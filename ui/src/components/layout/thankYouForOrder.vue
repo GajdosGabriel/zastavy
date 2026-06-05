@@ -1,33 +1,87 @@
 <script setup>
-import router from '../../router';
-import Smile from '../icons/smile.vue';
 import BaseLayout from './BaseLayout.vue';
 </script>
+
 <template>
     <BaseLayout>
-
         <template #main>
-            <!-- <h1 class="page-heading">{{ getProduct.name }}</h1> -->
+            <section class="col-span-12 px-4 pb-12">
+                <div class="mx-auto max-w-3xl rounded-md border border-green-200 bg-white shadow-sm">
+                    <div class="border-b border-green-100 bg-green-50 px-6 py-6 text-center">
+                        <div
+                            class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-700 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20"
+                                fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <h1 class="text-2xl font-semibold text-gray-900">
+                            Ďakujeme za objednávku
+                        </h1>
+                        <p class="mt-2 text-gray-700">
+                            Objednávka bola úspešne odoslaná a jej rekapituláciu sme poslali na zadaný e-mail.
+                        </p>
+                    </div>
 
-            <div class="page-body col-span-12 text-center min-h-screen">
-                <div class="font-semibold text-2xl text-gray-100 flex justify-center mb-6 p-4 bg-green-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    <div>Ďakujeme za objednávku</div>
+                    <div class="space-y-6 px-6 py-6">
+                        <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
+                            <h2 class="mb-3 text-base font-semibold text-gray-900">Čo bude nasledovať</h2>
+                            <ul class="space-y-2 text-sm text-gray-700">
+                                <li class="flex gap-2">
+                                    <span class="font-semibold text-green-700">1.</span>
+                                    <span>Skontrolujeme dostupnosť položiek a pripravíme objednávku na vybavenie.</span>
+                                </li>
+                                <li class="flex gap-2">
+                                    <span class="font-semibold text-green-700">2.</span>
+                                    <span>Ak bude potrebné niečo doplniť, ozveme sa vám e-mailom alebo telefonicky.</span>
+                                </li>
+                                <li class="flex gap-2">
+                                    <span class="font-semibold text-green-700">3.</span>
+                                    <span>Po vybavení dostanete informáciu o ďalšom postupe alebo doručení.</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="rounded-md border border-gray-200 p-4">
+                                <h2 class="mb-2 text-base font-semibold text-gray-900">E-mail s potvrdením</h2>
+                                <p class="text-sm text-gray-700">
+                                    Ak správu nevidíte, skontrolujte aj priečinok spam alebo hromadnú poštu.
+                                </p>
+                            </div>
+                            <div class="rounded-md border border-gray-200 p-4">
+                                <h2 class="mb-2 text-base font-semibold text-gray-900">Potrebujete niečo zmeniť?</h2>
+                                <p class="text-sm text-gray-700">
+                                    Kontaktujte nás čo najskôr a uveďte údaje, pod ktorými bola objednávka odoslaná.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                                <router-link :to="{ name: 'public.obchodne.podmienky' }"
+                                    class="text-blue-800 hover:underline">
+                                    Obchodné podmienky
+                                </router-link>
+                                <router-link :to="{ name: 'public.ochranaOsobnychUdajov' }"
+                                    class="text-blue-800 hover:underline">
+                                    Ochrana osobných údajov
+                                </router-link>
+                                <router-link :to="{ name: 'public.contactUs' }" class="text-blue-800 hover:underline">
+                                    Kontakt
+                                </router-link>
+                            </div>
+
+                            <router-link :to="{ name: 'public.index' }"
+                                class="inline-flex w-auto items-center justify-center rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                Prejsť na začiatok
+                            </router-link>
+                        </div>
+                    </div>
                 </div>
-
-                <Smile class="mx-auto h-32"/>
-                <div class="font-semibold text-2xl mb-6">Objednávka bola úspešne odoslaná.</div>
-                <div class="font-semibold">V emailovej schránke nájdete rekapituláciu objednávky.</div>
-                <router-link :to="{ name: 'public.index' }">
-                    <div class="btn btn-primary mt-10">Prejsť na začiatok</div>
-                </router-link>
-            </div>
-
+            </section>
         </template>
     </BaseLayout>
-
 </template>
