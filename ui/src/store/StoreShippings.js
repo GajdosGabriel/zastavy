@@ -20,10 +20,11 @@ const actions = {
         // let response = await axios.get("/carts");
         // state.carts = response.data.data;
     },
-    storeShipping: async (order) => {
+    storeShipping: async (order, options = {}) => {
         try {
             const response = await axiosInstance.post(
-                "/orders/" + order.id + "/shippings"
+                "/orders/" + order.id + "/shippings",
+                options
             );
 
             state.shipping = response.data.data;
