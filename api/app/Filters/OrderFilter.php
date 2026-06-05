@@ -2,11 +2,6 @@
 
 namespace App\Filters;
 
-use App\Models\Order;
-use App\Models\Product;
-use App\Models\Customer;
-use App\Models\OrderProduct;
-use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrderFilter extends Filters
@@ -48,20 +43,24 @@ class OrderFilter extends Filters
 
     public function bySearchInput($company)
     {
-        return $this->builder->whereHas('customer', function ($query) use ($company) {
-            $query->where('company', 'like', '%' . $company . '%')
-                ->orWhere('city', 'like', '%' . $company . '%')
-                ->orWhere('ico', 'like', '%' . $company . '%');
-        })->get();
+        return $this->builder->where(function ($query) use ($company) {
+            $query->where('serial_number', 'like', '%' . $company . '%')
+                ->orWhereHas('customer', function ($query) use ($company) {
+                    $query->where('company', 'like', '%' . $company . '%')
+                        ->orWhere('name', 'like', '%' . $company . '%')
+                        ->orWhere('city', 'like', '%' . $company . '%')
+                        ->orWhere('ico', 'like', '%' . $company . '%')
+                        ->orWhere('postcode', 'like', '%' . $company . '%')
+                        ->orWhere('email', 'like', '%' . $company . '%');
+                });
+        });
     }
 
     public function searchByProduct($input)
     {
-        $products =  Product::where('name', 'like', '%' . $input . '%')->get()->pluck('id');
-
-        $orders =  OrderProduct::whereIn('product_id',  $products)->first()->pluck('id');
-
-        // dd($orders);
-        $this->builder->whereIn('id',  $orders)->get();
+        return $this->builder->whereHas('orderProducts.product', function ($query) use ($input) {
+            $query->where('name', 'like', '%' . $input . '%')
+                ->orWhere('description', 'like', '%' . $input . '%');
+        });
     }
 }

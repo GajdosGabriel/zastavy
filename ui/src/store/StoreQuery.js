@@ -22,13 +22,37 @@ const mutators = {
 
 };
 
+const normalizeQuery = (data) => {
+    if (typeof data === 'string') {
+        return data;
+    }
+
+    return data.key + encodeURIComponent(data.value ?? '');
+};
+
+const normalizeQueryKey = (data) => {
+    const query = normalizeQuery(data);
+    const separatorIndex = query.indexOf('=');
+
+    return separatorIndex === -1 ? query : query.slice(0, separatorIndex + 1);
+};
+
 const actions = {
     setQuery: (data) => {
-        state.query.push(data);
+        const query = normalizeQuery(data);
+        const key = normalizeQueryKey(data);
+
+        state.query = state.query.filter(item => normalizeQueryKey(item) !== key);
+
+        if (!query.endsWith('=')) {
+            state.query.push(query);
+        }
+
         mutators.transformQueryToString();
     },
     removeQuery: (data) => {
-        state.query = state.query.filter(object => object.key !== data.key);
+        const key = normalizeQueryKey(data);
+        state.query = state.query.filter(item => normalizeQueryKey(item) !== key);
         mutators.transformQueryToString();
     },
 

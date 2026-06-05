@@ -22,17 +22,20 @@ watch(state, () => {
 
 const searchInputText = (object) => {
     removeQuery(object);
-    setQuery(object);
+
+    if (object.value) {
+        setQuery(object);
+    }
 };
 
 const clearInputCustomer = () => {
     input.customer = null
-    resetQuery();
+    removeQuery({ key: 'bySearchInput=' });
 };
 
 const clearInputProduct = () => {
     input.product = null
-    resetQuery();
+    removeQuery({ key: 'searchByProduct=' });
 };
 
 const onClearQuery = () => {
