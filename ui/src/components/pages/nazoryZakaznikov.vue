@@ -1,17 +1,50 @@
+<script setup>
+const reviews = [
+    {
+        text: 'Expresné rýchle dodanie tovaru.',
+    },
+    {
+        text: 'Veľmi rýchly nákup bez problémov.',
+    },
+    {
+        text: 'Nevyjadrujem sa...',
+    },
+    {
+        text: 'Veľmi dobrá spolupráca, profesionalita a ochota. Doporučujem ako obchodného partnera.',
+    },
+    {
+        text: 'Som spokojná, objednávka bola vybavená okamžite a taktiež tovar bol doručený ihneď a v poriadku.',
+    },
+    {
+        text: 'Ďakujem za spoluprácu, maximálna spokojnosť a ústretovosť pri vybavení objednávky. Odporúčame.',
+    },
+    {
+        text: 'Pri vlajke EU som nevedela zadať, či chcem vlajku alebo zástavu.',
+        response: 'Pri EU sa nerozlišuje zástava ani vlajka. Vlajka EU sa používa ako zástava aj vlajka.',
+    },
+];
+</script>
+
 <template>
-    <div class="p-2 border-2 border-gray-500 bg-gray-300 rounded-md hidden md:block">
-        <h4 class="font-semibold text-lg">Názory zákazníkov</h4>
-        <p class="p-2 border-2 border-gray-500 bg-gray-100 rounded-md mb-2"> Expresné rýchle dodanie tovaru. </p>
-        <p class="p-2 border-2 border-gray-500 bg-gray-100 rounded-md mb-2"> Veľmi rýchly nákup bez problémov. </p>
-        <p class="p-2 border-2 border-gray-500 bg-gray-100 rounded-md mb-2"> Nevyjadrujem sa... </p>
-        <p class="p-2 border-2 border-gray-500 bg-gray-100 rounded-md mb-2"> Veľmi dobrá spolupráca, profesionalita a
-            ochota. Doporučujem ako obchodného partnera. </p>
-        <p class="p-2 border-2 border-gray-500 bg-gray-100 rounded-md mb-2"> Som spokojná, objednávka bola vybavená
-            okamžite a taktiež tovar bol doručený ihneď a v poriadku. </p>
-        <p class="p-2 border-2 border-gray-500 bg-gray-100 rounded-md mb-2"> Ďakujem za spoluprácu maximálna spokojnosť
-            a ústretovosť vybavenie objednávky. Odporúčame. </p>
-        <p class="p-2 border-2 border-gray-500 bg-gray-100 rounded-md mb-2"> Pri vlajke EU som nevedela zadať či chcem
-            vlajku alebo zástavu.<span style="color:#ff0000;"> Odpoveď: Pri EU sa nerozlišuje zástava ani vlajka. Vlajka
-                EU sa používa ako zástava aj vlajka.</span></p>
-    </div>
+    <aside class="hidden md:block rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="mb-4 border-b border-slate-200 pb-3">
+            <p class="text-xs font-semibold uppercase tracking-wide text-blue-800">Referencie</p>
+            <h4 class="mt-1 text-lg font-semibold text-slate-900">Názory zákazníkov</h4>
+        </div>
+
+        <div class="space-y-3">
+            <article v-for="(review, index) in reviews" :key="index"
+                class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-slate-700">
+                <div class="flex gap-2">
+                    <span class="mt-0.5 text-lg leading-none text-blue-700">“</span>
+                    <p>{{ review.text }}</p>
+                </div>
+
+                <div v-if="review.response" class="mt-3 rounded-md border border-blue-100 bg-blue-50 p-3 text-blue-900">
+                    <div class="text-xs font-semibold uppercase text-blue-800">Odpoveď obchodu</div>
+                    <p class="mt-1">{{ review.response }}</p>
+                </div>
+            </article>
+        </div>
+    </aside>
 </template>
