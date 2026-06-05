@@ -16,7 +16,7 @@ const submitCart = (form) => {
 
     messages.value.push(form.input_order + " " + formatUnitName(form.input_order));
 
-    props.item.input_order = props.item.min_order;
+    props.item.input_order = Number(props.item.min_order) || 1;
 };
 
 const onClickProductCart = () => {
@@ -81,7 +81,7 @@ const onClickProductCart = () => {
 
             <form @submit.prevent="submitCart(item)">
                 <div class="flex justify-center">
-                    <input type="number" v-model="item.input_order" class="rounded w-24" :min="item.min_order"
+                    <input type="number" v-model.number="item.input_order" class="rounded w-24" :min="item.min_order"
                         name="ddd" required />
                     <button
                         class="ml-4 border-2 border-gray-400 px-4 rounded-md hover:bg-blue-300 flex bg-blue-200 items-center">

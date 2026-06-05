@@ -4,25 +4,25 @@ import { onMounted, ref } from "vue";
 import useCheckouts from "../../store/StoreCheckouts";
 import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
-import useUsers from "../../store/StoreUsers";
 import router from "../../router";
 import search from "../icons/search.vue";
+import { formatDecimal } from "../../models/functions";
 
 
 const {
-      state,
       removeCart,
       storeCheckout,
       getCarts,
       getCheckout,
       getlocalStorage,
       resetCarts,
+      updateCartQuantity,
 } = useCheckouts();
 
 const { getCustomer, setCustomer, findCustomerByIco, } = useCustomers();
-const { state: order, getOrder } = useOrders();
-const { getUser } = useUsers();
+const { getOrder } = useOrders();
 const isSearchingCompany = ref(false);
+const isSubmitting = ref(false);
 const icoSearchMessage = ref("");
 const highlightMissingRequired = ref(false);
 
@@ -34,12 +34,29 @@ const requiredInputClass = (field) => {
       return isRequiredMissing(field) ? 'border-red-500 ring-1 ring-red-500 bg-red-50' : '';
 };
 
+const parseStoredCustomer = () => {
+      try {
+            return JSON.parse(localStorage.getItem('customer')) || {};
+      } catch {
+            localStorage.removeItem('customer');
+            return {};
+      }
+};
+
+const shortDescription = (product) => {
+      return String(product.description || '').substring(0, 25);
+};
+
+const productTotal = (product) => {
+      return formatDecimal(Number(product.active_price || 0) * Number(product.input_order || 0));
+};
+
 
 onMounted(() => {
       getlocalStorage();
 
       if (getCarts.value.length) {
-            setCustomer(JSON.parse(localStorage.getItem('customer')) || {});
+            setCustomer(parseStoredCustomer());
       }
 
 });
@@ -69,16 +86,22 @@ const onClickIco = async () => {
 };
 
 const onClickForm = async () => {
-      if (!state.carts.length) {
+      if (isSubmitting.value) {
+            return;
+      }
+
+      if (!getCarts.value.length) {
             return alert("Objednávka je prázdna!");
       }
-      await storeCheckout();
 
-      // if (!getErrors) {
-      router.push({ name: "public.thankYouForOrder.show" });
-      // }
+      isSubmitting.value = true;
+      const wasStored = await storeCheckout();
+      isSubmitting.value = false;
+
+      if (wasStored) {
+            router.push({ name: "public.thankYouForOrder.show" });
+      }
 };
-
 </script>
 
 <template>
@@ -110,23 +133,25 @@ const onClickForm = async () => {
                                                                   {{ product.name }}
                                                             </h4>
                                                             <p class="text-xs">
-                                                                  {{ product.description.substring(0, 25) }}
+                                                                  {{ shortDescription(product) }}
                                                             </p>
                                                       </div>
                                                 </div>
                                           </td>
                                           <td class="whitespace-nowrap">
-                                                {{ product.active_price + " €" }}
+                                                {{ formatDecimal(product.active_price) }} €
                                           </td>
                                           <td>
                                                 <span class="text-center font-semibold">
-                                                      <input type="number" v-model="product.input_order"
-                                                            class="rounded w-16" :min="product.min_order" required />
+                                                      <input type="number" v-model.number="product.input_order"
+                                                            class="rounded w-16" :min="product.min_order"
+                                                            @change="updateCartQuantity(product, product.input_order)"
+                                                            required />
                                                       {{ product.unit_value }}
                                                 </span>
                                           </td>
                                           <td class="text-center whitespace-nowrap">
-                                                {{ product.active_price * product.input_order }} €
+                                                {{ productTotal(product) }} €
                                           </td>
 
                                           <td class="actions">
@@ -143,7 +168,7 @@ const onClickForm = async () => {
                                           </td>
                                     </tr>
                                     <tr v-if="!getCarts.length" class="border-b-2 border-gray-500">
-                                          <td colspan="4" class="p-4 font-semibold text-center">
+                                          <td colspan="5" class="p-4 font-semibold text-center">
                                                 V košík je prázdny.
                                           </td>
                                     </tr>
@@ -171,7 +196,7 @@ const onClickForm = async () => {
                                           <td class="hidden-xs"></td>
                                           <td class="hidden-xs">{{ getCheckout.grandQuantity }} ks</td>
                                           <td class="hidden-xs text-center font-semibold whitespace-nowrap">
-                                                {{ getCheckout.grandTotal }},- €
+                                                {{ formatDecimal(getCheckout.grandTotal) }} €
                                           </td>
                                           <td class="hidden-xs text-right p-3">
                                                 <button class="btn btn-default" @click="clickEmptyBasket"
@@ -284,10 +309,10 @@ const onClickForm = async () => {
                                                       placeholder="Telefón" />
                                           </div>
 
-                                          <div class="hidden">
+                                          <div>
                                                 <div class="flex justify-between">
                                                       <label class="block text-gray-700 text-sm font-bold mb-2"
-                                                            for="ico">
+                                                            for="billing-ico">
                                                             ICO
                                                       </label>
                                                       <button type="button" @click="onClickIco"
@@ -298,7 +323,7 @@ const onClickForm = async () => {
                                                       </button>
                                                 </div>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="ico" type="text" v-model="getCustomer.ico" @keyup.enter="onClickIco"
+                                                      id="billing-ico" type="text" v-model="getCustomer.ico" @keyup.enter="onClickIco"
                                                       placeholder="IČO organizácie" />
                                           </div>
 
@@ -336,9 +361,9 @@ const onClickForm = async () => {
                                     </div>
 
                                     <div class="text-right">
-                                          <button @click="onClickForm"
-                                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                                                Odoslať objednávku
+                                          <button @click="onClickForm" :disabled="isSubmitting || !getCarts.length"
+                                                class="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                                {{ isSubmitting ? 'Odosielam...' : 'Odoslať objednávku' }}
                                           </button>
                                     </div>
                               </div>
@@ -347,3 +372,4 @@ const onClickForm = async () => {
             </template>
       </BaseLayout>
 </template>
+
