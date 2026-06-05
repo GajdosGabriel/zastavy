@@ -1,6 +1,6 @@
 <script setup>
 import BaseLayout from "../layout/BaseLayout.vue";
-import { onMounted, watch } from "vue";
+import { onMounted, ref } from "vue";
 import useCheckouts from "../../store/StoreCheckouts";
 import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
@@ -22,6 +22,17 @@ const {
 const { getCustomer, setCustomer, findCustomerByIco, } = useCustomers();
 const { state: order, getOrder } = useOrders();
 const { getUser } = useUsers();
+const isSearchingCompany = ref(false);
+const icoSearchMessage = ref("");
+const highlightMissingRequired = ref(false);
+
+const isRequiredMissing = (field) => {
+      return highlightMissingRequired.value && !String(getCustomer.value?.[field] ?? '').trim();
+};
+
+const requiredInputClass = (field) => {
+      return isRequiredMissing(field) ? 'border-red-500 ring-1 ring-red-500 bg-red-50' : '';
+};
 
 
 onMounted(() => {
@@ -41,8 +52,20 @@ const clickEmptyBasket = () => {
 };
 
 
-const onClickIco = () => {
-      findCustomerByIco();
+const onClickIco = async () => {
+      icoSearchMessage.value = "";
+      isSearchingCompany.value = true;
+
+      try {
+            const response = await findCustomerByIco();
+            highlightMissingRequired.value = ['internet', 'database_with_internet'].includes(response?.source);
+            icoSearchMessage.value = "Údaje firmy boli doplnené.";
+      } catch (error) {
+            highlightMissingRequired.value = false;
+            icoSearchMessage.value = error.response?.data?.message || error.message || "Firmu sa nepodarilo nájsť.";
+      } finally {
+            isSearchingCompany.value = false;
+      }
 };
 
 const onClickForm = async () => {
@@ -171,12 +194,32 @@ const onClickForm = async () => {
                               </h2>
                               <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full lg:w-8/12 md:w-12/12">
 
+                                    <div class="mb-5 rounded border border-gray-200 bg-gray-50 p-4">
+                                          <label class="block text-gray-700 text-sm font-bold mb-2" for="ico">
+                                                ICO
+                                          </label>
+                                          <div class="flex gap-3">
+                                                <input
+                                                      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                      id="ico" type="text" v-model="getCustomer.ico"
+                                                      placeholder="IČO organizácie" @keyup.enter="onClickIco" />
+                                                <button type="button" @click="onClickIco" :disabled="isSearchingCompany"
+                                                      class="whitespace-nowrap bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                                      {{ isSearchingCompany ? 'Hľadám...' : 'Vyhľadať firmu' }}
+                                                </button>
+                                          </div>
+                                          <p v-if="icoSearchMessage" class="mt-2 text-xs text-gray-500">
+                                                {{ icoSearchMessage }}
+                                          </p>
+                                    </div>
+
                                     <div class="mb-4">
                                           <label class="block text-gray-700 text-sm font-bold mb-2" for="company">
                                                 Názov <span class="text-red-700 font-semibold text-lg">*</span>
                                           </label>
                                           <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                 id="company" type="text" v-model="getCustomer.company" ref="companyRef"
+                                                :class="requiredInputClass('company')"
                                                 required placeholder="Názov firmy" />
                                     </div>
                                     <div class="md:grid justify-items-stretch grid-cols-3 gap-5">
@@ -186,6 +229,7 @@ const onClickForm = async () => {
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="street" type="text" v-model="getCustomer.street"
+                                                      :class="requiredInputClass('street')"
                                                       placeholder="Adresa a číslo" required />
                                           </div>
 
@@ -196,6 +240,7 @@ const onClickForm = async () => {
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="postcode" type="text" v-model="getCustomer.postcode"
+                                                      :class="requiredInputClass('postcode')"
                                                       placeholder="Poštové smerové číslo" required />
                                           </div>
 
@@ -205,6 +250,7 @@ const onClickForm = async () => {
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="city" type="text" v-model="getCustomer.city"
+                                                      :class="requiredInputClass('city')"
                                                       placeholder="Meslo" required />
                                           </div>
 
@@ -214,6 +260,7 @@ const onClickForm = async () => {
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="email" type="email" v-model="getCustomer.email" required
+                                                      :class="requiredInputClass('email')"
                                                       placeholder="Email na zaslanie objednávky" />
                                           </div>
 
@@ -224,6 +271,7 @@ const onClickForm = async () => {
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="name" type="text" v-model="getCustomer.name" required
+                                                      :class="requiredInputClass('name')"
                                                       placeholder="Meno objednávateľa" />
                                           </div>
                                           <div>
@@ -232,20 +280,30 @@ const onClickForm = async () => {
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="phone" type="text" required v-model="getCustomer.phone"
+                                                      :class="requiredInputClass('phone')"
                                                       placeholder="Telefón" />
                                           </div>
 
-                                          <div>
+                                          <div class="hidden">
                                                 <div class="flex justify-between">
                                                       <label class="block text-gray-700 text-sm font-bold mb-2"
                                                             for="ico">
                                                             ICO
                                                       </label>
-                                                      <search @click="onClickIco" class="cursor-pointer" />
+                                                      <button type="button" @click="onClickIco"
+                                                            :disabled="isSearchingCompany"
+                                                            class="flex items-center text-xs text-blue-700 hover:text-blue-900 disabled:text-gray-400">
+                                                            <search class="cursor-pointer" />
+                                                            <span class="ml-1">{{ isSearchingCompany ? 'Hľadám...' : 'Vyhľadať firmu' }}</span>
+                                                      </button>
                                                 </div>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="ico" type="text" v-model="getCustomer.ico"
+                                                      id="ico" type="text" v-model="getCustomer.ico" @keyup.enter="onClickIco"
                                                       placeholder="IČO organizácie" />
+                                          </div>
+
+                                          <div v-if="icoSearchMessage" class="hidden">
+                                                {{ icoSearchMessage }}
                                           </div>
 
                                           <div>

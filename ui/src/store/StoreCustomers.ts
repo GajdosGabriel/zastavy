@@ -84,8 +84,33 @@ const actions = {
     },
 
     findCustomerByIco: async () => {
-        let response = await axiosInstance.get("/checkouts/" + state.customer.ico);
-        state.customer = response.data.data;
+        const ico = String(state.customer.ico || '').replace(/\D/g, '');
+
+        if (!ico) {
+            throw new Error('Zadajte IČO.');
+        }
+
+        const response = await axiosInstance.get("/checkouts/" + ico);
+        const company = response.data.data;
+
+        state.customer = {
+            ...state.customer,
+            company: company.company ?? state.customer.company,
+            street: company.street ?? state.customer.street,
+            postcode: company.postcode ?? state.customer.postcode,
+            city: company.city ?? state.customer.city,
+            ico: company.ico ?? ico,
+            dic: company.dic ?? state.customer.dic,
+            ic_dic: company.ic_dic ?? state.customer.ic_dic,
+            name: state.customer.name || company.name || '',
+            email: state.customer.email || company.email || '',
+            phone: state.customer.phone || company.phone || '',
+        };
+
+        return {
+            customer: state.customer,
+            source: response.data.source,
+        };
     },
 
     updateCustomer: async () => {
