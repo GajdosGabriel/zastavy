@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Frontend build output
+dist/
+build/
+.vite/
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime/cache files
+.cache/
+.tmp/
+tmp/
+temp/
+
+# Laravel / PHP
+**/storage/*.key
+**/storage/framework/cache/*
+**/storage/framework/sessions/*
+**/storage/framework/testing/*
+**/storage/framework/views/*
+**/storage/logs/*
+**/bootstrap/cache/*
+.phpunit.result.cache
+
+# OS and editor metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

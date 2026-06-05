@@ -1,0 +1,43 @@
+import { computed, reactive, readonly } from "vue";
+import axiosInstance from "../axiosInstance";
+import StoreOrders from "./StoreOrders";
+import StoreOrderProducts from "./StoreOrderProducts";
+import router from '../router';
+import useErrors from './StoreErrors';
+const { setErrors } = useErrors();
+
+const defaulState = {
+    shipping: '',
+};
+
+const state = reactive(defaulState);
+
+const getters = {
+    shipping: computed(() => state.shipping),
+};
+const actions = {
+    getShippings: async () => {
+        // let response = await axios.get("/carts");
+        // state.carts = response.data.data;
+    },
+    storeShipping: async (order) => {
+        try {
+            const response = await axiosInstance.post(
+                "/orders/" + order.id + "/shippings"
+            );
+
+            state.shipping = response.data.data;
+
+            StoreOrders().setOrder(response.data.order);
+            StoreOrderProducts().setOrderProducts(response.data.order.orderProducts);
+        } catch (e) {
+            setErrors(e);
+        }
+    },
+};
+
+export default () => ({
+    state: readonly(state),
+    ...actions,
+    ...getters,
+});

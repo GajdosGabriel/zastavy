@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.page-heading {
+    @apply flex justify-between font-semibold text-3xl my-7 px-7 col-span-full;
+}
+
+.page-body {
+    @apply p-3 border-solid pl-2 border-slate-300  border-4 rounded-md;
+}
+
+
+.btn {
+    @apply py-1 px-3 border-gray-500 border-2 rounded-md;
+}
+
+.btn-primary {
+    @apply bg-blue-500 text-white hover:bg-blue-400;
+}
+
+.btn-danger {
+    @apply bg-red-500 text-white hover:bg-gray-400;
+}
+
+.btn-secondary {
+    @apply bg-gray-300 text-gray-700 hover:bg-gray-200;
+}
+
+.form-control {
+    @apply w-full;
+}
+
+.form-group {
+    @apply mb-5;
+}
+
+.label {
+    @apply border-2 rounded-md border-gray-400 px-2 text-gray-200;
+}
+
+.lable-default {
+    @apply rounded-md border-gray-400;
+}
+
+.lable-red {
+    @apply bg-red-600 hover:bg-red-500;
+}
+
+.lable-green {
+    @apply bg-green-600 hover:bg-green-500;
+}
+
+/* -------------------------- Table -------------------------- */
+.table-header {
+    @apply px-4 py-2 text-left;
+}
+
+.table-data {
+    @apply border px-4 py-2;
+}
+
+.thead {
+    @apply bg-blue-800;
+}
+
+.thead_th {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider;
+}
+
+.tbody_td {
+    @apply px-4 py-4 whitespace-nowrap text-sm text-gray-500;
+}
+
+.actions {
+    @apply text-right pr-3;
+}
+
+/* -------------------------- Navigation -------------------------- */
+
+.nav_link {
+    @apply cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out;
+}
+
+.nav_link_active {
+    @apply text-blue-900 font-bold text-lg ;
+}
+
+
+
+
+

@@ -1,0 +1,66 @@
+<script setup lang="ts">
+const props = defineProps({
+  size: {
+    type: String,
+    default: "50px",
+  },
+});
+</script>
+
+<template>
+  <!-- <table-row :orders="ordersActive"></table-row> -->
+  <tr>
+    <td :colspan="10">
+      <div class="spinner-wrapper">
+        <div class="loader" :style="{ width: props.size, height: props.size }"></div>
+      </div>
+    </td>
+  </tr>
+</template>
+
+<style scoped>
+.spinner-wrapper {
+  width: 100%;
+  height: 100vh;
+  background-color: white;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 2rem;
+  z-index: 10;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.loader {
+  aspect-ratio: 1;
+  display: grid;
+  border-radius: 50%;
+  background:
+    linear-gradient(0deg, rgb(0 0 0/50%) 30%, #0000 0 70%, rgb(0 0 0/100%) 0) 50%/8% 100%,
+    linear-gradient(90deg, rgb(0 0 0/25%) 30%, #0000 0 70%, rgb(0 0 0/75%) 0) 50%/100% 8%;
+  background-repeat: no-repeat;
+  animation: l23 1s infinite steps(12);
+}
+
+.loader::before,
+.loader::after {
+  content: "";
+  grid-area: 1/1;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.915;
+  transform: rotate(30deg);
+}
+
+.loader::after {
+  opacity: 0.83;
+  transform: rotate(60deg);
+}
+
+@keyframes l23 {
+  100% {
+    transform: rotate(1turn);
+  }
+}
+</style>
