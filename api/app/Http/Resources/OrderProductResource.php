@@ -32,6 +32,11 @@ class OrderProductResource extends JsonResource
             'total' => $this->total,
             'storno' => $this->storno,
             'stockSum' => $this->stockSum,
+            'shipping_remaining_quantity' => max(0, $this->quantity - $this->storno - $this->stockSum),
+            'shipping_required_quantity' => max(0, $this->quantity - $this->storno),
+            'shipping_percentage' => max(0, $this->quantity - $this->storno) > 0
+                ? round(min(100, ($this->stockSum / max(1, $this->quantity - $this->storno)) * 100), 1)
+                : 0,
 
             'endpoints'   => [
                 // 'index'     =>  route('orders.posts.index', [auth()->user()->active_organization]),

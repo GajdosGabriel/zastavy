@@ -68,8 +68,13 @@ const onChangeSelect = (productId) => {
                 }}</span>
         </td>
         <td class="tbody_td">
-            <div class="rounded-full w-fit px-2" :class="item.stockSum ? 'bg-green-200' : 'bg-red-200'">
-                {{ item.stockSum }}
+            <div class="flex flex-col gap-1 text-xs">
+                <div class="w-fit rounded-full px-2 font-semibold" :class="item.stockSum ? 'bg-green-200' : 'bg-red-200'">
+                    {{ item.stockSum }} / {{ item.shipping_required_quantity ?? item.quantity }}
+                </div>
+                <div class="text-gray-500">
+                    {{ item.shipping_percentage ?? 0 }} %, ostáva {{ item.shipping_remaining_quantity ?? 0 }}
+                </div>
             </div>
         </td>
         <td class="tbody_td">

@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ShippingResource;
 use App\Http\Resources\OrderResource;
 use App\Notifications\OrderExpedition;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 class OrderShippingController extends Controller
@@ -18,13 +19,20 @@ class OrderShippingController extends Controller
     {
         $validated = $request->validate([
             'notify_customer' => ['sometimes', 'boolean'],
+            'items' => ['sometimes', 'array'],
+            'items.*.order_product_id' => ['required_with:items', 'integer', 'exists:order_products,id'],
+            'items.*.quantity' => ['required_with:items', 'integer', 'min:0'],
         ]);
 
         $notifyCustomer = $validated['notify_customer'] ?? true;
+        $items = $validated['items'] ?? null;
 
-        $order->update(['isOpened' => 1]);
-        
-        $shipping =  (new ShippingService)->create($order);
+        $shipping = DB::transaction(function () use ($order, $items) {
+            $order->load('orderProducts.stocks');
+            $order->update(['isOpened' => 1]);
+
+            return (new ShippingService)->create($order, $items);
+        });
 
         if ($notifyCustomer && $shipping) {
             $shipping->notices()->create(['notice' => 'email']);

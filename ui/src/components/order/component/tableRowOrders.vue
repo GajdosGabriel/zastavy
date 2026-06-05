@@ -45,7 +45,7 @@ const dropdownItems = computed(() => {
         { 'bg-gray-200': order.isStorned },
     ]">
         <td class="tbody_td whitespace-nowrap font-semibold">
-            <router-link :to="{ name: 'orders.show', params: { orderId: order.id } }" class="hover:text-blue-700">
+            <router-link :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }" class="hover:text-blue-700">
                 {{ order.serial_number }}
             </router-link>
         </td>
@@ -55,7 +55,7 @@ const dropdownItems = computed(() => {
         </td>
 
         <td class="tbody_td min-w-64 relative cursor-pointer hover:text-blue-800">
-            <router-link :to="{ name: 'orders.show', params: { orderId: order.id } }">
+            <router-link :to="{ name: 'customers.orders', params: { customerId: order.customer.id } }">
                 <div v-if="order.customer.company" class="font-bold">
                     {{ order.customer.company.substring(0, 30) }}
                 </div>

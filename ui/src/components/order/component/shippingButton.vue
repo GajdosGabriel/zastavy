@@ -1,7 +1,6 @@
 <script setup>
-import { ref } from "vue";
+import { computed } from "vue";
 import useOrders from "../../../store/StoreOrders";
-import useShippings from "../../../store/StoreShippings";
 
 const props = defineProps({
     order: {
@@ -19,9 +18,11 @@ const props = defineProps({
 });
 
 const { updateOrder } = useOrders();
-const { storeShipping } = useShippings();
-const notifyCustomer = ref(true);
-const showShippingModal = ref(false);
+const shippingPercentage = computed(() => Number(props.order.shipping_percentage ?? 0));
+const remainingQuantity = computed(() => Number(props.order.shipping_remaining_quantity ?? 0));
+const shippedQuantity = computed(() => Number(props.order.stock_expedition ?? 0));
+const requiredQuantity = computed(() => Number(props.order.shipping_required_quantity ?? 0));
+const statusLabel = computed(() => props.order.shipping_status_label ?? (props.order.isFinished ? "Vybavená" : "Nevybavená"));
 
 const markAsDelivered = async () => {
     if (props.order.isStorned) {
@@ -37,31 +38,6 @@ const markAsDelivered = async () => {
         isDelivered: 1,
     });
 };
-
-const onClickShipping = () => {
-    if (props.order.isStorned) {
-        return alert("Položka je stornovaná");
-    }
-
-    if (props.order.isFinished) {
-        return alert("Objednávka už bola expedovaná!");
-    }
-
-    notifyCustomer.value = true;
-    showShippingModal.value = true;
-};
-
-const closeShippingModal = () => {
-    showShippingModal.value = false;
-};
-
-const confirmShipping = async () => {
-    await storeShipping(props.order, {
-        notify_customer: notifyCustomer.value,
-    });
-
-    closeShippingModal();
-};
 </script>
 
 <template>
@@ -75,10 +51,11 @@ const confirmShipping = async () => {
             {{ order.isDelivered == 1 ? "Zabalené" : "Zabaliť" }} {{ order.shippintPercentageCalculator }}
         </button>
 
-        <button v-if="showShippingAction && !order.isFinished && !order.isStorned" type="button" @click="onClickShipping"
+        <router-link v-if="showShippingAction && !order.isFinished && !order.isStorned"
+            :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }"
             class="inline-flex min-w-24 items-center justify-center rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-blue-700">
             Expedovať
-        </button>
+        </router-link>
 
         <span v-if="showPackStatus && order.isStorned"
             class="inline-flex min-w-28 items-center justify-center rounded bg-gray-700 px-2 py-1 text-xs font-semibold text-white">
@@ -97,37 +74,19 @@ const confirmShipping = async () => {
         </span>
     </div>
 
-    <svg v-if="showPackStatus && order.isDelivered !== null" xmlns="http://www.w3.org/2000/svg" class="mt-1 h-4 w-4"
-        :class="{ 'text-red-400': order.isDelivered == 0, 'text-green-600': order.isDelivered == 1 }" fill="none"
-        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round"
-            d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
-    </svg>
-
-    <Teleport to="body">
-        <div v-if="showShippingModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div class="w-full max-w-sm rounded bg-white p-5 shadow-lg">
-                <h3 class="mb-3 text-lg font-semibold text-gray-800">
-                    Expedícia objednávky
-                </h3>
-                <p class="mb-4 text-sm text-gray-600">
-                    Označiť objednávku ako odoslanú?
-                </p>
-                <label class="mb-5 flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" v-model="notifyCustomer" class="rounded" />
-                    Poslať email zákazníkovi
-                </label>
-                <div class="flex justify-end gap-2">
-                    <button type="button" @click="closeShippingModal"
-                        class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
-                        Zrušiť
-                    </button>
-                    <button type="button" @click="confirmShipping"
-                        class="rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-                        Potvrdiť
-                    </button>
-                </div>
-            </div>
+    <div v-if="showPackStatus" class="mt-2 min-w-44 text-xs text-gray-600">
+        <div class="mb-1 flex items-center justify-between gap-2">
+            <span class="font-semibold">{{ statusLabel }}</span>
+            <span>{{ shippedQuantity }}/{{ requiredQuantity }} ks</span>
         </div>
-    </Teleport>
+        <div class="h-2 overflow-hidden rounded-full bg-gray-200">
+            <div class="h-full rounded-full transition-all"
+                :class="order.isFinished ? 'bg-green-600' : shippedQuantity > 0 ? 'bg-amber-500' : 'bg-red-500'"
+                :style="{ width: `${shippingPercentage}%` }"></div>
+        </div>
+        <div class="mt-1 flex items-center justify-between gap-2">
+            <span>{{ shippingPercentage }} %</span>
+            <span>Ostáva {{ remainingQuantity }} ks</span>
+        </div>
+    </div>
 </template>

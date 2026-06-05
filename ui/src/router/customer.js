@@ -18,6 +18,16 @@ const customer = [
         }
     },
     {
+        path: '/zakaznici/:customerId/objednavky',
+        name: 'customers.orders',
+        components: {
+            default: () => import('../components/customer/CustomerShow.vue'),
+        },
+        meta: {
+            title: 'Objednávky zákazníka'
+        }
+    },
+    {
         path: '/zakaznici/:customerId/edit',
         name: 'customers.edit',
         components: {

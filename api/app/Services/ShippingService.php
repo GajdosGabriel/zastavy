@@ -3,29 +3,42 @@
 namespace App\Services;
 
 use App\Models\Stock;
-use App\Notifications\OrderExpedition;
-
+use Illuminate\Support\Collection;
 
 class ShippingService
 {
-  public function create($order)
+  public function create($order, ?array $items = null)
   {
+    $itemsToShip = $items === null ? null : collect($items)
+      ->keyBy('order_product_id')
+      ->map(fn ($item) => (int) $item['quantity']);
 
     $stocks = collect();
 
     foreach ($order->orderProducts as $item) {
-      $this->sumShippingItems($item);
+      $alreadyShipped = $this->sumShippingItems($item);
+      $remaining = max(0, $item->quantity - $item->storno - $alreadyShipped);
 
-      if ($this->sumShippingItems($item) === $item->quantity) {
+      if ($remaining === 0) {
         continue;
-      };
+      }
+
+      $quantity = $itemsToShip instanceof Collection
+        ? min($remaining, max(0, (int) ($itemsToShip->get($item->id, 0))))
+        : $remaining;
+
+      if ($quantity === 0) {
+        continue;
+      }
 
       $stocks->push(new Stock([
         'order_id' => $order->id,
         'order_product_id' => $item->id,
-        'quantity' => $item->quantity - $item->storno - $this->sumShippingItems($item) // Rozdiel v počte dodaných kusov
+        'quantity' => $quantity,
       ]));
     }
+
+    $shipping = null;
 
     if ($stocks->isNotEmpty()) {
       $shipping = $order->shippings()->create();
@@ -34,7 +47,6 @@ class ShippingService
 
     return $shipping;
   }
-
 
   protected function sumShippingItems($item)
   {

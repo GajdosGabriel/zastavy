@@ -34,6 +34,8 @@ const actions = {
                 StoreOrders().setOrder(updatedOrder);
                 StoreOrderProducts().setOrderProducts(updatedOrder.orderProducts ?? []);
             }
+
+            return response.data;
         } catch (e) {
             setErrors(e);
         }

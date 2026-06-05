@@ -1,6 +1,6 @@
 import { PAGE_ORDER } from '../constants';
-const order = [
 
+const order = [
     {
         path: '/objednavky',
         name: PAGE_ORDER.ROUTE,
@@ -18,7 +18,7 @@ const order = [
             default: () => import('../components/order/OrderShow.vue'),
         },
         meta: {
-            title: 'Zobraziť objednávka'
+            title: 'Zobraziť objednávku'
         }
     },
     {
@@ -32,6 +32,16 @@ const order = [
         }
     },
     {
+        path: '/objednavky/:orderId/expedicia',
+        name: 'orders.shipping.edit',
+        components: {
+            default: () => import('../components/order/OrderShippingEdit.vue'),
+        },
+        meta: {
+            title: 'Expedícia objednávky'
+        }
+    },
+    {
         path: '/objednavky/create',
         name: 'orders.create',
         components: {
@@ -41,8 +51,6 @@ const order = [
             title: 'Nová objednávka'
         }
     },
-
-
-]
+];
 
 export default order;

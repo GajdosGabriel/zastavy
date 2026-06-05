@@ -17,14 +17,8 @@ class Order extends Model
     use HasFactory, SoftDeletes, Notifiable, HasNotices;
 
     protected $guarded = [];
-    // protected $fillable = ['productStornoSum', 'serial_number', 'notice'];
 
     protected $appends = ['productOrderSum'];
-
-    // protected $casts = [
-    //     'star' => 'boolean',
-    // ];
-
 
     public function customer()
     {
@@ -73,16 +67,56 @@ class Order extends Model
 
     public function isFinished()
     {
-        return  $this->productOrderSum - $this->productStornoSum() === $this->stockExpedition;
+        return $this->shippingRequiredQuantity() === $this->stockExpedition;
     }
 
     public function shippintPercentageCalculator()
     {
-        // Nulou nemožno deliť, preto iba nie prázbne objednávky.
-        if ($this->productOrderSum - $this->productStornoSum() == 0) {
+        if ($this->shippingRequiredQuantity() == 0) {
             return "Prázdna objednávka";
         }
-        return (100 / $this->productOrderSum - $this->productStornoSum()) * $this->stockExpedition . '%';
+
+        return $this->shippingPercentage() . '%';
+    }
+
+    public function shippingRequiredQuantity()
+    {
+        return max(0, $this->productOrderSum - $this->productStornoSum());
+    }
+
+    public function shippingRemainingQuantity()
+    {
+        return max(0, $this->shippingRequiredQuantity() - $this->stockExpedition);
+    }
+
+    public function shippingPercentage()
+    {
+        if ($this->shippingRequiredQuantity() == 0) {
+            return 0;
+        }
+
+        return round(min(100, ($this->stockExpedition / $this->shippingRequiredQuantity()) * 100), 1);
+    }
+
+    public function shippingStatusLabel()
+    {
+        if ($this->isStorned()) {
+            return 'Stornovaná';
+        }
+
+        if ($this->shippingRequiredQuantity() == 0) {
+            return 'Prázdna';
+        }
+
+        if ($this->isFinished()) {
+            return 'Vybavená';
+        }
+
+        if ($this->stockExpedition > 0) {
+            return 'Čiastočne vybavená';
+        }
+
+        return 'Nevybavená';
     }
 
     public function getStockExpeditionAttribute()
