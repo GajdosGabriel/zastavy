@@ -3,7 +3,20 @@ import { ref } from "vue";
 import useOrders from "../../../store/StoreOrders";
 import useShippings from "../../../store/StoreShippings";
 
-const props = defineProps(["order"]);
+const props = defineProps({
+    order: {
+        type: Object,
+        required: true,
+    },
+    showPackStatus: {
+        type: Boolean,
+        default: true,
+    },
+    showShippingAction: {
+        type: Boolean,
+        default: true,
+    },
+});
 
 const { updateOrder } = useOrders();
 const { storeShipping } = useShippings();
@@ -52,41 +65,41 @@ const confirmShipping = async () => {
 </script>
 
 <template>
-    <div v-if="!order.isStorned" class="flex justify-between">
-        <div class="flex flex-wrap items-center gap-2">
-            <button type="button" @click="markAsDelivered" :title="order.created_at"
-                class="rounded-md border-2 px-2 hover:bg-green-500 hover:text-gray-200" :class="{
-                    'bg-green-600 text-gray-200': order.isDelivered == 1,
-                    'cursor-pointer': order.isDelivered != 1,
-                    'cursor-default': order.isDelivered == 1,
-                }">
-                {{ order.isDelivered == 1 ? "Zabalené" : "Dodané" }} {{ order.shippintPercentageCalculator }}
-            </button>
+    <div class="flex flex-wrap items-center gap-2">
+        <button v-if="showPackStatus && !order.isStorned" type="button" @click="markAsDelivered" :title="order.created_at"
+            class="inline-flex min-w-28 items-center justify-center rounded border px-2 py-1 text-xs font-semibold transition"
+            :class="{
+                'border-green-600 bg-green-600 text-white': order.isDelivered == 1,
+                'border-gray-300 bg-white text-gray-700 hover:border-green-500 hover:bg-green-50': order.isDelivered != 1,
+            }">
+            {{ order.isDelivered == 1 ? "Zabalené" : "Zabaliť" }} {{ order.shippintPercentageCalculator }}
+        </button>
 
-            <button v-if="!order.isFinished" type="button" @click="onClickShipping"
-                class="rounded-md border-2 px-2 hover:bg-blue-400 hover:text-gray-200 disabled:cursor-not-allowed"
-                :class="{ 'bg-blue-500 text-gray-200': order.isFinished }">
-                Expedovať
-            </button>
-        </div>
+        <button v-if="showShippingAction && !order.isFinished && !order.isStorned" type="button" @click="onClickShipping"
+            class="inline-flex min-w-24 items-center justify-center rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-blue-700">
+            Expedovať
+        </button>
+
+        <span v-if="showPackStatus && order.isStorned"
+            class="inline-flex min-w-28 items-center justify-center rounded bg-gray-700 px-2 py-1 text-xs font-semibold text-white">
+            Stornovaná
+        </span>
+
+        <span v-if="showPackStatus && !order.orderProducts?.length"
+            class="inline-flex min-w-28 items-center justify-center rounded bg-green-700 px-2 py-1 text-xs font-semibold text-white"
+            title="Objednávka je prázdna">
+            Prázdna
+        </span>
+
+        <span v-if="showPackStatus && order.isDeleted"
+            class="inline-flex min-w-28 items-center justify-center rounded bg-red-700 px-2 py-1 text-xs font-semibold text-white">
+            Obnoviť
+        </span>
     </div>
 
-    <button v-else class="float-right rounded-md bg-gray-700 px-2 text-gray-200" disabled>
-        Stornovaná
-    </button>
-
-    <button v-if="!order.orderProducts?.length" class="float-right rounded-md bg-green-700 px-2 text-gray-200"
-        title="Objednávka je prázdna" disabled>
-        Prázdna
-    </button>
-
-    <button v-if="order.isDeleted" class="float-right rounded-md bg-red-700 px-2 text-gray-200" disabled>
-        Obnoviť
-    </button>
-
-    <svg v-if="order.isDelivered !== null" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
-        :class="{ 'text-red-400': order.isDelivered == 0 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        stroke-width="2">
+    <svg v-if="showPackStatus && order.isDelivered !== null" xmlns="http://www.w3.org/2000/svg" class="mt-1 h-4 w-4"
+        :class="{ 'text-red-400': order.isDelivered == 0, 'text-green-600': order.isDelivered == 1 }" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round"
             d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
     </svg>

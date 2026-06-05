@@ -41,18 +41,16 @@ const confirmNotice = async () => {
 </script>
 
 <template>
-    <div v-if="shipping" class="flex">
+    <div v-if="shipping" class="inline-flex items-center gap-2 rounded border border-gray-200 bg-white px-2 py-1 shadow-sm">
         <button @click="onClickShipping"
-            class="rounded-md border-2 bg-white px-2 hover:bg-blue-500 hover:text-gray-200">
-            {{ shipping.id }}
+            class="text-xs font-semibold text-blue-700 hover:text-blue-900">
+            #{{ shipping.id }}
         </button>
 
-        <div v-for="notice in shipping.notices" :key="notice.id" class="ml-2 text-center">
-            <div class="label lable-green" :title="notice.created_at">
+        <div v-for="notice in shipping.notices" :key="notice.id" class="text-center">
+            <div class="flex items-center gap-1 text-xs text-green-700" :title="notice.created_at">
                 <icon-email />
-                <div style="font-size: .7rem;">
-                    {{ notice.created_at_human }}
-                </div>
+                <span>{{ notice.created_at_human }}</span>
             </div>
         </div>
     </div>

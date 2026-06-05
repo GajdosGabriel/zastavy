@@ -57,13 +57,13 @@ const template = () => {
                               <div class="-my-2 sm:-mx-6 lg:-mx-8">
 
                                     <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                                          <div class="shadow border-b border-gray-200 sm:rounded-lg">
+                                          <div class="overflow-x-auto shadow border-b border-gray-200 sm:rounded-lg">
                                                 <table
-                                                      class="min-w-full divide-y divide-gray-500 border-2 border-gray-400">
+                                                      class="min-w-full divide-y divide-gray-200 border border-gray-200">
                                                       <thead class="thead">
                                                             <tr>
-                                                                  <th class="thead_th flex items-center">
-                                                                        Id
+                                                                  <th class="thead_th whitespace-nowrap">
+                                                                        Číslo
                                                                   </th>
                                                                   <th class="thead_th">
                                                                         <icon-star
@@ -71,7 +71,7 @@ const template = () => {
                                                                               @click="fetchMarkSelected"
                                                                               class="mx-auto" />
                                                                   </th>
-                                                                  <th class="thead_th">Name</th>
+                                                                  <th class="thead_th">Zákazník</th>
                                                                   <th class="thead_th">Cena</th>
                                                                   <th class="thead_th">Status</th>
                                                                   <th class="thead_th">Expedícia</th>
