@@ -2,7 +2,6 @@ import { computed, reactive, readonly } from "vue";
 import axiosInstance from "../axiosInstance";
 import StoreOrders from "./StoreOrders";
 import StoreOrderProducts from "./StoreOrderProducts";
-import router from '../router';
 import useErrors from './StoreErrors';
 const { setErrors } = useErrors();
 
@@ -29,8 +28,12 @@ const actions = {
 
             state.shipping = response.data.data;
 
-            StoreOrders().setOrder(response.data.order);
-            StoreOrderProducts().setOrderProducts(response.data.order.orderProducts);
+            const updatedOrder = response.data.order?.data ?? response.data.order;
+
+            if (updatedOrder) {
+                StoreOrders().setOrder(updatedOrder);
+                StoreOrderProducts().setOrderProducts(updatedOrder.orderProducts ?? []);
+            }
         } catch (e) {
             setErrors(e);
         }

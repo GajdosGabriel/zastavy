@@ -17,7 +17,11 @@ const actions = {
   setErrors: (error) => {
     actions.resetErrors();
 
-    state.errors.push(error.response.data.message)
+    const message = error?.response?.data?.message
+      ?? error?.message
+      ?? "Nastala neočakávaná chyba.";
+
+    state.errors.push(message)
   },
 
   removeError: (index) => {

@@ -1,20 +1,37 @@
 <script setup>
 import { ref } from "vue";
+import useOrders from "../../../store/StoreOrders";
 import useShippings from "../../../store/StoreShippings";
 
 const props = defineProps(["order"]);
 
+const { updateOrder } = useOrders();
 const { storeShipping } = useShippings();
 const notifyCustomer = ref(true);
 const showShippingModal = ref(false);
 
+const markAsDelivered = async () => {
+    if (props.order.isStorned) {
+        return alert("Položka je stornovaná");
+    }
+
+    if (props.order.isDelivered == 1) {
+        return;
+    }
+
+    await updateOrder({
+        id: props.order.id,
+        isDelivered: 1,
+    });
+};
+
 const onClickShipping = () => {
     if (props.order.isStorned) {
-        return alert("Polozka je stornovana");
+        return alert("Položka je stornovaná");
     }
 
     if (props.order.isFinished) {
-        return alert("Objednavka uz bola expedovana!");
+        return alert("Objednávka už bola expedovaná!");
     }
 
     notifyCustomer.value = true;
@@ -36,27 +53,34 @@ const confirmShipping = async () => {
 
 <template>
     <div v-if="!order.isStorned" class="flex justify-between">
-        <div class="flex items-center">
-            <div @click="onClickShipping" :disabled="order.isFinished" :title="order.created_at"
-                class="hover:bg-blue-400 hover:text-gray-200 px-2 rounded-md border-2 cursor-pointer" :class="{
-                    'bg-blue-500 rounded-md border-2 px-2 text-gray-200':
-                        order.isFinished,
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" @click="markAsDelivered" :title="order.created_at"
+                class="rounded-md border-2 px-2 hover:bg-green-500 hover:text-gray-200" :class="{
+                    'bg-green-600 text-gray-200': order.isDelivered == 1,
+                    'cursor-pointer': order.isDelivered != 1,
+                    'cursor-default': order.isDelivered == 1,
                 }">
-                {{ order.isFinished ? "Expedovaná" : "Dodané " + order.shippintPercentageCalculator }}
-            </div>
+                {{ order.isDelivered == 1 ? "Zabalené" : "Dodané" }} {{ order.shippintPercentageCalculator }}
+            </button>
+
+            <button v-if="!order.isFinished" type="button" @click="onClickShipping"
+                class="rounded-md border-2 px-2 hover:bg-blue-400 hover:text-gray-200 disabled:cursor-not-allowed"
+                :class="{ 'bg-blue-500 text-gray-200': order.isFinished }">
+                Expedovať
+            </button>
         </div>
     </div>
 
-    <button v-else class="bg-gray-700 text-gray-200 px-2 rounded-md float-right" disabled>
+    <button v-else class="float-right rounded-md bg-gray-700 px-2 text-gray-200" disabled>
         Stornovaná
     </button>
 
-    <button v-if="!order.orderProducts?.length" class="bg-green-700 text-gray-200 px-2 rounded-md float-right"
+    <button v-if="!order.orderProducts?.length" class="float-right rounded-md bg-green-700 px-2 text-gray-200"
         title="Objednávka je prázdna" disabled>
         Prázdna
     </button>
 
-    <button v-if="order.isDeleted" class="bg-red-700 text-gray-200 px-2 rounded-md float-right" disabled>
+    <button v-if="order.isDeleted" class="float-right rounded-md bg-red-700 px-2 text-gray-200" disabled>
         Obnoviť
     </button>
 

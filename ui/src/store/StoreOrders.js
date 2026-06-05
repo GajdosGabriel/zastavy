@@ -109,6 +109,12 @@ const actions = {
 
     setOrder: (order) => {
         state.order = order;
+
+        const index = state.orders.findIndex((item) => item.id === order.id);
+
+        if (index !== -1) {
+            state.orders.splice(index, 1, order);
+        }
     },
 
     resetOrder: () => {
