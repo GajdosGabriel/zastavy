@@ -35,6 +35,21 @@ class Customer extends Model
         return $this->hasMany(Order::class)->latest();
     }
 
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+
+    public function primaryUser()
+    {
+        return $this->hasOne(User::class)->oldestOfMany();
+    }
+
+    public function latestUser()
+    {
+        return $this->hasOne(User::class)->latestOfMany();
+    }
+
     public function mark()
     {
         return $this->morphOne(Mark::class, 'fileable');

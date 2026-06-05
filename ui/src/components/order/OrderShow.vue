@@ -82,15 +82,15 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                         <div class="border-b-2 border-gray-300 w-full mb-1 mt-1"></div>
                         <div class="flex items-center">
                             <icon-user />
-                            {{ customer.name }}
+                            {{ getOrder.user?.username || customer.name }}
                         </div>
                         <div class="flex items-center">
                             <icon-phone />
-                            {{ customer.phone }}
+                            {{ getOrder.user?.phone || customer.phone }}
                         </div>
                         <div class="flex items-center">
                             <icon-email />
-                            {{ customer.email }}
+                            {{ getOrder.user?.email || customer.email }}
                         </div>
                         <div class="border-b-2 border-gray-300 w-full mb-1 mt-1"></div>
                         <div>{{ getOrder.created_at_human }}</div>

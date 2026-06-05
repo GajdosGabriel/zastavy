@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Str;
 
 class RegisteredUserController extends Controller
 {
@@ -28,7 +29,10 @@ class RegisteredUserController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            'firstName' => $request->firstName,
+            'lastName' => $request->lastName,
+            'username' => trim($request->firstName . ' ' . $request->lastName),
+            'slug' => Str::slug($request->firstName . ' ' . $request->lastName),
             'email' => $request->email,
             'password' => Hash::make($request->string('password')),
         ]);

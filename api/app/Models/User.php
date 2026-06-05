@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -19,7 +20,16 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [ 'firstName, lastName, email, password' ];
+    protected $fillable = [
+        'firstName',
+        'lastName',
+        'slug',
+        'username',
+        'email',
+        'phone',
+        'customer_id',
+        'password',
+    ];
 
     protected $hidden = [
         'password',
@@ -40,10 +50,17 @@ class User extends Authenticatable
         return $this->belongsTo(Customer::class);
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 
-    // public function setNameAttribute($value)
-    // {
-    //     $this->attributes['name'] =  $value;
-    //     $this->attributes['slug'] =  Str::slug($value, '-');
-    // }
+    public function setUsernameAttribute($value)
+    {
+        $this->attributes['username'] = $value;
+
+        if ($value && empty($this->attributes['slug'])) {
+            $this->attributes['slug'] = Str::slug($value, '-');
+        }
+    }
 }

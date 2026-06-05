@@ -15,6 +15,8 @@ class StockResource extends JsonResource
      */
     public function toArray($request)
     {
+        $user = $request->user();
+
         return[
             'id' => $this->id,
             'shipping_id' => $this->shipping->id,
@@ -24,6 +26,16 @@ class StockResource extends JsonResource
             'name' => $this->product->name,
             'product_unit_value' => $this->product->unit_value,
             'quantity' => $this->quantity,
+            'endpoints' => [
+                'destroy' => route('stocks.destroy', $this->id),
+            ],
+            'permissions' => [
+                'view' => $user?->can('view', $this->resource) ?? false,
+                'update' => $user?->can('update', $this->resource) ?? false,
+                'delete' => $user?->can('delete', $this->resource) ?? false,
+                'archive' => $user?->can('archive', $this->resource) ?? false,
+                'restore' => $user?->can('restore', $this->resource) ?? false,
+            ],
         ];
     }
 }

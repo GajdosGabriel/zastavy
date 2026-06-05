@@ -19,6 +19,8 @@ class OrderResource extends JsonResource
      */
     public function toArray($request)
     {
+        $user = $request->user();
+
         return [
             'id' => $this->id,
             'isOpened' => $this->isOpened,
@@ -27,6 +29,7 @@ class OrderResource extends JsonResource
             'created_at' => $this->created_at->format('d.m.Y H:i:s'),
             'created_at_human' => Carbon::parse($this->created_at)->diffForhumans(),
             'customer' => new CustomerResource($this->customer),
+            'user' => $this->user ? new UserResource($this->user) : null,
             'shippings' => ShippingResource::collection($this->shippings),
             'price_sum' => $this->priceSum(),
             'notices' => $this->notices ,
@@ -46,12 +49,20 @@ class OrderResource extends JsonResource
                 'isActive' => isset($this->mark),
                 'endpoint'      =>  route('orders.marks.store', $this->id),
             ],
-             'endpoints' => [
+            'endpoints' => [
                 'index'     =>  route('orders.index'),
-                'show'      =>  $this->when($request->user()->can("view", $this->resource), route('orders.show', $this->id)),
+                'show'      =>  route('orders.show', $this->id),
                 'update'    =>  route('orders.update', $this->id),
                 'store'     =>  route('orders.store'),
-                'destroy' => $this->when($request->user()->can("delete", $this->resource), route('orders.destroy', $this->id))
+                'destroy' => route('orders.destroy', $this->id),
+            ],
+            'permissions' => [
+                'view' => $user?->can('view', $this->resource) ?? false,
+                'update' => $user?->can('update', $this->resource) ?? false,
+                'storno' => $user?->can('storno', $this->resource) ?? false,
+                'delete' => $user?->can('delete', $this->resource) ?? false,
+                'archive' => $user?->can('archive', $this->resource) ?? false,
+                'restore' => $user?->can('restore', $this->resource) ?? false,
             ],
         ];
     }

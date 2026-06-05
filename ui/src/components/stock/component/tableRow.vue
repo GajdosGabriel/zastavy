@@ -1,11 +1,26 @@
 <script setup>
+import { computed } from "vue";
 import PanelDropdown from "../../layout/PanelDropdown.vue";
 import useStocks from "../../../store/StoreStocks";
 
 const props = defineProps(["item"]);
+const { destroyStock } = useStocks();
 
-const { state, destroyStock } = useStocks();
+const dropdownItems = computed(() => {
+    const permissions = props.item.permissions || {};
+    const canDelete = permissions.delete ?? Boolean(props.item.endpoints?.destroy);
 
+    if (!canDelete) {
+        return [];
+    }
+
+    return [
+        {
+            label: "Zmazať",
+            onClick: () => destroyStock(props.item.id),
+        },
+    ];
+});
 </script>
 
 <template>
@@ -22,12 +37,7 @@ const { state, destroyStock } = useStocks();
         </td>
 
         <td class="tbody_td font-semibold">
-            <router-link :to="{
-                name: 'orders.show',
-                params: {
-                    orderId: item.order_id,
-                },
-            }">
+            <router-link :to="{ name: 'orders.show', params: { orderId: item.order_id } }">
                 <span class="font-bold">{{ item.company }}</span>
             </router-link>
         </td>
@@ -40,12 +50,7 @@ const { state, destroyStock } = useStocks();
             <!-- voľné -->
         </td>
         <td class="tbody_td">
-            <panel-dropdown>
-                <div @click="destroyStock(item.id)"
-                    class="cursor-pointer p-2 hover:bg-indigo-300 border-b-2 border-gray-200">
-                    Zmazať
-                </div>
-            </panel-dropdown>
+            <panel-dropdown :items="dropdownItems" />
         </td>
     </tr>
 </template>

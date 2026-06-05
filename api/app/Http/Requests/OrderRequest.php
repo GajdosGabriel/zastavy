@@ -29,6 +29,25 @@ class OrderRequest extends FormRequest
      */
     public function rules()
     {
+        if ($this->has('customer')) {
+            return [
+                'customer' => ['required', 'array'],
+                'customer.company' => ['required', 'string', 'min:2'],
+                'customer.name' => ['required', 'string'],
+                'customer.email' => ['required', 'email'],
+                'customer.phone' => ['required', 'string'],
+                'customer.street' => ['required', 'string'],
+                'customer.postcode' => ['required'],
+                'customer.city' => ['required', 'string'],
+                'customer.ico' => ['nullable'],
+                'customer.dic' => ['nullable'],
+                'customer.ic_dic' => ['nullable'],
+                'orderProducts' => ['required', 'array', 'min:1'],
+                'orderProducts.*.id' => ['required'],
+                'orderProducts.*.input_order' => ['required', 'numeric', 'min:1'],
+            ];
+        }
+
         return [
             // 'customer' => 'required|exists:customers,id',
         ];

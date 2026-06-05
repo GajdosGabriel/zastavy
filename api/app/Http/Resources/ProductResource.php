@@ -15,6 +15,8 @@ class ProductResource extends JsonResource
      */
     public function toArray($request)
     {
+        $user = $request->user();
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -37,10 +39,17 @@ class ProductResource extends JsonResource
 
             'endpoints' => [
                 'index'     => route('products.index'),
-                'show'      => auth()->check() && auth()->user()->can('view', $this->resource) ? route('products.show', $this->id) : null,
+                'show'      => route('products.show', $this->id),
                 'update'    => route('products.update', $this->id),
                 'store'     => route('products.store'),
-                'destroy'   => auth()->check() && auth()->user()->can('delete', $this->resource) ? route('products.destroy', $this->id) : null,
+                'destroy'   => route('products.destroy', $this->id),
+            ],
+            'permissions' => [
+                'view' => $user?->can('view', $this->resource) ?? false,
+                'update' => $user?->can('update', $this->resource) ?? false,
+                'delete' => $user?->can('delete', $this->resource) ?? false,
+                'archive' => $user?->can('archive', $this->resource) ?? false,
+                'restore' => $user?->can('restore', $this->resource) ?? false,
             ],
         ];
     }

@@ -17,7 +17,24 @@ const dropdownItems = computed(() => {
         return [];
     }
 
-    if (props.order.endpoints.storno) {
+    const permissions = props.order.permissions || {};
+    const canUpdate = permissions.update ?? Boolean(props.order.endpoints.update);
+    const canStorno = permissions.storno ?? canUpdate;
+    const canDelete = permissions.delete ?? Boolean(props.order.endpoints.destroy);
+
+    if (canUpdate) {
+        items.push({
+            label: "Upraviť objednávku",
+            to: {
+                name: "orders.edit",
+                params: {
+                    orderId: props.order.id,
+                },
+            },
+        });
+    }
+
+    if (canStorno) {
         items.push({
             label: props.order.isStorned ? "Zrušiť Storno" : "Storno",
             onClick: () => updateOrder({
@@ -27,7 +44,7 @@ const dropdownItems = computed(() => {
         });
     }
 
-    if (props.order.endpoints.destroy) {
+    if (canDelete) {
         items.push({
             label: "Zmazať",
             onClick: () => destroyOrder(props.order.endpoints.destroy),

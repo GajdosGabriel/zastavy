@@ -19,31 +19,29 @@ class OrderController extends Controller
 
     public function index(OrderFilter $orderFilters)
     {
-        $orders = Order::orderBy('created_at', 'desc')->filter($orderFilters)->paginate();
+        $orders = Order::with(['customer.users', 'user'])->orderBy('created_at', 'desc')->filter($orderFilters)->paginate();
         return OrderResource::collection($orders);
     }
 
     public function show(Order $order)
     {
-        return response(new OrderResource($order));
+        return response(new OrderResource($order->load(['customer.users', 'user'])));
     }
 
     public function update(Order $order, OrderRequest $request)
     {
         if ($request->makeStorned) {
+            Gate::authorize('storno', $order);
 
             foreach ($order->orderProducts as $product) {
-                if ($product->storno == 0) {
-                    $calculator = $product->quantity - Stock::where('order_product_id', '=', $product->id)->get()->sum('quantity');
-                } else {
-                    $calculator = 0;
-                }
+                $shippedQuantity = Stock::where('order_product_id', '=', $product->id)->sum('quantity');
+                $stornoQuantity = max(0, $product->quantity - $shippedQuantity);
 
                 $product->update([
-                    'storno' => $calculator
+                    'storno' => $stornoQuantity
                 ]);
             }
-            return new OrderResource($order);
+            return new OrderResource($order->refresh()->load(['customer.users', 'user']));
         };
 
         $order->update($request->all());

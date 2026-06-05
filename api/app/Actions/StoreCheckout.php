@@ -28,15 +28,15 @@ class StoreCheckout implements StoreCheckoutContract
     {
 
         $customerService = new CustomerService();
-        $customer = $customerService->handle($this->request->customer);
+        [$customer, $user] = $customerService->handleCheckout($this->request->customer);
 
-        $this->createOrder($customer);
+        $this->createOrder($customer, $user);
     }
 
-    public function createOrder($customer)
+    public function createOrder($customer, $user = null)
     {
         $storeOrder = new StoreOrder($this->request);
 
-        $storeOrder->handle($customer);
+        $storeOrder->handle($customer, $user);
     }
 }

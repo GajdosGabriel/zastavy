@@ -10,37 +10,38 @@ use App\Http\Requests\CustomerRequest;
 use App\Http\Resources\CustomerResource;
 use App\Http\Requests\CustomerCreateRequest;
 use App\Http\Requests\CustomerUpdateRequest;
+use App\Services\CustomerService;
 
 class CustomerController extends Controller
 {
     public function index(CustomerFilter $customerFilter)
     {
-        $customers = Customer::filter($customerFilter)->latest()->paginate();
+        $customers = Customer::with('users')->filter($customerFilter)->latest()->paginate();
 
         return CustomerResource::collection($customers);
     }
 
     public function show(Customer $customer)
     {
-        return response(new CustomerResource($customer));
+        return response(new CustomerResource($customer->load('users')));
     }
 
     public function update(Customer $customer, CustomerUpdateRequest $request)
     {
-        $customer->update($request->except('orders'));
+        (new CustomerService)->updateWithUser($customer, $request->except('orders'));
 
         // return response()->noContent();
-        return new CustomerResource($customer);
+        return new CustomerResource($customer->load('users'));
     }
 
 
     public function store(CustomerCreateRequest $request)
     {
 
-        $customer = Customer::create($request->all());
+        [$customer] = (new CustomerService)->handleCheckout($request->all());
 
         // return response()->noContent();
-        return new CustomerResource($customer);
+        return new CustomerResource($customer->load('users'));
     }
 
     public function destroy(Customer $customer)

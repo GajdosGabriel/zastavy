@@ -15,7 +15,8 @@ class ShippingNoticeController extends Controller
         $shipping->notices()->create(['notice' => $request->input('notifyType')]);
 
         if (request()->notifyType == 'email') {
-            Notification::send([$shipping->order->customer], new OrderExpedition($shipping->order));
+            $shipping->loadMissing('order.user');
+            Notification::send(collect([$shipping->order->user])->filter()->all(), new OrderExpedition($shipping->order));
           };
     }
 }

@@ -14,11 +14,20 @@ class CustomerFilter extends Filters
 
     public function bySearchInput($company)
     {
-        return $this->builder->where('company', 'like', '%' . $company . '%')
+        return $this->builder->where(function ($query) use ($company) {
+            $query->where('company', 'like', '%' . $company . '%')
                 ->orWhere('city', 'like', '%' . $company . '%')
                 ->orWhere('ico', 'like', '%' . $company . '%')
                 ->orWhere('postcode', 'like', '%' . $company . '%')
-                ->orWhere('email', 'like', '%' . $company . '%');
+                ->orWhere('email', 'like', '%' . $company . '%')
+                ->orWhereHas('users', function ($query) use ($company) {
+                    $query->where('username', 'like', '%' . $company . '%')
+                        ->orWhere('firstName', 'like', '%' . $company . '%')
+                        ->orWhere('lastName', 'like', '%' . $company . '%')
+                        ->orWhere('email', 'like', '%' . $company . '%')
+                        ->orWhere('phone', 'like', '%' . $company . '%');
+                });
+        });
     }
 
     public function sortById($value)

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('customer_id');
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('serial_number', 255)->nullable();
             $table->boolean('isOpened')->default(false);
             $table->boolean('isDelivered')->nullable();
@@ -21,6 +22,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

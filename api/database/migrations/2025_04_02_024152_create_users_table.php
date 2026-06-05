@@ -16,7 +16,9 @@ return new class extends Migration
             $table->string('firstName', 255);
             $table->string('lastName', 255);
             $table->string('slug', 255);
+            $table->string('username', 100)->nullable();
             $table->string('email', 255);
+            $table->string('phone', 40)->nullable();
             $table->unsignedInteger('customer_id')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password', 255);

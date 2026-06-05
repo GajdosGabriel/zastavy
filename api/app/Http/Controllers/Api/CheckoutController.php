@@ -87,9 +87,11 @@ class CheckoutController extends Controller
 
     private function customerToCheckoutData(Customer $customer): array
     {
+        $contact = $customer->latestUser;
+
         return [
             'id' => $customer->id,
-            'name' => $customer->name,
+            'name' => $contact?->username ?? $customer->name,
             'company' => $customer->company,
             'street' => $customer->street,
             'city' => $customer->city,
@@ -97,8 +99,8 @@ class CheckoutController extends Controller
             'ico' => $customer->ico,
             'dic' => $customer->dic,
             'ic_dic' => $customer->ic_dic,
-            'email' => $customer->email,
-            'phone' => $customer->phone,
+            'email' => $contact?->email ?? $customer->email,
+            'phone' => $contact?->phone ?? $customer->phone,
         ];
     }
 

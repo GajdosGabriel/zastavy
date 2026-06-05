@@ -32,14 +32,18 @@ const dropdownItems = computed(() => {
         return []
     }
 
-    if (props.product.endpoints.update) {
+    const permissions = props.product.permissions || {};
+    const canUpdate = permissions.update ?? Boolean(props.product.endpoints.update);
+    const canDelete = permissions.delete ?? Boolean(props.product.endpoints.destroy);
+
+    if (canUpdate) {
         items.push({
             label: 'Upraviť',
             to: '/products/' + props.product.id + '/edit'
         })
     }
 
-if (props.product.endpoints.destroy) {
+if (canDelete) {
     items.push({
         label: "Zmazať",
         onClick: () => destroyProduct(props.product.endpoints.destroy)

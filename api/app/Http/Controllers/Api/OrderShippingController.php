@@ -36,11 +36,12 @@ class OrderShippingController extends Controller
 
         if ($notifyCustomer && $shipping) {
             $shipping->notices()->create(['notice' => 'email']);
-            Notification::send([$order->customer], new OrderExpedition($order));
+            $order->loadMissing('user');
+            Notification::send(collect([$order->user])->filter()->all(), new OrderExpedition($order));
         }
 
         $shipping?->load('notices');
-        $order->refresh()->load(['customer', 'shippings.notices', 'orderProducts', 'stocks']);
+        $order->refresh()->load(['customer.users', 'user', 'shippings.notices', 'orderProducts', 'stocks']);
 
         return (new ShippingResource($shipping))->additional([
             'order' => new OrderResource($order)

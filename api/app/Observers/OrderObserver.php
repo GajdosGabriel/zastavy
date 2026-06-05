@@ -19,7 +19,12 @@ class OrderObserver
      */
     public function created(Order $order)
     {
-        Notification::send([$order->customer, User::first()], new OrderCreated($order));
+        $order->loadMissing('user');
+
+        Notification::send(
+            collect([$order->user, User::first()])->filter()->unique('id')->all(),
+            new OrderCreated($order)
+        );
     }
 
     /**

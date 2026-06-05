@@ -52,6 +52,13 @@ class OrderFilter extends Filters
                         ->orWhere('ico', 'like', '%' . $company . '%')
                         ->orWhere('postcode', 'like', '%' . $company . '%')
                         ->orWhere('email', 'like', '%' . $company . '%');
+                })
+                ->orWhereHas('user', function ($query) use ($company) {
+                    $query->where('username', 'like', '%' . $company . '%')
+                        ->orWhere('firstName', 'like', '%' . $company . '%')
+                        ->orWhere('lastName', 'like', '%' . $company . '%')
+                        ->orWhere('email', 'like', '%' . $company . '%')
+                        ->orWhere('phone', 'like', '%' . $company . '%');
                 });
         });
     }

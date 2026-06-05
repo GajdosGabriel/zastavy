@@ -15,9 +15,12 @@ class CustomerResource extends JsonResource
      */
     public function toArray($request)
     {
+        $user = $request->user();
+        $contact = $this->primaryUser ?? $this->latestUser;
+
         return [
             'id' => $this->id,
-            'name' => $this->name,
+            'name' => $contact?->username ?? $this->name,
             'company' => $this->company,
             'street' => $this->street,
             'city' => $this->city,
@@ -25,9 +28,11 @@ class CustomerResource extends JsonResource
             'ico' => $this->ico,
             'dic' => $this->dic,
             'ic_dic' => $this->ic_dic,
-            'email' => $this->email,
+            'email' => $contact?->email ?? $this->email,
             'created_at' => $this->created_at,
-            'phone' => $this->phone,
+            'phone' => $contact?->phone ?? $this->phone,
+            'primary_user' => $contact ? new UserResource($contact) : null,
+            'users' => UserResource::collection($this->whenLoaded('users')),
             'orders' => $this->ordersCount,
             'mark' =>  [
                 'isActive' => isset($this->mark),
@@ -39,8 +44,15 @@ class CustomerResource extends JsonResource
                 'show'      =>  route('customers.show', $this->id),
                 'update'    =>  route('customers.update', $this->id),
                 'store'     =>  route('customers.store'),
-                'destroy' => $this->when($request->user()->can("delete", $this->resource), route('customers.destroy', $this->id))
+                'destroy' => route('customers.destroy', $this->id),
 
+            ],
+            'permissions' => [
+                'view' => $user?->can('view', $this->resource) ?? false,
+                'update' => $user?->can('update', $this->resource) ?? false,
+                'delete' => $user?->can('delete', $this->resource) ?? false,
+                'archive' => $user?->can('archive', $this->resource) ?? false,
+                'restore' => $user?->can('restore', $this->resource) ?? false,
             ],
 
             // 'navigations' => [
