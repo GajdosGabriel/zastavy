@@ -4,7 +4,6 @@ namespace App\Actions;
 
 
 use App\Contracts\StoreImageContract;
-use App\Services\CustomerService;
 
 class StoreImage implements StoreImageContract
 {
@@ -25,7 +24,7 @@ class StoreImage implements StoreImageContract
 
             foreach ($this->input as $image) {
 
-                $path = $image->store('public');
+                $path = $image->store('', 'public');
 
                 $this->product->images()->create([
                     'path' => $path,

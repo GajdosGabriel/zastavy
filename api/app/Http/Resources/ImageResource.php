@@ -15,9 +15,11 @@ class ImageResource extends JsonResource
      */
     public function toArray($request)
     {
+        $path = preg_replace('#^public/#', '', $this->path);
+
         return [
             'id' => $this->id,
-            'path' => url('/public' . Storage::url($this->path)),
+            'path' => Storage::disk('public')->url($path),
         ];
     }
 }

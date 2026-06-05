@@ -12,7 +12,7 @@ import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
 import useUnsavedChanges from '../../models/useUnsavedChanges';
 
 const { state, getProduct, updateProduct, storeProduct, fetchProduct, setProduct } = useProducts();
-const { destroyImage } = useImages();
+const { destroyImage, storeImages } = useImages();
 const { categories, fetchCategories } = UseCategories();
 
 const productId = computed(() => useRoute().params.productId);
@@ -27,15 +27,17 @@ onMounted(async () => {
 });
 
 
-let imageFile = ref("");
-let imageUrl = ref("");
+let selectedImageFiles = ref([]);
+let imageUrls = ref([]);
 
 const handleImageSelected = (event) => {
     if (event.target.files.length === 0) {
+        selectedImageFiles.value = [];
+        imageUrls.value = [];
         return;
     }
 
-    imageFile.value = event.target.files[0];
+    selectedImageFiles.value = Array.from(event.target.files);
 };
 
 const onSubmitForm = async () => {
@@ -44,34 +46,57 @@ const onSubmitForm = async () => {
         return
     };
 
-    if (productId) {
-        await updateProduct(productId, imageFile.value);
+    if (productId.value) {
+        await updateProduct();
+
+        if (selectedImageFiles.value.length) {
+            const product = await storeImages(productId.value, selectedImageFiles.value);
+
+            if (product) {
+                state.product.images = product.images;
+                selectedImageFiles.value = [];
+                imageUrls.value = [];
+            }
+        }
+
+        await fetchProduct(productId.value);
+        setOriginalData(getProduct.value);
+        markAsSaved();
+
+        return;
     } else {
-        await storeProduct(imageFile.value);
-    }
-    if (imageFile.value) {
-        const formData = new FormData();
-        formData.append("file", imageFile.value);
-        await storeProduct(formData);
+        const product = await storeProduct();
+
+        if (product?.id && selectedImageFiles.value.length) {
+            await storeImages(product.id, selectedImageFiles.value);
+        }
     }
 
     router.push({ name: "products.index" });
     markAsSaved(); // označíme ako uložené
 };
 
-watch(imageFile, (imageFile) => {
-    let fileReader = new FileReader();
+watch(selectedImageFiles, (files) => {
+    imageUrls.value = [];
 
-    fileReader.readAsDataURL(imageFile);
+    files.forEach((file) => {
+        let fileReader = new FileReader();
 
-    fileReader.addEventListener("load", () => {
-        imageUrl.value = fileReader.result;
+        fileReader.readAsDataURL(file);
+
+        fileReader.addEventListener("load", () => {
+            imageUrls.value.push(fileReader.result);
+        });
     });
 });
 
 
-const onClickImageRemove = (imageId) => {
-    destroyImage(state.product.id, imageId);
+const onClickImageRemove = async (imageId) => {
+    const wasDeleted = await destroyImage(state.product.id, imageId);
+
+    if (wasDeleted) {
+        state.product.images = state.product.images.filter((image) => image.id !== imageId);
+    }
 };
 
 const categoryFilter = (categoryId) => {
@@ -217,7 +242,14 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                             <label for="myfile" class="block">Vložiť obrázok</label>
                             <input type="file" id="myfile" accept="image/*" @change="handleImageSelected" multiple />
 
-                            <div class="flex">
+                            <div v-if="imageUrls.length" class="flex flex-wrap">
+                                <div v-for="imageUrl in imageUrls" :key="imageUrl"
+                                    class="text-center border-2 border-blue-200 rounded-md mx-2 mt-4 bg-blue-50">
+                                    <img :src="imageUrl" alt="" class="h-24 p-4" />
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap">
                                 <div v-for="image in state.product.images" :key="image.id"
                                     class="text-center border-2 rounded-md mx-2 mt-4 hover:bg-gray-100 hover:border-gray-300">
                                     <img :src="image.path" alt="" class="h-24 p-4" />

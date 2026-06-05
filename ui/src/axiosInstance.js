@@ -24,6 +24,16 @@ axiosInstance.interceptors.request.use((config) => {
     if (storedToken) {
         config.headers.Authorization = `Bearer ${storedToken}`;
     }
+
+    if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+        delete config.headers['content-type'];
+
+        if (typeof config.headers.delete === 'function') {
+            config.headers.delete('Content-Type');
+        }
+    }
+
     return config;
 }, (error) => {
     loadingStore.isLoading = false;

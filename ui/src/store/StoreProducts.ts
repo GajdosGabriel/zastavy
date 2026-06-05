@@ -101,8 +101,10 @@ const actions = {
 
     storeProduct: async () => {
         try {
-            await axiosInstance.post(state.url, state.product);
+            const response = await axiosInstance.post(state.url, state.product);
             actions.fetchProducts();
+
+            return response.data.data ?? response.data;
         } catch (e) {
             setErrors(e);
         }

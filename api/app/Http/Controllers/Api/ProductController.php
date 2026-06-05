@@ -24,7 +24,7 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        return response(new ProductResource($product));
+        return response(new ProductResource($product->load(['images', 'categories'])));
     }
 
     public function update(Product $product, ProductRequest $request)
@@ -35,7 +35,7 @@ class ProductController extends Controller
 
         // new StoreImage($product, $request->images);
 
-        return new ProductResource($product);
+        return new ProductResource($product->refresh()->load(['images', 'categories']));
     }
 
     public function store(ProductRequest $request)
