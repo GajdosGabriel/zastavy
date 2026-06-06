@@ -137,6 +137,16 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                     </div>
 
                     <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="code">
+                            KĂłd tovaru
+                        </label>
+                        <input
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="code" type="text" v-model.trim="getProduct.code" placeholder="napr. TOV-000001"
+                            required />
+                    </div>
+
+                    <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="description">
                             Popis
                         </label>

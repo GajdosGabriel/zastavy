@@ -12,7 +12,10 @@ class ProductFilter extends Filters
 
     public function bySearchInput($value)
     {
-        return $this->builder->where('name', 'like', '%' . $value . '%')->orWhere('description', 'like', '%' . $value . '%');
+        return $this->builder
+            ->where('code', 'like', '%' . $value . '%')
+            ->orWhere('name', 'like', '%' . $value . '%')
+            ->orWhere('description', 'like', '%' . $value . '%');
     }
 
     public function isUnpublished($value)

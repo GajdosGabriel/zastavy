@@ -78,7 +78,8 @@ return items
                         <div class="text-sm font-medium text-gray-900">
                             {{ product.name }}
                         </div> -->
-                    <div v-show="product.description" class="text-sm text-gray-500">
+                    <div v-show="product.code || product.description" class="text-sm text-gray-500">
+                        <span v-if="product.code" class="mr-2 font-semibold text-gray-700">{{ product.code }}</span>
                         <span v-if="product.description">
                             {{
                                 product.description.substring(0, 25)

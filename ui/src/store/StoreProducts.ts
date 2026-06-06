@@ -11,6 +11,7 @@ import { formatDecimal } from "../models/functions";
 
 interface Product {
     id: string
+    code: string
     name: string
     slug: string
     description: string
@@ -46,6 +47,7 @@ const defaultState = {
     url: PAGE_PRODUCT.URL as string,
     products: [] as Product[],
     product: {
+        code: '',
         sale_price: 0,
         unit_value: 'ks',
         min_order: 1,
@@ -60,6 +62,12 @@ const getters = {
     getProducts: computed<Product[]>(() => state.products),
     getProduct: computed<Product>(() => state.product),
 };
+
+const productPayload = () => ({
+    ...state.product,
+    code: state.product.code?.trim().toUpperCase(),
+    status: state.product.status?.value || state.product.status,
+});
 
 const actions = {
     fetchProducts: async () => {
@@ -87,7 +95,7 @@ const actions = {
         try {
             const response = await axiosInstance.put(
                 state.product.endpoints.update,
-                state.product
+                productPayload()
             ).then((res) => {
                 const index = state.products.findIndex(item => item.id === res.data.data.id);
                 if (index !== -1) {
@@ -101,7 +109,7 @@ const actions = {
 
     storeProduct: async () => {
         try {
-            const response = await axiosInstance.post(state.url, state.product);
+            const response = await axiosInstance.post(state.url, productPayload());
             actions.fetchProducts();
 
             return response.data.data ?? response.data;

@@ -27,6 +27,13 @@ class ProductRequest extends FormRequest
     public function rules()
     {
         return [
+            'code' => [
+                'required',
+                'string',
+                'max:64',
+                'regex:/^[A-Za-z0-9._\\-\\/]+$/',
+                Rule::unique('products', 'code')->ignore($this->route('product')),
+            ],
             'name' => 'required|min:2',
             'price' => 'required',
             'sale_price' => 'numeric|nullable',

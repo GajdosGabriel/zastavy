@@ -23,6 +23,7 @@ class Product extends Model
     // protected $appends = ['activePrice'];
 
     protected $filleable = [
+        'code',
         'name',
         'slug',
         'description',
@@ -46,6 +47,11 @@ class Product extends Model
     {
         $this->attributes['name'] =  $value;
         $this->attributes['slug'] =  Str::slug($value, '-');
+    }
+
+    public function setCodeAttribute($value)
+    {
+        $this->attributes['code'] = Str::upper(trim((string) $value));
     }
 
     // protected function sale_price(): Attribute
