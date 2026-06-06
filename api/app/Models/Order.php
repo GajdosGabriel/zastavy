@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\ModelStatus;
 use App\Models\Mark;
 use App\Models\Stock;
 use App\Models\Shipping;
 use App\Models\OrderProduct;
+use App\Traits\HasModelStatus;
 use App\Traits\HasNotices;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
@@ -14,11 +16,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Order extends Model
 {
-    use HasFactory, SoftDeletes, Notifiable, HasNotices;
+    use HasFactory, SoftDeletes, Notifiable, HasNotices, HasModelStatus;
 
     protected $guarded = [];
 
     protected $appends = ['productOrderSum'];
+
+    protected $casts = [
+        'status' => ModelStatus::class,
+    ];
 
     public function customer()
     {

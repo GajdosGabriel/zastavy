@@ -32,7 +32,7 @@ class StockPolicy
 
     public function delete(User $user, Stock $stock): bool
     {
-        return true;
+        return ! $stock->isArchived();
     }
 
     public function restore(User $user, Stock $stock): bool

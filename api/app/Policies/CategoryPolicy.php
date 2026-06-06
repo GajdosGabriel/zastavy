@@ -65,7 +65,7 @@ class CategoryPolicy
      */
     public function delete(User $user, Category $category)
     {
-        return auth()->user();
+        return auth()->user() && ! $category->isArchived();
     }
 
     /**

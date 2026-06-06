@@ -19,6 +19,7 @@ class ImageResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'status' => $this->statusData(),
             'path' => Storage::disk('public')->url($path),
         ];
     }

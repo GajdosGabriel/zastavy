@@ -38,10 +38,12 @@ enum ModelStatus: string
     public function isOrderStatus(): bool
     {
         return in_array($this, [
+            self::Draft,
             self::Processing,
             self::PartiallyShipped,
             self::Shipped,
             self::Cancelled,
+            self::Archived,
         ], true);
     }
 
@@ -78,7 +80,7 @@ enum ModelStatus: string
     /**
      * Returns the allowed statuses for a given user as [value, label] pairs.
      *
-     * @return array<int, array{value: string, label: string}>
+     * @return array<int, array{value: string, label: string, color: string}>
      */
     public static function allowedForUser(?User $user): array
     {
@@ -110,6 +112,10 @@ enum ModelStatus: string
 
     public static function fromProduct(Product $product): self
     {
+        if ($product->status instanceof self && $product->status !== self::Active) {
+            return $product->status;
+        }
+
         if ($product->deleted_at !== null) {
             return self::Archived;
         }
@@ -127,6 +133,14 @@ enum ModelStatus: string
 
     public static function fromOrder(Order $order): self
     {
+        if ($order->status instanceof self && $order->status->isArchived()) {
+            return $order->status;
+        }
+
+        if ($order->status === self::Draft) {
+            return self::Draft;
+        }
+
         if ($order->isStorned()) {
             return self::Cancelled;
         }

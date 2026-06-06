@@ -3,8 +3,10 @@
 namespace App\Models;
 
 
+use App\Enums\ModelStatus;
 use App\Models\Stock;
 use App\Models\Category;
+use App\Traits\HasModelStatus;
 use App\Traits\HasNotices;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +17,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes, HasNotices;
+    use HasFactory, SoftDeletes, HasNotices, HasModelStatus;
 
     protected $guarded = [];
     // protected $appends = ['activePrice'];
@@ -34,6 +36,10 @@ class Product extends Model
         'published',
         'unit_value',
         'min_order',
+    ];
+
+    protected $casts = [
+        'status' => ModelStatus::class,
     ];
 
     public function setNameAttribute($value)

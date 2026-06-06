@@ -65,7 +65,7 @@ class ShippingPolicy
      */
     public function delete(User $user, Shipping $shipping)
     {
-        //
+        return ! $shipping->isArchived();
     }
 
     /**

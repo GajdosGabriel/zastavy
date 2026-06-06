@@ -26,6 +26,7 @@ class OrderProductResource extends JsonResource
             'min_order' => $this->product->min_order,
             'product_vat' => $this->product->vat,
             'quantity' => $this->quantity,
+            'status' => $this->statusData(),
             'sent_at' => $this->sent_at,
             'order_id' => $this->order_id,
             'price' => $this->price,

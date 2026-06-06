@@ -2,17 +2,23 @@
 
 namespace App\Models;
 
+use App\Enums\ModelStatus;
 use App\Models\Stock;
+use App\Traits\HasModelStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class OrderProduct extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasModelStatus;
 
     protected $guarded = [];
     protected $appends = ['product'];
+
+    protected $casts = [
+        'status' => ModelStatus::class,
+    ];
 
     public function order()
     {

@@ -32,7 +32,7 @@ class CustomerPolicy
 
     public function delete(User $user, Customer $customer): bool
     {
-        return !$customer->ordersCount;
+        return ! $customer->isArchived() && ! $customer->ordersCount;
     }
 
     public function restore(User $user, Customer $customer): bool

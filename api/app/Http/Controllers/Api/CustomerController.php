@@ -11,6 +11,7 @@ use App\Http\Resources\CustomerResource;
 use App\Http\Requests\CustomerCreateRequest;
 use App\Http\Requests\CustomerUpdateRequest;
 use App\Services\CustomerService;
+use Illuminate\Support\Facades\Gate;
 
 class CustomerController extends Controller
 {
@@ -46,7 +47,8 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer)
     {
-        $this->authorize('delete', $customer);
+        Gate::authorize('delete', $customer);
+
         $customer->delete();
         
         return response(new CustomerResource($customer));

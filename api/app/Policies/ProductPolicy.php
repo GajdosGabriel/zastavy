@@ -32,7 +32,7 @@ class ProductPolicy
 
     public function delete(User $user, Product $product): bool
     {
-        return $product->getOrderProductsCount() == 0;
+        return ! $product->isArchived() && $product->getOrderProductsCount() == 0;
     }
 
     public function restore(User $user, Product $product): bool

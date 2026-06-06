@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Http\Resources\ProductResource;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Support\Facades\Gate;
 
 class ProductController extends Controller
 {
@@ -49,6 +50,8 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        Gate::authorize('delete', $product);
+
         $product->delete();
         return response(new ProductResource($product));
     }

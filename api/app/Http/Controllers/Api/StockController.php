@@ -7,6 +7,7 @@ use App\Filters\StockFilter;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\StockResource;
+use Illuminate\Support\Facades\Gate;
 
 class StockController extends Controller
 {
@@ -39,6 +40,8 @@ class StockController extends Controller
 
     public function destroy(Stock $stock)
     {
+        Gate::authorize('delete', $stock);
+
         $stock->delete();
         return response()->noContent();
     }

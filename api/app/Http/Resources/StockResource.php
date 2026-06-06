@@ -26,6 +26,7 @@ class StockResource extends JsonResource
             'name' => $this->product->name,
             'product_unit_value' => $this->product->unit_value,
             'quantity' => $this->quantity,
+            'status' => $this->statusData(),
             'endpoints' => [
                 'destroy' => route('stocks.destroy', $this->id),
             ],

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ModelStatus;
 use App\Models\Stock;
 use Illuminate\Support\Collection;
 
@@ -43,6 +44,7 @@ class ShippingService
     if ($stocks->isNotEmpty()) {
       $shipping = $order->shippings()->create();
       $shipping->stocks()->saveMany($stocks);
+      $order->update(['status' => ModelStatus::Archived]);
     }
 
     return $shipping;

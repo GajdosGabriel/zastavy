@@ -31,6 +31,7 @@ class CustomerResource extends JsonResource
             'email' => $contact?->email ?? $this->email,
             'created_at' => $this->created_at,
             'phone' => $contact?->phone ?? $this->phone,
+            'status' => $this->statusData(),
             'primary_user' => $contact ? new UserResource($contact) : null,
             'users' => UserResource::collection($this->whenLoaded('users')),
             'orders' => $this->ordersCount,

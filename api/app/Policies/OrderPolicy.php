@@ -38,6 +38,10 @@ class OrderPolicy
 
     public function delete(User $user, Order $order): Response
     {
+        if ($order->isArchived()) {
+            return Response::deny('Archivovanu objednavku nie je mozne zmazat.');
+        }
+
         return $this->ownsOrder($user, $order) && $order->getStockExpeditionAttribute() == 0
             ? Response::allow()
             : Response::deny('Objednavku s expediciou nie je mozne zmazat.');

@@ -22,6 +22,7 @@ class UserIndexResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'customer_id' => $this->customer_id,
+            'status' => $this->statusData(),
             'customer' => $this->whenLoaded('customer', fn () => [
                 'id' => $this->customer?->id,
                 'company' => $this->customer?->company,

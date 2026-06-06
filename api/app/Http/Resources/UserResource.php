@@ -32,6 +32,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'customer_id' => $this->customer_id,
+            'status' => $this->statusData(),
             'order' => new OrderStatisticResource($request),
             'roles' => $this->getRoleNames(),
             'navigation' => [

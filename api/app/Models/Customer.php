@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ModelStatus;
 use App\Models\Mark;
 use App\Casts\IcoFormater;
 use App\Casts\DicFormater;
@@ -9,6 +10,7 @@ use Illuminate\Support\Str;
 use App\Casts\PhoneFormater;
 use App\Casts\DateTimeFormater;
 use App\Casts\PostCodeFormater;
+use App\Traits\HasModelStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -17,7 +19,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Customer extends Model
 {
-    use HasFactory, SoftDeletes, Notifiable;
+    use HasFactory, SoftDeletes, Notifiable, HasModelStatus;
 
     protected $guarded = ['id','created_at'];
     protected $appends = ['ordersCount'];
@@ -28,6 +30,7 @@ class Customer extends Model
         'postcode'      => PostCodeFormater::class,
         'phone'         => PhoneFormater::class,
         'created_at'    => DateTimeFormater::class,
+        'status'        => ModelStatus::class,
     ];
 
     public function orders()

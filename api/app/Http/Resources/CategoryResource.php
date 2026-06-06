@@ -18,6 +18,7 @@ class CategoryResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'status' => $this->statusData(),
             'url' => [
                 'index'     =>  route('categories.index'),
                 'show'      =>  route('categories.show', $this->id),
