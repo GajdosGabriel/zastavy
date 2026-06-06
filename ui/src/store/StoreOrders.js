@@ -78,6 +78,24 @@ const actions = {
         }
     },
 
+    storeOrder: async (payload) => {
+        try {
+            const response = await axiosInstance.post(PAGE_ORDER.URL, payload);
+            const order = response.data.data;
+
+            if (order) {
+                state.orders.unshift(order);
+                state.order = order;
+                state.customer = order.customer || {};
+            }
+
+            return order;
+        } catch (e) {
+            setErrors(e);
+            return null;
+        }
+    },
+
     destroyOrder: async (url) => {
         if (!window.confirm("Skutočne vymazať!")) {
             return;

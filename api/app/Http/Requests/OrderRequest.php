@@ -45,6 +45,8 @@ class OrderRequest extends FormRequest
                 'orderProducts' => ['required', 'array', 'min:1'],
                 'orderProducts.*.id' => ['required'],
                 'orderProducts.*.input_order' => ['required', 'numeric', 'min:1'],
+                'orderNotice' => ['nullable', 'string'],
+                'notify_customer' => ['sometimes', 'boolean'],
             ];
         }
 

@@ -11,6 +11,8 @@ class OrderPolicy
 {
     use HandlesAuthorization;
 
+    private const DASHBOARD_ROLES = ['super-admin', 'admin', 'manager', 'sales', 'warehouse'];
+
     public function viewAny(User $user): bool
     {
         return true;
@@ -64,7 +66,7 @@ class OrderPolicy
 
     private function ownsOrder(User $user, Order $order): bool
     {
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasAnyRole(self::DASHBOARD_ROLES)) {
             return true;
         }
 

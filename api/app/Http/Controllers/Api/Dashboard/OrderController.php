@@ -4,24 +4,27 @@ namespace App\Http\Controllers\Api\Dashboard;
 
 use App\Models\Order;
 use App\Models\Stock;
-use App\Models\Product;
-use App\Models\Customer;
 use App\Filters\OrderFilter;
-use Illuminate\Http\Request;
 use App\Http\Requests\OrderRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
+use App\Notifications\OrderCreated;
+use App\Services\CustomerService;
+use App\Actions\StoreOrder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 
 
 class OrderController extends Controller
 {
+    private const DASHBOARD_ROLES = ['super-admin', 'admin', 'manager', 'sales', 'warehouse'];
 
     public function index(OrderFilter $orderFilters)
     {
         $orders = Order::with(['customer.users', 'user'])
             ->orderBy('created_at', 'desc')
-            ->when(! request()->user()->hasRole('super-admin'), function ($query) {
+            ->when(! request()->user()->hasAnyRole(self::DASHBOARD_ROLES), function ($query) {
                 $query->where(function ($query) {
                     $query->where('user_id', request()->user()->id);
 
@@ -69,33 +72,24 @@ class OrderController extends Controller
 
     public function store(OrderRequest $request)
     {
-        $customer = Customer::whereIco($request->ico)->first();
+        Gate::authorize('create', Order::class);
 
-        if (!$customer) {
-            $customer = Customer::create($request->except('notice'));
+        $notifyCustomer = $request->user()->hasRole('super-admin')
+            && $request->boolean('notify_customer');
+
+        [$order] = DB::transaction(function () use ($request) {
+            [$customer, $user] = (new CustomerService)->handleCheckout($request->input('customer'));
+            $order = (new StoreOrder($request))->handle($customer, $user);
+
+            return [$order->load(['customer.users', 'user', 'orderProducts'])];
+        });
+
+        if ($notifyCustomer) {
+            $order->loadMissing('user');
+            Notification::send(collect([$order->user])->filter()->all(), new OrderCreated($order));
         }
 
-        $order = $customer->orders()->create();
-
-        // dd($request->session()->get('carts'));
-
-        $cartData = $request->session()->get('carts');
-
-        foreach ($cartData as $key => $value) {
-            $product = Product::whereId($key)->firstOrFail();
-            $price = $value['quantity'] * $product->price;
-
-            $order->orderProducts()->create([
-                'product_id' => $key,
-                'quantity' => $value['quantity'],
-                'price' => $price
-            ]);
-        }
-
-        session()->forget('carts');
-        session()->forget('total');
-
-        return redirect()->route('home.index');
+        return new OrderResource($order->refresh()->load(['customer.users', 'user', 'orderProducts']));
     }
 
 
