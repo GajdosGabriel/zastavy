@@ -5,11 +5,11 @@ import useCheckouts from "../../store/StoreCheckouts.js";
 import useCustomer from "../../store/StoreCustomers.ts";
 import useProduct from "../../store/StoreProducts.ts";
 import useStock from "../../store/StoreStocks.js";
-import usePaginator from "../../store/StorePaginator.js";
+import useNavigation from "../../store/StoreNavigation.js";
 import mainNavigationDropdown from "./navigationMainDropdown.vue";
 import kosik from "../icons/kosik.vue";
 import badge from "../plugins/badge.vue";
-import { NAV_MAIN_PAGES, APP_NAME, PAGE_KONTAKT, Page } from "../../constants.ts";
+import { APP_NAME, Page } from "../../constants.ts";
 import useOrder from "../../store/StoreOrders.js";
 
 
@@ -32,13 +32,17 @@ const onClickItem = (item: Page) => {
                   useStock().setPaginator(item.URL);
                   break;
             }
+            case 'public.contactUs': {
+                  break;
+            }
             default:
                   console.warn(`Unknown route: ${item.ROUTE}`); // Logovanie neznámej cesty
       }
 };
 
 const { getCarts, getlocalStorage } = useCheckouts();
-const { state, fetchUser, getUser, resetModelUrl } = useUser();
+const { fetchUser, getUser } = useUser();
+const { getMainNavigation } = useNavigation();
 
 
 onMounted(() => {
@@ -65,8 +69,7 @@ onMounted(() => {
 
                               <ul class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
 
-                                    <li v-for="page in NAV_MAIN_PAGES" :key="page.ROUTE" class="nav_link"
-                                          v-if="getUser?.isAuth">
+                                    <li v-for="page in getMainNavigation" :key="page.ROUTE" class="nav_link">
                                           <router-link :to="{ name: page.ROUTE }" @click="onClickItem(page)"
                                                 class="nav_link">
                                                 {{ page.NAME }}
@@ -74,13 +77,6 @@ onMounted(() => {
                                                 <badge v-if="getUser?.order?.isConfirmed && page.ICON === 'badge'"
                                                       :kosik="{ value: getUser.order.isConfirmed, title: 'Počet položiek', class: null }"
                                                       class="ml-1" />
-                                          </router-link>
-                                    </li>
-
-                                    <li class="nav_link">
-                                          <router-link :to="{ name: PAGE_KONTAKT.ROUTE }"
-                                                @click="onClickItem(PAGE_KONTAKT)" class="nav_link">
-                                                {{ PAGE_KONTAKT.NAME }}
                                           </router-link>
                                     </li>
 

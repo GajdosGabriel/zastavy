@@ -1,9 +1,11 @@
 import { computed, reactive, readonly } from "vue";
 import axiosInstance from "../axiosInstance";
 import useErrors from "./StoreErrors";
+import useNavigation from "./StoreNavigation";
 import router from "../router";
 
 const { setErrors } = useErrors();
+const { setMainNavigation, resetNavigation } = useNavigation();
 
 const defaultState = {
     user: {
@@ -29,8 +31,7 @@ const actions = {
         const token = localStorage.getItem('authToken');
 
         if (!token) {
-            actions.clearAuth();
-            return;
+            delete axiosInstance.defaults.headers.common['Authorization'];
         }
 
         try {
@@ -39,10 +40,9 @@ const actions = {
             state.user = response.data.data;
             state.userOrder = response.data.data;
             state.token = token;
+            setMainNavigation(response.data.data?.navigation?.main);
 
-            if (response.data) {
-                actions.updateUserIsAuth(true);
-            }
+            actions.updateUserIsAuth(Boolean(response.data.data?.isAuth));
         } catch (error) {
             if (error.response?.status === 401) {
                 actions.clearAuth();
@@ -116,6 +116,7 @@ const actions = {
             order: {}
         };
         state.userOrder = {};
+        resetNavigation();
     },
 
     resetModelUrl: (url) => {
