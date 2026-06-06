@@ -33,10 +33,24 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'customer_id' => $this->customer_id,
             'order' => new OrderStatisticResource($request),
+            'roles' => $this->getRoleNames(),
             'navigation' => [
-                'main' => self::privateNavigation(),
+                'main' => $this->hasBackofficeRole()
+                    ? self::privateNavigation()
+                    : self::publicNavigation(),
             ],
         ];
+    }
+
+    private function hasBackofficeRole(): bool
+    {
+        return $this->hasAnyRole([
+            'super-admin',
+            'admin',
+            'manager',
+            'sales',
+            'warehouse',
+        ]);
     }
 
     private static function privateNavigation(): array

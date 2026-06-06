@@ -15,6 +15,10 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (! $request->user()?->hasAnyRole(['super-admin', 'admin', 'manager', 'sales', 'warehouse'])) {
+            abort(403, 'Nemáte oprávnenie na túto akciu.');
+        }
+
         return $next($request);
     }
 }

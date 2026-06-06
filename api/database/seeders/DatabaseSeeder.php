@@ -16,5 +16,7 @@ class DatabaseSeeder extends Seeder
             'slug' => 'test-user',
             'email' => 'test@example.com',
         ]);
+
+        $this->call(RolePermissionSeeder::class);
     }
 }
