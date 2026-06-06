@@ -54,7 +54,14 @@ class UserResource extends JsonResource
 
     private function userMenuNavigation(): array
     {
-        $items = [];
+        $items = [
+            [
+                'NAME' => 'Dashboard',
+                'ROUTE' => 'dashboard.index',
+                'URL' => '/dashboard',
+                'ACTION' => null,
+            ],
+        ];
 
         if ($this->hasRole('super-admin')) {
             $items[] = [
@@ -66,7 +73,7 @@ class UserResource extends JsonResource
         }
 
         $items[] = [
-            'NAME' => 'Odhlásiť sa',
+            'NAME' => 'Odhlásiť',
             'ROUTE' => null,
             'URL' => null,
             'ACTION' => 'logout',
