@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ModelStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CustomerUpdateRequest extends FormRequest
 {
@@ -31,6 +33,7 @@ class CustomerUpdateRequest extends FormRequest
             'email' => 'required|email',
             'ico' => 'nullable|numeric',
             'dic' => 'nullable|numeric',
+            'status' => ['required', Rule::in(ModelStatus::allowedValuesForUser($this->user()))],
         ];
     }
 }

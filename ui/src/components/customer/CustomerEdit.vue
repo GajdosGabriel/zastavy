@@ -11,7 +11,7 @@ import templateCustomer from "../../models/templateCustomer";
 import useUnsavedChanges from '../../models/useUnsavedChanges';
 
 
-const { state, updateCustomer, fetchCustomer, getCustomer } = useCustomers();
+const { state, updateCustomer, fetchCustomer, getCustomer, getStatuses } = useCustomers();
 const { setOriginalData, markAsSaved, isFormChanged } = useUnsavedChanges(() => getCustomer.value);
 const {
     params: { customerId },
@@ -142,6 +142,22 @@ const buttonSubmit = { name: 'Uložiť', spinner: true }
                                 id="ic_dic" type="text" v-model="state.customer.ic_dic"
                                 placeholder="SKDIČ organizácie" />
                         </div>
+                    </div>
+
+                    <div v-if="state.customer.status" class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="status">
+                            Status
+                        </label>
+                        <select
+                            id="status"
+                            v-model="state.customer.status.value"
+                            required
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        >
+                            <option v-for="status in getStatuses" :key="status.value" :value="status.value">
+                                {{ status.label }}
+                            </option>
+                        </select>
                     </div>
 
                     <div class="flex justify-between mt-5">

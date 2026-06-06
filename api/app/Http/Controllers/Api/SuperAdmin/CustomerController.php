@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\SuperAdmin;
 
+use App\Enums\ModelStatus;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Filters\CustomerFilter;
@@ -24,7 +25,8 @@ class CustomerController extends Controller
 
     public function show(Customer $customer)
     {
-        return response(new CustomerResource($customer->load('users')));
+        return (new CustomerResource($customer->load('users')))
+            ->additional($this->formOptions());
     }
 
     public function update(Customer $customer, CustomerUpdateRequest $request)
@@ -32,7 +34,8 @@ class CustomerController extends Controller
         (new CustomerService)->updateWithUser($customer, $request->except('orders'));
 
         // return response()->noContent();
-        return new CustomerResource($customer->load('users'));
+        return (new CustomerResource($customer->refresh()->load('users')))
+            ->additional($this->formOptions());
     }
 
 
@@ -52,5 +55,14 @@ class CustomerController extends Controller
         $customer->delete();
         
         return response(new CustomerResource($customer));
+    }
+
+    private function formOptions(): array
+    {
+        return [
+            'meta' => [
+                'statuses' => ModelStatus::allowedForUser(request()->user()),
+            ],
+        ];
     }
 }

@@ -24,6 +24,7 @@ interface Customer {
     created_at: string
     updated_at: string
     deleted_at: string | null
+    status: any
 };
 
 interface Statement {
@@ -42,7 +43,8 @@ const defaultState = {
     } as Statement,
     url: PAGE_CUSTOMER.URL as string,
     customers: [] as Customer[],
-    customer: {} as Customer
+    customer: {} as Customer,
+    statuses: []
 };
 
 const state = reactive(defaultState);
@@ -50,6 +52,7 @@ const state = reactive(defaultState);
 const getters = {
     getCustomers: computed<Customer[]>(() => state.customers),
     getCustomer: computed<Customer>(() => state.customer),
+    getStatuses: computed(() => state.statuses),
     getNumberOfCustomers: () => {
         return computed<number>(() => state.customers.length);
     },
@@ -71,8 +74,9 @@ const actions = {
 
     fetchCustomer: async (id: number) => {
         try {
-            const response = await axiosInstance.get<Customer>(PAGE_CUSTOMER.URL + '/' + id);
-            state.customer = response.data;
+            const response = await axiosInstance.get(PAGE_CUSTOMER.URL + '/' + id);
+            state.customer = response.data.data;
+            state.statuses = response.data.meta?.statuses || [];
         } finally {
         }
     },
@@ -115,9 +119,14 @@ const actions = {
 
     updateCustomer: async () => {
         try {
+            const payload = {
+                ...state.customer,
+                status: state.customer.status?.value || state.customer.status,
+            };
+
             await axiosInstance.put(
                 PAGE_CUSTOMER.URL + '/' + state.customer.id,
-                state.customer
+                payload
             );
             // state.customer = response.data;
         } catch (e) {
