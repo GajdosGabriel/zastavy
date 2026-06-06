@@ -36,7 +36,7 @@ class ProductRequest extends FormRequest
             'quantity' => 'numeric|nullable',
             'description' => 'string|nullable',
             'vat' => ['required', new VatRule()],
-            'status' => ['sometimes', Rule::enum(ModelStatus::class)],
+            'status' => ['sometimes', Rule::in(ModelStatus::allowedValuesForUser($this->user()))],
         ];
     }
 

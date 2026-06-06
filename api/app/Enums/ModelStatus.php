@@ -84,18 +84,15 @@ enum ModelStatus: string
      */
     public static function allowedForUser(?User $user): array
     {
-        $cases = self::isAdmin($user)
-            ? self::cases()
-            : [
-                self::Draft,
-                self::Active,
-                self::Hidden,
-                self::OutOfStock,
-                self::Discontinued,
-                self::Archived,
-            ];
+        return array_map(fn (self $status) => $status->toArray(), self::allowedCasesForUser($user));
+    }
 
-        return array_map(fn (self $status) => $status->toArray(), $cases);
+    /**
+     * @return array<int, string>
+     */
+    public static function allowedValuesForUser(?User $user): array
+    {
+        return array_map(fn (self $status) => $status->value, self::allowedCasesForUser($user));
     }
 
     /**
@@ -175,6 +172,55 @@ enum ModelStatus: string
                 ->pluck('name')
                 ->intersect(['super-admin', 'admin'])
                 ->isNotEmpty();
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array<int, self>
+     */
+    protected static function allowedCasesForUser(?User $user): array
+    {
+        if (self::isSuperAdmin($user)) {
+            return self::cases();
+        }
+
+        if (self::isAdmin($user)) {
+            return array_values(array_filter(
+                self::cases(),
+                fn (self $status) => $status !== self::Blocked
+            ));
+        }
+
+        return [
+            self::Draft,
+            self::Active,
+            self::Hidden,
+            self::OutOfStock,
+            self::Discontinued,
+            self::Archived,
+        ];
+    }
+
+    protected static function isSuperAdmin(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if (method_exists($user, 'hasRole')) {
+            return $user->hasRole('super-admin');
+        }
+
+        if (isset($user->role)) {
+            return $user->role === 'super-admin';
+        }
+
+        if ($user->relationLoaded('roles')) {
+            return $user->roles
+                ->pluck('name')
+                ->contains('super-admin');
         }
 
         return false;

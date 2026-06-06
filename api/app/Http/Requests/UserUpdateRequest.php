@@ -22,7 +22,7 @@ class UserUpdateRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('user'))],
             'phone' => ['nullable', 'string', 'max:40'],
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
-            'status' => ['required', Rule::enum(ModelStatus::class)],
+            'status' => ['required', Rule::in(ModelStatus::allowedValuesForUser($this->user()))],
             'roles' => ['sometimes', 'array'],
             'roles.*' => ['string', 'exists:roles,name'],
         ];
