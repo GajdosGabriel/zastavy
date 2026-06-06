@@ -7,7 +7,6 @@ import useCheckouts from "../../store/StoreCheckouts";
 import { useRoute } from "vue-router";
 import kosik from "../checkout/kosikLink.vue";
 import kosikButton from "../icons/kosik.vue";
-import nazory from "../pages/nazoryZakaznikov.vue";
 import { formatDecimal, formatPriceWithoutVat } from "../../models/functions";
 
 const { state, getProduct, fetchProduct } = useProducts();
@@ -186,9 +185,6 @@ onUnmounted(() => {
                                 <kosik />
                             </section>
 
-                            <section class="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
-                                <nazory />
-                            </section>
                         </div>
                     </aside>
                 </section>
