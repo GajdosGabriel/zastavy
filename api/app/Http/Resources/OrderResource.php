@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\ModelStatus;
 use Carbon\Carbon;
 use App\Http\Resources\NoticeResource;
 use App\Http\Resources\CustomerResource;
@@ -20,6 +21,7 @@ class OrderResource extends JsonResource
     public function toArray($request)
     {
         $user = $request->user();
+        $status = ModelStatus::fromOrder($this->resource);
 
         return [
             'id' => $this->id,
@@ -41,6 +43,7 @@ class OrderResource extends JsonResource
             'shipping_remaining_quantity' => $this->shippingRemainingQuantity(),
             'shipping_percentage' => $this->shippingPercentage(),
             'shipping_status_label' => $this->shippingStatusLabel(),
+            'status' => $status->toArray(),
             'isStorned' => $this->isStorned(),
             'isFinished' => $this->isFinished(),
             'shippintPercentageCalculator' => $this->shippintPercentageCalculator(),

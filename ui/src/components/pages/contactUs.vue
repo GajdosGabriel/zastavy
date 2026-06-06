@@ -1,75 +1,139 @@
 <script setup lang="ts">
 import BaseLayout from '../layout/BaseLayout.vue';
-
 </script>
 
 <template>
-
       <BaseLayout>
-            <!-- Content for the default slot -->
             <template #main>
-                  <h1 class="page-heading">Kontakt</h1>
-
-                  <div class="page-body col-span-9">
-                        <div class="">
-
-                              <div class="md:flex justify-between">
-                                    <div>
-                                          <h4 class="font-semibold text-lg underline">Prevádzka</h4>
-                                          <p class="font-semibold">Gajdoš Gabriel-Reprezent</p>
-                                          <p>Sslatinská 14, Bratislava 921 07</p>
-                                          <p>email: obchod@zastavy-vlajky.sk</p>
-                                          <p>Mob. 0905 320 616</p>
-                                    </div>
-                                    <div>
-                                          <h4 class="font-semibold text-lg underline">
-                                                Sídlo podnikania:
-                                          </h4>
-                                          <p class="font-semibold">Gajdoš Gabriel-Reprezent</p>
-                                          <p>Sekčovska 19, 086 41 Raslavice</p>
-                                          <p>IČO: 14 287 315</p>
-                                          <p>DIC: SK1020747398</p>
-                                    </div>
+                  <section class="contact-page px-4 pb-10 sm:px-7">
+                        <div class="contact-shell overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+                              <div class="bg-blue-900 px-5 py-8 text-white sm:px-8">
+                                    <p class="text-sm font-semibold uppercase tracking-wide text-blue-100">
+                                          Kontaktné údaje
+                                    </p>
+                                    <h1 class="mt-2 text-3xl font-semibold sm:text-4xl">
+                                          Kontakt
+                                    </h1>
+                                    <p class="mt-3 max-w-3xl text-base leading-7 text-blue-50">
+                                          Sme tu pre obce, školy aj firmy. Poradíme s výberom vlajok,
+                                          zástav, štátnych symbolov a vybavíme objednávku od skladových
+                                          zásob po odoslanie.
+                                    </p>
                               </div>
 
-                              <p>
-                                    Živnostenský list vydaný dňa 19.01.1998 pod. sp.č.: Žo
-                                    98/00061/000 reg. č. 36/98
-                              </p>
+                              <div class="space-y-6 p-5 sm:p-8">
+                                    <div>
+                                          <div class="grid gap-5 lg:grid-cols-2">
+                                                <article class="rounded-md border border-slate-200 bg-slate-50 p-5">
+                                                      <p class="text-sm font-semibold uppercase text-blue-800">
+                                                            Prevádzka
+                                                      </p>
+                                                      <h2 class="mt-3 text-xl font-semibold text-slate-900">
+                                                            Gajdoš Gabriel-Reprezent
+                                                      </h2>
+                                                      <div class="mt-4 space-y-2 text-slate-700">
+                                                            <p>Slatinská 14, 921 07 Bratislava</p>
+                                                            <p>
+                                                                  <span class="font-semibold text-slate-900">Email:</span>
+                                                                  <a class="text-blue-800 underline-offset-4 hover:underline"
+                                                                        href="mailto:obchod@zastavy-vlajky.sk">
+                                                                        obchod@zastavy-vlajky.sk
+                                                                  </a>
+                                                            </p>
+                                                            <p>
+                                                                  <span class="font-semibold text-slate-900">Mobil:</span>
+                                                                  <a class="text-blue-800 underline-offset-4 hover:underline"
+                                                                        href="tel:+421905320616">
+                                                                        0905 320 616
+                                                                  </a>
+                                                            </p>
+                                                      </div>
+                                                </article>
 
-                              <div class="mt-6">
-                                    <h2 class="text-center font-semibold text-2xl">
-                                          Doprava a platba
-                                    </h2>
-                                    <p>
-                                          Dopravu tovaru k vám, volíme najlacnejším spôsobom.
-                                          Najlepšou variantou je Slovenská pošta, ktorá balík doručuje
-                                          do 2-3 pracovných dní priamo k vám. Do balíka prikladáme
-                                          faktúru, so platnosťou 14 dní.
-                                    </p>
-                                    <p>
-                                          Tovar môže byť odoslaný aj na dobierku, ale tento spôsob
-                                          zbytočne zvyšuje náklady. Doposiaľ nám každý odberateľ
-                                          zaplatil, a preto obecným úradom a školám posielame tovar
-                                          automaticky na faktúru. Objednávky prijaté do 10 hod. sa
-                                          expedujú v ten istý deň. Celý sortiment je k dispozícií na
-                                          sklade.
-                                    </p>
+                                                <article class="rounded-md border border-slate-200 bg-white p-5">
+                                                      <p class="text-sm font-semibold uppercase text-blue-800">
+                                                            Sídlo podnikania
+                                                      </p>
+                                                      <h2 class="mt-3 text-xl font-semibold text-slate-900">
+                                                            Gajdoš Gabriel-Reprezent
+                                                      </h2>
+                                                      <div class="mt-4 space-y-2 text-slate-700">
+                                                            <p>Sekčovská 19, 086 41 Raslavice</p>
+                                                            <p>
+                                                                  <span class="font-semibold text-slate-900">IČO:</span>
+                                                                  14 287 315
+                                                            </p>
+                                                            <p>
+                                                                  <span class="font-semibold text-slate-900">DIČ:</span>
+                                                                  SK1020747398
+                                                            </p>
+                                                      </div>
+                                                </article>
+                                          </div>
 
-                                    <h4>Vrátenie tovaru</h4>
+                                          <div class="mt-6 rounded-md border border-slate-200 bg-white p-5">
+                                                <h2 class="text-xl font-semibold text-slate-900">
+                                                      Doprava a platba
+                                                </h2>
+                                                <div class="mt-4 space-y-4 leading-7 text-slate-700">
+                                                      <p>
+                                                            Dopravu tovaru k vám volíme najlacnejším spôsobom.
+                                                            Najlepšou variantou je Slovenská pošta, ktorá balík
+                                                            doručuje do 2-3 pracovných dní priamo k vám. Do balíka
+                                                            prikladáme faktúru so splatnosťou 14 dní.
+                                                      </p>
+                                                      <p>
+                                                            Tovar môže byť odoslaný aj na dobierku, ale tento spôsob
+                                                            zbytočne zvyšuje náklady. Obecným úradom a školám posielame
+                                                            tovar automaticky na faktúru. Objednávky prijaté do 10 hod.
+                                                            expedujeme v ten istý deň, ak je sortiment skladom.
+                                                      </p>
+                                                </div>
+                                          </div>
+                                    </div>
 
-                                    <strong>Tovar môžete vrátiť na adresu: </strong><br />
+                                    <div class="grid gap-5 lg:grid-cols-2">
+                                          <div class="rounded-md border border-slate-200 bg-white p-5">
+                                                <h2 class="text-xl font-semibold text-slate-900">
+                                                      Vrátenie tovaru
+                                                </h2>
+                                                <p class="mt-3 text-slate-700">
+                                                      Tovar môžete vrátiť na adresu:
+                                                </p>
+                                                <address class="mt-4 not-italic leading-7 text-slate-700">
+                                                      <strong class="block text-slate-900">
+                                                            Gajdoš Gabriel - Reprezent
+                                                      </strong>
+                                                      Slatinská 14<br />
+                                                      921 07 Bratislava
+                                                </address>
+                                          </div>
 
-                                    Gajdoš Gabriel - Reprezent<br />
-
-                                    Slatinská 14<br />
-
-                                    921 07 Bratislava
+                                          <div class="rounded-md border border-blue-100 bg-blue-50 p-5 text-blue-950">
+                                                <h2 class="text-lg font-semibold">
+                                                      Živnostenské oprávnenie
+                                                </h2>
+                                                <p class="mt-3 leading-7">
+                                                      Živnostenský list vydaný dňa 19.01.1998 pod sp. č.
+                                                      Žo 98/00061/000, reg. č. 36/98.
+                                                </p>
+                                          </div>
+                                    </div>
                               </div>
                         </div>
-                  </div>
+                  </section>
             </template>
-
       </BaseLayout>
-
 </template>
+
+<style scoped>
+.contact-page {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-width: 0;
+}
+
+.contact-shell {
+      width: 100%;
+}
+</style>

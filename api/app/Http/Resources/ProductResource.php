@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\ModelStatus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,6 +17,7 @@ class ProductResource extends JsonResource
     public function toArray($request)
     {
         $user = $request->user();
+        $status = ModelStatus::fromProduct($this->resource);
 
         return [
             'id' => $this->id,
@@ -26,6 +28,8 @@ class ProductResource extends JsonResource
             'sale_price' => $this->sale_price,
             'quantity' => $this->quantity,
             'published' => $this->published,
+            'status' => $status->toArray(),
+            'status_options' => ModelStatus::allowedForUser($user),
             'vat' => $this->vat,
             'discount' => $this->discount,
             'thumb' => url($this->thumb),
