@@ -26,6 +26,16 @@ const routes = [
         }
     },
     {
+        path: '/dashboard',
+        name: 'dashboard.index',
+        components: {
+            default: () => import('../components/pages/dashboard.vue'),
+        },
+        meta: {
+            title: 'Dashboard'
+        }
+    },
+    {
         path: '/product/:productId/show/:productSlug',
         name: 'public.products.show',
         components: {

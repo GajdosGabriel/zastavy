@@ -13,9 +13,12 @@ const form = reactive({
     // device_name: "browser",
 });
 
-const onClickForm = () => {
-    login(form);
-    router.push({ name: "public.index" });
+const onClickForm = async () => {
+    const isLoggedIn = await login(form);
+
+    if (isLoggedIn) {
+        router.push({ name: "dashboard.index" });
+    }
 };
 </script>
 

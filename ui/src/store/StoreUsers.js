@@ -79,9 +79,14 @@ const actions = {
 
             console.log('Prihlasenie uspesne');
 
-            actions.fetchUser();
+            await actions.fetchUser();
+
+            return true;
         } catch (error) {
+            setErrors(error);
             console.error('Chyba pri prihlasovani:', error);
+
+            return false;
         }
     },
 

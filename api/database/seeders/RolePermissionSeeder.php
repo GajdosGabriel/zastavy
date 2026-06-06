@@ -75,11 +75,12 @@ class RolePermissionSeeder extends Seeder
             'products.view',
         ]);
 
-        $firstUser = User::query()->orderBy('id')->first();
-
-        if ($firstUser) {
-            $firstUser->syncRoles([$superAdmin]);
-        }
+        User::query()
+            ->orderBy('id')
+            ->get()
+            ->each(function (User $user, int $index) use ($superAdmin, $admin) {
+                $user->syncRoles([$index === 0 ? $superAdmin : $admin]);
+            });
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }

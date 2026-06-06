@@ -15,6 +15,9 @@ import useOrder from "../../store/StoreOrders.js";
 
 const onClickItem = (item: Page) => {
       switch (item.ROUTE) {
+            case 'dashboard.index': {
+                  break;
+            }
             case 'orders.index': {
                   useOrder().setPaginator(item.URL);
                   break;

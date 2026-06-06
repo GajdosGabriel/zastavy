@@ -1,0 +1,56 @@
+<script setup lang="ts">
+import BaseLayout from '../layout/BaseLayout.vue';
+</script>
+
+<template>
+      <BaseLayout>
+            <template #main>
+                  <section class="col-span-12 px-4 pb-10 sm:px-7">
+                        <div class="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
+                              <p class="text-sm font-semibold uppercase text-blue-800">
+                                    Administrácia
+                              </p>
+                              <h1 class="mt-2 text-3xl font-semibold text-slate-900">
+                                    Dashboard
+                              </h1>
+                              <p class="mt-3 max-w-3xl leading-7 text-slate-600">
+                                    Vitaj v administrácii obchodu. Tu bude rýchly prehľad objednávok,
+                                    produktov, skladu a zákazníkov.
+                              </p>
+                        </div>
+
+                        <div class="mt-6 grid gap-5 md:grid-cols-3">
+                              <article class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+                                    <p class="text-sm text-slate-500">Dnes</p>
+                                    <h2 class="mt-2 text-2xl font-semibold text-slate-900">
+                                          Nové objednávky
+                                    </h2>
+                                    <p class="mt-3 text-slate-600">
+                                          Demo panel pre počet nových objednávok a rýchly vstup do expedície.
+                                    </p>
+                              </article>
+
+                              <article class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+                                    <p class="text-sm text-slate-500">Sklad</p>
+                                    <h2 class="mt-2 text-2xl font-semibold text-slate-900">
+                                          Stav zásob
+                                    </h2>
+                                    <p class="mt-3 text-slate-600">
+                                          Demo panel pre produkty, ktoré treba doplniť alebo skontrolovať.
+                                    </p>
+                              </article>
+
+                              <article class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+                                    <p class="text-sm text-slate-500">Zákazníci</p>
+                                    <h2 class="mt-2 text-2xl font-semibold text-slate-900">
+                                          Aktivita
+                                    </h2>
+                                    <p class="mt-3 text-slate-600">
+                                          Demo panel pre posledné nákupy, kontakty a otvorené požiadavky.
+                                    </p>
+                              </article>
+                        </div>
+                  </section>
+            </template>
+      </BaseLayout>
+</template>

@@ -57,6 +57,12 @@ class UserResource extends JsonResource
     {
         return [
             [
+                'NAME' => 'Dashboard',
+                'ROUTE' => 'dashboard.index',
+                'URL' => '/dashboard',
+                'ICON' => '',
+            ],
+            [
                 'NAME' => 'Objednávky',
                 'ROUTE' => 'orders.index',
                 'URL' => route('orders.index'),
