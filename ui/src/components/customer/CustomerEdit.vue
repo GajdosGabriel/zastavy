@@ -9,6 +9,7 @@ import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 import templateCustomer from "../../models/templateCustomer";
 import useUnsavedChanges from '../../models/useUnsavedChanges';
+import RequiredMark from "../forms/RequiredMark.vue";
 
 
 const { state, updateCustomer, fetchCustomer, getCustomer, getStatuses } = useCustomers();
@@ -51,7 +52,7 @@ const buttonSubmit = { name: 'Uložiť', spinner: true }
 
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="company">
-                            Názov
+                            Názov <RequiredMark />
                         </label>
                         <input
                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -61,37 +62,37 @@ const buttonSubmit = { name: 'Uložiť', spinner: true }
                     <div class="md:flex md:space-x-3">
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="street">
-                                Adresa
+                                Adresa <RequiredMark />
                             </label>
                             <input
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="street" type="text" v-model="state.customer.street" placeholder="Adresa a číslo" />
+                                id="street" type="text" v-model="state.customer.street" placeholder="Adresa a číslo" required />
                         </div>
 
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="city">
-                                Mesto
+                                Mesto <RequiredMark />
                             </label>
                             <input
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="city" type="text" v-model="state.customer.city" placeholder="Meslo" />
+                                id="city" type="text" v-model="state.customer.city" placeholder="Meslo" required />
                         </div>
 
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="postcode">
-                                PSČ
+                                PSČ <RequiredMark />
                             </label>
                             <input
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 id="postcode" type="text" v-model="state.customer.postcode"
-                                placeholder="Poštové smerové číslo" />
+                                placeholder="Poštové smerové číslo" required />
                         </div>
                     </div>
 
                     <div class="md:flex md:space-x-3">
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-                                Email
+                                Email <RequiredMark />
                             </label>
                             <input
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -101,11 +102,11 @@ const buttonSubmit = { name: 'Uložiť', spinner: true }
 
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
-                                Vaše meno
+                                Vaše meno <RequiredMark />
                             </label>
                             <input
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="name" type="text" v-model="state.customer.name" placeholder="Vaše meno" />
+                                id="name" type="text" v-model="state.customer.name" placeholder="Vaše meno" required />
                         </div>
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="phone">
@@ -146,7 +147,7 @@ const buttonSubmit = { name: 'Uložiť', spinner: true }
 
                     <div v-if="state.customer.status" class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="status">
-                            Status
+                            Status <RequiredMark />
                         </label>
                         <select
                             id="status"

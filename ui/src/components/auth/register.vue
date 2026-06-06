@@ -4,6 +4,7 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import useUser from "../../store/StoreUsers";
 import router from "../../router";
 import ErrorPanel from "../plugins/ErrorPanel.vue";
+import RequiredMark from "../forms/RequiredMark.vue";
 
 
 const { register } = useUser();
@@ -39,7 +40,7 @@ const onClickForm = () => {
 
                         <!-- Meno -->
                         <div class="pb-4">
-                            <label for="firstName" class="block font-medium text-sm text-gray-700">Meno</label>
+                            <label for="firstName" class="block font-medium text-sm text-gray-700">Meno <RequiredMark /></label>
 
                             <input id="firstName"
                                 class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -48,7 +49,7 @@ const onClickForm = () => {
 
                         <!-- Priezvisko Name -->
                         <div class="pb-4">
-                            <label for="lastName" class="block font-medium text-sm text-gray-700">Priezvisko</label>
+                            <label for="lastName" class="block font-medium text-sm text-gray-700">Priezvisko <RequiredMark /></label>
 
                             <input id="lastName"
                                 class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -57,7 +58,7 @@ const onClickForm = () => {
 
                         <!-- Email Address -->
                         <div class="pb-4">
-                            <label for="email" class="block font-medium text-sm text-gray-700">Email</label>
+                            <label for="email" class="block font-medium text-sm text-gray-700">Email <RequiredMark /></label>
 
                             <input id="email"
                                 class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -66,7 +67,7 @@ const onClickForm = () => {
 
                         <!-- Password -->
                         <div class="pb-4">
-                            <label for="password" class="block font-medium text-sm text-gray-700">Heslo</label>
+                            <label for="password" class="block font-medium text-sm text-gray-700">Heslo <RequiredMark /></label>
 
                             <input id="password"
                                 class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"

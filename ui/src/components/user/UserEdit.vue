@@ -6,6 +6,7 @@ import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 import validationBar from "../bars/ValidationBar.vue";
 import useAdminUsers from "../../store/StoreAdminUsers";
+import RequiredMark from "../forms/RequiredMark.vue";
 
 const { state, fetchUser, updateUser, getRoles, getStatuses } = useAdminUsers();
 const router = useRouter();
@@ -43,7 +44,7 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label class="mb-2 block text-sm font-bold text-gray-700">Meno</label>
+                            <label class="mb-2 block text-sm font-bold text-gray-700">Meno <RequiredMark /></label>
                             <input v-model="state.user.firstName" type="text" required class="form-control rounded border px-3 py-2" />
                         </div>
 
@@ -58,7 +59,7 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-bold text-gray-700">Email</label>
+                            <label class="mb-2 block text-sm font-bold text-gray-700">Email <RequiredMark /></label>
                             <input v-model="state.user.email" type="email" required class="form-control rounded border px-3 py-2" />
                         </div>
 
@@ -73,7 +74,7 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-bold text-gray-700">Status</label>
+                            <label class="mb-2 block text-sm font-bold text-gray-700">Status <RequiredMark /></label>
                             <select v-model="state.user.status.value" required class="form-control rounded border px-3 py-2">
                                 <option v-for="status in getStatuses" :key="status.value" :value="status.value">
                                     {{ status.label }}

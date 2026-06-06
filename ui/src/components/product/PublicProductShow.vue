@@ -8,6 +8,7 @@ import { useRoute } from "vue-router";
 import kosik from "../checkout/kosikLink.vue";
 import kosikButton from "../icons/kosik.vue";
 import { formatDecimal, formatPriceWithoutVat } from "../../models/functions";
+import RequiredMark from "../forms/RequiredMark.vue";
 
 const { state, getProduct, fetchProduct } = useProducts();
 const { getImages, setImages } = useImages();
@@ -123,7 +124,7 @@ onUnmounted(() => {
 
                                 <form class="mt-5" @submit.prevent="submitCart">
                                     <label class="mb-2 block text-sm font-semibold text-gray-700" for="input_order">
-                                        Množstvo
+                                        Množstvo <RequiredMark />
                                     </label>
                                     <div class="flex gap-3">
                                         <input id="input_order" type="number" v-model="state.product.input_order"

@@ -3,6 +3,7 @@ import { reactive } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import useUser from "../../store/StoreUsers";
 import router from "../../router";
+import RequiredMark from "../forms/RequiredMark.vue";
 
 
 const { login } = useUser();
@@ -44,7 +45,7 @@ const onClickForm = async () => {
                     <form @submit.prevent="onClickForm" action="/login" class="bg-gray-300 p-6">
                         <!-- Email Address -->
                         <div>
-                            <label for="email" class="block font-medium text-sm text-gray-700">Email</label>
+                            <label for="email" class="block font-medium text-sm text-gray-700">Email <RequiredMark /></label>
 
                             <input id="email"
                                 class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -53,7 +54,7 @@ const onClickForm = async () => {
 
                         <!-- Password -->
                         <div class="mt-4">
-                            <label for="password" class="block font-medium text-sm text-gray-700">Heslo</label>
+                            <label for="password" class="block font-medium text-sm text-gray-700">Heslo <RequiredMark /></label>
 
                             <input id="password"
                                 class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"

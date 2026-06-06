@@ -6,6 +6,7 @@ import router from "../../router";
 import validationBar from "../bars/ValidationBar.vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import Plus from '../icons/plus.vue';
+import RequiredMark from "../forms/RequiredMark.vue";
 
 
 
@@ -41,7 +42,7 @@ const saveStock = () => {
 
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="product">
-                            Názov tovaru
+                            Názov tovaru <RequiredMark />
                         </label>
                         <select
                             class="shadow w-full appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -56,7 +57,7 @@ const saveStock = () => {
                         <div class="flex mb-5 md:space-x-3">
                             <div class="">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="price">
-                                    Množstvo
+                                    Množstvo <RequiredMark />
                                 </label>
                                 <input
                                     class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"

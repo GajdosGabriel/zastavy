@@ -8,6 +8,7 @@ import useProducts from "../../store/StoreProducts";
 import useUser from "../../store/StoreUsers";
 import router from "../../router";
 import { formatDecimal } from "../../models/functions";
+import RequiredMark from "../forms/RequiredMark.vue";
 
 const { getCustomer, setCustomer, findCustomerByIco } = useCustomers();
 const { storeOrder, state: orderState } = useOrders();
@@ -187,31 +188,31 @@ onMounted(() => {
 
                         <div class="grid gap-4 md:grid-cols-3">
                             <div class="md:col-span-2">
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Názov firmy *</label>
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Názov firmy <RequiredMark /></label>
                                 <input v-model="getCustomer.company" type="text" required class="w-full rounded border px-3 py-2" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Kontaktné meno *</label>
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Kontaktné meno <RequiredMark /></label>
                                 <input v-model="getCustomer.name" type="text" required class="w-full rounded border px-3 py-2" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Email *</label>
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Email <RequiredMark /></label>
                                 <input v-model="getCustomer.email" type="email" required class="w-full rounded border px-3 py-2" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Telefón *</label>
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Telefón <RequiredMark /></label>
                                 <input v-model="getCustomer.phone" type="text" required class="w-full rounded border px-3 py-2" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Ulica *</label>
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Ulica <RequiredMark /></label>
                                 <input v-model="getCustomer.street" type="text" required class="w-full rounded border px-3 py-2" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">PSČ *</label>
+                                <label class="mb-2 block text-sm font-bold text-gray-700">PSČ <RequiredMark /></label>
                                 <input v-model="getCustomer.postcode" type="text" required class="w-full rounded border px-3 py-2" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Mesto *</label>
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Mesto <RequiredMark /></label>
                                 <input v-model="getCustomer.city" type="text" required class="w-full rounded border px-3 py-2" />
                             </div>
                             <div>

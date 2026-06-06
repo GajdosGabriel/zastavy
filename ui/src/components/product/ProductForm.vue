@@ -10,6 +10,7 @@ import { formatDecimal } from "../../models/functions";
 import buttonRouterLink from '../layout/page/ButtonLink.vue';
 import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
 import useUnsavedChanges from '../../models/useUnsavedChanges';
+import RequiredMark from '../forms/RequiredMark.vue';
 
 const { state, getProduct, updateProduct, storeProduct, fetchProduct, setProduct } = useProducts();
 const { destroyImage, storeImages } = useImages();
@@ -129,16 +130,16 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
 
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
-                            Názov
+                            Názov <RequiredMark />
                         </label>
                         <input
                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            id="name" type="text" v-model="getProduct.name" placeholder="Názov produktu" />
+                            id="name" type="text" v-model="getProduct.name" placeholder="Názov produktu" required />
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="code">
-                            KĂłd tovaru
+                            Kód tovaru <RequiredMark />
                         </label>
                         <input
                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -159,12 +160,12 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                     <div class="flex mb-5 space-x-3">
                         <div class="">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="price">
-                                Cena
+                                Cena <RequiredMark />
                             </label>
                             <input
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 id="price" type="number" v-model.number="getProduct.price" placeholder="Predajná cena"
-                                step=".01" />
+                                step=".01" required />
                         </div>
                         <div class="">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="discont">
@@ -197,17 +198,17 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
 
                         <div class="">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="min_order">
-                                Min. odber
+                                Min. odber <RequiredMark />
                             </label>
                             <input
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 id="min_order" type="number" v-model.number="getProduct.min_order"
-                                placeholder="Minimálny odber" />
+                                placeholder="Minimálny odber" required />
                         </div>
 
                         <div class="w-24">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="unit_value">
-                                Jednotka
+                                Jednotka <RequiredMark />
                             </label>
                             <select
                                 class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -220,7 +221,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
 
                         <div class="w-24">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="vat">
-                                DPH
+                                DPH <RequiredMark />
                             </label>
                             <select
                                 class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"

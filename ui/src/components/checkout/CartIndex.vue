@@ -7,6 +7,7 @@ import useOrders from "../../store/StoreOrders";
 import router from "../../router";
 import search from "../icons/search.vue";
 import { formatDecimal } from "../../models/functions";
+import RequiredMark from "../forms/RequiredMark.vue";
 
 
 const {
@@ -240,7 +241,7 @@ const onClickForm = async () => {
 
                                     <div class="mb-4">
                                           <label class="block text-gray-700 text-sm font-bold mb-2" for="company">
-                                                Názov <span class="text-red-700 font-semibold text-lg">*</span>
+                                                Názov <RequiredMark />
                                           </label>
                                           <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                 id="company" type="text" v-model="getCustomer.company" ref="companyRef"
@@ -250,7 +251,7 @@ const onClickForm = async () => {
                                     <div class="md:grid justify-items-stretch grid-cols-3 gap-5">
                                           <div>
                                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="street">
-                                                      Adresa <span class="text-red-700 font-semibold text-lg ">*</span>
+                                                      Adresa <RequiredMark />
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="street" type="text" v-model="getCustomer.street"
@@ -261,7 +262,7 @@ const onClickForm = async () => {
                                           <div>
                                                 <label class="block text-gray-700 text-sm font-bold mb-2"
                                                       for="postcode">
-                                                      PSČ <span class="text-red-700 font-semibold text-lg ">*</span>
+                                                      PSČ <RequiredMark />
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="postcode" type="text" v-model="getCustomer.postcode"
@@ -271,7 +272,7 @@ const onClickForm = async () => {
 
                                           <div>
                                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="city">
-                                                      Mesto <span class="text-red-700 font-semibold text-lg ">*</span>
+                                                      Mesto <RequiredMark />
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="city" type="text" v-model="getCustomer.city"
@@ -281,7 +282,7 @@ const onClickForm = async () => {
 
                                           <div>
                                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-                                                      Email <span class="text-red-700 font-semibold text-lg ">*</span>
+                                                      Email <RequiredMark />
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="email" type="email" v-model="getCustomer.email" required
@@ -292,7 +293,7 @@ const onClickForm = async () => {
                                           <div>
                                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
                                                       Kontaktné meno <span
-                                                            class="text-red-700 font-semibold text-lg ">*</span>
+                                                            <RequiredMark />
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="name" type="text" v-model="getCustomer.name" required
@@ -301,7 +302,7 @@ const onClickForm = async () => {
                                           </div>
                                           <div>
                                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="phone">
-                                                      Telefón <span class="text-red-700 font-semibold text-lg ">*</span>
+                                                      Telefón <RequiredMark />
                                                 </label>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="phone" type="text" required v-model="getCustomer.phone"

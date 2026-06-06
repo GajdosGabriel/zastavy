@@ -8,6 +8,7 @@ import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 import templateCustomer from "../../models/templateCustomer";
 import ButtonSave from "../../types/ButtonSubmit";
+import RequiredMark from "../forms/RequiredMark.vue";
 
 const { state, storeCustomer, resetCustomer, getCustomer } = useCustomers();
 
@@ -41,7 +42,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/zakaznici', icon: 'a
 
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="company">
-                            Názov
+                            Názov <RequiredMark />
                         </label>
                         <input
                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -80,7 +81,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/zakaznici', icon: 'a
                     <div class="flex space-x-3">
                         <div class="mb-4 w-full">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-                                Email
+                                Email <RequiredMark />
                             </label>
                             <input
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
