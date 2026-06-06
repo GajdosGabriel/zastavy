@@ -1,25 +1,25 @@
 <?php
 
-use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CheckoutController;
-use App\Http\Controllers\Api\CustomerController;
-use App\Http\Controllers\Api\CustomerMarkController;
-use App\Http\Controllers\Api\CustomerOrderController;
+use App\Http\Controllers\Api\Dashboard\OrderController;
+use App\Http\Controllers\Api\Dashboard\OrderMarkController;
+use App\Http\Controllers\Api\Dashboard\OrderProductController;
+use App\Http\Controllers\Api\Dashboard\OrderShippingController;
 use App\Http\Controllers\Api\HomeController;
-use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderDeliverySurveyController;
-use App\Http\Controllers\Api\OrderMarkController;
-use App\Http\Controllers\Api\OrderProductController;
-use App\Http\Controllers\Api\OrderShippingController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\ProductImageController;
 use App\Http\Controllers\Api\SanctumController;
-use App\Http\Controllers\Api\ShippingNoticeController;
-use App\Http\Controllers\Api\StockController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\SuperAdmin\CategoryController;
+use App\Http\Controllers\Api\SuperAdmin\CustomerController;
+use App\Http\Controllers\Api\SuperAdmin\CustomerMarkController;
+use App\Http\Controllers\Api\SuperAdmin\CustomerOrderController;
+use App\Http\Controllers\Api\SuperAdmin\ProductController;
+use App\Http\Controllers\Api\SuperAdmin\ProductImageController;
+use App\Http\Controllers\Api\SuperAdmin\ShippingNoticeController;
+use App\Http\Controllers\Api\SuperAdmin\StockController;
+use App\Http\Controllers\Api\SuperAdmin\UserController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Middleware\AdminMiddleware;
-use App\Http\Middleware\SuperAdminMiddleware;
+use App\Http\Middleware\DashboardMiddleware;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -39,7 +39,7 @@ Route::apiResources([
 
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
-Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
+Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function () {
     Route::apiResources([
         'orders' => OrderController::class,
         'orders.shippings' => OrderShippingController::class,
@@ -50,7 +50,7 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::post('/logout', [SanctumController::class, 'logout'])->name('sanctum.logout');
 });
 
-Route::middleware(['auth:sanctum', SuperAdminMiddleware::class])->group(function () {
+Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::apiResources([
         'categories' => CategoryController::class,
         'customers' => CustomerController::class,

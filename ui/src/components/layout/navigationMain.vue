@@ -99,15 +99,6 @@ onMounted(() => {
                                           class="mr-2" />
                                     Košík
                               </router-link>
-
-                              <router-link :to="{ name: 'public.login.index' }" class="nav_link" v-if="!getUser.isAuth">
-                                    Vstup
-                              </router-link>
-
-                              <!-- <router-link :to="{ name: 'public.register.index' }" class="nav_link"
-                                    v-if="!getUser.isAuth">
-                                    Register
-                              </router-link> -->
                         </div>
                   </div>
             </div>

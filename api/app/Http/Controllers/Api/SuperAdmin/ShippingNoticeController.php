@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\SuperAdmin;
 
 use App\Models\Shipping;
 use Illuminate\Http\Request;

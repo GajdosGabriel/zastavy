@@ -39,6 +39,17 @@ const routes = [
         }
     },
     {
+        path: '/admin',
+        name: 'admin.index',
+        components: {
+            default: () => import('../components/pages/dashboard.vue'),
+        },
+        meta: {
+            title: 'Administrácia',
+            superAdminOnly: true,
+        }
+    },
+    {
         path: '/product/:productId/show/:productSlug',
         name: 'public.products.show',
         components: {

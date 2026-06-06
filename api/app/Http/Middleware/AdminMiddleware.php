@@ -8,15 +8,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AdminMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user()?->hasAnyRole(['super-admin', 'admin', 'manager', 'sales', 'warehouse'])) {
-            abort(403, 'Nemáte oprávnenie na túto akciu.');
+        if (! $request->user()?->hasRole('super-admin')) {
+            abort(403, 'Táto časť je dostupná iba pre super administrátora.');
         }
 
         return $next($request);

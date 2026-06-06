@@ -19,6 +19,7 @@ class UserResource extends JsonResource
                 'isAuth' => false,
                 'navigation' => [
                     'main' => self::publicNavigation(),
+                    'userMenu' => self::guestUserMenu(),
                 ],
             ];
         }
@@ -37,6 +38,7 @@ class UserResource extends JsonResource
             'roles' => $this->getRoleNames(),
             'navigation' => [
                 'main' => $this->mainNavigation(),
+                'userMenu' => $this->userMenuNavigation(),
             ],
         ];
     }
@@ -48,6 +50,29 @@ class UserResource extends JsonResource
         }
 
         return self::userNavigation();
+    }
+
+    private function userMenuNavigation(): array
+    {
+        $items = [];
+
+        if ($this->hasRole('super-admin')) {
+            $items[] = [
+                'NAME' => 'Admin',
+                'ROUTE' => 'admin.index',
+                'URL' => '/admin',
+                'ACTION' => null,
+            ];
+        }
+
+        $items[] = [
+            'NAME' => 'Odhlásiť sa',
+            'ROUTE' => null,
+            'URL' => null,
+            'ACTION' => 'logout',
+        ];
+
+        return $items;
     }
 
     private static function userNavigation(): array
@@ -124,6 +149,18 @@ class UserResource extends JsonResource
                 'ROUTE' => 'public.contactUs',
                 'URL' => '/kontakt',
                 'ICON' => '',
+            ],
+        ];
+    }
+
+    private static function guestUserMenu(): array
+    {
+        return [
+            [
+                'NAME' => 'Vstúpiť',
+                'ROUTE' => 'public.login.index',
+                'URL' => '/login',
+                'ACTION' => null,
             ],
         ];
     }
