@@ -119,7 +119,8 @@ const routes = [
             default: () => import('../components/auth/loginIndex.vue'),
         },
         meta: {
-            title: 'Prihlásenie'
+            title: 'Prihlásenie',
+            guestOnly: true,
         }
     },
 
@@ -130,7 +131,8 @@ const routes = [
             default: () => import('../components/auth/register.vue'),
         },
         meta: {
-            title: 'Registrácia'
+            title: 'Registrácia',
+            guestOnly: true,
         }
     },
 
@@ -167,6 +169,11 @@ router.beforeResolve(async (to, from, next) => {
 
     if (localStorage.getItem('authToken') && !getUser.value?.isAuth) {
         await fetchUser();
+    }
+
+    if (to.meta.guestOnly && getUser.value?.isAuth) {
+        next({ name: 'dashboard.index' });
+        return;
     }
 
     if (to.meta.superAdminOnly && !getUser.value?.roles?.some((role) => ['super-admin', 'admin'].includes(role))) {
