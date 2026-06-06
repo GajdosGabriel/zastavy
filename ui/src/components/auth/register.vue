@@ -2,8 +2,6 @@
 import { reactive } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import useUser from "../../store/StoreUsers";
-import router from "../../router";
-import ErrorPanel from "../plugins/ErrorPanel.vue";
 import RequiredMark from "../forms/RequiredMark.vue";
 
 
@@ -24,80 +22,99 @@ const onClickForm = () => {
 
 <template>
     <BaseLayout>
-
         <template #main>
-            <!-- <h1 class="page-heading">Zákazníci</h1> -->
-
-            <div class="page-body col-span-12">
-
-                <div class="min-h-screen md:w-1/3 mx-auto pt-6 sm:pt-0 bg-gray-100">
-                    <!-- <ErrorPanel /> -->
-                    <div class="text-center text-lg font-semibold">
-                        Registrácia
+            <div class="col-span-12 flex min-h-[calc(100vh-14rem)] items-center justify-center px-4 py-10">
+                <section class="w-full max-w-xl rounded bg-white shadow-lg ring-1 ring-slate-200">
+                    <div class="border-b border-slate-200 px-7 py-6">
+                        <h1 class="text-2xl font-semibold text-slate-900">Registrácia</h1>
+                        <p class="mt-1 text-sm text-slate-500">Vytvorenie účtu pre objednávky a správu údajov.</p>
                     </div>
 
-                    <form @submit.prevent="onClickForm" class="bg-gray-300 p-6">
+                    <form @submit.prevent="onClickForm" class="space-y-5 px-7 py-6">
+                        <div class="grid gap-5 md:grid-cols-2">
+                            <div>
+                                <label for="firstName" class="mb-2 block text-sm font-semibold text-slate-700">
+                                    Meno <RequiredMark />
+                                </label>
+                                <input
+                                    id="firstName"
+                                    v-model="form.firstName"
+                                    class="block w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                    type="text"
+                                    required
+                                    autocomplete="given-name"
+                                />
+                            </div>
 
-                        <!-- Meno -->
-                        <div class="pb-4">
-                            <label for="firstName" class="block font-medium text-sm text-gray-700">Meno <RequiredMark /></label>
-
-                            <input id="firstName"
-                                class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                type="text" v-model="form.firstName" required placeholder="meno" />
+                            <div>
+                                <label for="lastName" class="mb-2 block text-sm font-semibold text-slate-700">
+                                    Priezvisko <RequiredMark />
+                                </label>
+                                <input
+                                    id="lastName"
+                                    v-model="form.lastName"
+                                    class="block w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                    type="text"
+                                    required
+                                    autocomplete="family-name"
+                                />
+                            </div>
                         </div>
 
-                        <!-- Priezvisko Name -->
-                        <div class="pb-4">
-                            <label for="lastName" class="block font-medium text-sm text-gray-700">Priezvisko <RequiredMark /></label>
-
-                            <input id="lastName"
-                                class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                type="text" v-model="form.lastName" required placeholder="priezvisko" />
-                        </div>
-
-                        <!-- Email Address -->
-                        <div class="pb-4">
-                            <label for="email" class="block font-medium text-sm text-gray-700">Email <RequiredMark /></label>
-
-                            <input id="email"
-                                class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                type="email" v-model="form.email" required placeholder="email" />
-                        </div>
-
-                        <!-- Password -->
-                        <div class="pb-4">
-                            <label for="password" class="block font-medium text-sm text-gray-700">Heslo <RequiredMark /></label>
-
-                            <input id="password"
-                                class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                type="password" v-model="form.password" required autocomplete="current-password"
-                                placeholder="heslo" />
-                        </div>
-
-                        <!-- Remember Me -->
-                        <div class="block mt-4">
-                            <label for="remember_me" class="inline-flex items-center">
-                                <input id="remember_me" type="checkbox"
-                                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    name="remember" checked />
-                                <span class="ml-2 text-sm text-gray-600"> Uložiť</span>
+                        <div>
+                            <label for="email" class="mb-2 block text-sm font-semibold text-slate-700">
+                                Email <RequiredMark />
                             </label>
+                            <input
+                                id="email"
+                                v-model="form.email"
+                                class="block w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                type="email"
+                                required
+                                autocomplete="email"
+                            />
                         </div>
 
-                        <div class="flex items-center justify-end mt-4">
-                            <router-link :to="{ name: 'public.login.index' }"
-                                class="underline text-sm text-gray-600 hover:text-gray-900">
+                        <div>
+                            <label for="password" class="mb-2 block text-sm font-semibold text-slate-700">
+                                Heslo <RequiredMark />
+                            </label>
+                            <input
+                                id="password"
+                                v-model="form.password"
+                                class="block w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                type="password"
+                                required
+                                autocomplete="new-password"
+                            />
+                        </div>
+
+                        <label for="remember_me" class="inline-flex items-center gap-2 text-sm text-slate-600">
+                            <input
+                                id="remember_me"
+                                type="checkbox"
+                                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                name="remember"
+                                checked
+                            />
+                            Uložiť prihlásenie
+                        </label>
+
+                        <button
+                            class="flex w-full items-center justify-center rounded bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            type="submit"
+                        >
+                            Registrovať
+                        </button>
+
+                        <div class="border-t border-slate-200 pt-5 text-center text-sm text-slate-600">
+                            Už máte účet?
+                            <router-link :to="{ name: 'public.login.index' }" class="font-semibold text-blue-700 hover:text-blue-900">
                                 Prihlásenie
                             </router-link>
-
-                            <button
-                                class="ml-3 inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
-                                Registrácia
-                            </button>
                         </div>
                     </form>
-                </div>
+                </section>
             </div>
         </template>
     </BaseLayout>
