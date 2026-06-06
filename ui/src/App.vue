@@ -1,8 +1,11 @@
-<script setup>
-import index from './components/Home.vue';
-</script>
-
-
 <template>
-    <router-view></router-view>
+    <div>
+        <GlobalErrorPanel />
+
+        <router-view></router-view>
+    </div>
 </template>
+
+<script setup>
+import GlobalErrorPanel from './components/plugins/GlobalErrorPanel.vue';
+</script>

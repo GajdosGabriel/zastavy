@@ -38,6 +38,8 @@ Route::apiResources([
     'orderDeliverySurvey'   => OrderDeliverySurveyController::class,
 ]);
 
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::apiResources([
@@ -49,11 +51,12 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
         'customers.marks'       => CustomerMarkController::class,
         'stocks'                => StockController::class,
         'customers.order'       => CustomerOrderController::class,
-        'products'              => ProductController::class,
         'product.image'         => ProductImageController::class,
         'orders.orderProducts'  => OrderProductController::class,
         'shippings.notices'     => ShippingNoticeController::class
     ]);
+
+    Route::apiResource('products', ProductController::class)->except(['show']);
 
     Route::post('/logout', [SanctumController::class, 'logout'])->name('sanctum.logout');
 });

@@ -4,7 +4,6 @@ import NavBarTop from '../bars/NavBarTop.vue';
 import MainBar from '../bars/MainBar.vue';
 import navigationMain from './navigationMain.vue';
 import footerComponent from './footer.vue';
-import ErrorPanel from '../plugins/ErrorPanel.vue';
 import spinner from '../icons/spinnerTable.vue';
 import loadingStore from '../../store/StoreLoading';
 
@@ -30,9 +29,6 @@ import loadingStore from '../../store/StoreLoading';
         <!-- <spinner size="50px" v-if="loadingStore.isLoading" /> -->
 
         <article class="md:grid grid-cols-12">
-          <div class="col-span-12 mt-6">
-            <ErrorPanel />
-          </div>
           <slot name="main"></slot>
         </article>
 
