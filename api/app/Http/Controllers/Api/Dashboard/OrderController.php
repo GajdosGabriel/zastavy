@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Dashboard;
 
+use App\Enums\ModelStatus;
 use App\Models\Order;
 use App\Models\Stock;
 use App\Filters\OrderFilter;
@@ -52,14 +53,21 @@ class OrderController extends Controller
         if ($request->makeStorned) {
             Gate::authorize('storno', $order);
 
-            foreach ($order->orderProducts as $product) {
-                $shippedQuantity = Stock::where('order_product_id', '=', $product->id)->sum('quantity');
-                $stornoQuantity = max(0, $product->quantity - $shippedQuantity);
+            DB::transaction(function () use ($order) {
+                $order->forceFill(['status' => ModelStatus::Cancelled])->save();
 
-                $product->update([
-                    'storno' => $stornoQuantity
-                ]);
-            }
+                foreach ($order->orderProducts as $product) {
+                    $shippedQuantity = Stock::where('order_product_id', '=', $product->id)->sum('quantity');
+                    $stornoQuantity = max(0, $product->quantity - $shippedQuantity);
+                    $remainingQuantity = max(0, $product->quantity - $product->storno - $shippedQuantity);
+
+                    $product->update([
+                        'storno' => $stornoQuantity,
+                        'status' => $remainingQuantity > 0 ? ModelStatus::Cancelled : $product->status,
+                    ]);
+                }
+            });
+
             return new OrderResource($order->refresh()->load(['customer.users', 'user']));
         };
 

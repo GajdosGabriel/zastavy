@@ -130,6 +130,10 @@ enum ModelStatus: string
 
     public static function fromOrder(Order $order): self
     {
+        if ($order->status === self::Cancelled) {
+            return self::Cancelled;
+        }
+
         if ($order->status instanceof self && $order->status->isArchived()) {
             return $order->status;
         }

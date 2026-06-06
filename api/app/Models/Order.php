@@ -68,6 +68,10 @@ class Order extends Model
 
     public function isStorned()
     {
+        if ($this->status === ModelStatus::Cancelled) {
+            return true;
+        }
+
         return $this->productStornoSum() == $this->orderProducts->sum('quantity');
     }
 
@@ -78,6 +82,10 @@ class Order extends Model
 
     public function isFinished()
     {
+        if ($this->isStorned()) {
+            return false;
+        }
+
         return $this->shippingRequiredQuantity() === $this->stockExpedition;
     }
 

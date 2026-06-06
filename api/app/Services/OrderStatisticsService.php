@@ -65,15 +65,18 @@ class OrderStatisticsService
             ->leftJoinSub($stockTotals, 'stock_totals', function ($join) {
                 $join->on('stock_totals.order_id', '=', 'orders.id');
             })
-            ->select('orders.id', 'orders.isOpened', 'orders.deleted_at')
+            ->select('orders.id', 'orders.status', 'orders.isOpened', 'orders.deleted_at')
             ->selectRaw('COALESCE(SUM(order_products.quantity), 0) as ordered_quantity')
             ->selectRaw('COALESCE(SUM(order_products.storno), 0) as storno_quantity')
             ->selectRaw('COALESCE(stock_totals.shipped_quantity, 0) as shipped_quantity')
-            ->groupBy('orders.id', 'orders.isOpened', 'orders.deleted_at', 'stock_totals.shipped_quantity')
+            ->groupBy('orders.id', 'orders.status', 'orders.isOpened', 'orders.deleted_at', 'stock_totals.shipped_quantity')
             ->get()
             ->map(function ($order) {
                 $required = max(0, (int) $order->ordered_quantity - (int) $order->storno_quantity);
                 $shipped = (int) $order->shipped_quantity;
+                $isStorned = $order->status === 'cancelled'
+                    || ((int) $order->ordered_quantity > 0
+                        && (int) $order->ordered_quantity === (int) $order->storno_quantity);
 
                 return [
                     'id' => $order->id,
@@ -84,9 +87,8 @@ class OrderStatisticsService
                     'required_quantity' => $required,
                     'shipped_quantity' => $shipped,
                     'remaining_quantity' => max(0, $required - $shipped),
-                    'is_finished' => $required === $shipped,
-                    'is_storned' => (int) $order->ordered_quantity > 0
-                        && (int) $order->ordered_quantity === (int) $order->storno_quantity,
+                    'is_finished' => ! $isStorned && $required === $shipped,
+                    'is_storned' => $isStorned,
                 ];
             });
     }
