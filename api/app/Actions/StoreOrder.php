@@ -18,8 +18,13 @@ class StoreOrder implements StoreOrderContract
 
     public function handle($customer, $user = null)
     {
+        $contact = $this->request->input('customer', []);
+
         $order = $customer->orders()->create([
             'user_id' => $user?->id,
+            'name' => $contact['name'] ?? $user?->username ?? $customer->name,
+            'email' => $contact['email'] ?? $user?->email ?? $customer->email,
+            'phone' => $contact['phone'] ?? $user?->phone ?? $customer->phone,
         ]);
         $this->serialNumber($customer, $order);
         $this->saveNotice($order);

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Customer;
 use App\Models\User;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -50,23 +51,48 @@ class CustomerService
             return null;
         }
 
-        $username = $request['username'] ?? $request['name'] ?? null;
-        [$firstName, $lastName] = $this->splitName($username);
+        $username = $this->contactName($request) ?: $email;
+        [$firstName, $lastName] = $this->nameParts($request, $username);
+        $user = User::withTrashed()->where('email', $email)->first();
 
-        return User::updateOrCreate(
-            [
-                'customer_id' => $customer->id,
-                'email' => $email,
+        $this->ensureEmailIsAvailable($customer, $user);
+
+        $userData = [
+            'customer_id' => $customer->id,
+            'name' => $username,
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'username' => $username,
+            'slug' => Str::slug($username),
+            'phone' => $request['phone'] ?? null,
+        ];
+
+        if ($user) {
+            $user->restore();
+            $user->update($userData);
+
+            return $user;
+        }
+
+        return User::create([
+            ...$userData,
+            'email' => $email,
+            'password' => Hash::make(Str::random(32)),
+        ]);
+    }
+
+    private function ensureEmailIsAvailable(Customer $customer, ?User $user): void
+    {
+        if (!$user || !$user->customer_id || (int) $user->customer_id === (int) $customer->id) {
+            return;
+        }
+
+        throw new HttpResponseException(response()->json([
+            'message' => 'Zadaný email už existuje.',
+            'errors' => [
+                'customer.email' => ['Zadaný email už existuje.'],
             ],
-            [
-                'firstName' => $firstName,
-                'lastName' => $lastName,
-                'username' => $username,
-                'slug' => Str::slug($username ?: $email),
-                'phone' => $request['phone'] ?? null,
-                'password' => Hash::make(Str::random(32)),
-            ]
-        );
+        ], 422));
     }
 
     private function findCustomer(array $request): ?Customer
@@ -89,6 +115,9 @@ class CustomerService
         return [
             'name' => $company ?: ($request['name'] ?? 'Zákazník'),
             'company' => $company,
+            'email' => $request['email'] ?? null,
+            'phone' => $request['phone'] ?? null,
+            'username' => $request['username'] ?? $request['name'] ?? null,
             'street' => $request['street'] ?? null,
             'postcode' => $request['postcode'] ?? null,
             'city' => $request['city'] ?? null,
@@ -97,6 +126,35 @@ class CustomerService
             'ic_dic' => $request['ic_dic'] ?? null,
             'note' => $request['note'] ?? null,
         ];
+    }
+
+    private function contactName(array $request): string
+    {
+        $name = $request['username'] ?? $request['name'] ?? null;
+
+        if ($name) {
+            return trim((string) $name);
+        }
+
+        return trim(implode(' ', array_filter([
+            $request['firstName'] ?? null,
+            $request['lastName'] ?? null,
+        ])));
+    }
+
+    private function nameParts(array $request, ?string $name): array
+    {
+        $firstName = trim((string) ($request['firstName'] ?? ''));
+        $lastName = trim((string) ($request['lastName'] ?? ''));
+
+        if ($firstName !== '' || $lastName !== '') {
+            return [
+                $firstName ?: 'Kontakt',
+                $lastName,
+            ];
+        }
+
+        return $this->splitName($name);
     }
 
     private function splitName(?string $name): array

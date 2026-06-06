@@ -6,6 +6,7 @@ import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
 import useProducts from "../../store/StoreProducts";
 import useUser from "../../store/StoreUsers";
+import useErrors from "../../store/StoreErrors";
 import router from "../../router";
 import { formatDecimal } from "../../models/functions";
 import RequiredMark from "../forms/RequiredMark.vue";
@@ -14,6 +15,7 @@ const { getCustomer, setCustomer, findCustomerByIco } = useCustomers();
 const { storeOrder, state: orderState } = useOrders();
 const { fetchProducts, getProducts } = useProducts();
 const { getUser } = useUser();
+const { getFieldErrors } = useErrors();
 
 const orderProducts = ref([]);
 const selectedProductId = ref("");
@@ -58,6 +60,28 @@ const isCustomerComplete = computed(() => {
     return requiredCustomerFields.every((field) => String(getCustomer.value?.[field] ?? "").trim());
 });
 
+const fieldError = (field) => {
+    const errors = getFieldErrors.value?.[`customer.${field}`] ?? getFieldErrors.value?.[field] ?? [];
+
+    return Array.isArray(errors) ? errors[0] : errors;
+};
+
+const icoError = () => {
+    if (String(getCustomer.value?.ico ?? '').length > 8) {
+        return "IČO môže mať maximálne 8 číslic.";
+    }
+
+    return fieldError("ico");
+};
+
+const inputClass = (field) => {
+    if (field === "ico") {
+        return icoError() ? "border-red-500 ring-1 ring-red-500 bg-red-50" : "";
+    }
+
+    return fieldError(field) ? "border-red-500 ring-1 ring-red-500 bg-red-50" : "";
+};
+
 const addProduct = () => {
     const product = selectedProduct.value;
 
@@ -89,8 +113,17 @@ const normalizeQuantity = (product) => {
     product.input_order = Math.max(minOrder, Number(product.input_order || minOrder));
 };
 
+const onlyDigits = (event) => {
+    getCustomer.value.ico = String(event.target.value || '').replace(/\D/g, '');
+};
+
 const onClickIco = async () => {
     icoSearchMessage.value = "";
+
+    if (icoError()) {
+        return;
+    }
+
     isSearchingCompany.value = true;
 
     try {
@@ -170,8 +203,12 @@ onMounted(() => {
                                     id="ico"
                                     v-model="getCustomer.ico"
                                     type="text"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
                                     class="w-full rounded border px-3 py-2"
+                                    :class="inputClass('ico')"
                                     placeholder="IČO organizácie"
+                                    @input="onlyDigits"
                                     @keyup.enter="onClickIco"
                                 />
                                 <button
@@ -183,6 +220,7 @@ onMounted(() => {
                                     {{ isSearchingCompany ? "Hľadám..." : "Vyhľadať firmu" }}
                                 </button>
                             </div>
+                            <p v-if="icoError()" class="mt-2 text-xs font-semibold text-red-600">{{ icoError() }}</p>
                             <p v-if="icoSearchMessage" class="mt-2 text-xs text-gray-500">{{ icoSearchMessage }}</p>
                         </div>
 
@@ -197,7 +235,16 @@ onMounted(() => {
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-bold text-gray-700">Email <RequiredMark /></label>
-                                <input v-model="getCustomer.email" type="email" required class="w-full rounded border px-3 py-2" />
+                                <input
+                                    v-model="getCustomer.email"
+                                    type="email"
+                                    required
+                                    class="w-full rounded border px-3 py-2"
+                                    :class="inputClass('email')"
+                                />
+                                <p v-if="fieldError('email')" class="mt-1 text-xs font-semibold text-red-600">
+                                    {{ fieldError('email') }}
+                                </p>
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-bold text-gray-700">Telefón <RequiredMark /></label>

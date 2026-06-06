@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import useCheckouts from "../../store/StoreCheckouts";
 import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
+import useErrors from "../../store/StoreErrors";
 import router from "../../router";
 import search from "../icons/search.vue";
 import { formatDecimal } from "../../models/functions";
@@ -22,6 +23,7 @@ const {
 
 const { getCustomer, setCustomer, findCustomerByIco, } = useCustomers();
 const { getOrder } = useOrders();
+const { getFieldErrors } = useErrors();
 const isSearchingCompany = ref(false);
 const isSubmitting = ref(false);
 const icoSearchMessage = ref("");
@@ -31,8 +33,26 @@ const isRequiredMissing = (field) => {
       return highlightMissingRequired.value && !String(getCustomer.value?.[field] ?? '').trim();
 };
 
+const fieldError = (field) => {
+      const errors = getFieldErrors.value?.[`customer.${field}`] ?? getFieldErrors.value?.[field] ?? [];
+
+      return Array.isArray(errors) ? errors[0] : errors;
+};
+
+const icoError = () => {
+      if (String(getCustomer.value?.ico ?? '').length > 8) {
+            return 'IČO môže mať maximálne 8 číslic.';
+      }
+
+      return fieldError('ico');
+};
+
 const requiredInputClass = (field) => {
-      return isRequiredMissing(field) ? 'border-red-500 ring-1 ring-red-500 bg-red-50' : '';
+      if (field === 'ico') {
+            return icoError() ? 'border-red-500 ring-1 ring-red-500 bg-red-50' : '';
+      }
+
+      return isRequiredMissing(field) || fieldError(field) ? 'border-red-500 ring-1 ring-red-500 bg-red-50' : '';
 };
 
 const parseStoredCustomer = () => {
@@ -50,6 +70,10 @@ const shortDescription = (product) => {
 
 const productTotal = (product) => {
       return formatDecimal(Number(product.active_price || 0) * Number(product.input_order || 0));
+};
+
+const onlyDigits = (event) => {
+      getCustomer.value.ico = String(event.target.value || '').replace(/\D/g, '');
 };
 
 
@@ -72,6 +96,11 @@ const clickEmptyBasket = () => {
 
 const onClickIco = async () => {
       icoSearchMessage.value = "";
+
+      if (icoError()) {
+            return;
+      }
+
       isSearchingCompany.value = true;
 
       try {
@@ -227,13 +256,18 @@ const onClickForm = async () => {
                                           <div class="flex gap-3">
                                                 <input
                                                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="ico" type="text" v-model="getCustomer.ico"
-                                                      placeholder="IČO organizácie" @keyup.enter="onClickIco" />
+                                                      id="ico" type="text" inputmode="numeric" pattern="[0-9]*"
+                                                      :class="requiredInputClass('ico')"
+                                                      v-model="getCustomer.ico" placeholder="IČO organizácie"
+                                                      @input="onlyDigits" @keyup.enter="onClickIco" />
                                                 <button type="button" @click="onClickIco" :disabled="isSearchingCompany"
                                                       class="whitespace-nowrap bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                                                       {{ isSearchingCompany ? 'Hľadám...' : 'Vyhľadať firmu' }}
                                                 </button>
                                           </div>
+                                          <p v-if="icoError()" class="mt-2 text-xs font-semibold text-red-600">
+                                                {{ icoError() }}
+                                          </p>
                                           <p v-if="icoSearchMessage" class="mt-2 text-xs text-gray-500">
                                                 {{ icoSearchMessage }}
                                           </p>
@@ -288,6 +322,9 @@ const onClickForm = async () => {
                                                       id="email" type="email" v-model="getCustomer.email" required
                                                       :class="requiredInputClass('email')"
                                                       placeholder="Email na zaslanie objednávky" />
+                                                <p v-if="fieldError('email')" class="mt-1 text-xs font-semibold text-red-600">
+                                                      {{ fieldError('email') }}
+                                                </p>
                                           </div>
 
                                           <div>
@@ -324,8 +361,13 @@ const onClickForm = async () => {
                                                       </button>
                                                 </div>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="billing-ico" type="text" v-model="getCustomer.ico" @keyup.enter="onClickIco"
+                                                      id="billing-ico" type="text" inputmode="numeric" pattern="[0-9]*"
+                                                      :class="requiredInputClass('ico')"
+                                                      v-model="getCustomer.ico" @input="onlyDigits" @keyup.enter="onClickIco"
                                                       placeholder="IČO organizácie" />
+                                                <p v-if="icoError()" class="mt-1 text-xs font-semibold text-red-600">
+                                                      {{ icoError() }}
+                                                </p>
                                           </div>
 
                                           <div v-if="icoSearchMessage" class="hidden">

@@ -5,12 +5,14 @@ const defaultState = {
     // { name: "required", message: "This field is required." },
     // { name: "email", message: "Please enter a valid email address." },
   ],
+  fieldErrors: {},
 };
 
 const state = reactive(defaultState);
 
 const getters = {
   getErrors: computed(() => state.errors),
+  getFieldErrors: computed(() => state.fieldErrors),
 };
 
 const actions = {
@@ -22,6 +24,7 @@ const actions = {
       ?? "Nastala neočakávaná chyba.";
 
     state.errors.push(message)
+    state.fieldErrors = error?.response?.data?.errors ?? {};
   },
 
   removeError: (index) => {
@@ -30,6 +33,7 @@ const actions = {
 
   resetErrors: () => {
     state.errors = [];
+    state.fieldErrors = {};
   },
 };
 
