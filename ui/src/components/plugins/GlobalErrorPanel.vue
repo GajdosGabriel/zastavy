@@ -6,7 +6,7 @@ const { getErrors } = useErrors();
 </script>
 
 <template>
-    <div v-if="getErrors.length > 0" class="fixed left-0 right-0 top-4 z-50 mx-auto w-full max-w-5xl px-4">
+    <div v-if="getErrors.length > 0" class="col-span-12 px-3 pt-3">
         <ErrorPanel />
     </div>
 </template>

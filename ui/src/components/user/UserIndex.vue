@@ -59,6 +59,7 @@ const template = () => {
                                 <th class="thead_th">Objednavky</th>
                                 <th class="thead_th">Role</th>
                                 <th class="thead_th">Vytvoreny</th>
+                                <th class="thead_th"></th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">

@@ -1,9 +1,33 @@
 <script setup>
-defineProps(["user"]);
+import { computed } from "vue";
+import PanelDropdown from "../../layout/PanelDropdown.vue";
+
+const props = defineProps(["user"]);
 
 const fullName = (user) => {
     return [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || "-";
 };
+
+const dropdownItems = computed(() => [
+    {
+        label: "Zobraziť",
+        to: {
+            name: "users.show",
+            params: {
+                userId: props.user.id,
+            },
+        },
+    },
+    {
+        label: "Upraviť",
+        to: {
+            name: "users.edit",
+            params: {
+                userId: props.user.id,
+            },
+        },
+    },
+]);
 </script>
 
 <template>
@@ -14,7 +38,9 @@ const fullName = (user) => {
 
         <td class="tbody_td">
             <div class="text-sm font-medium text-gray-900">
-                {{ fullName(user) }}
+                <router-link :to="{ name: 'users.show', params: { userId: user.id } }">
+                    {{ fullName(user) }}
+                </router-link>
             </div>
             <div class="text-sm text-gray-500">
                 {{ user.username || "-" }}
@@ -50,6 +76,10 @@ const fullName = (user) => {
 
         <td class="tbody_td">
             {{ user.created_at || "-" }}
+        </td>
+
+        <td class="tbody_td">
+            <PanelDropdown :items="dropdownItems" />
         </td>
     </tr>
 </template>

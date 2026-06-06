@@ -169,7 +169,7 @@ router.beforeResolve(async (to, from, next) => {
         await fetchUser();
     }
 
-    if (to.meta.superAdminOnly && !getUser.value?.roles?.includes('super-admin')) {
+    if (to.meta.superAdminOnly && !getUser.value?.roles?.some((role) => ['super-admin', 'admin'].includes(role))) {
         next({
             name: getUser.value?.isAuth ? 'dashboard.index' : 'public.login.index'
         });

@@ -6,6 +6,7 @@ import navigationMain from './navigationMain.vue';
 import footerComponent from './footer.vue';
 import spinner from '../icons/spinnerTable.vue';
 import loadingStore from '../../store/StoreLoading';
+import GlobalErrorPanel from '../plugins/GlobalErrorPanel.vue';
 
 
 </script>
@@ -29,6 +30,8 @@ import loadingStore from '../../store/StoreLoading';
         <!-- <spinner size="50px" v-if="loadingStore.isLoading" /> -->
 
         <article class="md:grid grid-cols-12">
+          <GlobalErrorPanel />
+
           <slot name="main"></slot>
         </article>
 

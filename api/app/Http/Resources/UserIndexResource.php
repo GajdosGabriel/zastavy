@@ -33,6 +33,8 @@ class UserIndexResource extends JsonResource
             'created_at' => $this->created_at?->format('d.m.Y H:i'),
             'endpoints' => [
                 'index' => route('users.index'),
+                'show' => route('users.show', $this->id),
+                'update' => route('users.update', $this->id),
             ],
         ];
     }

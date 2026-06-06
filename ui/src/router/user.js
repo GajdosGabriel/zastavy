@@ -12,6 +12,28 @@ const user = [
             superAdminOnly: true,
         },
     },
+    {
+        path: '/users/:userId/show',
+        name: 'users.show',
+        components: {
+            default: () => import('../components/user/UserShow.vue'),
+        },
+        meta: {
+            title: 'Pouzivatel',
+            superAdminOnly: true,
+        },
+    },
+    {
+        path: '/users/:userId/edit',
+        name: 'users.edit',
+        components: {
+            default: () => import('../components/user/UserEdit.vue'),
+        },
+        meta: {
+            title: 'Upravit pouzivatela',
+            superAdminOnly: true,
+        },
+    },
 ];
 
 export default user;
