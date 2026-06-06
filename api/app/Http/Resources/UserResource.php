@@ -35,25 +35,39 @@ class UserResource extends JsonResource
             'order' => new OrderStatisticResource($request),
             'roles' => $this->getRoleNames(),
             'navigation' => [
-                'main' => $this->hasBackofficeRole()
-                    ? self::privateNavigation()
-                    : self::publicNavigation(),
+                'main' => $this->mainNavigation(),
             ],
         ];
     }
 
-    private function hasBackofficeRole(): bool
+    private function mainNavigation(): array
     {
-        return $this->hasAnyRole([
-            'super-admin',
-            'admin',
-            'manager',
-            'sales',
-            'warehouse',
-        ]);
+        if ($this->hasRole('super-admin')) {
+            return self::superAdminNavigation();
+        }
+
+        return self::userNavigation();
     }
 
-    private static function privateNavigation(): array
+    private static function userNavigation(): array
+    {
+        return [
+            [
+                'NAME' => 'Dashboard',
+                'ROUTE' => 'dashboard.index',
+                'URL' => '/dashboard',
+                'ICON' => '',
+            ],
+            [
+                'NAME' => 'Objednávky',
+                'ROUTE' => 'orders.index',
+                'URL' => route('orders.index'),
+                'ICON' => 'badge',
+            ],
+        ];
+    }
+
+    private static function superAdminNavigation(): array
     {
         return [
             [
@@ -78,6 +92,12 @@ class UserResource extends JsonResource
                 'NAME' => 'Zákazníci',
                 'ROUTE' => 'customers.index',
                 'URL' => route('customers.index'),
+                'ICON' => '',
+            ],
+            [
+                'NAME' => 'Pouzivatelia',
+                'ROUTE' => 'users.index',
+                'URL' => route('users.index'),
                 'ICON' => '',
             ],
             [

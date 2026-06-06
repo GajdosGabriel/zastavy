@@ -19,12 +19,27 @@ class OrderController extends Controller
 
     public function index(OrderFilter $orderFilters)
     {
-        $orders = Order::with(['customer.users', 'user'])->orderBy('created_at', 'desc')->filter($orderFilters)->paginate();
+        $orders = Order::with(['customer.users', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->when(! request()->user()->hasRole('super-admin'), function ($query) {
+                $query->where(function ($query) {
+                    $query->where('user_id', request()->user()->id);
+
+                    if (request()->user()->customer_id) {
+                        $query->orWhere('customer_id', request()->user()->customer_id);
+                    }
+                });
+            })
+            ->filter($orderFilters)
+            ->paginate();
+
         return OrderResource::collection($orders);
     }
 
     public function show(Order $order)
     {
+        Gate::authorize('view', $order);
+
         return response(new OrderResource($order->load(['customer.users', 'user'])));
     }
 
@@ -43,6 +58,8 @@ class OrderController extends Controller
             }
             return new OrderResource($order->refresh()->load(['customer.users', 'user']));
         };
+
+        Gate::authorize('update', $order);
 
         $order->update($request->all());
         return new OrderResource($order);

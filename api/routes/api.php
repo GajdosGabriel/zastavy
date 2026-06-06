@@ -16,8 +16,10 @@ use App\Http\Controllers\Api\ProductImageController;
 use App\Http\Controllers\Api\SanctumController;
 use App\Http\Controllers\Api\ShippingNoticeController;
 use App\Http\Controllers\Api\StockController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\SuperAdminMiddleware;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -39,22 +41,28 @@ Route::get('/products/{product}', [ProductController::class, 'show'])->name('pro
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::apiResources([
-        'categories' => CategoryController::class,
         'orders' => OrderController::class,
         'orders.shippings' => OrderShippingController::class,
         'orders.marks' => OrderMarkController::class,
+        'orders.orderProducts' => OrderProductController::class,
+    ]);
+
+    Route::post('/logout', [SanctumController::class, 'logout'])->name('sanctum.logout');
+});
+
+Route::middleware(['auth:sanctum', SuperAdminMiddleware::class])->group(function () {
+    Route::apiResources([
+        'categories' => CategoryController::class,
         'customers' => CustomerController::class,
         'customers.marks' => CustomerMarkController::class,
-        'stocks' => StockController::class,
         'customers.order' => CustomerOrderController::class,
+        'stocks' => StockController::class,
         'product.image' => ProductImageController::class,
-        'orders.orderProducts' => OrderProductController::class,
         'shippings.notices' => ShippingNoticeController::class,
     ]);
 
+    Route::apiResource('users', UserController::class)->only(['index']);
     Route::apiResource('products', ProductController::class)->except(['show']);
-
-    Route::post('/logout', [SanctumController::class, 'logout'])->name('sanctum.logout');
 });
 
 Route::get('artisan/run', function () {

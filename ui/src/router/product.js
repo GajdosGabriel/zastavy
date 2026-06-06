@@ -1,4 +1,5 @@
 import { PAGE_PRODUCT } from '../constants';
+
 const product = [
     {
         path: '/products',
@@ -7,8 +8,9 @@ const product = [
             default: () => import('../components/product/ProductIndex.vue'),
         },
         meta: {
-            title: 'Zoznam tovaru'
-        }
+            title: 'Zoznam tovaru',
+            superAdminOnly: true,
+        },
     },
     {
         path: '/products/:productId/show',
@@ -17,8 +19,9 @@ const product = [
             default: () => import('../components/product/PublicProductShow.vue'),
         },
         meta: {
-            title: 'Zobraziť položku'
-        }
+            title: 'Zobrazit polozku',
+            superAdminOnly: true,
+        },
     },
     {
         path: '/products/create',
@@ -27,9 +30,9 @@ const product = [
             default: () => import('../components/product/ProductForm.vue'),
         },
         meta: {
-            title: 'Pridať nový tovar'
-        }
-
+            title: 'Pridat novy tovar',
+            superAdminOnly: true,
+        },
     },
     {
         path: '/products/:productId/edit',
@@ -38,9 +41,10 @@ const product = [
             default: () => import('../components/product/ProductForm.vue'),
         },
         meta: {
-            title: 'Upraviť položku'
-        }
-    }
-]
+            title: 'Upravit polozku',
+            superAdminOnly: true,
+        },
+    },
+];
 
 export default product;

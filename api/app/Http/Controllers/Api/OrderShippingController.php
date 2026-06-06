@@ -11,12 +11,15 @@ use App\Http\Resources\ShippingResource;
 use App\Http\Resources\OrderResource;
 use App\Notifications\OrderExpedition;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 
 class OrderShippingController extends Controller
 {
     public function store(Order $order, Request $request)
     {
+        Gate::authorize('update', $order);
+
         $validated = $request->validate([
             'notify_customer' => ['sometimes', 'boolean'],
             'items' => ['sometimes', 'array'],

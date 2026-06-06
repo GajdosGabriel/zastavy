@@ -33,6 +33,13 @@ export const PAGE_CUSTOMER: Page = {
     ICON: ''
 }
 
+export const PAGE_USER: Page = {
+    NAME: 'Pouzivatelia',
+    URL: URL_BASE_API + '/users',
+    ROUTE: 'users.index',
+    ICON: ''
+}
+
 export const PAGE_PRODUCT: Page = {
     NAME: 'Produkty',
     URL: URL_BASE_API + '/products',

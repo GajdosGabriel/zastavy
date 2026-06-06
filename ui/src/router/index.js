@@ -4,8 +4,10 @@ import product from './product';
 import order from './order';
 import customer from './customer';
 import stock from './stock';
+import user from './user';
 import useStoreErrors from '../store/StoreErrors';
 import useStoreOrders from '../store/StoreOrders';
+import useUser from '../store/StoreUsers';
 
 
 
@@ -14,6 +16,7 @@ const routes = [
     ...order,
     ...customer,
     ...stock,
+    ...user,
     {
         path: '/',
         name: 'public.index',
@@ -148,6 +151,19 @@ router.beforeResolve(async (to, from, next) => {
 
     useStoreErrors().resetErrors();
     useStoreOrders().resetOrder();
+
+    const { fetchUser, getUser } = useUser();
+
+    if (localStorage.getItem('authToken') && !getUser.value?.isAuth) {
+        await fetchUser();
+    }
+
+    if (to.meta.superAdminOnly && !getUser.value?.roles?.includes('super-admin')) {
+        next({
+            name: getUser.value?.isAuth ? 'dashboard.index' : 'public.login.index'
+        });
+        return;
+    }
     
     const title = to.meta.title
 

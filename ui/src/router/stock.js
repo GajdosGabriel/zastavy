@@ -1,4 +1,5 @@
 import { PAGE_STOCK } from '../constants';
+
 const stock = [
     {
         path: '/sklad',
@@ -7,8 +8,9 @@ const stock = [
             default: () => import('../components/stock/StockIndex.vue'),
         },
         meta: {
-            title: 'Sklad - zoznam tovaru'
-        }
+            title: 'Sklad - zoznam tovaru',
+            superAdminOnly: true,
+        },
     },
     {
         path: '/sklad/create',
@@ -17,9 +19,10 @@ const stock = [
             default: () => import('../components/stock/StockCreate.vue'),
         },
         meta: {
-            title: 'nový príjem tovaru'
-        }
-    }
-]
+            title: 'Novy prijem tovaru',
+            superAdminOnly: true,
+        },
+    },
+];
 
 export default stock;

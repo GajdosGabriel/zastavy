@@ -1,4 +1,5 @@
 import { PAGE_CUSTOMER } from '../constants';
+
 const customer = [
     {
         path: '/zakaznici',
@@ -7,15 +8,19 @@ const customer = [
             default: () => import('../components/customer/CustomerIndex.vue'),
         },
         meta: {
-            title: 'Zákazníci'
-        }
+            title: 'Zakaznici',
+            superAdminOnly: true,
+        },
     },
     {
         path: '/zakaznici/:customerId/show',
         name: 'customers.show',
         components: {
             default: () => import('../components/customer/CustomerShow.vue'),
-        }
+        },
+        meta: {
+            superAdminOnly: true,
+        },
     },
     {
         path: '/zakaznici/:customerId/objednavky',
@@ -24,15 +29,19 @@ const customer = [
             default: () => import('../components/customer/CustomerShow.vue'),
         },
         meta: {
-            title: 'Objednávky zákazníka'
-        }
+            title: 'Objednavky zakaznika',
+            superAdminOnly: true,
+        },
     },
     {
         path: '/zakaznici/:customerId/edit',
         name: 'customers.edit',
         components: {
             default: () => import('../components/customer/CustomerEdit.vue'),
-        }
+        },
+        meta: {
+            superAdminOnly: true,
+        },
     },
     {
         path: '/zakaznici/create',
@@ -41,9 +50,10 @@ const customer = [
             default: () => import('../components/customer/CustomerCreate.vue'),
         },
         meta: {
-            title: 'Nový zákazník'
-        }
+            title: 'Novy zakaznik',
+            superAdminOnly: true,
+        },
     },
-]
+];
 
 export default customer;
