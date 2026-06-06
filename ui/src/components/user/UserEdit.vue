@@ -1,14 +1,16 @@
 <script setup>
-import { onMounted } from "vue";
+import { computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import BaseLayout from "../layout/BaseLayout.vue";
 import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 import validationBar from "../bars/ValidationBar.vue";
 import useAdminUsers from "../../store/StoreAdminUsers";
+import useUsers from "../../store/StoreUsers";
 import RequiredMark from "../forms/RequiredMark.vue";
 
 const { state, fetchUser, updateUser, getRoles, getStatuses } = useAdminUsers();
+const { getUser: getAuthUser } = useUsers();
 const router = useRouter();
 const {
     params: { userId },
@@ -28,6 +30,7 @@ const saveUser = async () => {
 
 const buttonBack = { name: "Späť", link: "/users", icon: "arrow-left" };
 const buttonSubmit = { name: "Uložiť", spinner: true };
+const canManageRoles = computed(() => getAuthUser.value?.roles?.some(role => ["admin", "super-admin"].includes(role)));
 </script>
 
 <template>
@@ -69,11 +72,6 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-bold text-gray-700">Customer ID</label>
-                            <input v-model="state.user.customer_id" type="number" class="form-control rounded border px-3 py-2" />
-                        </div>
-
-                        <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Status <RequiredMark /></label>
                             <select v-model="state.user.status.value" required class="form-control rounded border px-3 py-2">
                                 <option v-for="status in getStatuses" :key="status.value" :value="status.value">
@@ -84,11 +82,21 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
 
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Role</label>
-                            <div class="flex flex-wrap gap-2 rounded border p-3">
+                            <div v-if="canManageRoles" class="flex flex-wrap gap-2 rounded border p-3">
                                 <label v-for="role in getRoles" :key="role.value" class="inline-flex items-center gap-2 text-sm">
                                     <input v-model="state.user.roles" type="checkbox" :value="role.value" />
                                     {{ role.label }}
                                 </label>
+                            </div>
+                            <div v-else class="flex min-h-11 flex-wrap items-center gap-2 rounded border bg-gray-50 p-3">
+                                <span
+                                    v-for="role in state.user.roles"
+                                    :key="role"
+                                    class="rounded bg-slate-200 px-2 py-1 text-xs font-semibold text-slate-700"
+                                >
+                                    {{ role }}
+                                </span>
+                                <span v-if="!state.user.roles?.length" class="text-sm text-gray-500">-</span>
                             </div>
                         </div>
                     </div>

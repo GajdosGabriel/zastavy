@@ -4,10 +4,12 @@ import usePaginator from "./StorePaginator";
 import useQuery from "./StoreQuery";
 import { PAGE_USER } from "../constants";
 import useErrors from "./StoreErrors";
+import useUsers from "./StoreUsers";
 
 const { setPaginator, setLinks } = usePaginator();
 const { getQueryStringUrl } = useQuery();
 const { setErrors } = useErrors();
+const { getUser: getAuthUser } = useUsers();
 
 const defaultState = {
     url: PAGE_USER.URL,
@@ -24,6 +26,7 @@ const getters = {
     getUser: computed(() => state.user),
     getRoles: computed(() => state.roles),
     getStatuses: computed(() => state.statuses),
+    canManageRoles: computed(() => getAuthUser.value?.roles?.some(role => ["admin", "super-admin"].includes(role))),
 };
 
 const actions = {
@@ -58,9 +61,13 @@ const actions = {
             const payload = {
                 ...state.user,
                 status: state.user.status?.value || state.user.status,
-                customer_id: state.user.customer_id || null,
-                roles: state.user.roles || [],
             };
+
+            if (getters.canManageRoles.value) {
+                payload.roles = state.user.roles || [];
+            } else {
+                delete payload.roles;
+            }
 
             const response = await axiosInstance.put(`${PAGE_USER.URL}/${state.user.id}`, payload);
 

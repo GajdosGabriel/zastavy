@@ -21,9 +21,12 @@ class UserUpdateRequest extends FormRequest
             'username' => ['nullable', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('user'))],
             'phone' => ['nullable', 'string', 'max:40'],
-            'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'status' => ['required', Rule::in(ModelStatus::allowedValuesForUser($this->user()))],
-            'roles' => ['sometimes', 'array'],
+            'roles' => [
+                Rule::prohibitedIf(! $this->user()?->hasAnyRole(['admin', 'super-admin'])),
+                'sometimes',
+                'array',
+            ],
             'roles.*' => ['string', 'exists:roles,name'],
         ];
     }

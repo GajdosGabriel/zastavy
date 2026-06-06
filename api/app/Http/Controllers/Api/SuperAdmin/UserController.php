@@ -63,7 +63,7 @@ class UserController extends Controller
         DB::transaction(function () use ($user, $validated, $roles) {
             $user->update($validated);
 
-            if (is_array($roles)) {
+            if ($request->user()?->hasAnyRole(['admin', 'super-admin']) && is_array($roles)) {
                 $user->syncRoles($roles);
             }
         });
@@ -76,14 +76,16 @@ class UserController extends Controller
     {
         return [
             'meta' => [
-                'roles' => Role::query()
-                    ->orderBy('name')
-                    ->pluck('name')
-                    ->map(fn (string $role) => [
-                        'value' => $role,
-                        'label' => $role,
-                    ])
-                    ->values(),
+                'roles' => request()->user()?->hasAnyRole(['admin', 'super-admin'])
+                    ? Role::query()
+                        ->orderBy('name')
+                        ->pluck('name')
+                        ->map(fn (string $role) => [
+                            'value' => $role,
+                            'label' => $role,
+                        ])
+                        ->values()
+                    : [],
                 'statuses' => ModelStatus::allowedForUser(request()->user()),
             ],
         ];
