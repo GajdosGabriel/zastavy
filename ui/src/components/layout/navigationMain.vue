@@ -5,6 +5,7 @@ import useCheckouts from "../../store/StoreCheckouts.js";
 import useCustomer from "../../store/StoreCustomers.ts";
 import useProduct from "../../store/StoreProducts.ts";
 import useStock from "../../store/StoreStocks.js";
+import useAnnouncement from "../../store/StoreAnnouncements.js";
 import useNavigation from "../../store/StoreNavigation.js";
 import mainNavigationDropdown from "./navigationMainDropdown.vue";
 import kosik from "../icons/kosik.vue";
@@ -33,6 +34,10 @@ const onClickItem = (item: Page) => {
             }
             case 'stocks.index': {
                   useStock().setPaginator(item.URL);
+                  break;
+            }
+            case 'announcements.index': {
+                  useAnnouncement().setPaginator(item.URL);
                   break;
             }
             case 'public.contactUs': {

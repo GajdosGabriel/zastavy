@@ -54,6 +54,13 @@ export const PAGE_STOCK: Page = {
     ICON: ''
 }
 
+export const PAGE_ANNOUNCEMENT: Page = {
+    NAME: 'Oznamy',
+    URL: URL_BASE_API + '/announcements',
+    ROUTE: 'announcements.index',
+    ICON: ''
+}
+
 export const PAGE_CATEGORY: Page = {
     NAME: 'Kategórie',
     URL: URL_BASE_API + '/categories',

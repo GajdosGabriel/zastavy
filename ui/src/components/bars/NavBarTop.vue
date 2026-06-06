@@ -1,46 +1,24 @@
 <script setup>
-import { onMounted, ref } from "@vue/runtime-core";
+import { onMounted } from "vue";
+import useAnnouncements from "../../store/StoreAnnouncements";
 
-const month = new Date().getMonth();
-const message = ref("");
-const background = ref("");
+const { fetchActiveAnnouncements, getActiveTopAnnouncements } = useAnnouncements();
 
-onMounted(getMonth);
-
-function getMonth() {
-    if (month == 0 || month == 1) {
-        message.value = "Prebieha Novoročná akcia!";
-        background.value = "bg-rose-700";
-    }
-    if (month == 2 || month == 3) {
-        message.value = "Prebieha Jarná akcia!";
-        background.value = "bg-emerald-600";
-    }
-    if (month == 4 || month == 5) {
-        message.value = "Prebieha Letná akcia!";
-        background.value = "bg-sky-700";
-    }
-
-    if (month == 9 || month == 10) {
-        message.value = "Prebieha Jesenná akcia!";
-        background.value = "bg-orange-700";
-    }
-
-    if (month == 11) {
-        message.value = "Prebieha Vianočná akcia!";
-        background.value = "bg-fuchsia-700";
-    }
-}
-
+onMounted(() => {
+    fetchActiveAnnouncements("top");
+});
 </script>
 
 <template>
-    <div v-if="message" class="text-center text-gray-100 p-1 text-lg" :class="background">
+    <div
+        v-for="announcement in getActiveTopAnnouncements"
+        :key="announcement.id"
+        class="p-1 text-center text-lg"
+        :class="announcement.style_class"
+    >
         <strong>
-            <div>{{ message }}</div>
-            <div>
-                Najlacnejšie Zástavy a Vlajky na Slovensku
-            </div>
+            <div>{{ announcement.title }}</div>
+            <div v-if="announcement.body">{{ announcement.body }}</div>
         </strong>
     </div>
 </template>

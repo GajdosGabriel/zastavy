@@ -49,6 +49,19 @@ import BaseLayout from '../layout/BaseLayout.vue';
                                           Demo panel pre posledné nákupy, kontakty a otvorené požiadavky.
                                     </p>
                               </article>
+
+                              <router-link
+                                    :to="{ name: 'announcements.index' }"
+                                    class="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+                              >
+                                    <p class="text-sm text-slate-500">Obsah webu</p>
+                                    <h2 class="mt-2 text-2xl font-semibold text-slate-900">
+                                          Oznamy a bannery
+                                    </h2>
+                                    <p class="mt-3 text-slate-600">
+                                          Upravit horny akcny banner, dolny oznam, publikovanie a datumy zobrazenia.
+                                    </p>
+                              </router-link>
                         </div>
                   </section>
             </template>

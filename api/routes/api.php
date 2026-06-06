@@ -6,8 +6,10 @@ use App\Http\Controllers\Api\Dashboard\OrderMarkController;
 use App\Http\Controllers\Api\Dashboard\OrderProductController;
 use App\Http\Controllers\Api\Dashboard\OrderShippingController;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\OrderDeliverySurveyController;
 use App\Http\Controllers\Api\SanctumController;
+use App\Http\Controllers\Api\SuperAdmin\AnnouncementController as SuperAdminAnnouncementController;
 use App\Http\Controllers\Api\SuperAdmin\CategoryController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerMarkController;
@@ -38,6 +40,7 @@ Route::apiResources([
 ]);
 
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/announcements/active', [AnnouncementController::class, 'active'])->name('announcements.active');
 
 Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function () {
     Route::get('/orders/statistics', [OrderController::class, 'statistics'])->name('orders.statistics');
@@ -59,6 +62,7 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
         'customers.marks' => CustomerMarkController::class,
         'customers.order' => CustomerOrderController::class,
         'stocks' => StockController::class,
+        'announcements' => SuperAdminAnnouncementController::class,
         'product.image' => ProductImageController::class,
         'shippings.notices' => ShippingNoticeController::class,
     ]);
