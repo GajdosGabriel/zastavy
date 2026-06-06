@@ -42,18 +42,43 @@ const { setImages } = useImages();
 const { setErrors } = useErrors();
 const { state: q, setQuery } = useQuery();
 
+const defaultProduct = (): Product => ({
+    id: '',
+    code: '',
+    name: '',
+    slug: '',
+    description: '',
+    quantity: 0,
+    weight: 0,
+    price: 0,
+    sale_price: 0,
+    discount: 0,
+    vat: 23,
+    image_id: 0,
+    published: false,
+    unit_value: 'ks',
+    min_order: 1,
+    created_at: '',
+    deleted_at: '',
+    updated_at: '',
+    active_price: 0,
+    input_order: 1,
+    thumb: '',
+    images: [],
+    categories: [],
+    endpoints: {
+        update: '',
+        destroy: '',
+    },
+} as Product);
+
+let productRequestId = 0;
+
 const defaultState = {
     searchUrl: "" as string,
     url: PAGE_PRODUCT.URL as string,
     products: [] as Product[],
-    product: {
-        code: '',
-        sale_price: 0,
-        unit_value: 'ks',
-        min_order: 1,
-        vat: 23,
-        published: false,
-    } as Product,
+    product: defaultProduct(),
 };
 
 const state = reactive(defaultState);
@@ -81,9 +106,18 @@ const actions = {
         }
     },
 
-    fetchProduct: async (id: number) => {
+    fetchProduct: async (id: number | string) => {
+        const requestId = ++productRequestId;
+        state.product = defaultProduct();
+        setImages([]);
+
         try {
             const response = await axiosInstance.get(PAGE_PRODUCT.URL + '/' + id);
+
+            if (requestId !== productRequestId) {
+                return;
+            }
+
             state.product = await response.data;
             setImages(response.data.images);
         } catch (e) {
@@ -147,6 +181,12 @@ const actions = {
 
     setProduct: (data) => {
         state.product = data;
+    },
+
+    resetProduct: () => {
+        productRequestId++;
+        state.product = defaultProduct();
+        setImages([]);
     },
 };
 

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import useProducts from "../../store/StoreProducts";
 import useImages from "../../store/StoreImages";
@@ -10,16 +10,14 @@ import kosikButton from "../icons/kosik.vue";
 import { formatDecimal, formatPriceWithoutVat } from "../../models/functions";
 import RequiredMark from "../forms/RequiredMark.vue";
 
-const { state, getProduct, fetchProduct } = useProducts();
-const { getImages, setImages } = useImages();
+const { state, getProduct, fetchProduct, resetProduct } = useProducts();
+const { getImages } = useImages();
 const { submitCartToIndex } = useCheckouts();
+const route = useRoute();
 const messages = ref([]);
 const currentImage = ref(0);
 
-const {
-    params: { productId }
-} = useRoute();
-
+const productLoaded = computed(() => String(getProduct.value.id) === String(route.params.productId));
 const selectedImage = computed(() => getImages.value?.[currentImage.value]?.path ?? getProduct.value.thumb);
 const activePrice = computed(() => Number(getProduct.value.active_price ?? 0));
 const inputOrder = computed(() => Number(state.product.input_order ?? getProduct.value.min_order ?? 1));
@@ -27,9 +25,11 @@ const orderTotal = computed(() => formatDecimal(inputOrder.value * activePrice.v
 const minOrderTotal = computed(() => formatDecimal(Number(getProduct.value.min_order ?? 1) * activePrice.value));
 const hasDiscount = computed(() => Number(getProduct.value.sale_price ?? 0) > 0);
 
-onMounted(() => {
-    fetchProduct(productId);
-});
+const loadProduct = async (productId) => {
+    currentImage.value = 0;
+    messages.value = [];
+    await fetchProduct(productId);
+};
 
 const submitCart = () => {
     submitCartToIndex(state.product);
@@ -49,8 +49,18 @@ watch(
     }
 );
 
+watch(
+    () => route.params.productId,
+    (productId) => {
+        if (productId) {
+            loadProduct(productId);
+        }
+    },
+    { immediate: true }
+);
+
 onUnmounted(() => {
-    setImages([]);
+    resetProduct();
 });
 </script>
 
@@ -63,10 +73,10 @@ onUnmounted(() => {
                         Produkty
                     </router-link>
                     <span class="mx-2">/</span>
-                    <span class="text-gray-700">{{ getProduct.name }}</span>
+                    <span class="text-gray-700">{{ productLoaded ? getProduct.name : '' }}</span>
                 </nav>
 
-                <section class="grid gap-6 lg:grid-cols-12">
+                <section v-if="productLoaded" class="grid gap-6 lg:grid-cols-12">
                     <div class="lg:col-span-7">
                         <div class="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
                             <div class="flex min-h-96 items-center justify-center bg-gray-50 p-4 md:p-8">
@@ -186,6 +196,19 @@ onUnmounted(() => {
                                 <kosik />
                             </section>
 
+                        </div>
+                    </aside>
+                </section>
+
+                <section v-else class="grid gap-6 lg:grid-cols-12">
+                    <div class="lg:col-span-7">
+                        <div class="min-h-96 rounded-md border border-gray-200 bg-gray-50 shadow-sm"></div>
+                    </div>
+                    <aside class="lg:col-span-5">
+                        <div class="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
+                            <div class="h-6 w-32 rounded bg-gray-100"></div>
+                            <div class="mt-4 h-10 w-3/4 rounded bg-gray-100"></div>
+                            <div class="mt-6 h-20 rounded bg-gray-100"></div>
                         </div>
                     </aside>
                 </section>
