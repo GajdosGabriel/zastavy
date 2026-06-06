@@ -26,6 +26,11 @@ const defaultState = reactive({
     orders: [],
     order: {},
     customer: {},
+    statistics: {
+        orders: {},
+        products: [],
+        undelivered_products: [],
+    },
 });
 const state = reactive(defaultState);
 
@@ -33,6 +38,7 @@ const getters = {
     customer: computed(() => templateCustomer(state.customer)),
     getOrders: computed(() => state.orders),
     getOrder: computed(() => templateOrder(state.order)),
+    getOrderStatistics: computed(() => state.statistics),
     isOrderFinished: computed(() => state.order.isFinished),
 };
 
@@ -45,6 +51,16 @@ const actions = {
             state.orders = await response.data.data;
             setPaginator(response.data.meta);
             setLinks(response.data.links);
+            actions.fetchOrderStatistics();
+        } catch (e) {
+            setErrors(e);
+        }
+    },
+
+    fetchOrderStatistics: async () => {
+        try {
+            const response = await axiosInstance.get(PAGE_ORDER.URL + '/statistics' + q.stringForUrl);
+            state.statistics = response.data.data;
         } catch (e) {
             setErrors(e);
         }

@@ -4,6 +4,7 @@ import { onMounted } from "vue";
 import useOrders from "../../store/StoreOrders";
 import tableRowOrders from "./component/tableRowOrders.vue";
 import filterOrder from "./FilterOrder.vue";
+import OrderStatistics from "./OrderStatistics.vue";
 import iconStar from "../../components/icons/star.vue";
 import templateOrder from "../../models/templateOrder"
 import PaginationComponent from "../plugins/pagination.vue";
@@ -51,6 +52,8 @@ const template = () => {
                         <PageHeader :item="template().page_header" />
 
                         <filterOrder />
+
+                        <OrderStatistics />
 
                         <div class="flex flex-col">
 

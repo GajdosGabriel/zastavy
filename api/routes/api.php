@@ -40,6 +40,8 @@ Route::apiResources([
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
 Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function () {
+    Route::get('/orders/statistics', [OrderController::class, 'statistics'])->name('orders.statistics');
+
     Route::apiResources([
         'orders' => OrderController::class,
         'orders.shippings' => OrderShippingController::class,

@@ -11,6 +11,8 @@ use App\Http\Resources\OrderResource;
 use App\Notifications\OrderCreated;
 use App\Services\CustomerService;
 use App\Actions\StoreOrder;
+use App\Http\Resources\OrderStatisticResource;
+use App\Services\OrderStatisticsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
@@ -22,21 +24,20 @@ class OrderController extends Controller
 
     public function index(OrderFilter $orderFilters)
     {
-        $orders = Order::with(['customer.users', 'user'])
+        $orders = app(OrderStatisticsService::class)
+            ->queryFor(request()->user(), $orderFilters)
+            ->with(['customer.users', 'user'])
             ->orderBy('created_at', 'desc')
-            ->when(! request()->user()->hasAnyRole(self::DASHBOARD_ROLES), function ($query) {
-                $query->where(function ($query) {
-                    $query->where('user_id', request()->user()->id);
-
-                    if (request()->user()->customer_id) {
-                        $query->orWhere('customer_id', request()->user()->customer_id);
-                    }
-                });
-            })
-            ->filter($orderFilters)
             ->paginate();
 
         return OrderResource::collection($orders);
+    }
+
+    public function statistics(OrderFilter $orderFilters, OrderStatisticsService $statistics)
+    {
+        return new OrderStatisticResource(
+            $statistics->handle(request()->user(), $orderFilters)
+        );
     }
 
     public function show(Order $order)

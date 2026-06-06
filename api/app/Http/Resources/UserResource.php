@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Http\Resources;
+
+use App\Filters\OrderFilter;
+use App\Services\OrderStatisticsService;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\OrderStatisticResource;
 
 class UserResource extends JsonResource
 {
@@ -34,7 +36,9 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'customer_id' => $this->customer_id,
             'status' => $this->statusData(),
-            'order' => new OrderStatisticResource($request),
+            'order' => new OrderStatisticResource(
+                app(OrderStatisticsService::class)->handle($this->resource, app(OrderFilter::class))
+            ),
             'roles' => $this->getRoleNames(),
             'navigation' => [
                 'main' => $this->mainNavigation(),
