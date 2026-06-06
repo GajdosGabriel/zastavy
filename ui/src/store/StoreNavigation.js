@@ -2,6 +2,12 @@ import { computed, reactive } from "vue";
 
 const publicMainNavigation = [
     {
+        NAME: "Obchodné podmienky",
+        ROUTE: "public.obchodne.podmienky",
+        URL: "/obchodne-podmienky",
+        ICON: "",
+    },
+    {
         NAME: "Kontakt",
         ROUTE: "public.contactUs",
         URL: "/kontakt",

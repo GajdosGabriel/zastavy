@@ -351,7 +351,7 @@ const onClickForm = async () => {
                                                 <div class="flex justify-between">
                                                       <label class="block text-gray-700 text-sm font-bold mb-2"
                                                             for="billing-ico">
-                                                            ICO
+                                                            IĆO - Vyhľadať firmu podľa ico
                                                       </label>
                                                       <button type="button" @click="onClickIco"
                                                             :disabled="isSearchingCompany"
