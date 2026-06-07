@@ -30,6 +30,7 @@
     "Register": "Registrácia",
     "Reset Password": "Obnova hesla",
     "Reset Password Notification": "Požiadavka na obnovenie hesla",
+    "Reset your password": "Obnovte svoje heslo",
     "results": "výsledky",
     "Server Error": "Chyba servera",
     "Service Unavailable": "Služba je nedostupná",
@@ -44,6 +45,7 @@
     "Too Many Requests": "Príliš veľa požiadaviek",
     "Unauthorized": "Neoprávnený prístup",
     "Verify Email Address": "Overte emailovú adresu",
+    "Verify your email address": "Overte svoju e-mailovú adresu",
     "Whoops!": "Nastala chyba!",
     "You are receiving this email because we received a password reset request for your account.": "Táto správa Vám bola doručená na základe žiadosti pre obnovenie hesla."
 }
