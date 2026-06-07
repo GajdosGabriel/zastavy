@@ -22,6 +22,7 @@ const defaultState = reactive({
     statement: {
         markSelected: false,
     },
+    isLoading: false,
     url: PAGE_ORDER.URL,
     orders: [],
     order: {},
@@ -33,6 +34,7 @@ const defaultState = reactive({
     },
 });
 const state = reactive(defaultState);
+let ordersRequestId = 0;
 
 const getters = {
     customer: computed(() => templateCustomer(state.customer)),
@@ -46,14 +48,25 @@ const mutations = {};
 
 const actions = {
     fetchOrders: async () => {
+        const requestId = ++ordersRequestId;
+        state.isLoading = true;
+
         try {
             const response = await axiosInstance.get(state.url + q.stringForUrl);
+
+            if (requestId !== ordersRequestId) {
+                return;
+            }
+
             state.orders = await response.data.data;
             setPaginator(response.data.meta);
             setLinks(response.data.links);
-            actions.fetchOrderStatistics();
         } catch (e) {
             setErrors(e);
+        } finally {
+            if (requestId === ordersRequestId) {
+                state.isLoading = false;
+            }
         }
     },
 

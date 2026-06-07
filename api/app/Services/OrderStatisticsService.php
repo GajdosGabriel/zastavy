@@ -50,6 +50,44 @@ class OrderStatisticsService
         ];
     }
 
+    public function summary(User $user, OrderFilter $orderFilters): array
+    {
+        $ordersQuery = $this->queryFor($user, $orderFilters);
+        $notificationMissingCount = (clone $ordersQuery)
+            ->whereHas('shippings')
+            ->whereDoesntHave('shippings.notices')
+            ->count();
+
+        return [
+            'orders' => $this->orderSummary($this->orderRows(clone $ordersQuery), $notificationMissingCount),
+            'products' => [],
+            'undelivered_products' => [],
+        ];
+    }
+
+    public function navigationSummary(User $user, OrderFilter $orderFilters): array
+    {
+        $ordersQuery = $this->queryFor($user, $orderFilters);
+        $unopenedCount = (clone $ordersQuery)->where('isOpened', 0)->count();
+        $notificationMissingCount = (clone $ordersQuery)
+            ->whereHas('shippings')
+            ->whereDoesntHave('shippings.notices')
+            ->count();
+
+        return [
+            'orders' => [
+                'unopened_count' => $unopenedCount,
+                'notification_missing_count' => $notificationMissingCount,
+                'deleted_count' => 0,
+                'isConfirmed' => $unopenedCount,
+                'isNotificated' => $notificationMissingCount,
+                'isDeleted' => 0,
+            ],
+            'products' => [],
+            'undelivered_products' => [],
+        ];
+    }
+
     private function orderRows(Builder $ordersQuery)
     {
         $stockTotals = DB::table('stocks')

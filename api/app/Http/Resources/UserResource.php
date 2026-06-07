@@ -39,9 +39,8 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'customer_id' => $this->customer_id,
             'status' => $this->statusData(),
-            'order' => new OrderStatisticResource(
-                app(OrderStatisticsService::class)->handle($this->resource, app(OrderFilter::class))
-            ),
+            'order' => app(OrderStatisticsService::class)
+                ->navigationSummary($this->resource, app(OrderFilter::class))['orders'],
             'roles' => $this->getRoleNames(),
             'navigation' => [
                 'main' => $this->mainNavigation(),

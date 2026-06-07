@@ -1,5 +1,14 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import BaseLayout from '../layout/BaseLayout.vue';
+import OrderStatistics from '../order/OrderStatistics.vue';
+import useOrders from '../../store/StoreOrders';
+
+const { fetchOrderStatistics } = useOrders();
+
+onMounted(() => {
+      fetchOrderStatistics();
+});
 </script>
 
 <template>
@@ -18,6 +27,8 @@ import BaseLayout from '../layout/BaseLayout.vue';
                                     produktov, skladu a zákazníkov.
                               </p>
                         </div>
+
+                        <OrderStatistics class="mt-6" />
 
                         <div class="mt-6 grid gap-5 md:grid-cols-3">
                               <article class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">

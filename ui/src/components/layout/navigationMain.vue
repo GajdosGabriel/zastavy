@@ -20,7 +20,7 @@ const onClickItem = (item: Page) => {
                   break;
             }
             case 'orders.index': {
-                  useOrder().setPaginator(item.URL);
+                  useOrder().resetUrl();
                   break;
             }
             case 'customers.index': {
@@ -54,7 +54,9 @@ const { getMainNavigation } = useNavigation();
 
 
 onMounted(() => {
-      fetchUser();
+      if (localStorage.getItem('authToken') && !getUser.value?.isAuth) {
+            fetchUser();
+      }
       getlocalStorage();
 });
 

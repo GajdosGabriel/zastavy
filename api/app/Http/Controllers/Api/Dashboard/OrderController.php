@@ -8,6 +8,7 @@ use App\Models\Stock;
 use App\Filters\OrderFilter;
 use App\Http\Requests\OrderRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\OrderIndexResource;
 use App\Http\Resources\OrderResource;
 use App\Notifications\OrderCreated;
 use App\Services\CustomerService;
@@ -27,11 +28,11 @@ class OrderController extends Controller
     {
         $orders = app(OrderStatisticsService::class)
             ->queryFor(request()->user(), $orderFilters)
-            ->with(['customer.users', 'user'])
+            ->with(['customer', 'shippings.stocks', 'shippings.notices', 'orderProducts', 'stocks', 'mark', 'notices'])
             ->orderBy('created_at', 'desc')
             ->paginate();
 
-        return OrderResource::collection($orders);
+        return OrderIndexResource::collection($orders);
     }
 
     public function statistics(OrderFilter $orderFilters, OrderStatisticsService $statistics)

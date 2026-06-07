@@ -4,7 +4,6 @@ import { onMounted } from "vue";
 import useOrders from "../../store/StoreOrders";
 import tableRowOrders from "./component/tableRowOrders.vue";
 import filterOrder from "./FilterOrder.vue";
-import OrderStatistics from "./OrderStatistics.vue";
 import iconStar from "../../components/icons/star.vue";
 import templateOrder from "../../models/templateOrder"
 import PaginationComponent from "../plugins/pagination.vue";
@@ -12,7 +11,6 @@ import plus from '../icons/plus.vue';
 import PageHeader from '../layout/page/pageHeader.vue';
 import PageBottom from '../layout/page/pageBottom.vue';
 import spinnerTable from '../icons/spinnerTable.vue';
-import loadingStore from '../../store/StoreLoading';
 
 
 
@@ -53,8 +51,6 @@ const template = () => {
 
                         <filterOrder />
 
-                        <OrderStatistics />
-
                         <div class="flex flex-col">
 
                               <div class="-my-2 sm:-mx-6 lg:-mx-8">
@@ -83,7 +79,7 @@ const template = () => {
                                                       </thead>
                                                       <tbody class="">
 
-                                                            <spinnerTable v-if="loadingStore.isLoading" />
+                                                            <spinnerTable v-if="state.isLoading" />
 
                                                             <tableRowOrders v-else v-for="order in getOrders"
                                                                   :key="order.id" :order="templateOrder(order)">
