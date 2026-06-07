@@ -5,19 +5,20 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules;
+use Illuminate\Validation\ValidationException;
 
 class RegisteredUserController extends Controller
 {
     /**
      * Handle an incoming registration request.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function store(Request $request): JsonResponse
     {
@@ -28,11 +29,14 @@ class RegisteredUserController extends Controller
             'password' => ['required', Rules\Password::defaults()],
         ]);
 
+        $name = trim($request->firstName.' '.$request->lastName);
+
         $user = User::create([
+            'name' => $name,
             'firstName' => $request->firstName,
             'lastName' => $request->lastName,
-            'username' => trim($request->firstName . ' ' . $request->lastName),
-            'slug' => Str::slug($request->firstName . ' ' . $request->lastName),
+            'username' => $name,
+            'slug' => Str::slug($name),
             'email' => $request->email,
             'password' => Hash::make($request->string('password')),
         ]);

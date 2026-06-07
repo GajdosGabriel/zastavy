@@ -2,12 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ * @extends Factory<User>
  */
 class UserFactory extends Factory
 {
@@ -23,11 +24,16 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $firstName = fake()->firstName();
+        $lastName = fake()->lastName();
+        $name = trim($firstName.' '.$lastName);
+
         return [
-            'firstName' => fake()->firstName(),
-            'lastName' => fake()->lastName(),
-            'slug' => fake()->slug(),
-            'username' => fake()->name(),
+            'name' => $name,
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'slug' => Str::slug($name),
+            'username' => $name,
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
             'email_verified_at' => now(),
