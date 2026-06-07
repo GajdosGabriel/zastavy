@@ -3,20 +3,17 @@
 namespace App\Models;
 
 use App\Enums\ModelStatus;
-use App\Models\Mark;
-use App\Models\Stock;
-use App\Models\Shipping;
-use App\Models\OrderProduct;
 use App\Traits\HasModelStatus;
 use App\Traits\HasNotices;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
-    use HasFactory, SoftDeletes, Notifiable, HasNotices, HasModelStatus;
+    use HasFactory, HasModelStatus, HasNotices, Notifiable, SoftDeletes;
 
     protected $guarded = [];
 
@@ -25,6 +22,15 @@ class Order extends Model
     protected $casts = [
         'status' => ModelStatus::class,
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Order $order) {
+            if (! $order->uuid) {
+                $order->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     public function customer()
     {
@@ -92,10 +98,10 @@ class Order extends Model
     public function shippintPercentageCalculator()
     {
         if ($this->shippingRequiredQuantity() == 0) {
-            return "Prázdna objednávka";
+            return 'Prázdna objednávka';
         }
 
-        return $this->shippingPercentage() . '%';
+        return $this->shippingPercentage().'%';
     }
 
     public function shippingRequiredQuantity()

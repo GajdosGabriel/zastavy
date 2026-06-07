@@ -4,6 +4,8 @@ namespace App\Http\Resources;
 
 use App\Filters\OrderFilter;
 use App\Services\OrderStatisticsService;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
@@ -11,8 +13,8 @@ class UserResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @param  Request  $request
+     * @return array|Arrayable|\JsonSerializable
      */
     public function toArray($request)
     {
@@ -28,6 +30,7 @@ class UserResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'uuid' => $this->uuid,
             'isAuth' => true,
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,

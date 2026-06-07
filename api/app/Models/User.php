@@ -5,18 +5,19 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\ModelStatus;
 use App\Traits\HasModelStatus;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, HasRoles, HasModelStatus;
+    /** @use HasFactory<UserFactory> */
+    use HasApiTokens, HasFactory, HasModelStatus, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -25,6 +26,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'uuid',
         'firstName',
         'lastName',
         'slug',
@@ -50,6 +52,15 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'status' => ModelStatus::class,
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (! $user->uuid) {
+                $user->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     public function customer()
     {

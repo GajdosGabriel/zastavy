@@ -30,6 +30,7 @@ class UserFactory extends Factory
 
         return [
             'name' => $name,
+            'uuid' => (string) Str::uuid(),
             'firstName' => $firstName,
             'lastName' => $lastName,
             'slug' => Str::slug($name),

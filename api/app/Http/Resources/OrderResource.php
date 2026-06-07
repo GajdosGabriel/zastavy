@@ -4,10 +4,8 @@ namespace App\Http\Resources;
 
 use App\Enums\ModelStatus;
 use Carbon\Carbon;
-use App\Http\Resources\NoticeResource;
-use App\Http\Resources\CustomerResource;
-use App\Http\Resources\ShippingResource;
-use App\Http\Resources\OrderProductResource;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class OrderResource extends JsonResource
@@ -15,8 +13,8 @@ class OrderResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @param  Request  $request
+     * @return array|Arrayable|\JsonSerializable
      */
     public function toArray($request)
     {
@@ -25,6 +23,7 @@ class OrderResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'uuid' => $this->uuid,
             'isOpened' => $this->isOpened,
             'isDelivered' => $this->isDelivered,
             'serial_number' => $this->serial_number,
@@ -37,9 +36,9 @@ class OrderResource extends JsonResource
             'user' => $this->user ? new UserResource($this->user) : null,
             'shippings' => ShippingResource::collection($this->shippings),
             'price_sum' => $this->priceSum(),
-            'notices' => $this->notices ,
+            'notices' => $this->notices,
             'orderProducts' => OrderProductResource::collection($this->orderProducts),
-            'stock_expedition' =>  $this->stockExpedition,
+            'stock_expedition' => $this->stockExpedition,
             'product_order_sum' => $this->productOrderSum,
             'product_storno_sum' => $this->productStornoSum(),
             'shipping_required_quantity' => $this->shippingRequiredQuantity(),
@@ -50,16 +49,16 @@ class OrderResource extends JsonResource
             'isStorned' => $this->isStorned(),
             'isFinished' => $this->isFinished(),
             'shippintPercentageCalculator' => $this->shippintPercentageCalculator(),
-            'isDeleted' => $this->deleted_at != NULL,
-            'mark' =>  [
+            'isDeleted' => $this->deleted_at != null,
+            'mark' => [
                 'isActive' => isset($this->mark),
-                'endpoint'      =>  route('orders.marks.store', $this->id),
+                'endpoint' => route('orders.marks.store', $this->id),
             ],
             'endpoints' => [
-                'index'     =>  route('orders.index'),
-                'show'      =>  route('orders.show', $this->id),
-                'update'    =>  route('orders.update', $this->id),
-                'store'     =>  route('orders.store'),
+                'index' => route('orders.index'),
+                'show' => route('orders.show', $this->id),
+                'update' => route('orders.update', $this->id),
+                'store' => route('orders.store'),
                 'destroy' => route('orders.destroy', $this->id),
             ],
             'permissions' => [
