@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Customer;
 use App\Models\User;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -51,13 +50,16 @@ class CustomerService
             return null;
         }
 
-        $username = $this->contactName($request) ?: $email;
-        [$firstName, $lastName] = $this->nameParts($request, $username);
         $user = User::withTrashed()->where('email', $email)->first();
 
-        $this->ensureEmailIsAvailable($customer, $user);
+        if ($user) {
+            return $user;
+        }
 
-        $userData = [
+        $username = $this->contactName($request) ?: $email;
+        [$firstName, $lastName] = $this->nameParts($request, $username);
+
+        return User::create([
             'customer_id' => $customer->id,
             'name' => $username,
             'firstName' => $firstName,
@@ -65,34 +67,9 @@ class CustomerService
             'username' => $username,
             'slug' => Str::slug($username),
             'phone' => $request['phone'] ?? null,
-        ];
-
-        if ($user) {
-            $user->restore();
-            $user->update($userData);
-
-            return $user;
-        }
-
-        return User::create([
-            ...$userData,
             'email' => $email,
             'password' => Hash::make(Str::random(32)),
         ]);
-    }
-
-    private function ensureEmailIsAvailable(Customer $customer, ?User $user): void
-    {
-        if (!$user || !$user->customer_id || (int) $user->customer_id === (int) $customer->id) {
-            return;
-        }
-
-        throw new HttpResponseException(response()->json([
-            'message' => 'Zadaný email už existuje.',
-            'errors' => [
-                'customer.email' => ['Zadaný email už existuje.'],
-            ],
-        ], 422));
     }
 
     private function findCustomer(array $request): ?Customer

@@ -251,7 +251,7 @@ const onClickForm = async () => {
 
                                     <div class="mb-5 rounded border border-gray-200 bg-gray-50 p-4">
                                           <label class="block text-gray-700 text-sm font-bold mb-2" for="ico">
-                                                ICO
+                                                ICO - Vyhľadať firmu podľa ico
                                           </label>
                                           <div class="flex gap-3">
                                                 <input
@@ -351,13 +351,13 @@ const onClickForm = async () => {
                                                 <div class="flex justify-between">
                                                       <label class="block text-gray-700 text-sm font-bold mb-2"
                                                             for="billing-ico">
-                                                            IĆO - Vyhľadať firmu podľa ico
+                                                            IĆO
                                                       </label>
                                                       <button type="button" @click="onClickIco"
                                                             :disabled="isSearchingCompany"
                                                             class="flex items-center text-xs text-blue-700 hover:text-blue-900 disabled:text-gray-400">
                                                             <search class="cursor-pointer" />
-                                                            <span class="ml-1">{{ isSearchingCompany ? 'Hľadám...' : 'Vyhľadať firmu' }}</span>
+                                                            <span class="ml-1">{{ isSearchingCompany ? 'Hľadám...' : 'Hľadať' }}</span>
                                                       </button>
                                                 </div>
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
