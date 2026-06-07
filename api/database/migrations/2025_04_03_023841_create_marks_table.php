@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('marks', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedInteger('fileable_id');
-            $table->unsignedInteger('user_id');
+            $table->id();
+            $table->unsignedBigInteger('fileable_id');
+            $table->unsignedBigInteger('user_id');
             $table->string('fileable_type', 255);
             $table->timestamps();
         });

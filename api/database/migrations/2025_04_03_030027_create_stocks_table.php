@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stocks', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedInteger('order_id');
-            $table->unsignedInteger('shipping_id');
-            $table->unsignedInteger('order_product_id');
+            $table->id();
+            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('shipping_id');
+            $table->unsignedBigInteger('order_product_id');
             $table->integer('quantity');
             $table->timestamps();
             $table->softDeletes();

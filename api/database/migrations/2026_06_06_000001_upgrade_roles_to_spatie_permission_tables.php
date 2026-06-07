@@ -11,7 +11,7 @@ return new class extends Migration
     {
         if (! Schema::hasTable('roles')) {
             Schema::create('roles', function (Blueprint $table) {
-                $table->increments('id');
+                $table->id();
                 $table->string('name');
                 $table->string('guard_name')->default('web');
                 $table->text('description')->nullable();
@@ -56,7 +56,7 @@ return new class extends Migration
 
         if (! Schema::hasTable('model_has_roles')) {
             Schema::create('model_has_roles', function (Blueprint $table) {
-                $table->unsignedInteger('role_id');
+                $table->unsignedBigInteger('role_id');
                 $table->string('model_type');
                 $table->unsignedBigInteger('model_id');
 
@@ -69,7 +69,7 @@ return new class extends Migration
         if (! Schema::hasTable('role_has_permissions')) {
             Schema::create('role_has_permissions', function (Blueprint $table) {
                 $table->unsignedBigInteger('permission_id');
-                $table->unsignedInteger('role_id');
+                $table->unsignedBigInteger('role_id');
 
                 $table->foreign('permission_id')->references('id')->on('permissions')->cascadeOnDelete();
                 $table->foreign('role_id')->references('id')->on('roles')->cascadeOnDelete();

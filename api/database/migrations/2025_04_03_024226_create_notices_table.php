@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('notices', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedInteger('fileable_id');
+            $table->id();
+            $table->unsignedBigInteger('fileable_id');
             $table->string('fileable_type', 255);
             $table->string('notice', 255)->nullable();
             $table->timestamps();
