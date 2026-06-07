@@ -10,19 +10,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('announcements', function (Blueprint $table) {
-            $table->id();
-            $table->string('status', 32)->default(ModelStatus::Active->value)->index();
-            $table->string('placement', 32)->index();
-            $table->string('title');
-            $table->text('body')->nullable();
-            $table->string('style_class')->default('bg-blue-700 text-gray-100');
-            $table->unsignedInteger('sort_order')->default(0);
-            $table->dateTime('published_from')->nullable();
-            $table->dateTime('published_until')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        if (! Schema::hasTable('announcements')) {
+            Schema::create('announcements', function (Blueprint $table) {
+                $table->id();
+                $table->string('status', 32)->default(ModelStatus::Active->value)->index();
+                $table->string('placement', 32)->index();
+                $table->string('title');
+                $table->text('body')->nullable();
+                $table->string('style_class')->default('bg-blue-700 text-gray-100');
+                $table->unsignedInteger('sort_order')->default(0);
+                $table->dateTime('published_from')->nullable();
+                $table->dateTime('published_until')->nullable();
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+
+        if (DB::table('announcements')->exists()) {
+            return;
+        }
 
         DB::table('announcements')->insert([
             [

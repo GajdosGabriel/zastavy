@@ -24,7 +24,9 @@ return new class extends Migration
                     $table->string('guard_name')->default('web')->after('name');
                 }
 
-                $table->unique(['name', 'guard_name']);
+                if (! $this->hasIndex('roles', 'roles_name_guard_name_unique')) {
+                    $table->unique(['name', 'guard_name']);
+                }
             });
 
             if (Schema::hasColumn('roles', 'description')) {
@@ -91,5 +93,14 @@ return new class extends Migration
                 $table->dropColumn('guard_name');
             });
         }
+    }
+
+    private function hasIndex(string $table, string $index): bool
+    {
+        return DB::table('information_schema.STATISTICS')
+            ->where('TABLE_SCHEMA', DB::getDatabaseName())
+            ->where('TABLE_NAME', $table)
+            ->where('INDEX_NAME', $index)
+            ->exists();
     }
 };
