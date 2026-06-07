@@ -4,6 +4,7 @@ import router from "../router";
 import usePaginator from './StorePaginator';
 import useQuery from './StoreQuery';
 import useOrders from './StoreOrders';
+import useErrors from './StoreErrors';
 import { PAGE_CUSTOMER } from "../constants";
 import { AxiosResponse } from "axios";
 import { ApiResponse } from "../types";
@@ -34,6 +35,7 @@ interface Statement {
 
 
 const { setOrders } = useOrders();
+const { setErrors } = useErrors();
 const { setPaginator, setLinks } = usePaginator();
 const { getQueryStringUrl, setQuery, removeQuery } = useQuery();
 
@@ -82,9 +84,15 @@ const actions = {
     },
 
     fetchCustomerOrders: async (customerId: number) => {
-        setOrders([]);
-        const response: AxiosResponse<Customer> = await axiosInstance.get(PAGE_CUSTOMER.URL + '/' + customerId + '/order');
-        setOrders(response.data.data);
+        try {
+            setOrders([]);
+            const response: AxiosResponse<ApiResponse<any[]>> = await axiosInstance.get(PAGE_CUSTOMER.URL + '/' + customerId + '/order');
+            setOrders(response.data.data);
+            setPaginator(response.data.meta);
+            setLinks(response.data.links);
+        } catch (e) {
+            setErrors(e);
+        }
     },
 
     findCustomerByIco: async () => {

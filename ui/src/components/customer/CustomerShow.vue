@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, watch } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
@@ -14,23 +14,28 @@ import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 
 
-const {
-    params: { customerId },
-} = useRoute();
+const route = useRoute();
 
 const { state, fetchCustomer, getCustomer, fetchCustomerOrders } = useCustomers();
 const { state: ooorrr, getOrders } = useOrders();
 
 
 onMounted(() => {
-    fetchCustomer(customerId);
-    fetchCustomerOrders(customerId);
     document.title = "Detail zákazníka";
 });
 
 const buttonTopRight = { name: 'Nový zákazník', spinner: true, link: '/zakaznici/create', icon: 'plus' }
 
 const buttonBottomLeft = { name: 'Späť', spinner: true, link: '/zakaznici', icon: 'arrow-left' }
+
+watch(
+    () => route.params.customerId,
+    (customerId) => {
+        fetchCustomer(customerId);
+        fetchCustomerOrders(customerId);
+    },
+    { immediate: true }
+);
 
 state.buttonTopRight = buttonTopRight;
 state.buttonBottomLeft = buttonBottomLeft;
