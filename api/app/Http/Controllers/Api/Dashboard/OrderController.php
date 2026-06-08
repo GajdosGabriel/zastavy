@@ -10,14 +10,12 @@ use App\Http\Requests\OrderRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderIndexResource;
 use App\Http\Resources\OrderResource;
-use App\Notifications\OrderCreated;
 use App\Services\CustomerService;
 use App\Actions\StoreOrder;
 use App\Http\Resources\OrderStatisticResource;
 use App\Services\OrderStatisticsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Notification;
 
 
 class OrderController extends Controller
@@ -94,9 +92,8 @@ class OrderController extends Controller
             return [$order->load(['customer.users', 'user', 'orderProducts'])];
         });
 
-        if ($notifyCustomer) {
-            $order->loadMissing('user');
-            Notification::send(collect([$order->user])->filter()->all(), new OrderCreated($order));
+        if ($notifyCustomer && $order->customer?->email) {
+            $order->customer->notify(new OrderCreated($order));
         }
 
         return new OrderResource($order->refresh()->load(['customer.users', 'user', 'orderProducts']));

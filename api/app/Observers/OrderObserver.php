@@ -2,12 +2,8 @@
 
 namespace App\Observers;
 
-use App\Models\Customer;
 use App\Models\Order;
-use App\Models\User;
 use App\Notifications\OrderCreated;
-use Illuminate\Contracts\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Notification;
 
 class OrderObserver
 {
@@ -19,12 +15,11 @@ class OrderObserver
      */
     public function created(Order $order)
     {
-        $order->loadMissing('user');
+        $order->loadMissing('customer');
 
-        Notification::send(
-            collect([$order->user, User::first()])->filter()->unique('id')->all(),
-            new OrderCreated($order)
-        );
+        if ($order->customer?->email) {
+            $order->customer->notify(new OrderCreated($order));
+        }
     }
 
     /**
