@@ -8,15 +8,14 @@ const { destroyStock } = useStocks();
 
 const dropdownItems = computed(() => {
     const permissions = props.item.permissions || {};
-    const canDelete = permissions.delete ?? Boolean(props.item.endpoints?.destroy);
 
-    if (!canDelete) {
+    if (!permissions.delete?.allowed) {
         return [];
     }
 
     return [
         {
-            label: "Zmazať",
+            label: permissions.delete.label,
             onClick: () => destroyStock(props.item.id),
         },
     ];

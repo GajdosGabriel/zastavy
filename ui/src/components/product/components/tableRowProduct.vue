@@ -11,46 +11,25 @@ import routerLinkComponent from "../../layout/RouterLinkComponent.vue";
 const emits = defineEmits(['checkmark']);
 const props = defineProps(["product"]);
 
-const { destroyProduct, updateProduct, setProduct, getProducts, getProduct, getStatment } = useProducts();
-
-const deleteProduct = (url) => {
-    destroyProduct(url);
-};
+const { destroyProduct, updateProduct, setProduct, getStatment } = useProducts();
 
 const onClickUpdate = async () => {
-
-    props.product.snipper = true
+    props.product.snipper = true;
     setProduct({ ...props.product, published: !props.product.published });
     await updateProduct();
 };
 
+const actionMap = {
+    update: { to: '/products/' + props.product.id + '/edit' },
+    delete: { onClick: () => destroyProduct(props.product.endpoints.destroy) },
+};
 
 const dropdownItems = computed(() => {
-    const items = []
+    if (!Object.keys(props.product.endpoints).length) return [];
 
-    if (!Object.keys(props.product.endpoints).length) {
-        return []
-    }
-
-    const permissions = props.product.permissions || {};
-    const canUpdate = permissions.update ?? Boolean(props.product.endpoints.update);
-    const canDelete = permissions.delete ?? Boolean(props.product.endpoints.destroy);
-
-    if (canUpdate) {
-        items.push({
-            label: 'Upraviť',
-            to: '/products/' + props.product.id + '/edit'
-        })
-    }
-
-if (canDelete) {
-    items.push({
-        label: "Zmazať",
-        onClick: () => destroyProduct(props.product.endpoints.destroy)
-    })
-}
-
-return items
+    return Object.entries(props.product.permissions || {})
+        .filter(([key, perm]) => perm.allowed && actionMap[key])
+        .map(([key, perm]) => ({ label: perm.label, ...actionMap[key] }));
 })
 
 </script>

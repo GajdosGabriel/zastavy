@@ -10,48 +10,18 @@ const props = defineProps(["order"]);
 
 const { destroyOrder, updateOrder, clickToMark } = useOrders();
 
+const actionMap = {
+    update: { to: { name: "orders.edit", params: { orderId: props.order.id } } },
+    storno: { onClick: () => updateOrder({ id: props.order.id, makeStorned: true }) },
+    delete: { onClick: () => destroyOrder(props.order.endpoints.destroy) },
+};
+
 const dropdownItems = computed(() => {
-    const items = [];
+    if (!Object.keys(props.order.endpoints).length) return [];
 
-    if (!Object.keys(props.order.endpoints).length) {
-        return [];
-    }
-
-    const permissions = props.order.permissions || {};
-    const canUpdate = permissions.update ?? Boolean(props.order.endpoints.update);
-    const canStorno = permissions.storno ?? canUpdate;
-    const canDelete = permissions.delete ?? Boolean(props.order.endpoints.destroy);
-
-    if (canUpdate) {
-        items.push({
-            label: "Upraviť objednávku",
-            to: {
-                name: "orders.edit",
-                params: {
-                    orderId: props.order.id,
-                },
-            },
-        });
-    }
-
-    if (canStorno) {
-        items.push({
-            label: props.order.isStorned ? "Zrušiť Storno" : "Storno",
-            onClick: () => updateOrder({
-                id: props.order.id,
-                makeStorned: true,
-            }),
-        });
-    }
-
-    if (canDelete) {
-        items.push({
-            label: "Zmazať",
-            onClick: () => destroyOrder(props.order.endpoints.destroy),
-        });
-    }
-
-    return items;
+    return Object.entries(props.order.permissions || {})
+        .filter(([key, perm]) => perm.allowed && actionMap[key])
+        .map(([key, perm]) => ({ label: perm.label, ...actionMap[key] }));
 });
 </script>
 

@@ -7,45 +7,17 @@ import iconStar from "../../icons/star.vue";
 const props = defineProps(["customer"]);
 const { destroyCustomer, clickToMark } = useCustomers();
 
-const deleteCustomer = async (url) => {
-    await destroyCustomer(url);
-};
-
-const onClickMark = async (url) => {
-    await clickToMark(url);
+const actionMap = {
+    update: { to: { name: 'customers.edit', params: { customerId: props.customer.id } } },
+    delete: { onClick: () => destroyCustomer(props.customer.endpoints.destroy) },
 };
 
 const dropdownItems = computed(() => {
-    const items = []
+    if (!Object.keys(props.customer.endpoints).length) return [];
 
-    if (!Object.keys(props.customer.endpoints).length) {
-        return []
-    }
-
-    const permissions = props.customer.permissions || {};
-    const canUpdate = permissions.update ?? Boolean(props.customer.endpoints.update);
-    const canDelete = permissions.delete ?? Boolean(props.customer.endpoints.destroy);
-
-    if (canUpdate) {
-        items.push({
-            label: 'Upraviť',
-            to: {
-                name: 'customers.edit',
-                params: {
-                    customerId: props.customer.id,
-                },
-            },
-        })
-    }
-
-    if (canDelete) {
-        items.push({
-            label: "Zmazať",
-            onClick: () => destroyCustomer(props.customer.endpoints.destroy)
-        })
-    }
-
-    return items
+    return Object.entries(props.customer.permissions || {})
+        .filter(([key, perm]) => perm.allowed && actionMap[key])
+        .map(([key, perm]) => ({ label: perm.label, ...actionMap[key] }));
 });
 
 </script>
@@ -57,7 +29,7 @@ const dropdownItems = computed(() => {
         </td>
         <td class="tbody_td">
             <icon-star :status="customer.mark.isActive" class="mx-auto cursor-pointer"
-                @click="onClickMark(customer.mark.endpoint)" />
+                @click="clickToMark(customer.mark.endpoint)" />
         </td>
         <td class="px-6 py-4">
             <div class="h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center" title="Počet objednávok">

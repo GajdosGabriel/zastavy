@@ -49,11 +49,26 @@ class CustomerResource extends JsonResource
 
             ],
             'permissions' => [
-                'view' => $user?->can('view', $this->resource) ?? false,
-                'update' => $user?->can('update', $this->resource) ?? false,
-                'delete' => $user?->can('delete', $this->resource) ?? false,
-                'archive' => $user?->can('archive', $this->resource) ?? false,
-                'restore' => $user?->can('restore', $this->resource) ?? false,
+                'view' => [
+                    'allowed' => $user?->can('view', $this->resource) ?? false,
+                    'label' => __('actions.view'),
+                ],
+                'update' => [
+                    'allowed' => $user?->can('update', $this->resource) ?? false,
+                    'label' => __('actions.update'),
+                ],
+                'delete' => [
+                    'allowed' => $user?->can('delete', $this->resource) ?? false,
+                    'label' => __('actions.delete'),
+                ],
+                'archive' => [
+                    'allowed' => $user?->can('archive', $this->resource) ?? false,
+                    'label' => __('actions.archive'),
+                ],
+                'restore' => [
+                    'allowed' => $user?->can('restore', $this->resource) ?? false,
+                    'label' => __('actions.restore'),
+                ],
             ],
 
             // 'navigations' => [
