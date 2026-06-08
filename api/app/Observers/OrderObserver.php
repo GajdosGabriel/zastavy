@@ -3,7 +3,9 @@
 namespace App\Observers;
 
 use App\Models\Order;
+use App\Models\User;
 use App\Notifications\OrderCreated;
+use Illuminate\Support\Facades\Notification;
 
 class OrderObserver
 {
@@ -17,9 +19,14 @@ class OrderObserver
     {
         $order->loadMissing('customer');
 
+        $notification = new OrderCreated($order);
+
         if ($order->customer?->email) {
-            $order->customer->notify(new OrderCreated($order));
+            $order->customer->notify($notification);
         }
+
+        $superAdmins = User::role('super-admin')->get();
+        Notification::send($superAdmins, $notification);
     }
 
     /**
