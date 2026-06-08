@@ -48,7 +48,7 @@ const markAsDelivered = async () => {
                 'border-green-600 bg-green-600 text-white': order.isDelivered == 1,
                 'border-gray-300 bg-white text-gray-700 hover:border-green-500 hover:bg-green-50': order.isDelivered != 1,
             }">
-            {{ order.isDelivered == 1 ? "Zabalené" : "Zabaliť" }} {{ order.shippintPercentageCalculator }}
+            {{ order.isDelivered == 1 ? "Dodané" : "Dodané" }} {{ order.shippintPercentageCalculator }}
         </button>
 
         <router-link v-if="showShippingAction && !order.isFinished && !order.isStorned"
@@ -74,7 +74,7 @@ const markAsDelivered = async () => {
         </span>
     </div>
 
-    <div v-if="showPackStatus" class="mt-2 min-w-44 text-xs text-gray-600">
+    <!-- <div v-if="showPackStatus" class="mt-2 min-w-44 text-xs text-gray-600">
         <div class="mb-1 flex items-center justify-between gap-2">
             <span class="font-semibold">{{ statusLabel }}</span>
             <span>{{ shippedQuantity }}/{{ requiredQuantity }} ks</span>
@@ -88,5 +88,5 @@ const markAsDelivered = async () => {
             <span>{{ shippingPercentage }} %</span>
             <span>Ostáva {{ remainingQuantity }} ks</span>
         </div>
-    </div>
+    </div> -->
 </template>
