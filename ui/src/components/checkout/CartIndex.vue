@@ -76,6 +76,13 @@ const onlyDigits = (event) => {
       getCustomer.value.ico = String(event.target.value || '').replace(/\D/g, '');
 };
 
+const padIco = () => {
+      const ico = String(getCustomer.value?.ico ?? '').trim();
+      if (ico.length > 0 && ico.length < 8) {
+            getCustomer.value.ico = ico.padStart(8, '0');
+      }
+};
+
 
 onMounted(() => {
       getlocalStorage();
@@ -96,6 +103,7 @@ const clickEmptyBasket = () => {
 
 const onClickIco = async () => {
       icoSearchMessage.value = "";
+      padIco();
 
       if (icoError()) {
             return;
@@ -259,7 +267,7 @@ const onClickForm = async () => {
                                                       id="ico" type="text" inputmode="numeric" pattern="[0-9]*"
                                                       :class="requiredInputClass('ico')"
                                                       v-model="getCustomer.ico" placeholder="IČO organizácie"
-                                                      @input="onlyDigits" @keyup.enter="onClickIco" />
+                                                      @input="onlyDigits" @blur="padIco" @keyup.enter="onClickIco" />
                                                 <button type="button" @click="onClickIco" :disabled="isSearchingCompany"
                                                       class="whitespace-nowrap bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                                                       {{ isSearchingCompany ? 'Hľadám...' : 'Vyhľadať firmu' }}
@@ -363,7 +371,7 @@ const onClickForm = async () => {
                                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                       id="billing-ico" type="text" inputmode="numeric" pattern="[0-9]*"
                                                       :class="requiredInputClass('ico')"
-                                                      v-model="getCustomer.ico" @input="onlyDigits" @keyup.enter="onClickIco"
+                                                      v-model="getCustomer.ico" @input="onlyDigits" @blur="padIco" @keyup.enter="onClickIco"
                                                       placeholder="IČO organizácie" />
                                                 <p v-if="icoError()" class="mt-1 text-xs font-semibold text-red-600">
                                                       {{ icoError() }}
