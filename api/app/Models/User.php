@@ -73,7 +73,7 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
-    public function sendPasswordResetNotification(string $token): void
+    public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPassword($token));
     }
