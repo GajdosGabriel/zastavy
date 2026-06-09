@@ -21,7 +21,16 @@ class OrderStatisticsService
                     $query->where('user_id', $user->id);
 
                     if ($user->customer_id) {
+                        // portálový user — vidí všetky objednávky svojej organizácie
                         $query->orWhere('customer_id', $user->customer_id);
+                    } else {
+                        // staff user — vidí všetky objednávky zákazníkov, na ktorých pracuje
+                        $query->orWhereIn('customer_id', function ($sub) use ($user) {
+                            $sub->select('customer_id')
+                                ->from('orders')
+                                ->where('user_id', $user->id)
+                                ->whereNotNull('customer_id');
+                        });
                     }
                 });
             });
@@ -131,7 +140,7 @@ class OrderStatisticsService
             });
     }
 
-    private function orderSummary($orderRows, int $notificationMissingCount): array
+    private function orderSummary(\Illuminate\Support\Collection $orderRows, int $notificationMissingCount): array
     {
         $summary = [
             'order_count' => $orderRows->count(),
