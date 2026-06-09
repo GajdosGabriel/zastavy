@@ -138,6 +138,30 @@ const routes = [
         }
     },
 
+    {
+        path: '/forgot-password',
+        name: 'public.forgotPassword',
+        components: {
+            default: () => import('../components/auth/ForgotPassword.vue'),
+        },
+        meta: {
+            title: 'Zabudnuté heslo',
+            guestOnly: true,
+        }
+    },
+
+    {
+        path: '/reset-password',
+        name: 'public.resetPassword',
+        components: {
+            default: () => import('../components/auth/ResetPassword.vue'),
+        },
+        meta: {
+            title: 'Nastaviť nové heslo',
+            guestOnly: true,
+        }
+    },
+
 
     {
         path: '/:pathMatch(.*)*', name: 'Stranka-sa-nenasla',

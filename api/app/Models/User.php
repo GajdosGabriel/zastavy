@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\ModelStatus;
+use App\Notifications\ResetPassword;
 use App\Traits\HasModelStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -70,6 +71,11 @@ class User extends Authenticatable
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function sendPasswordResetNotification(string $token): void
+    {
+        $this->notify(new ResetPassword($token));
     }
 
     public function setUsernameAttribute($value)

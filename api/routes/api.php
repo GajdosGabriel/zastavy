@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\SuperAdmin\ProductImageController;
 use App\Http\Controllers\Api\SuperAdmin\ShippingNoticeController;
 use App\Http\Controllers\Api\SuperAdmin\StockController;
 use App\Http\Controllers\Api\SuperAdmin\UserController;
+use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\DashboardMiddleware;
@@ -28,6 +29,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [SanctumController::class, 'login'])->name('sanctum.login');
 Route::post('/register', [RegisteredUserController::class, 'store'])->name('auth.register');
+Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->name('password.forgot');
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.reset');
 
 Route::get('/user', function (Request $request) {
     return new UserResource($request->user('sanctum'));

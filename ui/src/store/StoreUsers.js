@@ -126,7 +126,27 @@ const actions = {
 
     resetModelUrl: (url) => {
         console.log(url);
-    }
+    },
+
+    forgotPassword: async (email) => {
+        try {
+            const response = await axiosInstance.post('/forgot-password', { email });
+            return { success: true, message: response.data.message };
+        } catch (error) {
+            setErrors(error);
+            return { success: false };
+        }
+    },
+
+    resetPassword: async (form) => {
+        try {
+            const response = await axiosInstance.post('/reset-password', form);
+            return { success: true, message: response.data.message };
+        } catch (error) {
+            setErrors(error);
+            return { success: false };
+        }
+    },
 };
 
 export default () => ({

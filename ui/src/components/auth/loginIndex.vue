@@ -51,9 +51,14 @@ const onClickForm = async () => {
                         </div>
 
                         <div>
-                            <label for="password" class="mb-2 block text-sm font-semibold text-slate-700">
-                                Heslo <RequiredMark />
-                            </label>
+                            <div class="mb-2 flex items-center justify-between">
+                                <label for="password" class="block text-sm font-semibold text-slate-700">
+                                    Heslo <RequiredMark />
+                                </label>
+                                <router-link :to="{ name: 'public.forgotPassword' }" class="text-xs text-blue-700 hover:text-blue-900">
+                                    Zabudnuté heslo?
+                                </router-link>
+                            </div>
                             <input
                                 id="password"
                                 v-model="form.password"
