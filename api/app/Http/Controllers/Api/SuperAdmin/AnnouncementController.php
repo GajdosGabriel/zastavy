@@ -7,20 +7,23 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AnnouncementRequest;
 use App\Http\Resources\AnnouncementResource;
 use App\Models\Announcement;
+use Illuminate\Support\Facades\Gate;
 
 class AnnouncementController extends Controller
 {
     public function index()
     {
+        Gate::authorize('announcements.manage');
+
         return AnnouncementResource::collection(
-            Announcement::query()
-                ->latest()
-                ->paginate()
+            Announcement::query()->latest()->paginate()
         )->additional($this->formOptions());
     }
 
     public function store(AnnouncementRequest $request)
     {
+        Gate::authorize('announcements.manage');
+
         $announcement = Announcement::create($this->payload($request));
 
         return (new AnnouncementResource($announcement))
@@ -29,12 +32,16 @@ class AnnouncementController extends Controller
 
     public function show(Announcement $announcement)
     {
+        Gate::authorize('announcements.manage');
+
         return (new AnnouncementResource($announcement))
             ->additional($this->formOptions());
     }
 
     public function update(AnnouncementRequest $request, Announcement $announcement)
     {
+        Gate::authorize('announcements.manage');
+
         $announcement->update($this->payload($request));
 
         return (new AnnouncementResource($announcement->refresh()))
@@ -43,6 +50,8 @@ class AnnouncementController extends Controller
 
     public function destroy(Announcement $announcement)
     {
+        Gate::authorize('announcements.manage');
+
         $announcement->delete();
 
         return response()->noContent();

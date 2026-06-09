@@ -10,20 +10,19 @@ use App\Http\Requests\OrderRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderIndexResource;
 use App\Http\Resources\OrderResource;
-use App\Services\CustomerService;
-use App\Actions\StoreOrder;
 use App\Http\Resources\OrderStatisticResource;
+use App\Services\CustomerService;
 use App\Services\OrderStatisticsService;
+use App\Actions\StoreOrder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
-
 class OrderController extends Controller
 {
-    private const DASHBOARD_ROLES = ['super-admin', 'admin', 'manager', 'sales', 'warehouse'];
-
     public function index(OrderFilter $orderFilters)
     {
+        Gate::authorize('viewAny', Order::class);
+
         $orders = app(OrderStatisticsService::class)
             ->queryFor(request()->user(), $orderFilters)
             ->with(['customer', 'shippings.stocks', 'shippings.notices', 'orderProducts', 'stocks', 'mark', 'notices'])
@@ -35,6 +34,8 @@ class OrderController extends Controller
 
     public function statistics(OrderFilter $orderFilters, OrderStatisticsService $statistics)
     {
+        Gate::authorize('viewAny', Order::class);
+
         return new OrderStatisticResource(
             $statistics->handle(request()->user(), $orderFilters)
         );
@@ -68,22 +69,18 @@ class OrderController extends Controller
             });
 
             return new OrderResource($order->refresh()->load(['customer.users', 'user']));
-        };
+        }
 
         Gate::authorize('update', $order);
 
         $order->update($request->all());
+
         return new OrderResource($order);
     }
-
-
 
     public function store(OrderRequest $request)
     {
         Gate::authorize('create', Order::class);
-
-        $notifyCustomer = $request->user()->hasRole('super-admin')
-            && $request->boolean('notify_customer');
 
         [$order] = DB::transaction(function () use ($request) {
             [$customer, $user] = (new CustomerService)->handleCheckout($request->input('customer'));
@@ -92,19 +89,16 @@ class OrderController extends Controller
             return [$order->load(['customer.users', 'user', 'orderProducts'])];
         });
 
-        if ($notifyCustomer && $order->customer?->email) {
-            $order->customer->notify(new OrderCreated($order));
-        }
-
         return new OrderResource($order->refresh()->load(['customer.users', 'user', 'orderProducts']));
     }
-
 
     public function destroy(Order $order)
     {
         Gate::authorize('delete', $order);
+
         $order->orderProducts()->delete();
         $order->delete();
+
         return response(new OrderResource($order));
     }
 }

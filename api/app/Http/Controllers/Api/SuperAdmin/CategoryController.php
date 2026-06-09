@@ -10,12 +10,17 @@ use Illuminate\Support\Facades\Gate;
 
 class CategoryController extends Controller
 {
-    public function index(){
-       return CategoryResource::collection(Category::all());
+    public function index()
+    {
+        Gate::authorize('viewAny', Category::class);
+
+        return CategoryResource::collection(Category::all());
     }
 
     public function store(Request $request)
     {
+        Gate::authorize('create', Category::class);
+
         Category::create($request->all());
     }
 
@@ -24,6 +29,7 @@ class CategoryController extends Controller
         Gate::authorize('delete', $category);
 
         $category->delete();
+
         return response()->noContent();
     }
 }

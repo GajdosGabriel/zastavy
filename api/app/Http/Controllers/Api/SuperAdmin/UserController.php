@@ -9,6 +9,7 @@ use App\Http\Resources\UserIndexResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
@@ -16,6 +17,8 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        Gate::authorize('viewAny', User::class);
+
         $users = User::query()
             ->with(['roles', 'customer'])
             ->withCount('orders')
@@ -46,12 +49,16 @@ class UserController extends Controller
 
     public function show(User $user)
     {
+        Gate::authorize('view', $user);
+
         return (new UserIndexResource($user->load(['roles', 'customer'])->loadCount('orders')))
             ->additional($this->formOptions());
     }
 
     public function update(UserUpdateRequest $request, User $user)
     {
+        Gate::authorize('update', $user);
+
         $validated = $request->validated();
         $roles = $validated['roles'] ?? null;
         unset($validated['roles']);
@@ -60,7 +67,7 @@ class UserController extends Controller
         $validated['username'] = $validated['username'] ?: $validated['name'];
         $validated['slug'] = Str::slug($validated['username']);
 
-        DB::transaction(function () use ($user, $validated, $roles) {
+        DB::transaction(function () use ($user, $validated, $roles, $request) {
             $user->update($validated);
 
             if ($request->user()?->hasAnyRole(['admin', 'super-admin']) && is_array($roles)) {

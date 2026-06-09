@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Api\SuperAdmin;
 
 use App\Enums\ModelStatus;
 use App\Models\Customer;
-use Illuminate\Http\Request;
 use App\Filters\CustomerFilter;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CustomerRequest;
-use App\Http\Resources\CustomerResource;
 use App\Http\Requests\CustomerCreateRequest;
 use App\Http\Requests\CustomerUpdateRequest;
+use App\Http\Resources\CustomerResource;
 use App\Services\CustomerService;
 use Illuminate\Support\Facades\Gate;
 
@@ -18,6 +16,8 @@ class CustomerController extends Controller
 {
     public function index(CustomerFilter $customerFilter)
     {
+        Gate::authorize('viewAny', Customer::class);
+
         $customers = Customer::with('users')->filter($customerFilter)->latest()->paginate();
 
         return CustomerResource::collection($customers);
@@ -25,27 +25,29 @@ class CustomerController extends Controller
 
     public function show(Customer $customer)
     {
+        Gate::authorize('view', $customer);
+
         return (new CustomerResource($customer->load('users')))
             ->additional($this->formOptions());
     }
 
-    public function update(Customer $customer, CustomerUpdateRequest $request)
-    {
-        (new CustomerService)->updateWithUser($customer, $request->except('orders'));
-
-        // return response()->noContent();
-        return (new CustomerResource($customer->refresh()->load('users')))
-            ->additional($this->formOptions());
-    }
-
-
     public function store(CustomerCreateRequest $request)
     {
+        Gate::authorize('create', Customer::class);
 
         [$customer] = (new CustomerService)->handleCheckout($request->all());
 
-        // return response()->noContent();
         return new CustomerResource($customer->load('users'));
+    }
+
+    public function update(Customer $customer, CustomerUpdateRequest $request)
+    {
+        Gate::authorize('update', $customer);
+
+        (new CustomerService)->updateWithUser($customer, $request->except('orders'));
+
+        return (new CustomerResource($customer->refresh()->load('users')))
+            ->additional($this->formOptions());
     }
 
     public function destroy(Customer $customer)
@@ -53,7 +55,7 @@ class CustomerController extends Controller
         Gate::authorize('delete', $customer);
 
         $customer->delete();
-        
+
         return response(new CustomerResource($customer));
     }
 
