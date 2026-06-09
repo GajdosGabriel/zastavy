@@ -51,7 +51,7 @@ class UserResource extends JsonResource
 
     private function mainNavigation(): array
     {
-        if ($this->hasAnyRole(['super-admin', 'admin'])) {
+        if ($this->hasRole('super-admin')) {
             return self::superAdminNavigation();
         }
 
@@ -69,7 +69,7 @@ class UserResource extends JsonResource
             ],
         ];
 
-        if ($this->hasAnyRole(['super-admin', 'admin'])) {
+        if ($this->hasRole('super-admin')) {
             $items[] = [
                 'NAME' => 'Admin',
                 'ROUTE' => 'admin.index',

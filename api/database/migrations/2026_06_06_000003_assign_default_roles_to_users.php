@@ -11,14 +11,14 @@ return new class extends Migration
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $superAdmin = Role::findOrCreate('super-admin', 'web');
+        Role::findOrCreate('super-admin', 'web');
         $admin = Role::findOrCreate('admin', 'web');
 
         User::query()
             ->orderBy('id')
             ->get()
-            ->each(function (User $user, int $index) use ($superAdmin, $admin) {
-                $user->syncRoles([$index === 0 ? $superAdmin : $admin]);
+            ->each(function (User $user) use ($admin) {
+                $user->syncRoles([$admin]);
             });
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
