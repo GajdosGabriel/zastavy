@@ -87,10 +87,11 @@
             </tbody>
         </table>
 
-        @if(!empty(trim($order->notice ?? '')))
+        @php $orderNotice = $order->notices->first()?->notice; @endphp
+        @if(!empty(trim($orderNotice ?? '')))
         <div class="info-block">
             <p class="section-title">Poznámka</p>
-            <p style="font-size:14px;">{{ $order->notice }}</p>
+            <p style="font-size:14px;">{{ $orderNotice }}</p>
         </div>
         @endif
 
