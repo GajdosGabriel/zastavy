@@ -40,8 +40,12 @@ class UserController extends Controller
                     ->pluck('customer_id')
                     ->unique();
 
-                $query->whereNotNull('customer_id')
-                    ->whereIn('customer_id', $customerIds);
+                $query->where(function ($query) use ($request, $customerIds) {
+                    $query->where(function ($query) use ($customerIds) {
+                        $query->whereNotNull('customer_id')
+                            ->whereIn('customer_id', $customerIds);
+                    })->orWhere('id', $request->user()->id);
+                });
             })
             ->when($request->filled('bySearchInput'), function ($query) use ($request) {
                 $search = $request->string('bySearchInput')->toString();
