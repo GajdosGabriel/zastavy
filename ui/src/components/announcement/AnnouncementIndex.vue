@@ -6,6 +6,7 @@ import ButtonSubmit from "../layout/page/ButtonSubmit.vue";
 import PaginationComponent from "../plugins/pagination.vue";
 import PanelDropdown from "../layout/PanelDropdown.vue";
 import useAnnouncements from "../../store/StoreAnnouncements";
+import FormInput from "../forms/FormInput.vue";
 
 const {
     state,
@@ -54,7 +55,7 @@ const dropdownItems = (announcement) => [
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Názov</label>
-                            <input v-model="state.announcement.title" type="text" required class="form-control rounded border px-3 py-2" />
+                            <FormInput v-model="state.announcement.title" placeholder="Názov oznamu" required />
                         </div>
 
                         <div>

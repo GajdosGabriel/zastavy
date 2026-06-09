@@ -10,6 +10,7 @@ import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 import templateCustomer from "../../models/templateCustomer";
 import useUnsavedChanges from '../../models/useUnsavedChanges';
 import RequiredMark from "../forms/RequiredMark.vue";
+import FormInput from "../forms/FormInput.vue";
 
 
 const { state, updateCustomer, fetchCustomer, getCustomer, getStatuses } = useCustomers();
@@ -51,97 +52,50 @@ const buttonSubmit = { name: 'Uložiť', spinner: true }
                     <validationBar :validations="null" />
 
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="company">
-                            Názov <RequiredMark />
-                        </label>
-                        <input
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            ref="companyRef" type="text" v-model="state.customer.company" placeholder="Názov firmy"
-                            required />
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Názov <RequiredMark /></label>
+                        <FormInput v-model="state.customer.company" placeholder="Názov firmy" required />
                     </div>
                     <div class="md:flex md:space-x-3">
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="street">
-                                Adresa <RequiredMark />
-                            </label>
-                            <input
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="street" type="text" v-model="state.customer.street" placeholder="Adresa a číslo" required />
+                        <div class="mb-4 w-full">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Adresa <RequiredMark /></label>
+                            <FormInput v-model="state.customer.street" placeholder="Adresa a číslo" required />
                         </div>
-
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="city">
-                                Mesto <RequiredMark />
-                            </label>
-                            <input
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="city" type="text" v-model="state.customer.city" placeholder="Meslo" required />
+                        <div class="mb-4 w-full">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Mesto <RequiredMark /></label>
+                            <FormInput v-model="state.customer.city" placeholder="Mesto" required />
                         </div>
-
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="postcode">
-                                PSČ <RequiredMark />
-                            </label>
-                            <input
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="postcode" type="text" v-model="state.customer.postcode"
-                                placeholder="Poštové smerové číslo" required />
+                        <div class="mb-4 w-full">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">PSČ <RequiredMark /></label>
+                            <FormInput v-model="state.customer.postcode" placeholder="Poštové smerové číslo" required />
                         </div>
                     </div>
 
                     <div class="md:flex md:space-x-3">
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-                                Email <RequiredMark />
-                            </label>
-                            <input
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="email" type="email" v-model="state.customer.email" required
-                                placeholder="Email na zaslanie objednávky" />
+                        <div class="mb-4 w-full">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Email <RequiredMark /></label>
+                            <FormInput v-model="state.customer.email" type="email" placeholder="Email" required />
                         </div>
-
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
-                                Vaše meno <RequiredMark />
-                            </label>
-                            <input
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="name" type="text" v-model="state.customer.name" placeholder="Vaše meno" required />
+                        <div class="mb-4 w-full">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Vaše meno <RequiredMark /></label>
+                            <FormInput v-model="state.customer.name" placeholder="Vaše meno" required />
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="phone">
-                                Telefón
-                            </label>
-                            <input
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="phone" type="text" v-model="state.customer.phone" placeholder="Telefón" />
+                        <div class="mb-4 w-full">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Telefón</label>
+                            <FormInput v-model="state.customer.phone" placeholder="Telefón" />
                         </div>
                     </div>
                     <div class="md:flex md:space-x-3">
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="ico">
-                                ICO
-                            </label>
-                            <input
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="ico" type="number" v-model="state.customer.ico" placeholder="IČO organizácie" />
+                        <div class="mb-4 w-full">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">ICO</label>
+                            <FormInput v-model="state.customer.ico" placeholder="IČO organizácie" />
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="dic">
-                                DIC
-                            </label>
-                            <input
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="dic" type="text" v-model="state.customer.dic" placeholder="DIČ organizácie" />
+                        <div class="mb-4 w-full">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">DIC</label>
+                            <FormInput v-model="state.customer.dic" placeholder="DIČ organizácie" />
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="ic_dic">
-                                SKDIC
-                            </label>
-                            <input
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="ic_dic" type="text" v-model="state.customer.ic_dic"
-                                placeholder="SKDIČ organizácie" />
+                        <div class="mb-4 w-full">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">SKDIC</label>
+                            <FormInput v-model="state.customer.ic_dic" placeholder="SKDIČ organizácie" />
                         </div>
                     </div>
 

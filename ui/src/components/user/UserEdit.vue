@@ -8,6 +8,7 @@ import validationBar from "../bars/ValidationBar.vue";
 import useAdminUsers from "../../store/StoreAdminUsers";
 import useUsers from "../../store/StoreUsers";
 import RequiredMark from "../forms/RequiredMark.vue";
+import FormInput from "../forms/FormInput.vue";
 
 const { state, fetchUser, updateUser, getRoles, getStatuses } = useAdminUsers();
 const { getUser: getAuthUser } = useUsers();
@@ -48,27 +49,27 @@ const canManageRoles = computed(() => getAuthUser.value?.roles?.some(role => ["a
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Meno <RequiredMark /></label>
-                            <input v-model="state.user.firstName" type="text" required class="form-control rounded border px-3 py-2" />
+                            <FormInput v-model="state.user.firstName" placeholder="Meno" required />
                         </div>
 
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Priezvisko</label>
-                            <input v-model="state.user.lastName" type="text" class="form-control rounded border px-3 py-2" />
+                            <FormInput v-model="state.user.lastName" placeholder="Priezvisko" />
                         </div>
 
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Používateľské meno</label>
-                            <input v-model="state.user.username" type="text" class="form-control rounded border px-3 py-2" />
+                            <FormInput v-model="state.user.username" placeholder="Používateľské meno" />
                         </div>
 
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Email <RequiredMark /></label>
-                            <input v-model="state.user.email" type="email" required class="form-control rounded border px-3 py-2" />
+                            <FormInput v-model="state.user.email" type="email" placeholder="Email" required />
                         </div>
 
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Telefón</label>
-                            <input v-model="state.user.phone" type="text" class="form-control rounded border px-3 py-2" />
+                            <FormInput v-model="state.user.phone" placeholder="Telefón" />
                         </div>
 
                         <div>

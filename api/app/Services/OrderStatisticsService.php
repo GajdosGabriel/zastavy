@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class OrderStatisticsService
 {
-    private const DASHBOARD_ROLES = ['super-admin', 'admin', 'manager', 'sales', 'warehouse'];
+    private const DASHBOARD_ROLES = ['super-admin'];
 
     public function queryFor(User $user, OrderFilter $orderFilters): Builder
     {

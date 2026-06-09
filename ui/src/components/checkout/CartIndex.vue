@@ -9,6 +9,7 @@ import router from "../../router";
 import search from "../icons/search.vue";
 import { formatDecimal } from "../../models/functions";
 import RequiredMark from "../forms/RequiredMark.vue";
+import FormInput from "../forms/FormInput.vue";
 
 
 const {
@@ -47,13 +48,6 @@ const icoError = () => {
       return fieldError('ico');
 };
 
-const requiredInputClass = (field) => {
-      if (field === 'ico') {
-            return icoError() ? 'border-red-500 ring-1 ring-red-500 bg-red-50' : '';
-      }
-
-      return isRequiredMissing(field) || fieldError(field) ? 'border-red-500 ring-1 ring-red-500 bg-red-50' : '';
-};
 
 const parseStoredCustomer = () => {
       try {
@@ -262,11 +256,10 @@ const onClickForm = async () => {
                                                 ICO - Vyhľadať firmu podľa ico
                                           </label>
                                           <div class="flex gap-3">
-                                                <input
-                                                      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="ico" type="text" inputmode="numeric" pattern="[0-9]*"
-                                                      :class="requiredInputClass('ico')"
+                                                <FormInput
+                                                      :invalid="!!icoError()"
                                                       v-model="getCustomer.ico" placeholder="IČO organizácie"
+                                                      inputmode="numeric" pattern="[0-9]*"
                                                       @input="onlyDigits" @blur="padIco" @keyup.enter="onClickIco" />
                                                 <button type="button" @click="onClickIco" :disabled="isSearchingCompany"
                                                       class="whitespace-nowrap bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
@@ -282,85 +275,43 @@ const onClickForm = async () => {
                                     </div>
 
                                     <div class="mb-4">
-                                          <label class="block text-gray-700 text-sm font-bold mb-2" for="company">
-                                                Názov <RequiredMark />
-                                          </label>
-                                          <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                id="company" type="text" v-model="getCustomer.company" ref="companyRef"
-                                                :class="requiredInputClass('company')"
-                                                required placeholder="Názov firmy" />
+                                          <label class="block text-gray-700 text-sm font-bold mb-2">Názov <RequiredMark /></label>
+                                          <FormInput v-model="getCustomer.company" :invalid="isRequiredMissing('company')" :error="fieldError('company')" placeholder="Názov firmy" />
                                     </div>
                                     <div class="md:grid justify-items-stretch grid-cols-3 gap-5">
                                           <div>
-                                                <label class="block text-gray-700 text-sm font-bold mb-2" for="street">
-                                                      Adresa <RequiredMark />
-                                                </label>
-                                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="street" type="text" v-model="getCustomer.street"
-                                                      :class="requiredInputClass('street')"
-                                                      placeholder="Adresa a číslo" required />
+                                                <label class="block text-gray-700 text-sm font-bold mb-2">Adresa <RequiredMark /></label>
+                                                <FormInput v-model="getCustomer.street" :invalid="isRequiredMissing('street')" placeholder="Adresa a číslo" />
                                           </div>
 
                                           <div>
-                                                <label class="block text-gray-700 text-sm font-bold mb-2"
-                                                      for="postcode">
-                                                      PSČ <RequiredMark />
-                                                </label>
-                                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="postcode" type="text" v-model="getCustomer.postcode"
-                                                      :class="requiredInputClass('postcode')"
-                                                      placeholder="Poštové smerové číslo" required />
+                                                <label class="block text-gray-700 text-sm font-bold mb-2">PSČ <RequiredMark /></label>
+                                                <FormInput v-model="getCustomer.postcode" :invalid="isRequiredMissing('postcode')" placeholder="Poštové smerové číslo" />
                                           </div>
 
                                           <div>
-                                                <label class="block text-gray-700 text-sm font-bold mb-2" for="city">
-                                                      Mesto <RequiredMark />
-                                                </label>
-                                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="city" type="text" v-model="getCustomer.city"
-                                                      :class="requiredInputClass('city')"
-                                                      placeholder="Meslo" required />
+                                                <label class="block text-gray-700 text-sm font-bold mb-2">Mesto <RequiredMark /></label>
+                                                <FormInput v-model="getCustomer.city" :invalid="isRequiredMissing('city')" placeholder="Mesto" />
                                           </div>
 
                                           <div>
-                                                <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-                                                      Email <RequiredMark />
-                                                </label>
-                                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="email" type="email" v-model="getCustomer.email" required
-                                                      :class="requiredInputClass('email')"
-                                                      placeholder="Email na zaslanie objednávky" />
-                                                <p v-if="fieldError('email')" class="mt-1 text-xs font-semibold text-red-600">
-                                                      {{ fieldError('email') }}
-                                                </p>
+                                                <label class="block text-gray-700 text-sm font-bold mb-2">Email <RequiredMark /></label>
+                                                <FormInput v-model="getCustomer.email" type="email" :invalid="isRequiredMissing('email') || !!fieldError('email')" :error="fieldError('email')" placeholder="Email na zaslanie objednávky" />
                                           </div>
 
                                           <div>
-                                                <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
-                                                      Kontaktné meno <span
-                                                            <RequiredMark />
-                                                </label>
-                                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="name" type="text" v-model="getCustomer.name" required
-                                                      :class="requiredInputClass('name')"
-                                                      placeholder="Meno objednávateľa" />
+                                                <label class="block text-gray-700 text-sm font-bold mb-2">Kontaktné meno <RequiredMark /></label>
+                                                <FormInput v-model="getCustomer.name" :invalid="isRequiredMissing('name')" placeholder="Meno objednávateľa" />
                                           </div>
+
                                           <div>
-                                                <label class="block text-gray-700 text-sm font-bold mb-2" for="phone">
-                                                      Telefón <RequiredMark />
-                                                </label>
-                                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="phone" type="text" required v-model="getCustomer.phone"
-                                                      :class="requiredInputClass('phone')"
-                                                      placeholder="Telefón" />
+                                                <label class="block text-gray-700 text-sm font-bold mb-2">Telefón <RequiredMark /></label>
+                                                <FormInput v-model="getCustomer.phone" :invalid="isRequiredMissing('phone')" placeholder="Telefón" />
                                           </div>
 
                                           <div>
                                                 <div class="flex justify-between">
-                                                      <label class="block text-gray-700 text-sm font-bold mb-2"
-                                                            for="billing-ico">
-                                                            IĆO
-                                                      </label>
+                                                      <label class="block text-gray-700 text-sm font-bold mb-2">IČO</label>
                                                       <button type="button" @click="onClickIco"
                                                             :disabled="isSearchingCompany"
                                                             class="flex items-center text-xs text-blue-700 hover:text-blue-900 disabled:text-gray-400">
@@ -368,14 +319,7 @@ const onClickForm = async () => {
                                                             <span class="ml-1">{{ isSearchingCompany ? 'Hľadám...' : 'Hľadať' }}</span>
                                                       </button>
                                                 </div>
-                                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="billing-ico" type="text" inputmode="numeric" pattern="[0-9]*"
-                                                      :class="requiredInputClass('ico')"
-                                                      v-model="getCustomer.ico" @input="onlyDigits" @blur="padIco" @keyup.enter="onClickIco"
-                                                      placeholder="IČO organizácie" />
-                                                <p v-if="icoError()" class="mt-1 text-xs font-semibold text-red-600">
-                                                      {{ icoError() }}
-                                                </p>
+                                                <FormInput v-model="getCustomer.ico" :invalid="!!icoError()" :error="icoError()" inputmode="numeric" pattern="[0-9]*" placeholder="IČO organizácie" @input="onlyDigits" @blur="padIco" @keyup.enter="onClickIco" />
                                           </div>
 
                                           <div v-if="icoSearchMessage" class="hidden">
@@ -383,19 +327,12 @@ const onClickForm = async () => {
                                           </div>
 
                                           <div>
-                                                <label class="block text-gray-700 text-sm font-bold mb-2" for="dic">
-                                                      DIC
-                                                </label>
-                                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="dic" type="text" v-model="getCustomer.dic"
-                                                      placeholder="DIČ organizácie" />
+                                                <label class="block text-gray-700 text-sm font-bold mb-2">DIC</label>
+                                                <FormInput v-model="getCustomer.dic" placeholder="DIČ organizácie" />
                                           </div>
                                           <div>
-                                                <label class="block text-gray-700 text-sm font-bold mb-2" for="ic_dic">
-                                                      SKDIC
-                                                </label>
-                                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                      id="ic_dic" type="text" v-model="getCustomer.ic_dic"
+                                                <label class="block text-gray-700 text-sm font-bold mb-2">SKDIC</label>
+                                                <FormInput v-model="getCustomer.ic_dic"
                                                       placeholder="SKDIČ organizácie" />
                                           </div>
                                     </div>
@@ -405,9 +342,7 @@ const onClickForm = async () => {
                                           <label class="block text-gray-700 text-sm font-bold mb-2" for="notice">
                                                 Poznámka
                                           </label>
-                                          <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                id="notice" type="text" v-model="getOrder.notice"
-                                                placeholder="Poznámka" />
+                                          <FormInput v-model="getOrder.notice" placeholder="Poznámka" />
 
                                     </div>
 

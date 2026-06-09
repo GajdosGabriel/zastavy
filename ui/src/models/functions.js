@@ -7,8 +7,8 @@ export const formatSubstring = (val, stringLimit = 35) => {
 };
 
 export const formatDecimal = (number = null) => {
-  if (number == null) return 0.00;
-  return number.toFixed(2);
+  if (number == null) return '0.00';
+  return Number(number).toFixed(2);
 };
 
 export const formatUnitName = (number = 0) => {

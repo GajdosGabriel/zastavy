@@ -11,7 +11,7 @@ class OrderPolicy
 {
     use HandlesAuthorization;
 
-    private const DASHBOARD_ROLES = ['super-admin', 'admin', 'manager', 'sales', 'warehouse'];
+    private const DASHBOARD_ROLES = ['super-admin'];
 
     public function viewAny(User $user): bool
     {

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import ButtonLink from "../layout/page/ButtonLink.vue";
+import ErrorPanel from "../plugins/ErrorPanel.vue";
 import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
 import useProducts from "../../store/StoreProducts";
@@ -10,12 +11,13 @@ import useErrors from "../../store/StoreErrors";
 import router from "../../router";
 import { formatDecimal } from "../../models/functions";
 import RequiredMark from "../forms/RequiredMark.vue";
+import FormInput from "../forms/FormInput.vue";
 
 const { getCustomer, setCustomer, findCustomerByIco } = useCustomers();
 const { storeOrder, state: orderState } = useOrders();
 const { fetchProducts, getProducts } = useProducts();
 const { getUser } = useUser();
-const { getFieldErrors } = useErrors();
+const { getFieldErrors, setErrors, resetErrors } = useErrors();
 
 const orderProducts = ref([]);
 const selectedProductId = ref("");
@@ -25,6 +27,7 @@ const showSaveModal = ref(false);
 const isSubmitting = ref(false);
 const icoSearchMessage = ref("");
 const isSearchingCompany = ref(false);
+const highlightMissingRequired = ref(false);
 
 const buttonBack = { name: "Späť", spinner: true, link: "/objednavky", icon: "arrow-left" };
 
@@ -74,13 +77,14 @@ const icoError = () => {
     return fieldError("ico");
 };
 
-const inputClass = (field) => {
-    if (field === "ico") {
-        return icoError() ? "border-red-500 ring-1 ring-red-500 bg-red-50" : "";
-    }
-
-    return fieldError(field) ? "border-red-500 ring-1 ring-red-500 bg-red-50" : "";
+const isRequiredMissing = (field) => {
+    return highlightMissingRequired.value
+        && requiredCustomerFields.includes(field)
+        && !String(getCustomer.value?.[field] ?? '').trim();
 };
+
+const icoInputClass = () =>
+    icoError() ? "border-red-500 ring-1 ring-red-500 bg-red-50" : "";
 
 const addProduct = () => {
     const product = selectedProduct.value;
@@ -142,8 +146,14 @@ const openSaveModal = () => {
     }
 
     if (!isCustomerComplete.value) {
-        return alert("Vyplňte povinné údaje zákazníka.");
+        highlightMissingRequired.value = true;
+        setErrors({ message: "Vyplňte všetky povinné údaje zákazníka označené hviezdičkou." });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
     }
+
+    highlightMissingRequired.value = false;
+    resetErrors();
 
     if (isSuperAdmin.value) {
         notifyCustomer.value = true;
@@ -192,6 +202,7 @@ onMounted(() => {
             </h1>
 
             <div class="page-body col-span-12">
+                <ErrorPanel class="mb-4" />
                 <div class="grid gap-5 lg:grid-cols-3">
                     <section class="rounded border border-gray-300 bg-white p-5 shadow lg:col-span-2">
                         <h2 class="mb-4 text-lg font-semibold text-gray-900">Zákazník</h2>
@@ -206,7 +217,7 @@ onMounted(() => {
                                     inputmode="numeric"
                                     pattern="[0-9]*"
                                     class="w-full rounded border px-3 py-2"
-                                    :class="inputClass('ico')"
+                                    :class="icoInputClass()"
                                     placeholder="IČO organizácie"
                                     @input="onlyDigits"
                                     @keyup.enter="onClickIco"
@@ -227,48 +238,39 @@ onMounted(() => {
                         <div class="grid gap-4 md:grid-cols-3">
                             <div class="md:col-span-2">
                                 <label class="mb-2 block text-sm font-bold text-gray-700">Názov firmy <RequiredMark /></label>
-                                <input v-model="getCustomer.company" type="text" required class="w-full rounded border px-3 py-2" />
+                                <FormInput v-model="getCustomer.company" :invalid="isRequiredMissing('company')" :error="fieldError('company')" placeholder="Názov firmy" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-bold text-gray-700">Kontaktné meno <RequiredMark /></label>
-                                <input v-model="getCustomer.name" type="text" required class="w-full rounded border px-3 py-2" />
+                                <FormInput v-model="getCustomer.name" :invalid="isRequiredMissing('name')" :error="fieldError('name')" placeholder="Kontaktné meno" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-bold text-gray-700">Email <RequiredMark /></label>
-                                <input
-                                    v-model="getCustomer.email"
-                                    type="email"
-                                    required
-                                    class="w-full rounded border px-3 py-2"
-                                    :class="inputClass('email')"
-                                />
-                                <p v-if="fieldError('email')" class="mt-1 text-xs font-semibold text-red-600">
-                                    {{ fieldError('email') }}
-                                </p>
+                                <FormInput v-model="getCustomer.email" type="email" :invalid="isRequiredMissing('email') || !!fieldError('email')" :error="fieldError('email')" placeholder="Email" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-bold text-gray-700">Telefón <RequiredMark /></label>
-                                <input v-model="getCustomer.phone" type="text" required class="w-full rounded border px-3 py-2" />
+                                <FormInput v-model="getCustomer.phone" :invalid="isRequiredMissing('phone')" :error="fieldError('phone')" placeholder="Telefón" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-bold text-gray-700">Ulica <RequiredMark /></label>
-                                <input v-model="getCustomer.street" type="text" required class="w-full rounded border px-3 py-2" />
+                                <FormInput v-model="getCustomer.street" :invalid="isRequiredMissing('street')" :error="fieldError('street')" placeholder="Ulica a číslo" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-bold text-gray-700">PSČ <RequiredMark /></label>
-                                <input v-model="getCustomer.postcode" type="text" required class="w-full rounded border px-3 py-2" />
+                                <FormInput v-model="getCustomer.postcode" :invalid="isRequiredMissing('postcode')" :error="fieldError('postcode')" placeholder="PSČ" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-bold text-gray-700">Mesto <RequiredMark /></label>
-                                <input v-model="getCustomer.city" type="text" required class="w-full rounded border px-3 py-2" />
+                                <FormInput v-model="getCustomer.city" :invalid="isRequiredMissing('city')" :error="fieldError('city')" placeholder="Mesto" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-bold text-gray-700">DIČ</label>
-                                <input v-model="getCustomer.dic" type="text" class="w-full rounded border px-3 py-2" />
+                                <FormInput v-model="getCustomer.dic" placeholder="DIČ" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-bold text-gray-700">IČ DPH</label>
-                                <input v-model="getCustomer.ic_dic" type="text" class="w-full rounded border px-3 py-2" />
+                                <FormInput v-model="getCustomer.ic_dic" placeholder="IČ DPH" />
                             </div>
                         </div>
 
@@ -338,8 +340,18 @@ onMounted(() => {
                             <tbody class="divide-y divide-gray-200">
                                 <tr v-for="product in orderProducts" :key="product.id">
                                     <td class="tbody_td">
-                                        <div class="font-semibold text-gray-900">{{ product.name }}</div>
-                                        <div class="text-xs text-gray-500">{{ product.code }}</div>
+                                        <div class="flex items-center gap-3">
+                                            <img
+                                                v-if="product.thumb"
+                                                :src="product.thumb"
+                                                :alt="product.name"
+                                                class="h-10 w-10 shrink-0 rounded border border-gray-200 object-cover"
+                                            />
+                                            <div>
+                                                <div class="font-semibold text-gray-900">{{ product.name }}</div>
+                                                <div class="text-xs text-gray-500">{{ product.code }}</div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="tbody_td text-center">{{ formatDecimal(product.active_price) }} €</td>
                                     <td class="tbody_td text-center">
