@@ -33,7 +33,11 @@ const template = () => {
     return {
         page_header: {
             title: "Pouzivatelia",
-            buttonLink: {},
+            buttonLink: {
+                name: "Nový používateľ",
+                link: "/users/create",
+                icon: "plus",
+            },
         },
         page_bottom: {},
     };

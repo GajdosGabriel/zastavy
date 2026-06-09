@@ -21,7 +21,7 @@ class UserPolicy
 
     public function create(User $user): bool
     {
-        return false;
+        return $user->can('users.update');
     }
 
     public function update(User $user, User $model): bool
@@ -29,17 +29,17 @@ class UserPolicy
         return $user->can('users.update');
     }
 
-    public function delete(User $user, User $model): bool
+    public function delete(): bool
     {
         return false;
     }
 
-    public function restore(User $user, User $model): bool
+    public function restore(): bool
     {
         return false;
     }
 
-    public function forceDelete(User $user, User $model): bool
+    public function forceDelete(): bool
     {
         return false;
     }

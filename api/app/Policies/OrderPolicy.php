@@ -13,29 +13,29 @@ class OrderPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->can('orders.viewAny') || $this->isPortalUser($user);
+        return $user->can('orders.viewAny') || $this->portalCan($user, 'orders.viewAny');
     }
 
     public function view(User $user, Order $order): bool
     {
-        return ($user->can('orders.view') || $this->isPortalUser($user))
+        return ($user->can('orders.view') || $this->portalCan($user, 'orders.view'))
             && $this->ownsOrder($user, $order);
     }
 
     public function create(User $user): bool
     {
-        return $user->can('orders.create') || $this->isPortalUser($user);
+        return $user->can('orders.create') || $this->portalCan($user, 'orders.create');
     }
 
     public function update(User $user, Order $order): bool
     {
-        return ($user->can('orders.update') || $this->isPortalUser($user))
+        return ($user->can('orders.update') || $this->portalCan($user, 'orders.update'))
             && $this->ownsOrder($user, $order);
     }
 
     public function storno(User $user, Order $order): bool
     {
-        return ($user->can('orders.storno') || $this->isPortalUser($user))
+        return ($user->can('orders.storno') || $this->portalCan($user, 'orders.storno'))
             && $this->ownsOrder($user, $order)
             && ! $order->isFinished();
     }
@@ -60,12 +60,12 @@ class OrderPolicy
         return $user->can('orders.update') && $this->ownsOrder($user, $order);
     }
 
-    public function archive(User $user, Order $order): bool
+    public function archive(): bool
     {
         return false;
     }
 
-    public function forceDelete(User $user, Order $order): bool
+    public function forceDelete(): bool
     {
         return false;
     }
@@ -83,5 +83,24 @@ class OrderPolicy
     private function isPortalUser(User $user): bool
     {
         return $user->customer_id !== null;
+    }
+
+    /**
+     * Portal user s priamo pridelenými permissions ich rešpektuje.
+     * Bez priamo pridelených permissions dostane základný prístup k objednávkam.
+     */
+    private function portalCan(User $user, string $permission): bool
+    {
+        if (! $this->isPortalUser($user)) {
+            return false;
+        }
+
+        if ($user->getDirectPermissions()->isNotEmpty()) {
+            return $user->hasDirectPermission($permission);
+        }
+
+        return in_array($permission, [
+            'orders.viewAny', 'orders.view', 'orders.create', 'orders.update', 'orders.storno',
+        ]);
     }
 }

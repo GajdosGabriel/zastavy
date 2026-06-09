@@ -32,6 +32,7 @@ class UserIndexResource extends JsonResource
                 'city' => $this->customer?->city,
             ]),
             'roles' => $this->getRoleNames(),
+            'permissions' => $this->getDirectPermissions()->pluck('name')->values(),
             'orders_count' => $this->orders_count ?? 0,
             'created_at' => $this->created_at?->format('d.m.Y H:i'),
             'endpoints' => [

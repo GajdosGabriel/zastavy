@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Api\SuperAdmin;
 
 use App\Enums\ModelStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Http\Resources\UserIndexResource;
+use App\Models\Customer;
+use App\Models\Order;
 use App\Models\User;
+use App\Notifications\UserInvited;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -15,6 +19,14 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    private const PORTAL_PERMISSIONS = [
+        'orders.viewAny' => 'Zobraziť zoznam objednávok',
+        'orders.view'    => 'Zobraziť detail objednávky',
+        'orders.create'  => 'Vytvárať objednávky',
+        'orders.update'  => 'Upravovať objednávky',
+        'orders.storno'  => 'Stornovať objednávky',
+    ];
+
     public function index(Request $request)
     {
         Gate::authorize('viewAny', User::class);
@@ -22,6 +34,15 @@ class UserController extends Controller
         $users = User::query()
             ->with(['roles', 'customer'])
             ->withCount('orders')
+            ->when(! $request->user()->hasRole('super-admin'), function ($query) use ($request) {
+                $customerIds = Order::where('user_id', $request->user()->id)
+                    ->whereNotNull('customer_id')
+                    ->pluck('customer_id')
+                    ->unique();
+
+                $query->whereNotNull('customer_id')
+                    ->whereIn('customer_id', $customerIds);
+            })
             ->when($request->filled('bySearchInput'), function ($query) use ($request) {
                 $search = $request->string('bySearchInput')->toString();
 
@@ -47,53 +68,161 @@ class UserController extends Controller
         return UserIndexResource::collection($users);
     }
 
+    public function create()
+    {
+        Gate::authorize('create', User::class);
+
+        return response()->json(['meta' => $this->createOptions()]);
+    }
+
+    public function store(UserStoreRequest $request)
+    {
+        Gate::authorize('create', User::class);
+
+        $validated = $request->validated();
+        $this->authorizeCustomerScope($request->user(), (int) $validated['customer_id']);
+
+        $roles       = $validated['roles'] ?? [];
+        $permissions = $validated['permissions'] ?? [];
+        unset($validated['roles'], $validated['permissions']);
+
+        $fullName = trim(($validated['firstName'] ?? '') . ' ' . ($validated['lastName'] ?? ''));
+        $validated['name']     = $fullName;
+        $validated['username'] = $fullName ?: $validated['email'];
+        $validated['slug']     = Str::slug($validated['username']);
+        $validated['uuid']     = Str::uuid();
+        $validated['status']   = ModelStatus::Active->value;
+
+        $password = Str::random(12);
+        $validated['password'] = bcrypt($password);
+
+        $user = DB::transaction(function () use ($validated, $roles, $permissions, $request) {
+            $user = User::create($validated);
+
+            if ($request->user()->hasRole('super-admin') && ! empty($roles)) {
+                $user->syncRoles($roles);
+            }
+
+            if (! empty($permissions)) {
+                $allowed = array_keys(self::PORTAL_PERMISSIONS);
+                $toGrant = collect($permissions)->intersect($allowed)->values()->toArray();
+                $user->syncPermissions($toGrant);
+            }
+
+            return $user;
+        });
+
+        $user->notify(new UserInvited($user, $password, $roles));
+
+        return new UserIndexResource($user->load(['roles', 'customer'])->loadCount('orders'));
+    }
+
     public function show(User $user)
     {
         Gate::authorize('view', $user);
 
         return (new UserIndexResource($user->load(['roles', 'customer'])->loadCount('orders')))
-            ->additional($this->formOptions());
+            ->additional($this->formOptions($user));
     }
 
     public function update(UserUpdateRequest $request, User $user)
     {
         Gate::authorize('update', $user);
+        $this->authorizeCustomerScope($request->user(), $user->customer_id);
 
-        $validated = $request->validated();
-        $roles = $validated['roles'] ?? null;
-        unset($validated['roles']);
+        $validated   = $request->validated();
+        $roles       = $validated['roles'] ?? null;
+        $permissions = $validated['permissions'] ?? null;
+        unset($validated['roles'], $validated['permissions']);
 
-        $validated['name'] = trim(($validated['firstName'] ?? '') . ' ' . ($validated['lastName'] ?? ''));
+        $validated['name']     = trim(($validated['firstName'] ?? '') . ' ' . ($validated['lastName'] ?? ''));
         $validated['username'] = $validated['username'] ?: $validated['name'];
-        $validated['slug'] = Str::slug($validated['username']);
+        $validated['slug']     = Str::slug($validated['username']);
 
-        DB::transaction(function () use ($user, $validated, $roles, $request) {
+        DB::transaction(function () use ($user, $validated, $roles, $permissions, $request) {
             $user->update($validated);
 
-            if ($request->user()?->hasAnyRole(['admin', 'super-admin']) && is_array($roles)) {
+            if ($request->user()->hasAnyRole(['admin', 'super-admin']) && is_array($roles)) {
                 $user->syncRoles($roles);
+            }
+
+            if (is_array($permissions) && $user->customer_id !== null) {
+                $allowed = array_keys(self::PORTAL_PERMISSIONS);
+                $toGrant = collect($permissions)->intersect($allowed)->values()->toArray();
+                $user->syncPermissions($toGrant);
             }
         });
 
         return (new UserIndexResource($user->refresh()->load(['roles', 'customer'])->loadCount('orders')))
-            ->additional($this->formOptions());
+            ->additional($this->formOptions($user));
     }
 
-    private function formOptions(): array
+    private function authorizeCustomerScope(User $authUser, ?int $customerId): void
     {
+        if ($authUser->hasRole('super-admin') || $customerId === null) {
+            return;
+        }
+
+        $customerIds = Order::where('user_id', $authUser->id)
+            ->whereNotNull('customer_id')
+            ->pluck('customer_id');
+
+        if (! $customerIds->contains($customerId)) {
+            abort(403, 'Nemáte oprávnenie pre tohto zákazníka.');
+        }
+    }
+
+    private function createOptions(): array
+    {
+        $authUser   = request()->user();
+        $isSuperAdmin = $authUser?->hasRole('super-admin');
+
+        $customersQuery = Customer::query()->orderBy('company');
+
+        if (! $isSuperAdmin) {
+            $customerIds = Order::where('user_id', $authUser->id)
+                ->whereNotNull('customer_id')
+                ->pluck('customer_id')
+                ->unique();
+
+            $customersQuery->whereIn('id', $customerIds);
+        }
+
+        $customers = $customersQuery->get()->map(fn (Customer $c) => [
+            'value' => $c->id,
+            'label' => $c->company . ($c->city ? " ({$c->city})" : ''),
+        ]);
+
+        return [
+            'customers' => $customers,
+            'roles' => $isSuperAdmin
+                ? Role::query()->orderBy('name')->pluck('name')
+                    ->map(fn (string $r) => ['value' => $r, 'label' => $r])->values()
+                : [],
+            'portal_permissions' => collect(self::PORTAL_PERMISSIONS)
+                ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
+                ->values(),
+            'statuses' => ModelStatus::allowedForUser($authUser),
+        ];
+    }
+
+    private function formOptions(User $user): array
+    {
+        $authUser     = request()->user();
+        $isSuperAdmin = $authUser?->hasRole('super-admin');
+
         return [
             'meta' => [
-                'roles' => request()->user()?->hasAnyRole(['admin', 'super-admin'])
-                    ? Role::query()
-                        ->orderBy('name')
-                        ->pluck('name')
-                        ->map(fn (string $role) => [
-                            'value' => $role,
-                            'label' => $role,
-                        ])
+                'roles' => $isSuperAdmin
+                    ? Role::query()->orderBy('name')->pluck('name')
+                        ->map(fn (string $r) => ['value' => $r, 'label' => $r])->values()
+                    : [],
+                'portal_permissions' => $user->customer_id !== null
+                    ? collect(self::PORTAL_PERMISSIONS)
+                        ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
                         ->values()
                     : [],
-                'statuses' => ModelStatus::allowedForUser(request()->user()),
+                'statuses' => ModelStatus::allowedForUser($authUser),
             ],
         ];
     }

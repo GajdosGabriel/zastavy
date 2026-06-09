@@ -34,6 +34,17 @@ const user = [
             superAdminOnly: true,
         },
     },
+    {
+        path: '/users/create',
+        name: 'users.create',
+        components: {
+            default: () => import('../components/user/UserCreate.vue'),
+        },
+        meta: {
+            title: 'Nový používateľ',
+            superAdminOnly: true,
+        },
+    },
 ];
 
 export default user;

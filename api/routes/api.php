@@ -67,7 +67,8 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
         'shippings.notices' => ShippingNoticeController::class,
     ]);
 
-    Route::apiResource('users', UserController::class)->only(['index', 'show', 'update']);
+    Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+    Route::apiResource('users', UserController::class)->only(['index', 'show', 'update', 'store']);
     Route::apiResource('products', ProductController::class)->except(['show']);
 });
 
