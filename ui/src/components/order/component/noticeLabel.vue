@@ -3,6 +3,8 @@ import { ref } from "vue";
 import iconEmail from "../../../components/icons/email.vue";
 import useNotices from "../../../store/StoreNotices";
 import useOrders from "../../../store/StoreOrders";
+import SpinnerButton from "../../icons/spinnerButton.vue";
+import loadingStore from "../../../store/StoreLoading";
 
 const props = defineProps(["shipping"]);
 
@@ -74,7 +76,9 @@ const confirmNotice = async () => {
                         Zrušiť
                     </button>
                     <button type="button" @click="confirmNotice"
-                        class="rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                        :disabled="loadingStore.isLoading"
+                        class="inline-flex items-center gap-2 rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed">
+                        <SpinnerButton v-if="loadingStore.isLoading" />
                         Potvrdiť
                     </button>
                 </div>

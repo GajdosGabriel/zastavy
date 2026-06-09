@@ -4,6 +4,8 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import useUser from "../../store/StoreUsers";
 import router from "../../router";
 import RequiredMark from "../forms/RequiredMark.vue";
+import SpinnerButton from "../icons/spinnerButton.vue";
+import loadingStore from "../../store/StoreLoading";
 
 
 const { login } = useUser();
@@ -74,9 +76,11 @@ const onClickForm = async () => {
                         </label>
 
                         <button
-                            class="flex w-full items-center justify-center rounded bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            class="flex w-full items-center justify-center gap-2 rounded bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:bg-blue-500 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                             type="submit"
+                            :disabled="loadingStore.isLoading"
                         >
+                            <SpinnerButton v-if="loadingStore.isLoading" />
                             Prihlásiť
                         </button>
 

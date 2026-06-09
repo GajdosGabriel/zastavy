@@ -10,6 +10,7 @@ import search from "../icons/search.vue";
 import { formatDecimal } from "../../models/functions";
 import RequiredMark from "../forms/RequiredMark.vue";
 import FormInput from "../forms/FormInput.vue";
+import ButtonSubmit from "../layout/page/ButtonSubmit.vue";
 
 
 const {
@@ -347,10 +348,13 @@ const onClickForm = async () => {
                                     </div>
 
                                     <div class="text-right">
-                                          <button @click="onClickForm" :disabled="isSubmitting || !getCarts.length"
-                                                class="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                                                {{ isSubmitting ? 'Odosielam...' : 'Odoslať objednávku' }}
-                                          </button>
+                                          <ButtonSubmit
+                                                :item="{ name: 'Odoslať objednávku', spinner: true }"
+                                                :loading="isSubmitting"
+                                                :disabled="!getCarts.length"
+                                                type="button"
+                                                @click="onClickForm"
+                                          />
                                     </div>
                               </div>
                         </div>

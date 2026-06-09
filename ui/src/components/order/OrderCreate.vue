@@ -12,6 +12,8 @@ import router from "../../router";
 import { formatDecimal } from "../../models/functions";
 import RequiredMark from "../forms/RequiredMark.vue";
 import FormInput from "../forms/FormInput.vue";
+import SpinnerButton from "../icons/spinnerButton.vue";
+import loadingStore from "../../store/StoreLoading";
 
 const { getCustomer, setCustomer, findCustomerByIco } = useCustomers();
 const { storeOrder, state: orderState } = useOrders();
@@ -399,7 +401,10 @@ onMounted(() => {
                             <button type="button" class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700" @click="showSaveModal = false">
                                 Zrušiť
                             </button>
-                            <button type="button" class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white" @click="confirmSave()">
+                            <button type="button" @click="confirmSave()"
+                                :disabled="loadingStore.isLoading"
+                                class="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:bg-blue-400 disabled:cursor-not-allowed">
+                                <SpinnerButton v-if="loadingStore.isLoading" />
                                 Potvrdiť
                             </button>
                         </div>

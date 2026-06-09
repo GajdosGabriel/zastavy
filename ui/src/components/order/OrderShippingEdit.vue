@@ -5,6 +5,8 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import buttonLink from "../layout/page/ButtonLink.vue";
 import useOrders from "../../store/StoreOrders";
 import useShippings from "../../store/StoreShippings";
+import SpinnerButton from "../icons/spinnerButton.vue";
+import loadingStore from "../../store/StoreLoading";
 
 const {
     getOrder,
@@ -314,7 +316,9 @@ watch(availableProducts, () => resetShippingItems(true));
                                 Zrušiť
                             </button>
                             <button type="button" @click="confirmShipping"
-                                class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                                :disabled="loadingStore.isLoading"
+                                class="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed">
+                                <SpinnerButton v-if="loadingStore.isLoading" />
                                 Potvrdiť
                             </button>
                         </div>

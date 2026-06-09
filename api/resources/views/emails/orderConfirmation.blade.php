@@ -87,6 +87,13 @@
             </tbody>
         </table>
 
+        @if(!empty(trim($order->notice ?? '')))
+        <div class="info-block">
+            <p class="section-title">Poznámka</p>
+            <p style="font-size:14px;">{{ $order->notice }}</p>
+        </div>
+        @endif
+
         <p style="font-size:14px; color:#555;">
             Ďakujeme za Vašu objednávku. V prípade otázok nás kontaktujte.
         </p>
