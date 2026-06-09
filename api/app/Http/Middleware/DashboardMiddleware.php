@@ -15,7 +15,11 @@ class DashboardMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user()?->hasAnyRole(['super-admin', 'admin', 'manager', 'sales', 'warehouse'])) {
+        $user = $request->user();
+        $isStaff  = $user?->hasAnyRole(['super-admin', 'admin', 'manager', 'sales', 'warehouse']);
+        $isPortal = $user?->customer_id !== null;
+
+        if (! $isStaff && ! $isPortal) {
             abort(403, 'Nemáte oprávnenie na túto akciu.');
         }
 

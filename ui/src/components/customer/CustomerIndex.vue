@@ -2,6 +2,7 @@
 import { onMounted, watch, ref } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import useCustomers from "../../store/StoreCustomers";
+import useUser from "../../store/StoreUsers";
 import useQuery from "../../store/StoreQuery";
 import PaginationComponent from "../plugins/pagination.vue";
 import FilterPanel from "./FilterPanel.vue";
@@ -24,6 +25,7 @@ const {
     setPaginator,
     getCustomers,
 } = useCustomers();
+const { getUserCan } = useUser();
 
 const { state: q, setQuery, getQuery, getQueryStringUrl, removeQuery, resetQuery } = useQuery();
 
@@ -69,7 +71,9 @@ const template = () => {
     return {
         page_header: {
             title: 'Zákazníci',
-            buttonLink: { name: 'Nový zákazník', spinner: true, link: '/zakaznici/create', icon: 'plus' }
+            buttonLink: getUserCan.value['customers.create']
+                    ? { name: 'Nový zákazník', spinner: true, link: '/zakaznici/create', icon: 'plus' }
+                    : null,
         },
         page_bottom: {
             buttonBottomLeft: { name: 'Späť', spinner: true, link: '/zakaznici', icon: 'arrow-left' }

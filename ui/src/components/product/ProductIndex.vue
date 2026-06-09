@@ -2,6 +2,7 @@
 import BaseLayout from '../layout/BaseLayout.vue';
 import { onMounted, ref } from "vue";
 import useProducts from "../../store/StoreProducts";
+import useUser from "../../store/StoreUsers";
 import paginationComponent from "../plugins/pagination.vue";
 import filterPanel from "./FilterPanel.vue";
 import tableRowProduct from "./components/tableRowProduct.vue";
@@ -13,6 +14,7 @@ import loadingStore from '../../store/StoreLoading';
 const {
       state, fetchProducts, setUrl, getProducts
 } = useProducts();
+const { getUserCan } = useUser();
 
 const quickMark = ref([]);
 
@@ -44,7 +46,9 @@ const template = (product) => {
             ...product,
             page_header: {
                   title: 'Zoznam tovaru',
-                  buttonLink: { name: 'Nový produkt', spinner: true, link: '/products/create', icon: 'plus' }
+                  buttonLink: getUserCan.value['products.create']
+                        ? { name: 'Nový produkt', spinner: true, link: '/products/create', icon: 'plus' }
+                        : null
             },
             page_bottom: {
                   // buttonLink: { name: 'Späť', spinner: true, link: 'products.index', icon: 'arrow-left' },

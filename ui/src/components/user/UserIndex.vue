@@ -10,9 +10,11 @@ import spinnerTable from "../icons/spinnerTable.vue";
 import loadingStore from "../../store/StoreLoading";
 import useAdminUsers from "../../store/StoreAdminUsers";
 import useQuery from "../../store/StoreQuery";
+import useUser from "../../store/StoreUsers";
 
 const { fetchUsers, setPaginator, getUsers, resetUrl } = useAdminUsers();
 const { resetQuery, getQueryStringUrl } = useQuery();
+const { getUserCan } = useUser();
 
 onMounted(() => {
     resetUrl();
@@ -33,11 +35,9 @@ const template = () => {
     return {
         page_header: {
             title: "Použivatelia",
-            buttonLink: {
-                name: "Nový používateľ",
-                link: "/users/create",
-                icon: "plus",
-            },
+            buttonLink: getUserCan.value['users.create']
+                ? { name: "Nový používateľ", link: "/users/create", icon: "plus" }
+                : null,
         },
         page_bottom: {},
     };

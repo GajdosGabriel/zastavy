@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import useStocks from "../../store/StoreStocks";
+import useUser from "../../store/StoreUsers";
 import PaginationComponent from "../plugins/pagination.vue";
 import tableRow from "./component/tableRow.vue";
 import filterPanel from "./FilterPanel.vue";
@@ -12,6 +13,7 @@ import spinnerTable from '../icons/spinnerTable.vue';
 import loadingStore from '../../store/StoreLoading';
 
 const { state, fetchStocks, setPaginator, getStocks } = useStocks();
+const { getUserCan } = useUser();
 
 onMounted(() => {
     fetchStocks();
@@ -25,7 +27,9 @@ const template = () => {
     return {
         page_header: {
             title: 'Sklad - pohyby',
-            buttonLink: { name: 'Nový príjem', spinner: true, link: '/sklad/create', icon: 'plus' }
+            buttonLink: getUserCan.value['stocks.create']
+                ? { name: 'Nový príjem', spinner: true, link: '/sklad/create', icon: 'plus' }
+                : null
         },
         page_bottom: {
             // buttonLink: { name: 'Späť', spinner: true, link: 'products.index', icon: 'arrow-left' },

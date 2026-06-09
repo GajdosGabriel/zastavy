@@ -3,10 +3,13 @@
 namespace App\Http\Resources;
 
 use App\Filters\OrderFilter;
+use App\Models\Order;
+use App\Models\User;
 use App\Services\OrderStatisticsService;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class UserResource extends JsonResource
 {
@@ -36,10 +39,26 @@ class UserResource extends JsonResource
             'order' => app(OrderStatisticsService::class)
                 ->navigationSummary($this->resource, app(OrderFilter::class))['orders'],
             'roles' => $this->getRoleNames(),
+            'can' => $this->buildCan(),
             'navigation' => [
                 'main' => $this->mainNavigation(),
                 'userMenu' => $this->userMenuNavigation(),
             ],
+        ];
+    }
+
+    private function buildCan(): array
+    {
+        $user = $this->resource;
+
+        return [
+            'orders.create'        => Gate::forUser($user)->check('create', Order::class),
+            'customers.create'     => $user->can('customers.create'),
+            'products.create'      => $user->can('products.create'),
+            'stocks.create'        => $user->can('stocks.create'),
+            'users.create'         => $user->can('users.update'),
+            'categories.manage'    => $user->can('categories.manage'),
+            'announcements.manage' => $user->can('announcements.manage'),
         ];
     }
 

@@ -22,6 +22,7 @@ const state = reactive(defaultState);
 const getters = {
     getUser: computed(() => state.user),
     getUserOrder: computed(() => state.user.order),
+    getUserCan: computed(() => state.user.can ?? {}),
     getFilterCounter: computed(() => state.filterCounter),
     getToken: computed(() => state.token),
 };

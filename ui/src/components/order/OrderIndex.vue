@@ -2,6 +2,7 @@
 import BaseLayout from '../layout/BaseLayout.vue';
 import { onMounted } from "vue";
 import useOrders from "../../store/StoreOrders";
+import useUser from "../../store/StoreUsers";
 import tableRowOrders from "./component/tableRowOrders.vue";
 import filterOrder from "./FilterOrder.vue";
 import iconStar from "../../components/icons/star.vue";
@@ -15,6 +16,7 @@ import spinnerTable from '../icons/spinnerTable.vue';
 
 
 const { state, fetchOrders, setPaginator, getOrders, fetchMarkSelected } = useOrders();
+const { getUserCan } = useUser();
 
 onMounted(() => {
       fetchOrders();
@@ -29,7 +31,9 @@ const template = () => {
       return {
             page_header: {
                   title: 'Zoznam objednávok',
-                  buttonLink: { name: 'Nová objednávka', spinner: true, link: '/objednavky/create', icon: 'plus' }
+                  buttonLink: getUserCan.value['orders.create']
+                      ? { name: 'Nová objednávka', spinner: true, link: '/objednavky/create', icon: 'plus' }
+                      : null,
             },
             page_bottom: {
                   // buttonLink: { name: 'Späť', spinner: true, link: 'products.index', icon: 'arrow-left' },
