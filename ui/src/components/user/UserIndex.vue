@@ -56,7 +56,7 @@ const template = () => {
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="thead">
                             <tr>
-                                <th class="thead_th">ID</th>
+                                <th class="thead_th">Por.</th>
                                 <th class="thead_th">Pouzivatel</th>
                                 <th class="thead_th">Kontakt</th>
                                 <th class="thead_th">Zakaznik</th>
@@ -68,7 +68,7 @@ const template = () => {
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <spinnerTable v-if="loadingStore.isLoading" />
-                            <table-row v-else v-for="user in getUsers" :user="user" :key="user.id" />
+                            <table-row v-else v-for="(user, index) in getUsers" :user="user" :index="index + 1" :key="user.id" />
                         </tbody>
                     </table>
                 </div>

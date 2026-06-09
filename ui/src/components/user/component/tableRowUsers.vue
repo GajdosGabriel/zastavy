@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import PanelDropdown from "../../layout/PanelDropdown.vue";
 
-const props = defineProps(["user"]);
+const props = defineProps(["user", "index"]);
 
 const fullName = (user) => {
     return [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || "-";
@@ -32,8 +32,8 @@ const dropdownItems = computed(() => [
 
 <template>
     <tr>
-        <td class="tbody_td">
-            {{ user.id }}
+        <td class="tbody_td" :title="`ID: ${user.id}`">
+            {{ index }}
         </td>
 
         <td class="tbody_td">
