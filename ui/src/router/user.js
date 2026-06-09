@@ -8,7 +8,7 @@ const user = [
             default: () => import('../components/user/UserIndex.vue'),
         },
         meta: {
-            title: 'Pouzivatelia',
+            title: 'Použivatelia',
             superAdminOnly: true,
         },
     },

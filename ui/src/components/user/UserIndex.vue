@@ -32,7 +32,7 @@ watch(getQueryStringUrl, () => {
 const template = () => {
     return {
         page_header: {
-            title: "Pouzivatelia",
+            title: "Použivatelia",
             buttonLink: {
                 name: "Nový používateľ",
                 link: "/users/create",
