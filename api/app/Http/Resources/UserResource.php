@@ -65,7 +65,7 @@ class UserResource extends JsonResource
         }
 
         if ($user->can('users.viewAny')) {
-            $items[] = ['NAME' => 'Pouzivatelia', 'ROUTE' => 'users.index', 'URL' => route('users.index'), 'ICON' => ''];
+            $items[] = ['NAME' => 'Použivatelia', 'ROUTE' => 'users.index', 'URL' => route('users.index'), 'ICON' => ''];
         }
 
         if ($user->can('stocks.viewAny')) {

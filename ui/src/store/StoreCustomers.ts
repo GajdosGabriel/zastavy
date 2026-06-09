@@ -1,5 +1,5 @@
 import axiosInstance from "../axiosInstance";
-import { computed, reactive, watch } from "vue";
+import { computed, reactive } from "vue";
 import router from "../router";
 import usePaginator from './StorePaginator';
 import useQuery from './StoreQuery';
@@ -69,8 +69,9 @@ const actions = {
             state.customers = response.data.data;
             setPaginator(response.data.meta);
             setLinks(response.data.links);
-        } finally {
-
+        } catch (error) {
+            state.customers = [];
+            setErrors(error);
         }
     },
 
@@ -201,6 +202,3 @@ export default () => ({
     ...actions,
 });
 
-watch(getQueryStringUrl, (val) => {
-    actions.fetchCustomers();
-});

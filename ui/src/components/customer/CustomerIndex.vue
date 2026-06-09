@@ -25,11 +25,15 @@ const {
     getCustomers,
 } = useCustomers();
 
-const { state: q, setQuery, getQuery, removeQuery, resetQuery } = useQuery();
+const { state: q, setQuery, getQuery, getQueryStringUrl, removeQuery, resetQuery } = useQuery();
 
 const sortById = ref<boolean>(false);
 const sortByOrders = ref<boolean>(false);
 const iconStatus = ref<boolean>(false);
+
+watch(getQueryStringUrl, () => {
+    fetchCustomers();
+});
 
 watch(sortById, () => {
     sortById.value
