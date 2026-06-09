@@ -10,85 +10,43 @@ class ShippingPolicy
 {
     use HandlesAuthorization;
 
-    /**
-     * Determine whether the user can view any models.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function viewAny(User $user)
+    public function viewAny(User $user): bool
     {
-        //
+        return $user->can('shippings.manage');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Shipping  $shipping
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function view(User $user, Shipping $shipping)
+    public function view(User $user, Shipping $shipping): bool
     {
-        //
+        return $user->can('shippings.manage');
     }
 
-    /**
-     * Determine whether the user can create models.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function create(User $user)
+    public function create(User $user): bool
     {
-        //
+        return $user->can('shippings.manage');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Shipping  $shipping
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function update(User $user, Shipping $shipping)
+    public function update(User $user, Shipping $shipping): bool
     {
-        //
+        return $user->can('shippings.manage');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Shipping  $shipping
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function delete(User $user, Shipping $shipping)
+    public function delete(User $user, Shipping $shipping): bool
     {
-        return ! $shipping->isArchived();
+        return $user->can('shippings.manage') && ! $shipping->isArchived();
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Shipping  $shipping
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function restore(User $user, Shipping $shipping)
+    public function restore(User $user, Shipping $shipping): bool
     {
-        //
+        return $user->can('shippings.manage');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Shipping  $shipping
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function forceDelete(User $user, Shipping $shipping)
+    public function archive(User $user, Shipping $shipping): bool
     {
-        //
+        return false;
+    }
+
+    public function forceDelete(User $user, Shipping $shipping): bool
+    {
+        return false;
     }
 }

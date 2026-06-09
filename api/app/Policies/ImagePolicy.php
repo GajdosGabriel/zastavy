@@ -12,6 +12,6 @@ class ImagePolicy
 
     public function delete(User $user, Image $image): bool
     {
-        return ! $image->isArchived();
+        return $user->can('products.delete') && ! $image->isArchived();
     }
 }

@@ -11,35 +11,41 @@ class OrderPolicy
 {
     use HandlesAuthorization;
 
-    private const DASHBOARD_ROLES = ['super-admin'];
-
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can('orders.viewAny') || $this->isPortalUser($user);
     }
 
     public function view(User $user, Order $order): bool
     {
-        return $this->ownsOrder($user, $order);
+        return ($user->can('orders.view') || $this->isPortalUser($user))
+            && $this->ownsOrder($user, $order);
     }
 
     public function create(User $user): bool
     {
-        return true;
+        return $user->can('orders.create') || $this->isPortalUser($user);
     }
 
     public function update(User $user, Order $order): bool
     {
-        return $this->ownsOrder($user, $order);
+        return ($user->can('orders.update') || $this->isPortalUser($user))
+            && $this->ownsOrder($user, $order);
     }
 
     public function storno(User $user, Order $order): bool
     {
-        return $this->ownsOrder($user, $order) && ! $order->isFinished();
+        return ($user->can('orders.storno') || $this->isPortalUser($user))
+            && $this->ownsOrder($user, $order)
+            && ! $order->isFinished();
     }
 
     public function delete(User $user, Order $order): Response
     {
+        if (! $user->can('orders.delete')) {
+            return Response::deny('Nemáte oprávnenie zmazať objednávku.');
+        }
+
         if ($order->isArchived()) {
             return Response::deny('Archivovanu objednavku nie je mozne zmazat.');
         }
@@ -51,7 +57,7 @@ class OrderPolicy
 
     public function restore(User $user, Order $order): bool
     {
-        return $this->ownsOrder($user, $order);
+        return $user->can('orders.update') && $this->ownsOrder($user, $order);
     }
 
     public function archive(User $user, Order $order): bool
@@ -66,11 +72,16 @@ class OrderPolicy
 
     private function ownsOrder(User $user, Order $order): bool
     {
-        if ($user->hasAnyRole(self::DASHBOARD_ROLES)) {
+        if ($user->hasRole('super-admin')) {
             return true;
         }
 
         return $order->user_id === $user->id
             || ($user->customer_id !== null && $order->customer_id === $user->customer_id);
+    }
+
+    private function isPortalUser(User $user): bool
+    {
+        return $user->customer_id !== null;
     }
 }

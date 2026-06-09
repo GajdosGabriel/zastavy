@@ -10,12 +10,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @param  Request  $request
-     * @return array|Arrayable|\JsonSerializable
-     */
     public function toArray($request)
     {
         if (! $this->resource) {
@@ -51,130 +45,71 @@ class UserResource extends JsonResource
 
     private function mainNavigation(): array
     {
-        if ($this->hasRole('super-admin')) {
-            return self::superAdminNavigation();
-        }
+        $user = $this->resource;
+        $isPortalUser = $user->customer_id !== null;
 
-        return self::userNavigation();
-    }
-
-    private function userMenuNavigation(): array
-    {
         $items = [
-            [
-                'NAME' => 'Dashboard',
-                'ROUTE' => 'dashboard.index',
-                'URL' => '/dashboard',
-                'ACTION' => null,
-            ],
+            ['NAME' => 'Dashboard', 'ROUTE' => 'dashboard.index', 'URL' => '/dashboard', 'ICON' => ''],
         ];
 
-        if ($this->hasRole('super-admin')) {
-            $items[] = [
-                'NAME' => 'Admin',
-                'ROUTE' => 'admin.index',
-                'URL' => '/admin',
-                'ACTION' => null,
-            ];
+        if ($user->can('orders.viewAny') || $isPortalUser) {
+            $items[] = ['NAME' => 'Objednávky', 'ROUTE' => 'orders.index', 'URL' => route('orders.index'), 'ICON' => 'badge'];
         }
 
-        $items[] = [
-            'NAME' => 'Odhlásiť',
-            'ROUTE' => null,
-            'URL' => null,
-            'ACTION' => 'logout',
-        ];
+        if ($user->can('products.viewAny')) {
+            $items[] = ['NAME' => 'Produkty', 'ROUTE' => 'products.index', 'URL' => route('products.index'), 'ICON' => ''];
+        }
+
+        if ($user->can('customers.viewAny')) {
+            $items[] = ['NAME' => 'Zákazníci', 'ROUTE' => 'customers.index', 'URL' => route('customers.index'), 'ICON' => ''];
+        }
+
+        if ($user->can('users.viewAny')) {
+            $items[] = ['NAME' => 'Pouzivatelia', 'ROUTE' => 'users.index', 'URL' => route('users.index'), 'ICON' => ''];
+        }
+
+        if ($user->can('stocks.viewAny')) {
+            $items[] = ['NAME' => 'Sklad', 'ROUTE' => 'stocks.index', 'URL' => route('stocks.index'), 'ICON' => ''];
+        }
+
+        $items[] = ['NAME' => 'Kontakt', 'ROUTE' => 'public.contactUs', 'URL' => '/kontakt', 'ICON' => ''];
 
         return $items;
     }
 
-    private static function userNavigation(): array
+    private function userMenuNavigation(): array
     {
-        return [
-            [
-                'NAME' => 'Dashboard',
-                'ROUTE' => 'dashboard.index',
-                'URL' => '/dashboard',
-                'ICON' => '',
-            ],
-            [
-                'NAME' => 'Objednávky',
-                'ROUTE' => 'orders.index',
-                'URL' => route('orders.index'),
-                'ICON' => 'badge',
-            ],
-        ];
-    }
+        $user = $this->resource;
 
-    private static function superAdminNavigation(): array
-    {
-        return [
-            [
-                'NAME' => 'Dashboard',
-                'ROUTE' => 'dashboard.index',
-                'URL' => '/dashboard',
-                'ICON' => '',
-            ],
-            [
-                'NAME' => 'Objednávky',
-                'ROUTE' => 'orders.index',
-                'URL' => route('orders.index'),
-                'ICON' => 'badge',
-            ],
-            [
-                'NAME' => 'Produkty',
-                'ROUTE' => 'products.index',
-                'URL' => route('products.index'),
-                'ICON' => '',
-            ],
-            [
-                'NAME' => 'Zákazníci',
-                'ROUTE' => 'customers.index',
-                'URL' => route('customers.index'),
-                'ICON' => '',
-            ],
-            [
-                'NAME' => 'Pouzivatelia',
-                'ROUTE' => 'users.index',
-                'URL' => route('users.index'),
-                'ICON' => '',
-            ],
-            [
-                'NAME' => 'Sklad',
-                'ROUTE' => 'stocks.index',
-                'URL' => route('stocks.index'),
-                'ICON' => '',
-            ],
-            [
-                'NAME' => 'Kontakt',
-                'ROUTE' => 'public.contactUs',
-                'URL' => '/kontakt',
-                'ICON' => '',
-            ],
+        $items = [
+            ['NAME' => 'Dashboard', 'ROUTE' => 'dashboard.index', 'URL' => '/dashboard', 'ACTION' => null],
         ];
+
+        $hasAdminAccess = $user->hasAnyPermission([
+            'products.viewAny', 'customers.viewAny', 'stocks.viewAny',
+            'users.viewAny', 'categories.manage', 'announcements.manage',
+        ]);
+
+        if ($hasAdminAccess) {
+            $items[] = ['NAME' => 'Admin', 'ROUTE' => 'admin.index', 'URL' => '/admin', 'ACTION' => null];
+        }
+
+        $items[] = ['NAME' => 'Odhlásiť', 'ROUTE' => null, 'URL' => null, 'ACTION' => 'logout'];
+
+        return $items;
     }
 
     private static function publicNavigation(): array
     {
         return [
-            [
-                'NAME' => 'Kontakt',
-                'ROUTE' => 'public.contactUs',
-                'URL' => '/kontakt',
-                'ICON' => '',
-            ],
+            ['NAME' => 'Kontakt', 'ROUTE' => 'public.contactUs', 'URL' => '/kontakt', 'ICON' => ''],
         ];
     }
 
     private static function guestUserMenu(): array
     {
         return [
-            [
-                'NAME' => 'Vstúpiť',
-                'ROUTE' => 'public.login.index',
-                'URL' => '/login',
-                'ACTION' => null,
-            ],
+            ['NAME' => 'Vstúpiť', 'ROUTE' => 'public.login.index', 'URL' => '/login', 'ACTION' => null],
         ];
     }
 }
