@@ -6,12 +6,9 @@ import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
-import search from "../icons/search.vue";
 import { formatDecimal } from "../../models/functions";
-import RequiredMark from "../forms/RequiredMark.vue";
-import FormInput from "../forms/FormInput.vue";
 import ButtonSubmit from "../layout/page/ButtonSubmit.vue";
-
+import CustomerFormFields from "../forms/CustomerFormFields.vue";
 
 const {
       removeCart,
@@ -23,32 +20,10 @@ const {
       updateCartQuantity,
 } = useCheckouts();
 
-const { getCustomer, setCustomer, findCustomerByIco, } = useCustomers();
+const { getCustomer, setCustomer } = useCustomers();
 const { getOrder } = useOrders();
 const { getFieldErrors } = useErrors();
-const isSearchingCompany = ref(false);
 const isSubmitting = ref(false);
-const icoSearchMessage = ref("");
-const highlightMissingRequired = ref(false);
-
-const isRequiredMissing = (field) => {
-      return highlightMissingRequired.value && !String(getCustomer.value?.[field] ?? '').trim();
-};
-
-const fieldError = (field) => {
-      const errors = getFieldErrors.value?.[`customer.${field}`] ?? getFieldErrors.value?.[field] ?? [];
-
-      return Array.isArray(errors) ? errors[0] : errors;
-};
-
-const icoError = () => {
-      if (String(getCustomer.value?.ico ?? '').length > 8) {
-            return 'IČO môže mať maximálne 8 číslic.';
-      }
-
-      return fieldError('ico');
-};
-
 
 const parseStoredCustomer = () => {
       try {
@@ -59,63 +34,19 @@ const parseStoredCustomer = () => {
       }
 };
 
-const shortDescription = (product) => {
-      return String(product.description || '').substring(0, 25);
-};
-
-const productTotal = (product) => {
-      return formatDecimal(Number(product.active_price || 0) * Number(product.input_order || 0));
-};
-
-const onlyDigits = (event) => {
-      getCustomer.value.ico = String(event.target.value || '').replace(/\D/g, '');
-};
-
-const padIco = () => {
-      const ico = String(getCustomer.value?.ico ?? '').trim();
-      if (ico.length > 0 && ico.length < 8) {
-            getCustomer.value.ico = ico.padStart(8, '0');
-      }
-};
-
+const shortDescription = (product) => String(product.description || '').substring(0, 25);
+const productTotal = (product) => formatDecimal(Number(product.active_price || 0) * Number(product.input_order || 0));
 
 onMounted(() => {
       getlocalStorage();
-
       if (getCarts.value.length) {
             setCustomer(parseStoredCustomer());
       }
-
 });
 
 const clickEmptyBasket = () => {
-      if (!window.confirm("Skutočne vyprázniť košík!")) {
-            return;
-      }
+      if (!window.confirm("Skutočne vyprázniť košík!")) return;
       resetCarts();
-};
-
-
-const onClickIco = async () => {
-      icoSearchMessage.value = "";
-      padIco();
-
-      if (icoError()) {
-            return;
-      }
-
-      isSearchingCompany.value = true;
-
-      try {
-            const response = await findCustomerByIco();
-            highlightMissingRequired.value = ['internet', 'database_with_internet'].includes(response?.source);
-            icoSearchMessage.value = "Údaje firmy boli doplnené.";
-      } catch (error) {
-            highlightMissingRequired.value = false;
-            icoSearchMessage.value = error.response?.data?.message || error.message || "Firmu sa nepodarilo nájsť.";
-      } finally {
-            isSearchingCompany.value = false;
-      }
 };
 
 const onClickForm = async () => {
@@ -252,80 +183,13 @@ const onClickForm = async () => {
                                 <h2 class="text-base font-semibold text-gray-800">Fakturačné údaje</h2>
                             </div>
                             <div class="px-6 py-5">
-
-                                <!-- IČO vyhľadávanie -->
-                                <div class="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
-                                    <label class="mb-2 block text-sm font-semibold text-blue-900">Rýchle doplnenie — vyhľadajte firmu podľa IČO</label>
-                                    <div class="flex gap-2">
-                                        <FormInput
-                                            :invalid="!!icoError()"
-                                            v-model="getCustomer.ico"
-                                            placeholder="IČO organizácie"
-                                            inputmode="numeric"
-                                            pattern="[0-9]*"
-                                            @input="onlyDigits"
-                                            @blur="padIco"
-                                            @keyup.enter="onClickIco"
-                                        />
-                                        <button
-                                            type="button"
-                                            @click="onClickIco"
-                                            :disabled="isSearchingCompany"
-                                            class="whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:bg-gray-400"
-                                        >
-                                            {{ isSearchingCompany ? 'Hľadám...' : 'Vyhľadať firmu' }}
-                                        </button>
-                                    </div>
-                                    <p v-if="icoError()" class="mt-2 text-xs font-semibold text-red-600">{{ icoError() }}</p>
-                                    <p v-if="icoSearchMessage" class="mt-2 text-xs text-blue-700">{{ icoSearchMessage }}</p>
-                                </div>
-
-                                <!-- Formulár -->
-                                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                    <div class="sm:col-span-2 lg:col-span-3">
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">Názov firmy <RequiredMark /></label>
-                                        <FormInput v-model="getCustomer.company" :invalid="isRequiredMissing('company')" :error="fieldError('company')" placeholder="Názov firmy" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">Ulica a číslo <RequiredMark /></label>
-                                        <FormInput v-model="getCustomer.street" :invalid="isRequiredMissing('street')" placeholder="Ulica a číslo" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">PSČ <RequiredMark /></label>
-                                        <FormInput v-model="getCustomer.postcode" :invalid="isRequiredMissing('postcode')" placeholder="PSČ" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">Mesto <RequiredMark /></label>
-                                        <FormInput v-model="getCustomer.city" :invalid="isRequiredMissing('city')" placeholder="Mesto" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">Kontaktné meno <RequiredMark /></label>
-                                        <FormInput v-model="getCustomer.name" :invalid="isRequiredMissing('name')" placeholder="Meno objednávateľa" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">Email <RequiredMark /></label>
-                                        <FormInput v-model="getCustomer.email" type="email" :invalid="isRequiredMissing('email') || !!fieldError('email')" :error="fieldError('email')" placeholder="Email" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">Telefón <RequiredMark /></label>
-                                        <FormInput v-model="getCustomer.phone" :invalid="isRequiredMissing('phone')" placeholder="Telefón" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">IČO</label>
-                                        <FormInput v-model="getCustomer.ico" :invalid="!!icoError()" :error="icoError()" inputmode="numeric" pattern="[0-9]*" placeholder="IČO" @input="onlyDigits" @blur="padIco" @keyup.enter="onClickIco" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">DIČ</label>
-                                        <FormInput v-model="getCustomer.dic" placeholder="DIČ" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">IČ DPH</label>
-                                        <FormInput v-model="getCustomer.ic_dic" placeholder="IČ DPH" />
-                                    </div>
-                                    <div class="sm:col-span-2 lg:col-span-3">
-                                        <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
-                                        <FormInput v-model="getOrder.notice" placeholder="Poznámka" />
-                                    </div>
+                                <CustomerFormFields
+                                    :fieldErrors="getFieldErrors"
+                                    :requiredFields="['company', 'name', 'email', 'phone', 'street', 'postcode', 'city']"
+                                />
+                                <div class="mt-4">
+                                    <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
+                                    <input v-model="getOrder.notice" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />
                                 </div>
                             </div>
                         </div>

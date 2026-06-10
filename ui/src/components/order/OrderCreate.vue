@@ -9,12 +9,11 @@ import useUser from "../../store/StoreUsers";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
 import { formatDecimal } from "../../models/functions";
-import RequiredMark from "../forms/RequiredMark.vue";
-import FormInput from "../forms/FormInput.vue";
 import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
+import CustomerFormFields from "../forms/CustomerFormFields.vue";
 
-const { getCustomer, setCustomer, findCustomerByIco } = useCustomers();
+const { getCustomer, setCustomer, fetchCustomer } = useCustomers();
 const { storeOrder, state: orderState } = useOrders();
 const { fetchProducts, getProducts } = useProducts();
 const { getUser } = useUser();
@@ -26,66 +25,35 @@ const productSearch = ref("");
 const notifyCustomer = ref(true);
 const showSaveModal = ref(false);
 const isSubmitting = ref(false);
-const icoSearchMessage = ref("");
-const isSearchingCompany = ref(false);
 const highlightMissingRequired = ref(false);
 
 const buttonBack = { name: "Späť", spinner: true, link: "/objednavky", icon: "arrow-left" };
+const requiredCustomerFields = ["company", "name", "email", "phone", "street", "postcode", "city"];
 
 const isSuperAdmin = computed(() => getUser.value?.roles?.includes("super-admin"));
 
 const filteredProducts = computed(() => {
     const search = productSearch.value.trim().toLowerCase();
     const products = getProducts.value || [];
-
-    if (!search) {
-        return products;
-    }
-
-    return products.filter((product) => {
-        return [product.code, product.name, product.description]
+    if (!search) return products;
+    return products.filter((product) =>
+        [product.code, product.name, product.description]
             .filter(Boolean)
-            .some((value) => String(value).toLowerCase().includes(search));
-    });
+            .some((value) => String(value).toLowerCase().includes(search))
+    );
 });
 
-const selectedProduct = computed(() => {
-    return (getProducts.value || []).find((product) => String(product.id) === String(selectedProductId.value));
-});
+const selectedProduct = computed(() =>
+    (getProducts.value || []).find((product) => String(product.id) === String(selectedProductId.value))
+);
 
 const grandQuantity = computed(() => orderProducts.value.reduce((sum, item) => sum + Number(item.input_order || 0), 0));
-const grandTotal = computed(() => orderProducts.value.reduce((sum, item) => {
-    return sum + Number(item.active_price || 0) * Number(item.input_order || 0);
-}, 0));
+const grandTotal = computed(() => orderProducts.value.reduce((sum, item) =>
+    sum + Number(item.active_price || 0) * Number(item.input_order || 0), 0));
 
-const requiredCustomerFields = ["company", "name", "email", "phone", "street", "postcode", "city"];
-
-const isCustomerComplete = computed(() => {
-    return requiredCustomerFields.every((field) => String(getCustomer.value?.[field] ?? "").trim());
-});
-
-const fieldError = (field) => {
-    const errors = getFieldErrors.value?.[`customer.${field}`] ?? getFieldErrors.value?.[field] ?? [];
-
-    return Array.isArray(errors) ? errors[0] : errors;
-};
-
-const icoError = () => {
-    if (String(getCustomer.value?.ico ?? '').length > 8) {
-        return "IČO môže mať maximálne 8 číslic.";
-    }
-
-    return fieldError("ico");
-};
-
-const isRequiredMissing = (field) => {
-    return highlightMissingRequired.value
-        && requiredCustomerFields.includes(field)
-        && !String(getCustomer.value?.[field] ?? '').trim();
-};
-
-const icoInputClass = () =>
-    icoError() ? "border-red-500 ring-1 ring-red-500 bg-red-50" : "";
+const isCustomerComplete = computed(() =>
+    requiredCustomerFields.every((field) => String(getCustomer.value?.[field] ?? "").trim())
+);
 
 const addProduct = () => {
     const product = selectedProduct.value;
@@ -189,8 +157,14 @@ const confirmSave = async (sendNotification = notifyCustomer.value) => {
 
 onMounted(() => {
     fetchProducts();
-    setCustomer({});
     orderProducts.value = [];
+
+    const user = getUser.value;
+    if (!isSuperAdmin.value && user?.customer_id) {
+        fetchCustomer(user.customer_id);
+    } else {
+        setCustomer({});
+    }
 });
 </script>
 
@@ -200,79 +174,20 @@ onMounted(() => {
             <div class="page-body col-span-12">
                 <PageHeader :item="{ title: 'Nová objednávka', buttonLink: buttonBack }" />
 <div class="grid gap-5 lg:grid-cols-3">
-                    <section class="rounded border border-gray-300 bg-white p-5 shadow lg:col-span-2">
-                        <h2 class="mb-4 text-lg font-semibold text-gray-900">Zákazník</h2>
-
-                        <div class="mb-4">
-                            <label class="mb-2 block text-sm font-bold text-gray-700" for="ico">IČO</label>
-                            <div class="flex gap-3">
-                                <input
-                                    id="ico"
-                                    v-model="getCustomer.ico"
-                                    type="text"
-                                    inputmode="numeric"
-                                    pattern="[0-9]*"
-                                    class="w-full rounded border px-3 py-2"
-                                    :class="icoInputClass()"
-                                    placeholder="IČO organizácie"
-                                    @input="onlyDigits"
-                                    @keyup.enter="onClickIco"
-                                />
-                                <button
-                                    type="button"
-                                    class="whitespace-nowrap rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 disabled:bg-gray-400"
-                                    :disabled="isSearchingCompany"
-                                    @click="onClickIco"
-                                >
-                                    {{ isSearchingCompany ? "Hľadám..." : "Vyhľadať firmu" }}
-                                </button>
-                            </div>
-                            <p v-if="icoError()" class="mt-2 text-xs font-semibold text-red-600">{{ icoError() }}</p>
-                            <p v-if="icoSearchMessage" class="mt-2 text-xs text-gray-500">{{ icoSearchMessage }}</p>
+                    <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm lg:col-span-2">
+                        <div class="border-b border-gray-100 bg-gray-50 px-5 py-4">
+                            <h2 class="text-base font-semibold text-gray-800">Zákazník</h2>
                         </div>
-
-                        <div class="grid gap-4 md:grid-cols-3">
-                            <div class="md:col-span-2">
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Názov firmy <RequiredMark /></label>
-                                <FormInput v-model="getCustomer.company" :invalid="isRequiredMissing('company')" :error="fieldError('company')" placeholder="Názov firmy" />
+                        <div class="p-5">
+                            <CustomerFormFields
+                                :fieldErrors="getFieldErrors"
+                                :highlightRequired="highlightMissingRequired"
+                                :requiredFields="requiredCustomerFields"
+                            />
+                            <div class="mt-4">
+                                <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka</label>
+                                <input v-model="orderState.order.notice" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka k objednávke" />
                             </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Kontaktné meno <RequiredMark /></label>
-                                <FormInput v-model="getCustomer.name" :invalid="isRequiredMissing('name')" :error="fieldError('name')" placeholder="Kontaktné meno" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Email <RequiredMark /></label>
-                                <FormInput v-model="getCustomer.email" type="email" :invalid="isRequiredMissing('email') || !!fieldError('email')" :error="fieldError('email')" placeholder="Email" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Telefón <RequiredMark /></label>
-                                <FormInput v-model="getCustomer.phone" :invalid="isRequiredMissing('phone')" :error="fieldError('phone')" placeholder="Telefón" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Ulica <RequiredMark /></label>
-                                <FormInput v-model="getCustomer.street" :invalid="isRequiredMissing('street')" :error="fieldError('street')" placeholder="Ulica a číslo" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">PSČ <RequiredMark /></label>
-                                <FormInput v-model="getCustomer.postcode" :invalid="isRequiredMissing('postcode')" :error="fieldError('postcode')" placeholder="PSČ" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">Mesto <RequiredMark /></label>
-                                <FormInput v-model="getCustomer.city" :invalid="isRequiredMissing('city')" :error="fieldError('city')" placeholder="Mesto" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">DIČ</label>
-                                <FormInput v-model="getCustomer.dic" placeholder="DIČ" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-bold text-gray-700">IČ DPH</label>
-                                <FormInput v-model="getCustomer.ic_dic" placeholder="IČ DPH" />
-                            </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <label class="mb-2 block text-sm font-bold text-gray-700">Poznámka</label>
-                            <input v-model="orderState.order.notice" type="text" class="w-full rounded border px-3 py-2" />
                         </div>
                     </section>
 

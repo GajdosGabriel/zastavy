@@ -1,101 +1,42 @@
 <script setup lang="ts">
 import BaseLayout from "../layout/BaseLayout.vue";
+import PageHeader from "../layout/page/pageHeader.vue";
 import useCustomers from "../../store/StoreCustomers";
 import router from "../../router";
-import validationBar from "../bars/ValidationBar.vue";
-import { onMounted } from "vue";
-import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
-import templateCustomer from "../../models/templateCustomer";
-import ButtonSave from "../../types/ButtonSubmit";
-import RequiredMark from "../forms/RequiredMark.vue";
-import FormInput from "../forms/FormInput.vue";
+import CustomerFormFields from "../forms/CustomerFormFields.vue";
 
-const { state, storeCustomer, resetCustomer, getCustomer } = useCustomers();
+const { storeCustomer, resetCustomer } = useCustomers();
 
-onMounted(() => {
-    resetCustomer();
-})
+resetCustomer();
 
 const onClickSaveCustomer = () => {
     storeCustomer();
     router.push({ name: "customers.index" });
 };
 
-const buttonSubmit = { name: 'Uložiť', spinner: true }
-const buttonBack = { name: 'Späť', spinner: true, link: '/zakaznici', icon: 'arrow-left' }
-
+const buttonBack = { name: "Späť", spinner: true, link: "/zakaznici", icon: "arrow-left" };
+const requiredFields = ["company", "email"];
 </script>
 
 <template>
     <BaseLayout>
-
         <template #main>
-            <h1 class="page-heading">Nový zákazník
-                <buttonRouterLink :item="buttonBack" class="text-sm" />
-            </h1>
+            <div class="page-body col-span-12">
+                <PageHeader :item="{ title: 'Nový zákazník', buttonLink: buttonBack }" />
 
-            <div class="page-body col-span-8">
-
-                <form @submit.prevent="onClickSaveCustomer"
-                    class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full">
-                    <validationBar :validations="null" />
-
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Názov <RequiredMark /></label>
-                        <FormInput v-model="state.customer.company" placeholder="Názov firmy" required />
+                <form @submit.prevent="onClickSaveCustomer" class="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div class="border-b border-gray-100 bg-gray-50 px-6 py-4">
+                        <h2 class="text-base font-semibold text-gray-800">Údaje zákazníka</h2>
                     </div>
-                    <div class="flex space-x-3">
-                        <div class="mb-4 w-full">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Adresa</label>
-                            <FormInput v-model="state.customer.street" placeholder="Adresa a číslo" />
+                    <div class="px-6 py-5">
+                        <CustomerFormFields :requiredFields="requiredFields" />
+                        <div class="mt-6 flex justify-end">
+                            <buttonSubmitComponent :item="{ name: 'Uložiť zákazníka', spinner: true }" />
                         </div>
-                        <div class="mb-4 w-full">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">PSČ</label>
-                            <FormInput v-model="state.customer.postcode" placeholder="Poštové smerové číslo" />
-                        </div>
-                        <div class="mb-4 w-full">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Mesto</label>
-                            <FormInput v-model="state.customer.city" placeholder="Mesto" />
-                        </div>
-                    </div>
-
-                    <div class="flex space-x-3">
-                        <div class="mb-4 w-full">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Email <RequiredMark /></label>
-                            <FormInput v-model="state.customer.email" type="email" placeholder="Email" required />
-                        </div>
-                        <div class="mb-4 w-full">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Vaše meno</label>
-                            <FormInput v-model="state.customer.name" placeholder="Vaše meno" />
-                        </div>
-                        <div class="mb-4 w-full">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Telefón</label>
-                            <FormInput v-model="state.customer.phone" placeholder="Telefón" />
-                        </div>
-                    </div>
-                    <div class="flex space-x-3">
-                        <div class="mb-4 w-full">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">ICO</label>
-                            <FormInput v-model="state.customer.ico" placeholder="IČO organizácie" />
-                        </div>
-                        <div class="mb-4 w-full">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">DIC</label>
-                            <FormInput v-model="state.customer.dic" placeholder="DIČ organizácie" />
-                        </div>
-                        <div class="mb-4 w-full">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">SKDIC</label>
-                            <FormInput v-model="state.customer.ic_dic" placeholder="SKDIČ organizácie" />
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between mt-5">
-                        <buttonRouterLink :item="buttonBack" />
-                        <buttonSubmitComponent :item="buttonSubmit" />
                     </div>
                 </form>
             </div>
         </template>
     </BaseLayout>
-
 </template>
