@@ -52,7 +52,12 @@
         </div>
         @endif
 
+        @if($verificationUrl)
+        <p>Pred prihlásením je potrebné overiť Váš email kliknutím na tlačidlo nižšie. Až potom bude Váš účet aktívny.</p>
+        <a href="{{ $verificationUrl }}" class="btn">Overiť email a aktivovať účet</a>
+        @else
         <a href="{{ $loginUrl }}" class="btn">Prihlásiť sa</a>
+        @endif
 
         <div class="warning">
             <strong>Odporúčame</strong> zmeniť heslo ihneď po prvom prihlásení.

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Enums\ModelStatus;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -20,6 +21,18 @@ class SanctumController extends Controller
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        if ($user->status === ModelStatus::Cancelled) {
+            throw ValidationException::withMessages([
+                'email' => ['Váš účet bol zrušený. Kontaktujte administrátora.'],
+            ]);
+        }
+
+        if ($user->status === ModelStatus::Blocked) {
+            throw ValidationException::withMessages([
+                'email' => ['Váš účet je blokovaný. Kontaktujte administrátora.'],
             ]);
         }
 

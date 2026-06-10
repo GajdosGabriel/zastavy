@@ -16,6 +16,7 @@ class UserInvited extends Notification implements ShouldQueue
         public readonly User $invitedUser,
         public readonly string $temporaryPassword,
         public readonly array $roles = [],
+        public readonly ?string $verificationUrl = null,
     ) {}
 
     public function via($notifiable): array
@@ -32,6 +33,7 @@ class UserInvited extends Notification implements ShouldQueue
                 'temporaryPassword' => $this->temporaryPassword,
                 'roles'             => $this->roles,
                 'loginUrl'          => env('FRONTEND_URL', config('app.url')) . '/login',
+                'verificationUrl'   => $this->verificationUrl,
             ]);
     }
 }

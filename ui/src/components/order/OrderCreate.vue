@@ -2,7 +2,6 @@
 import { computed, onMounted, ref } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import ButtonLink from "../layout/page/ButtonLink.vue";
-import ErrorPanel from "../plugins/ErrorPanel.vue";
 import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
 import useProducts from "../../store/StoreProducts";
@@ -204,8 +203,7 @@ onMounted(() => {
             </h1>
 
             <div class="page-body col-span-12">
-                <ErrorPanel class="mb-4" />
-                <div class="grid gap-5 lg:grid-cols-3">
+<div class="grid gap-5 lg:grid-cols-3">
                     <section class="rounded border border-gray-300 bg-white p-5 shadow lg:col-span-2">
                         <h2 class="mb-4 text-lg font-semibold text-gray-900">Zákazník</h2>
 

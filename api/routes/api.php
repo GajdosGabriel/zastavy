@@ -27,6 +27,7 @@ use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/verify-email/{uuid}', [UserController::class, 'verifyEmail'])->name('users.verifyEmail');
 Route::post('/login', [SanctumController::class, 'login'])->name('sanctum.login');
 Route::post('/register', [RegisteredUserController::class, 'store'])->name('auth.register');
 Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->name('password.forgot');

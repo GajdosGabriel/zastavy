@@ -90,20 +90,22 @@ class UserController extends Controller
         $permissions = $validated['permissions'] ?? [];
         unset($validated['roles'], $validated['permissions']);
 
+        $isSuperAdmin = $request->user()->hasRole('super-admin');
+
         $fullName = trim(($validated['firstName'] ?? '') . ' ' . ($validated['lastName'] ?? ''));
         $validated['name']     = $fullName;
         $validated['username'] = $fullName ?: $validated['email'];
         $validated['slug']     = Str::slug($validated['username']);
-        $validated['uuid']     = Str::uuid();
-        $validated['status']   = ModelStatus::Active->value;
+        $validated['uuid']     = (string) Str::uuid();
+        $validated['status']   = $isSuperAdmin ? ModelStatus::Active->value : ModelStatus::Draft->value;
 
         $password = Str::random(12);
         $validated['password'] = bcrypt($password);
 
-        $user = DB::transaction(function () use ($validated, $roles, $permissions, $request) {
+        $user = DB::transaction(function () use ($validated, $roles, $permissions, $isSuperAdmin) {
             $user = User::create($validated);
 
-            if ($request->user()->hasRole('super-admin') && ! empty($roles)) {
+            if ($isSuperAdmin && ! empty($roles)) {
                 $user->syncRoles($roles);
             }
 
@@ -116,9 +118,29 @@ class UserController extends Controller
             return $user;
         });
 
-        $user->notify(new UserInvited($user, $password, $roles));
+        $verificationUrl = $isSuperAdmin
+            ? null
+            : route('users.verifyEmail', ['uuid' => $validated['uuid']]);
+
+        $user->notify(new UserInvited($user, $password, $roles, $verificationUrl));
 
         return new UserIndexResource($user->load(['roles', 'customer'])->loadCount('orders'));
+    }
+
+    public function verifyEmail(string $uuid)
+    {
+        $user = User::where('uuid', $uuid)->firstOrFail();
+
+        if ($user->status !== ModelStatus::Draft) {
+            return redirect(env('FRONTEND_URL', config('app.url')) . '/login?verified=already');
+        }
+
+        $user->update([
+            'status'            => ModelStatus::Active->value,
+            'email_verified_at' => now(),
+        ]);
+
+        return redirect(env('FRONTEND_URL', config('app.url')) . '/login?verified=1');
     }
 
     public function show(User $user)

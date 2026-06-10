@@ -193,7 +193,7 @@ enum ModelStatus: string
         if (self::isAdmin($user)) {
             return array_values(array_filter(
                 self::cases(),
-                fn (self $status) => $status !== self::Blocked
+                fn (self $status) => ! in_array($status, [self::Cancelled, self::Blocked], true)
             ));
         }
 
