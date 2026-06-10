@@ -12,6 +12,7 @@ import iconEmail from "../icons/email.vue";
 import iconPhone from "../icons/phone.vue";
 import iconCalendar from "../icons/calendar.vue";
 import iconUser from "../icons/user.vue";
+import PageHeader from '../layout/page/pageHeader.vue';
 import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
 import buttonLink from '../layout/page/ButtonLink.vue';
 
@@ -50,12 +51,8 @@ const buttonBack = { name: 'Späť', spinner: true, link: 'orders.index', icon: 
     <BaseLayout>
 
         <template #main>
-            <h1 class="page-heading">Upraviť objednávku
-                <buttonLink :item="buttonBack" class="text-sm" />
-            </h1>
-
-
             <div class="page-body col-span-12">
+                <PageHeader :item="{ title: 'Upraviť objednávku', buttonLink: buttonBack }" />
 
                 <div
                     class="bg-white p-4 border-2 border-gray-300 rounded-ms shadow mb-4 md:flex justify-between md:space-x-6">

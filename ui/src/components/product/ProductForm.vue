@@ -7,8 +7,9 @@ import UseCategories from "../../store/StoreCategories";
 import { useRoute } from "vue-router";
 import router from "../../router";
 import { formatDecimal } from "../../models/functions";
-import buttonRouterLink from '../layout/page/ButtonLink.vue';
+import PageHeader from '../layout/page/pageHeader.vue';
 import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
+import buttonRouterLink from '../layout/page/ButtonLink.vue';
 import useUnsavedChanges from '../../models/useUnsavedChanges';
 import RequiredMark from '../forms/RequiredMark.vue';
 
@@ -110,6 +111,7 @@ onUnmounted(() => {
 
 
 
+const pageTitle = computed(() => productId.value ? 'Upraviť produkt' : 'Nový produkt');
 const buttonSubmit = { name: 'Uložiť', spinner: true }
 const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'arrow-left' }
 
@@ -119,11 +121,8 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
 <template>
     <BaseLayout>
         <template #main>
-            <h1 class="page-heading">{{ productId ? 'Upraviť produkt' : 'Nový produkt' }}
-                <buttonRouterLink :item="buttonBack" class="text-sm" />
-            </h1>
-
             <div class="page-body col-span-12">
+                <PageHeader :item="{ title: pageTitle, buttonLink: buttonBack }" />
 
                 <form @submit.prevent="onSubmitForm" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
                     enctype="multipart/form-data">

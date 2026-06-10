@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
-import ButtonLink from "../layout/page/ButtonLink.vue";
+import PageHeader from "../layout/page/pageHeader.vue";
 import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
 import useProducts from "../../store/StoreProducts";
@@ -197,12 +197,8 @@ onMounted(() => {
 <template>
     <BaseLayout>
         <template #main>
-            <h1 class="page-heading">
-                Nová objednávka
-                <ButtonLink :item="buttonBack" class="text-sm" />
-            </h1>
-
             <div class="page-body col-span-12">
+                <PageHeader :item="{ title: 'Nová objednávka', buttonLink: buttonBack }" />
 <div class="grid gap-5 lg:grid-cols-3">
                     <section class="rounded border border-gray-300 bg-white p-5 shadow lg:col-span-2">
                         <h2 class="mb-4 text-lg font-semibold text-gray-900">Zákazník</h2>
