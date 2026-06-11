@@ -106,10 +106,11 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                         </div>
                     </div>
                 </div>
-                <!-- Zákaznícka poznámka -->
-                <div v-if="getOrder.note"
-                     class="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    <span class="font-semibold">Poznámka:</span> {{ getOrder.note }}
+                <!-- Zákaznícka poznámka + záujem o kupón -->
+                <div v-if="getOrder.note || getOrder.wants_coupon"
+                     class="mb-4 space-y-1 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <div v-if="getOrder.note"><span class="font-semibold">Poznámka:</span> {{ getOrder.note }}</div>
+                    <div v-if="getOrder.wants_coupon" class="font-semibold">Zákazník chce získať zľavový kupón na ďalší nákup</div>
                 </div>
                 <div class="flex flex-col">
                     <div class="-my-2 sm:-mx-6 lg:-mx-8">

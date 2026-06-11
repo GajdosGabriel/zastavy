@@ -113,7 +113,7 @@ const actions = {
     },
 
     storeCheckout: async () => {
-        const { state: optionsState, getCouponCode } = useCheckoutOptions();
+        const { state: optionsState, getCouponCode, getWantsCoupon } = useCheckoutOptions();
         try {
             await axiosInstance.post("/checkouts", {
                 customer: getCustomer.value,
@@ -122,6 +122,7 @@ const actions = {
                 shipping_method_id: optionsState.selectedShippingId,
                 payment_method_id:  optionsState.selectedPaymentId,
                 coupon_code:        getCouponCode.value || null,
+                wants_coupon:       getWantsCoupon.value,
             });
             actions.setlocalStorageCustomer();
             state.carts = [];

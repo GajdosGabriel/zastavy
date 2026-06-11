@@ -12,6 +12,7 @@ const {
     getPaymentMethods,
     getSelectedShipping,
     getSelectedPayment,
+    getCouponMode,
     getCouponData,
     getCouponError,
     getCouponCode,
@@ -23,6 +24,7 @@ const {
     fetchPaymentMethods,
     selectShipping,
     selectPayment,
+    setCouponMode,
     setCouponCode,
     validateCoupon,
     clearCoupon,
@@ -118,25 +120,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
         <!-- Kupón -->
         <div>
             <h3 class="mb-2 text-sm font-semibold text-gray-700">Zľavový kupón</h3>
-            <div v-if="!getCouponData" class="flex gap-2">
-                <input
-                    type="text"
-                    :value="getCouponCode"
-                    @input="setCouponCode($event.target.value)"
-                    @keyup.enter="onValidateCoupon"
-                    placeholder="Zadajte kód kupóna"
-                    class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <button
-                    type="button"
-                    :disabled="isCouponLoading || !getCouponCode.trim()"
-                    @click="onValidateCoupon"
-                    class="rounded-lg bg-gray-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-900 disabled:bg-gray-400"
-                >
-                    {{ isCouponLoading ? '...' : 'Uplatniť' }}
-                </button>
-            </div>
-            <p v-if="getCouponError" class="mt-1.5 text-xs text-red-600">{{ getCouponError }}</p>
+            <!-- Uplatnený kupón -->
             <div v-if="getCouponData" class="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
                 <div>
                     <span class="text-sm font-semibold text-green-700">{{ getCouponData.code }}</span>
@@ -144,7 +128,58 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                         −{{ getCouponData.type === 'percent' ? `${getCouponData.value}%` : `${formatDecimal(getCouponData.value)} €` }}
                     </span>
                 </div>
-                <button type="button" @click="clearCoupon" class="text-xs text-gray-400 hover:text-red-600">Odstrániť</button>
+                <button type="button" @click="clearCoupon(); setCouponMode(null)" class="text-xs text-gray-400 hover:text-red-600">Odstrániť</button>
+            </div>
+
+            <!-- Výber -->
+            <div v-else class="space-y-2">
+                <label :class="[
+                    'flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition',
+                    getCouponMode === 'get'
+                        ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                ]">
+                    <input type="radio" name="coupon_mode" value="get"
+                        :checked="getCouponMode === 'get'"
+                        @change="setCouponMode('get')"
+                        class="accent-blue-600" />
+                    <span class="text-sm font-medium text-gray-800">Získaj kupón</span>
+                </label>
+                <p v-if="getCouponMode === 'get'" class="px-1 text-xs text-gray-400">
+                    Kupón bude zaslaný pre ďalší nákup.
+                </p>
+
+                <label :class="[
+                    'flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition',
+                    getCouponMode === 'have'
+                        ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                ]">
+                    <input type="radio" name="coupon_mode" value="have"
+                        :checked="getCouponMode === 'have'"
+                        @change="setCouponMode('have')"
+                        class="accent-blue-600" />
+                    <span class="text-sm font-medium text-gray-800">Mám kupón</span>
+                </label>
+                <div v-if="getCouponMode === 'have'" class="flex gap-2">
+                    <input
+                        type="text"
+                        :value="getCouponCode"
+                        @input="setCouponCode($event.target.value)"
+                        @keyup.enter="onValidateCoupon"
+                        placeholder="Zadajte kód kupóna"
+                        class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                        type="button"
+                        :disabled="isCouponLoading || !getCouponCode.trim()"
+                        @click="onValidateCoupon"
+                        class="rounded-lg bg-gray-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-900 disabled:bg-gray-400"
+                    >
+                        {{ isCouponLoading ? '...' : 'Uplatniť' }}
+                    </button>
+                </div>
+                <p v-if="getCouponError" class="text-xs text-red-600">{{ getCouponError }}</p>
             </div>
         </div>
 

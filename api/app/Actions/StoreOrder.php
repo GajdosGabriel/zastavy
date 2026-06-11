@@ -38,6 +38,7 @@ class StoreOrder implements StoreOrderContract
             'coupon_id'          => $couponId,
             'discount_amount'    => $discountAmount,
             'note'               => $this->request->input('note') ?: null,
+            'wants_coupon'       => (bool) $this->request->input('wants_coupon', false),
         ]);
         $this->serialNumber($customer, $order);
         $this->storeOrderProducts($order);

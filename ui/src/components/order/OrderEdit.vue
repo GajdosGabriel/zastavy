@@ -168,10 +168,11 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                     </div>
                 </div>
 
-                <!-- Zákaznícka poznámka -->
-                <div v-if="getOrder.note"
-                     class="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    <span class="font-semibold">Poznámka:</span> {{ getOrder.note }}
+                <!-- Zákaznícka poznámka + záujem o kupón -->
+                <div v-if="getOrder.note || getOrder.wants_coupon"
+                     class="mb-4 space-y-1 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <div v-if="getOrder.note"><span class="font-semibold">Poznámka:</span> {{ getOrder.note }}</div>
+                    <div v-if="getOrder.wants_coupon" class="font-semibold">Zákazník chce získať zľavový kupón na ďalší nákup</div>
                 </div>
 
                 <!-- Produkty -->

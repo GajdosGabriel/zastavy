@@ -6,6 +6,7 @@ const state = reactive({
     paymentMethods: [],
     selectedShippingId: null,
     selectedPaymentId: null,
+    couponMode: null,
     couponCode: '',
     couponData: null,
     couponError: null,
@@ -21,10 +22,12 @@ const getters = {
     getSelectedPayment: computed(() =>
         state.paymentMethods.find(m => m.id === state.selectedPaymentId) ?? null
     ),
+    getCouponMode:   computed(() => state.couponMode),
     getCouponData:   computed(() => state.couponData),
     getCouponError:  computed(() => state.couponError),
     getCouponCode:   computed(() => state.couponCode),
     isCouponLoading: computed(() => state.couponLoading),
+    getWantsCoupon:  computed(() => state.couponMode === 'get'),
 
     shippingPrice: (cartTotal) => {
         const method = state.shippingMethods.find(m => m.id === state.selectedShippingId);
@@ -61,6 +64,15 @@ const actions = {
     selectShipping: (id) => { state.selectedShippingId = id; },
     selectPayment:  (id) => { state.selectedPaymentId = id; },
 
+    setCouponMode: (mode) => {
+        state.couponMode = mode;
+        if (mode === 'get') {
+            state.couponCode  = '';
+            state.couponData  = null;
+            state.couponError = null;
+        }
+    },
+
     setCouponCode: (code) => {
         state.couponCode = code;
         state.couponData = null;
@@ -94,6 +106,7 @@ const actions = {
     reset: () => {
         state.selectedShippingId = state.shippingMethods[0]?.id ?? null;
         state.selectedPaymentId  = state.paymentMethods[0]?.id  ?? null;
+        state.couponMode = null;
         actions.clearCoupon();
     },
 };
