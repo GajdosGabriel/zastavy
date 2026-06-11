@@ -141,7 +141,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                 ]">
                     <input type="radio" name="coupon_mode" value="get"
                         :checked="getCouponMode === 'get'"
-                        @change="setCouponMode('get')"
+                        @click="setCouponMode(getCouponMode === 'get' ? null : 'get')"
                         class="accent-blue-600" />
                     <span class="text-sm font-medium text-gray-800">Získaj kupón</span>
                 </label>
@@ -157,7 +157,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                 ]">
                     <input type="radio" name="coupon_mode" value="have"
                         :checked="getCouponMode === 'have'"
-                        @change="setCouponMode('have')"
+                        @click="setCouponMode(getCouponMode === 'have' ? null : 'have')"
                         class="accent-blue-600" />
                     <span class="text-sm font-medium text-gray-800">Mám kupón</span>
                 </label>
