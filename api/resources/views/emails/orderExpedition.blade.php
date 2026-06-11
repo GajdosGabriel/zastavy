@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaša objednávka bola odoslaná</title>
+    <style>
+        body { font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; background: #f5f5f5; }
+        .wrapper { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 6px; overflow: hidden; }
+        .header { background: #1e3a5f; color: #fff; padding: 28px 32px; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 600; }
+        .header p { margin: 6px 0 0; font-size: 14px; color: #aaa; }
+        .body { padding: 32px; }
+        .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin: 0 0 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        th { text-align: left; font-size: 12px; text-transform: uppercase; color: #888; padding: 6px 0; border-bottom: 1px solid #e5e5e5; }
+        td { padding: 9px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+        .pending-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 5px; padding: 16px 20px; margin-bottom: 24px; }
+        .pending-box .pending-title { font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 8px; }
+        .pending-box table { margin-bottom: 0; }
+        .pending-box td { font-size: 13px; color: #78350f; border-bottom-color: #fde68a; }
+        .pending-box th { color: #a16207; border-bottom-color: #fcd34d; }
+        .shipping-line { font-size: 14px; color: #555; margin-bottom: 24px; }
+        .shipping-line strong { color: #1e3a5f; }
+        .contact-block { background: #f7f9fc; border: 1px solid #e8edf3; border-radius: 5px; padding: 16px 20px; margin-bottom: 24px; font-size: 14px; }
+        .contact-block strong { display: block; margin-bottom: 6px; color: #1e3a5f; }
+        .footer { background: #f9f9f9; padding: 20px 32px; font-size: 12px; color: #aaa; text-align: center; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+@php
+    $isPartial = !$order->isFinished();
+    $remainingItems = $order->orderProducts->filter(function ($item) {
+        $remaining = max(0, $item->quantity - ($item->storno ?? 0) - $item->stockSum);
+        return $remaining > 0;
+    })->map(function ($item) {
+        return [
+            'name'      => $item->product->name ?? '—',
+            'remaining' => max(0, $item->quantity - ($item->storno ?? 0) - $item->stockSum),
+            'unit'      => $item->unit_value ?? 'ks',
+        ];
+    });
+@endphp
+<div class="wrapper">
+    <div class="header">
+        <h1>{{ $isPartial ? 'Čiastočná expedícia' : 'Objednávka odoslaná' }}</h1>
+        @if($order->serial_number)
+            <p>Objednávka č. {{ $order->serial_number }}</p>
+        @endif
+    </div>
+
+    <div class="body">
+        <p style="font-size:15px; margin: 0 0 20px; line-height:1.6;">
+            Dobrý deň, <strong>{{ $order->customer->company ?: $order->customer->name }}</strong>,<br>
+            @if($isPartial)
+                dnes sme Vám odoslali časť Vašej objednávky.
+                Zvyšné položky Vám doručíme v najbližšom možnom termíne.
+            @else
+                Vaša objednávka bola dnes kompletne expedovaná a je na ceste k Vám.
+            @endif
+        </p>
+
+        @if($order->shippingMethod)
+        <div class="shipping-line">
+            Spôsob doručenia: <strong>{{ $order->shippingMethod->name }}</strong>
+        </div>
+        @endif
+
+        <p class="section-title">Objednané položky</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tovar</th>
+                    <th style="text-align:right">Objednané</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($order->orderProducts as $item)
+                <tr>
+                    <td>{{ $item->product->name ?? '—' }}</td>
+                    <td style="text-align:right">{{ $item->quantity }} {{ $item->unit_value ?? 'ks' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        @if($isPartial && $remainingItems->count())
+        <div class="pending-box">
+            <div class="pending-title">Položky, ktoré dorazia neskôr</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tovar</th>
+                        <th style="text-align:right">Zostatok</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($remainingItems as $item)
+                    <tr>
+                        <td>{{ $item['name'] }}</td>
+                        <td style="text-align:right">{{ $item['remaining'] }} {{ $item['unit'] }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+
+        <div class="contact-block">
+            <strong>Gajdoš Gabriel – Reprezent</strong>
+            Máte otázky? Odpovedzte priamo na tento email alebo nás kontaktujte:<br>
+            Tel.: <a href="tel:+421905320616" style="color:#1e3a5f;">0905 320 616</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        Gajdoš Gabriel – Reprezent · Slatinská 14, 921 07 Bratislava · {{ now()->format('d.m.Y') }}
+    </div>
+</div>
+</body>
+</html>

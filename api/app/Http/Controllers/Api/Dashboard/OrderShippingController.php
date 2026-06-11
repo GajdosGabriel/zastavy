@@ -12,7 +12,6 @@ use App\Http\Resources\OrderResource;
 use App\Notifications\OrderExpedition;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Notification;
 
 class OrderShippingController extends Controller
 {
@@ -39,8 +38,11 @@ class OrderShippingController extends Controller
 
         if ($notifyCustomer && $shipping) {
             $shipping->notices()->create(['notice' => 'email']);
-            $order->loadMissing('user');
-            Notification::send(collect([$order->user])->filter()->all(), new OrderExpedition($order));
+            $order->loadMissing(['customer', 'shippingMethod', 'paymentMethod', 'orderProducts.product', 'orderProducts.stocks']);
+
+            if ($order->customer?->email) {
+                $order->customer->notify(new OrderExpedition($order));
+            }
         }
 
         $shipping?->load('notices');

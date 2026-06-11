@@ -40,7 +40,8 @@ class OrderExpedition extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Expedícia objednávky')
+            ->subject('Vaša objednávka bola odoslaná – č. ' . $this->order->serial_number)
+            ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderExpedition', ['order' => $this->order]);
     }
 
