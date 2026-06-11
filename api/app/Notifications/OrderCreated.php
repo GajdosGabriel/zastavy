@@ -44,7 +44,8 @@ class OrderCreated extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject("Objednávka | ". $this->order->customer->company)
-            ->view( 'emails.orderConfirmation', ['order' => $this->order]);
+            ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
+            ->view('emails.orderConfirmation', ['order' => $this->order]);
     }
 
     /**

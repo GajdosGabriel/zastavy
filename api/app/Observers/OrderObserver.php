@@ -17,7 +17,7 @@ class OrderObserver
      */
     public function created(Order $order)
     {
-        $order->loadMissing('customer');
+        $order->loadMissing(['customer', 'shippingMethod', 'paymentMethod', 'orderProducts.product']);
 
         $notification = new OrderCreated($order);
 

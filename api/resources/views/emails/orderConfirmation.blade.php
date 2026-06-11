@@ -14,10 +14,14 @@
         .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin: 0 0 12px; }
         .info-block { margin-bottom: 28px; }
         .info-block p { margin: 4px 0; font-size: 14px; }
+        .meta-line { font-size: 13px; color: #666; margin-bottom: 20px; }
+        .meta-line span { color: #333; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
         th { text-align: left; font-size: 12px; text-transform: uppercase; color: #888; padding: 6px 0; border-bottom: 1px solid #e5e5e5; }
         td { padding: 10px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
         .total-row td { font-weight: 700; font-size: 15px; border-bottom: none; padding-top: 14px; }
+        .contact-block { background: #f7f9fc; border: 1px solid #e8edf3; border-radius: 5px; padding: 16px 20px; margin-bottom: 24px; font-size: 14px; }
+        .contact-block strong { display: block; margin-bottom: 6px; color: #1e3a5f; }
         .footer { background: #f9f9f9; padding: 20px 32px; font-size: 12px; color: #aaa; text-align: center; border-top: 1px solid #eee; }
     </style>
 </head>
@@ -55,11 +59,19 @@
         </div>
         @endif
 
+        @if($order->shippingMethod || $order->paymentMethod)
+        <div class="meta-line">
+            @if($order->shippingMethod)Doprava: <span>{{ $order->shippingMethod->name }}</span>@endif
+            @if($order->shippingMethod && $order->paymentMethod) &nbsp;·&nbsp; @endif
+            @if($order->paymentMethod)Platba: <span>{{ $order->paymentMethod->name }}</span>@endif
+        </div>
+        @endif
+
         <p class="section-title">Objednané položky</p>
         <table>
             <thead>
                 <tr>
-                    <th>Produkt</th>
+                    <th>Tovar</th>
                     <th style="text-align:right">Množstvo</th>
                     @if($order->orderProducts->first()?->price)
                         <th style="text-align:right">Cena/ks</th>
@@ -79,29 +91,60 @@
                 </tr>
                 @endforeach
                 @if($order->orderProducts->first()?->price)
+                @php
+                    $subtotal  = $order->orderProducts->sum('total');
+                    $shipping  = (float) ($order->shipping_price ?? 0);
+                    $fee       = (float) ($order->payment_fee ?? 0);
+                    $discount  = (float) ($order->discount_amount ?? 0);
+                    $grandTotal = $subtotal + $shipping + $fee - $discount;
+                @endphp
+                @if($shipping > 0)
+                <tr>
+                    <td colspan="3" style="color:#666;">Poštovné{{ $order->shippingMethod ? ' ('.$order->shippingMethod->name.')' : '' }}</td>
+                    <td style="text-align:right;color:#666;">{{ number_format($shipping, 2, ',', ' ') }} €</td>
+                </tr>
+                @elseif($order->shippingMethod)
+                <tr>
+                    <td colspan="3" style="color:#666;">Poštovné ({{ $order->shippingMethod->name }})</td>
+                    <td style="text-align:right;color:#28a745;">Zdarma</td>
+                </tr>
+                @endif
+                @if($fee > 0)
+                <tr>
+                    <td colspan="3" style="color:#666;">{{ $order->paymentMethod?->name ?? 'Poplatok za platbu' }}</td>
+                    <td style="text-align:right;color:#666;">{{ number_format($fee, 2, ',', ' ') }} €</td>
+                </tr>
+                @endif
+                @if($discount > 0)
+                <tr>
+                    <td colspan="3" style="color:#28a745;">Zľava</td>
+                    <td style="text-align:right;color:#28a745;">−{{ number_format($discount, 2, ',', ' ') }} €</td>
+                </tr>
+                @endif
                 <tr class="total-row">
                     <td colspan="3">Celková suma</td>
-                    <td style="text-align:right">{{ number_format($order->orderProducts->sum('total'), 2, ',', ' ') }} €</td>
+                    <td style="text-align:right">{{ number_format($grandTotal, 2, ',', ' ') }} €</td>
                 </tr>
                 @endif
             </tbody>
         </table>
 
-        @php $orderNotice = $order->notices->first()?->notice; @endphp
-        @if(!empty(trim($orderNotice ?? '')))
+        @if(!empty(trim($order->note ?? '')))
         <div class="info-block">
             <p class="section-title">Poznámka</p>
-            <p style="font-size:14px;">{{ $orderNotice }}</p>
+            <p style="font-size:14px;">{{ $order->note }}</p>
         </div>
         @endif
 
-        <p style="font-size:14px; color:#555;">
-            Ďakujeme za Vašu objednávku. V prípade otázok nás kontaktujte.
-        </p>
+        <div class="contact-block">
+            <strong>Gajdoš Gabriel – Reprezent</strong>
+            V prípade otázok nás kontaktujte:<br>
+            Tel.: <a href="tel:+421905320616" style="color:#1e3a5f;">0905 320 616</a>
+        </div>
     </div>
 
     <div class="footer">
-        Táto správa bola vygenerovaná automaticky · {{ $order->created_at->format('d.m.Y') }}
+        Gajdoš Gabriel – Reprezent · Slatinská 14, 921 07 Bratislava · {{ $order->created_at->format('d.m.Y') }}
     </div>
 </div>
 </body>
