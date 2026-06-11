@@ -42,6 +42,17 @@ const actions = {
         }
     },
 
+    reorderImages: async (productId, ids) => {
+        try {
+            const response = await axiosInstance.post(`/product/${productId}/image/reorder`, { ids });
+            const product = response.data.data ?? response.data;
+            state.images = product.images;
+            return true;
+        } catch (e) {
+            setErrors(e);
+        }
+    },
+
     destroyImage: async (productId, imageId) => {
         if (!window.confirm("Skutočne vymazať!")) {
             return;

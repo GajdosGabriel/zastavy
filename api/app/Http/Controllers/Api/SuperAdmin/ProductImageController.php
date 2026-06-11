@@ -24,6 +24,20 @@ class ProductImageController extends Controller
         return new ProductResource($product->refresh()->load(['images', 'categories']));
     }
 
+    public function reorder(Product $product, Request $request)
+    {
+        $request->validate([
+            'ids'   => ['required', 'array'],
+            'ids.*' => ['integer'],
+        ]);
+
+        foreach ($request->ids as $position => $id) {
+            $product->images()->whereKey($id)->update(['sort_order' => $position]);
+        }
+
+        return new ProductResource($product->refresh()->load(['images', 'categories']));
+    }
+
     public function destroy(Product $product, Image $image)
     {
         Gate::authorize('delete', $image);

@@ -68,7 +68,7 @@ class Product extends Model
 
     public function images()
     {
-        return $this->morphMany(Image::class, 'fileable');
+        return $this->morphMany(Image::class, 'fileable')->orderBy('sort_order');
     }
 
     public function categories()

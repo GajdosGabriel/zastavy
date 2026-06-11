@@ -69,6 +69,8 @@ Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function 
 });
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
+    Route::post('/product/{product}/image/reorder', [ProductImageController::class, 'reorder'])->name('product.image.reorder');
+
     Route::apiResources([
         'categories' => CategoryController::class,
         'customers' => CustomerController::class,

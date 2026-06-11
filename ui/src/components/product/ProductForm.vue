@@ -14,7 +14,21 @@ import useUnsavedChanges from '../../models/useUnsavedChanges';
 import RequiredMark from '../forms/RequiredMark.vue';
 
 const { state, getProduct, updateProduct, storeProduct, fetchProduct, setProduct } = useProducts();
-const { destroyImage, storeImages } = useImages();
+const { destroyImage, storeImages, reorderImages } = useImages();
+
+const dragIndex = ref(null);
+
+const onDragStart = (index) => { dragIndex.value = index; };
+const onDragOver = (e) => { e.preventDefault(); };
+const onDrop = async (targetIndex) => {
+    if (dragIndex.value === null || dragIndex.value === targetIndex) return;
+    const imgs = [...state.product.images];
+    const [moved] = imgs.splice(dragIndex.value, 1);
+    imgs.splice(targetIndex, 0, moved);
+    state.product.images = imgs;
+    dragIndex.value = null;
+    await reorderImages(state.product.id, imgs.map(i => i.id));
+};
 const { categories, fetchCategories } = UseCategories();
 
 const productId = computed(() => useRoute().params.productId);
@@ -259,10 +273,26 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                                 </div>
                             </div>
 
+                            <div v-if="state.product.images?.length" class="mt-2 mb-1 text-xs text-gray-400">
+                                Potiahnite obrázky pre zmenu poradia
+                            </div>
                             <div class="flex flex-wrap">
-                                <div v-for="image in state.product.images" :key="image.id"
-                                    class="text-center border-2 rounded-md mx-2 mt-4 hover:bg-gray-100 hover:border-gray-300">
-                                    <img :src="image.path" alt="" class="h-24 p-4" />
+                                <div
+                                    v-for="(image, index) in state.product.images"
+                                    :key="image.id"
+                                    draggable="true"
+                                    @dragstart="onDragStart(index)"
+                                    @dragover="onDragOver"
+                                    @drop="onDrop(index)"
+                                    :class="[
+                                        'text-center border-2 rounded-md mx-2 mt-4 cursor-grab select-none transition',
+                                        dragIndex === index
+                                            ? 'opacity-40 border-blue-400'
+                                            : 'hover:bg-gray-100 hover:border-gray-300'
+                                    ]"
+                                >
+                                    <div class="text-xs text-gray-400 pt-1">{{ index + 1 }}</div>
+                                    <img :src="image.path" alt="" class="h-24 p-4 pointer-events-none" />
                                     <div @click="onClickImageRemove(image.id)"
                                         class="cursor-pointer hover:bg-gray-300 px-2 rounded-md text-sm">
                                         Odstrániť
