@@ -3,12 +3,11 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import { onMounted, ref } from "vue";
 import useCheckouts from "../../store/StoreCheckouts";
 import useCustomers from "../../store/StoreCustomers";
-import useOrders from "../../store/StoreOrders";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
 import { formatDecimal } from "../../models/functions";
-import ButtonSubmit from "../layout/page/ButtonSubmit.vue";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
+import ShippingPaymentSelector from "../forms/ShippingPaymentSelector.vue";
 
 const {
       removeCart,
@@ -18,10 +17,10 @@ const {
       getlocalStorage,
       resetCarts,
       updateCartQuantity,
+      state: checkoutState,
 } = useCheckouts();
 
 const { getCustomer, setCustomer } = useCustomers();
-const { getOrder } = useOrders();
 const { getFieldErrors } = useErrors();
 const isSubmitting = ref(false);
 
@@ -189,21 +188,24 @@ const onClickForm = async () => {
                                 />
                                 <div class="mt-4">
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
-                                    <input v-model="getOrder.notice" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />
+                                    <input v-model="checkoutState.note" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Pravý stĺpec: súhrn objednávky -->
+                    <!-- Pravý stĺpec: doprava, platba, kupón, súhrn -->
                     <aside class="space-y-4">
-                        <div class="sticky top-4 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                            <div class="border-b border-gray-100 bg-gray-50 px-5 py-4">
-                                <h2 class="text-base font-semibold text-gray-800">Súhrn objednávky</h2>
-                            </div>
-                            <div class="px-5 py-4">
-                                <div class="space-y-2 text-sm">
-                                    <div v-for="product in getCarts" :key="product.id" class="flex items-start justify-between gap-2">
+                        <div class="sticky top-4 space-y-4">
+                            <!-- Zoznam produktov v súhrne -->
+                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                                <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
+                                    <h2 class="text-sm font-semibold text-gray-700">
+                                        Produkty ({{ getCarts.length }})
+                                    </h2>
+                                </div>
+                                <div class="divide-y divide-gray-50 px-5 py-3">
+                                    <div v-for="product in getCarts" :key="product.id" class="flex items-start justify-between gap-2 py-1.5 text-sm">
                                         <span class="text-gray-600 leading-snug">
                                             {{ product.name }}
                                             <span class="text-gray-400">× {{ product.input_order }}</span>
@@ -211,37 +213,29 @@ const onClickForm = async () => {
                                         <span class="shrink-0 font-medium text-gray-900">{{ productTotal(product) }} €</span>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div class="my-4 border-t border-gray-100"></div>
-
-                                <div class="flex justify-between text-sm text-gray-500">
-                                    <span>Počet položiek</span>
-                                    <span class="font-medium text-gray-700">{{ getCarts.length }}</span>
+                            <!-- Doprava + platba + kupón + rekapitulácia -->
+                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                                <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
+                                    <h2 class="text-sm font-semibold text-gray-700">Doprava a platba</h2>
                                 </div>
-                                <div class="flex justify-between text-sm text-gray-500 mt-1">
-                                    <span>Celkové množstvo</span>
-                                    <span class="font-medium text-gray-700">{{ getCheckout.grandQuantity }} ks</span>
+                                <div class="px-5 py-4">
+                                    <ShippingPaymentSelector :cartTotal="getCheckout.grandTotal" />
+
+                                    <button
+                                        type="button"
+                                        @click="onClickForm"
+                                        :disabled="isSubmitting || !getCarts.length"
+                                        class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                                    >
+                                        <svg v-if="isSubmitting" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                        </svg>
+                                        {{ isSubmitting ? 'Odosielam...' : 'Odoslať objednávku' }}
+                                    </button>
                                 </div>
-
-                                <div class="my-4 border-t border-gray-200"></div>
-
-                                <div class="flex items-center justify-between">
-                                    <span class="text-base font-semibold text-gray-900">Celkom s DPH</span>
-                                    <span class="text-xl font-bold text-blue-700">{{ formatDecimal(getCheckout.grandTotal) }} €</span>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    @click="onClickForm"
-                                    :disabled="isSubmitting || !getCarts.length"
-                                    class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-                                >
-                                    <svg v-if="isSubmitting" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                                    </svg>
-                                    {{ isSubmitting ? 'Odosielam...' : 'Odoslať objednávku' }}
-                                </button>
                             </div>
                         </div>
                     </aside>

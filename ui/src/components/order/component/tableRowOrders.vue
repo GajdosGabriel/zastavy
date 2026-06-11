@@ -51,8 +51,8 @@ const dropdownItems = computed(() => {
                 </div>
                 <div class="font-semibold text-gray-600">
                     {{ order.customer.city }}
-                    <span v-if="order.notices.length"
-                        class="absolute right-2 rounded bg-red-600 px-2 text-xs text-gray-200">
+                    <span v-if="order.note"
+                        class="absolute right-2 rounded bg-amber-500 px-2 text-xs text-white">
                         Poznámka
                     </span>
                 </div>

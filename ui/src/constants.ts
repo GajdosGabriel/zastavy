@@ -68,6 +68,27 @@ export const PAGE_CATEGORY: Page = {
     ICON: ''
 }
 
+export const PAGE_SHIPPING_METHOD: Page = {
+    NAME: 'Doprava',
+    URL: URL_BASE_API + '/shipping-methods',
+    ROUTE: 'shipping-methods.index',
+    ICON: ''
+}
+
+export const PAGE_PAYMENT_METHOD: Page = {
+    NAME: 'Platby',
+    URL: URL_BASE_API + '/payment-methods',
+    ROUTE: 'payment-methods.index',
+    ICON: ''
+}
+
+export const PAGE_COUPON: Page = {
+    NAME: 'Kupóny',
+    URL: URL_BASE_API + '/coupons',
+    ROUTE: 'coupons.index',
+    ICON: ''
+}
+
 export const PAGE_KONTAKT: Page = {
     NAME: 'Kontakt',
     URL: '',

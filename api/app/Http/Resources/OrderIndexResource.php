@@ -40,7 +40,7 @@ class OrderIndexResource extends JsonResource
             ],
             'shippings' => ShippingResource::collection($this->shippings),
             'price_sum' => $this->orderProducts->sum('total'),
-            'notices' => NoticeResource::collection($this->notices),
+            'note'    => $this->note,
             'orderProducts' => OrderProductResource::collection($this->orderProducts),
             'stock_expedition' => $stockExpedition,
             'product_order_sum' => $orderedQuantity,

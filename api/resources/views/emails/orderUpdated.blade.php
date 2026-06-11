@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Potvrdenie objednávky</title>
+    <title>Zmena objednávky</title>
     <style>
         body { font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; background: #f5f5f5; }
         .wrapper { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 6px; overflow: hidden; }
@@ -14,6 +14,12 @@
         .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin: 0 0 12px; }
         .info-block { margin-bottom: 28px; }
         .info-block p { margin: 4px 0; font-size: 14px; }
+        .change-block { background: #f0f4ff; border-left: 4px solid #1e3a5f; border-radius: 4px; padding: 16px 20px; margin: 0 0 28px; }
+        .change-row { display: flex; gap: 8px; align-items: center; font-size: 14px; margin: 6px 0; }
+        .change-label { color: #555; min-width: 150px; }
+        .change-old { color: #e53e3e; text-decoration: line-through; }
+        .change-arrow { color: #888; }
+        .change-new { color: #2f855a; font-weight: 600; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
         th { text-align: left; font-size: 12px; text-transform: uppercase; color: #888; padding: 6px 0; border-bottom: 1px solid #e5e5e5; }
         td { padding: 10px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
@@ -24,7 +30,7 @@
 <body>
 <div class="wrapper">
     <div class="header">
-        <h1>Potvrdenie objednávky</h1>
+        <h1>Zmena objednávky</h1>
         @if($order->serial_number)
             <p>Číslo objednávky: {{ $order->serial_number }}</p>
         @endif
@@ -40,18 +46,21 @@
             @if($order->customer->email)
                 <p>{{ $order->customer->email }}</p>
             @endif
-            @if($order->customer->phone)
-                <p>{{ $order->customer->phone }}</p>
-            @endif
         </div>
 
-        @if($order->customer->street || $order->customer->city)
+        @if(!empty($changes))
         <div class="info-block">
-            <p class="section-title">Doručovacia adresa</p>
-            @if($order->customer->street)
-                <p>{{ $order->customer->street }}</p>
-            @endif
-            <p>{{ $order->customer->postcode }} {{ $order->customer->city }}</p>
+            <p class="section-title">Čo sa zmenilo</p>
+            <div class="change-block">
+                @foreach($changes as $change)
+                <div class="change-row">
+                    <span class="change-label">{{ $change['label'] }}:</span>
+                    <span class="change-old">{{ $change['old'] ?? '—' }}</span>
+                    <span class="change-arrow">→</span>
+                    <span class="change-new">{{ $change['new'] ?? '—' }}</span>
+                </div>
+                @endforeach
+            </div>
         </div>
         @endif
 
@@ -87,21 +96,13 @@
             </tbody>
         </table>
 
-        @php $orderNotice = $order->notices->first()?->notice; @endphp
-        @if(!empty(trim($orderNotice ?? '')))
-        <div class="info-block">
-            <p class="section-title">Poznámka</p>
-            <p style="font-size:14px;">{{ $orderNotice }}</p>
-        </div>
-        @endif
-
         <p style="font-size:14px; color:#555;">
-            Ďakujeme za Vašu objednávku. V prípade otázok nás kontaktujte.
+            V prípade otázok nás kontaktujte.
         </p>
     </div>
 
     <div class="footer">
-        Táto správa bola vygenerovaná automaticky · {{ $order->created_at->format('d.m.Y') }}
+        Táto správa bola vygenerovaná automaticky · {{ now()->format('d.m.Y') }}
     </div>
 </div>
 </body>

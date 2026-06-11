@@ -45,8 +45,11 @@ class OrderRequest extends FormRequest
                 'orderProducts' => ['required', 'array', 'min:1'],
                 'orderProducts.*.id' => ['required'],
                 'orderProducts.*.input_order' => ['required', 'numeric', 'min:1'],
-                'orderNotice' => ['nullable', 'string'],
-                'notify_customer' => ['sometimes', 'boolean'],
+                'note'        => ['nullable', 'string', 'max:1000'],
+                'notify_customer'     => ['sometimes', 'boolean'],
+                'shipping_method_id'  => ['nullable', 'exists:shipping_methods,id'],
+                'payment_method_id'   => ['nullable', 'exists:payment_methods,id'],
+                'coupon_code'         => ['nullable', 'string', 'max:50'],
             ];
         }
 

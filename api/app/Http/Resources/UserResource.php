@@ -113,6 +113,12 @@ class UserResource extends JsonResource
             $items[] = ['NAME' => 'Admin', 'ROUTE' => 'admin.index', 'URL' => '/admin', 'ACTION' => null];
         }
 
+        if ($user->hasRole('super-admin')) {
+            $items[] = ['NAME' => 'Doprava', 'ROUTE' => 'shipping-methods.index', 'URL' => '/admin/doprava', 'ACTION' => null];
+            $items[] = ['NAME' => 'Platby',  'ROUTE' => 'payment-methods.index',  'URL' => '/admin/platby',  'ACTION' => null];
+            $items[] = ['NAME' => 'Kupóny',  'ROUTE' => 'coupons.index',          'URL' => '/admin/kupony',  'ACTION' => null];
+        }
+
         $items[] = ['NAME' => 'Odhlásiť', 'ROUTE' => null, 'URL' => null, 'ACTION' => 'logout'];
 
         return $items;

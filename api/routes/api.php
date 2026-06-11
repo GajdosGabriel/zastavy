@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\Dashboard\OrderController;
 use App\Http\Controllers\Api\Dashboard\OrderMarkController;
 use App\Http\Controllers\Api\Dashboard\OrderProductController;
@@ -8,14 +9,19 @@ use App\Http\Controllers\Api\Dashboard\OrderShippingController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\OrderDeliverySurveyController;
+use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\SanctumController;
+use App\Http\Controllers\Api\ShippingMethodController;
 use App\Http\Controllers\Api\SuperAdmin\AnnouncementController as SuperAdminAnnouncementController;
 use App\Http\Controllers\Api\SuperAdmin\CategoryController;
+use App\Http\Controllers\Api\SuperAdmin\CouponController as AdminCouponController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerMarkController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerOrderController;
+use App\Http\Controllers\Api\SuperAdmin\PaymentMethodController as AdminPaymentMethodController;
 use App\Http\Controllers\Api\SuperAdmin\ProductController;
 use App\Http\Controllers\Api\SuperAdmin\ProductImageController;
+use App\Http\Controllers\Api\SuperAdmin\ShippingMethodController as AdminShippingMethodController;
 use App\Http\Controllers\Api\SuperAdmin\ShippingNoticeController;
 use App\Http\Controllers\Api\SuperAdmin\StockController;
 use App\Http\Controllers\Api\SuperAdmin\UserController;
@@ -45,6 +51,9 @@ Route::apiResources([
 
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/announcements/active', [AnnouncementController::class, 'active'])->name('announcements.active');
+Route::get('/shipping-methods', [ShippingMethodController::class, 'index'])->name('shipping-methods.index');
+Route::get('/payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
+Route::post('/coupons/validate', [CouponController::class, 'validate'])->name('coupons.validate');
 
 Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function () {
     Route::get('/orders/statistics', [OrderController::class, 'statistics'])->name('orders.statistics');
@@ -74,6 +83,14 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::get('users/create', [UserController::class, 'create'])->name('users.create');
     Route::apiResource('users', UserController::class)->only(['index', 'show', 'update', 'store']);
     Route::apiResource('products', ProductController::class)->except(['show']);
+    Route::prefix('admin')->group(function () {
+        Route::apiResource('shipping-methods', AdminShippingMethodController::class)->except(['show', 'create', 'edit']);
+        Route::post('shipping-methods/{id}/restore', [AdminShippingMethodController::class, 'restore'])->name('admin.shipping-methods.restore');
+        Route::apiResource('payment-methods', AdminPaymentMethodController::class)->except(['show', 'create', 'edit']);
+        Route::post('payment-methods/{id}/restore', [AdminPaymentMethodController::class, 'restore'])->name('admin.payment-methods.restore');
+        Route::apiResource('coupons', AdminCouponController::class)->except(['show', 'create', 'edit']);
+        Route::post('coupons/{id}/restore', [AdminCouponController::class, 'restore'])->name('admin.coupons.restore');
+    });
 });
 
 Route::get('artisan/run', function () {

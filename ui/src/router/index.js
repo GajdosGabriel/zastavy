@@ -6,6 +6,7 @@ import customer from './customer';
 import stock from './stock';
 import user from './user';
 import announcement from './announcement';
+import admin from './admin';
 import useStoreErrors from '../store/StoreErrors';
 import useStoreOrders from '../store/StoreOrders';
 import useUser from '../store/StoreUsers';
@@ -19,6 +20,7 @@ const routes = [
     ...stock,
     ...user,
     ...announcement,
+    ...admin,
     {
         path: '/',
         name: 'public.index',

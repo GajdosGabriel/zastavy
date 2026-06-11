@@ -143,7 +143,7 @@ const confirmSave = async (sendNotification = notifyCustomer.value) => {
     const order = await storeOrder({
         customer: getCustomer.value,
         orderProducts: orderProducts.value,
-        orderNotice: orderState.order.notice,
+        note: orderState.order.note || null,
         notify_customer: Boolean(sendNotification),
     });
 
@@ -186,7 +186,7 @@ onMounted(() => {
                             />
                             <div class="mt-4">
                                 <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka</label>
-                                <input v-model="orderState.order.notice" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka k objednávke" />
+                                <input v-model="orderState.order.note" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka k objednávke" />
                             </div>
                         </div>
                     </section>

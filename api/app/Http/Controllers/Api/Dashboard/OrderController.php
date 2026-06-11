@@ -14,6 +14,9 @@ use App\Http\Resources\OrderStatisticResource;
 use App\Services\CustomerService;
 use App\Services\OrderStatisticsService;
 use App\Actions\StoreOrder;
+use App\Models\PaymentMethod;
+use App\Models\ShippingMethod;
+use App\Notifications\OrderUpdated;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -25,7 +28,7 @@ class OrderController extends Controller
 
         $orders = app(OrderStatisticsService::class)
             ->queryFor(request()->user(), $orderFilters)
-            ->with(['customer', 'shippings.stocks', 'shippings.notices', 'orderProducts', 'stocks', 'mark', 'notices'])
+            ->with(['customer', 'shippings.stocks', 'shippings.notices', 'orderProducts', 'stocks', 'mark'])
             ->orderBy('created_at', 'desc')
             ->paginate();
 
@@ -45,7 +48,7 @@ class OrderController extends Controller
     {
         Gate::authorize('view', $order);
 
-        return response(new OrderResource($order->load(['customer.users', 'user'])));
+        return response(new OrderResource($order->load(['customer.users', 'user', 'shippingMethod', 'paymentMethod'])));
     }
 
     public function update(Order $order, OrderRequest $request)
@@ -73,9 +76,38 @@ class OrderController extends Controller
 
         Gate::authorize('update', $order);
 
-        $order->update($request->all());
+        $changes = $this->detectChanges($order, $request);
+
+        $order->update($request->only([
+            'shipping_method_id', 'payment_method_id', 'status',
+            'isOpened', 'isDelivered',
+        ]));
+
+        if ($request->boolean('notify_customer') && !empty($changes)) {
+            $notifiable = $order->user ?? $order->customer;
+            $notifiable?->notify(new OrderUpdated($order->refresh()->load('orderProducts.product', 'customer'), $changes));
+        }
 
         return new OrderResource($order);
+    }
+
+    private function detectChanges(Order $order, $request): array
+    {
+        $changes = [];
+
+        if ($request->filled('shipping_method_id') && $request->shipping_method_id != $order->shipping_method_id) {
+            $oldMethod = $order->shippingMethod?->name ?? '—';
+            $newMethod = ShippingMethod::find($request->shipping_method_id)?->name ?? '—';
+            $changes[] = ['label' => 'Spôsob dopravy', 'old' => $oldMethod, 'new' => $newMethod];
+        }
+
+        if ($request->filled('payment_method_id') && $request->payment_method_id != $order->payment_method_id) {
+            $oldMethod = $order->paymentMethod?->name ?? '—';
+            $newMethod = PaymentMethod::find($request->payment_method_id)?->name ?? '—';
+            $changes[] = ['label' => 'Spôsob platby', 'old' => $oldMethod, 'new' => $newMethod];
+        }
+
+        return $changes;
     }
 
     public function store(OrderRequest $request)

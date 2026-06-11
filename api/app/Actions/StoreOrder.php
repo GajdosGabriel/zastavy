@@ -2,9 +2,12 @@
 
 namespace App\Actions;
 
+use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\ShippingMethod;
 use Illuminate\Http\Request;
 use App\Contracts\StoreOrderContract;
+use App\Models\PaymentMethod;
 
 
 class StoreOrder implements StoreOrderContract
@@ -20,24 +23,66 @@ class StoreOrder implements StoreOrderContract
     {
         $contact = $this->request->input('customer', []);
 
+        [$shippingMethodId, $shippingPrice, $paymentMethodId, $paymentFee, $couponId, $discountAmount] =
+            $this->resolveCheckoutFields();
+
         $order = $customer->orders()->create([
-            'user_id' => $user?->id,
-            'name' => $contact['name'] ?? $user?->username ?? $customer->name,
-            'email' => $contact['email'] ?? $user?->email ?? $customer->email,
-            'phone' => $contact['phone'] ?? $user?->phone ?? $customer->phone,
+            'user_id'            => $user?->id,
+            'name'               => $contact['name'] ?? $user?->username ?? $customer->name,
+            'email'              => $contact['email'] ?? $user?->email ?? $customer->email,
+            'phone'              => $contact['phone'] ?? $user?->phone ?? $customer->phone,
+            'shipping_method_id' => $shippingMethodId,
+            'shipping_price'     => $shippingPrice,
+            'payment_method_id'  => $paymentMethodId,
+            'payment_fee'        => $paymentFee,
+            'coupon_id'          => $couponId,
+            'discount_amount'    => $discountAmount,
+            'note'               => $this->request->input('note') ?: null,
         ]);
         $this->serialNumber($customer, $order);
-        $this->saveNotice($order);
         $this->storeOrderProducts($order);
+
+        if ($couponId) {
+            Coupon::where('id', $couponId)->increment('used_count');
+        }
 
         return $order;
     }
 
-    protected function saveNotice($order)
+    protected function resolveCheckoutFields(): array
     {
-        new StoreNotice($order, $this->request->orderNotice);
-    }
+        $shippingMethodId = $this->request->input('shipping_method_id');
+        $paymentMethodId  = $this->request->input('payment_method_id');
+        $couponCode       = $this->request->input('coupon_code');
 
+        $shippingPrice = 0.0;
+        if ($shippingMethodId) {
+            $method = ShippingMethod::find($shippingMethodId);
+            $cartTotal = collect($this->request->input('orderProducts', []))
+                ->sum(fn ($p) => ($p['active_price'] ?? 0) * ($p['input_order'] ?? 0));
+            $shippingPrice = $method ? $method->resolvePrice((float) $cartTotal) : 0.0;
+        }
+
+        $paymentFee = 0.0;
+        if ($paymentMethodId) {
+            $method = PaymentMethod::find($paymentMethodId);
+            $paymentFee = $method ? (float) $method->fee : 0.0;
+        }
+
+        $couponId = null;
+        $discountAmount = 0.0;
+        if ($couponCode) {
+            $coupon = Coupon::where('code', strtoupper($couponCode))->first();
+            if ($coupon) {
+                $cartTotal ??= collect($this->request->input('orderProducts', []))
+                    ->sum(fn ($p) => ($p['active_price'] ?? 0) * ($p['input_order'] ?? 0));
+                $couponId = $coupon->id;
+                $discountAmount = $coupon->calculateDiscount((float) $cartTotal);
+            }
+        }
+
+        return [$shippingMethodId, $shippingPrice, $paymentMethodId, $paymentFee, $couponId, $discountAmount];
+    }
 
     protected function storeOrderProducts($order)
     {

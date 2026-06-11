@@ -2,11 +2,10 @@ import { computed, reactive, watch } from "vue";
 import axiosInstance from "../axiosInstance";
 import useErrors from './StoreErrors';
 import useCustomer from './StoreCustomers';
-import useOrder from './StoreOrders';
+import useCheckoutOptions from './StoreCheckoutOptions';
 
 const { getCustomer, resetCustomer } = useCustomer();
 const { setErrors } = useErrors();
-const { state: order } = useOrder();
 
 const CART_STORAGE_KEY = 'form';
 const CUSTOMER_STORAGE_KEY = 'customer';
@@ -17,6 +16,7 @@ const defaulState = {
         grandQuantity: 0,
     },
     carts: [],
+    note: '',
 };
 
 const state = reactive(defaulState);
@@ -113,15 +113,21 @@ const actions = {
     },
 
     storeCheckout: async () => {
+        const { state: optionsState, getCouponCode } = useCheckoutOptions();
         try {
             await axiosInstance.post("/checkouts", {
                 customer: getCustomer.value,
                 orderProducts: state.carts,
-                orderNotice: order.order.notice,
+                note: state.note || null,
+                shipping_method_id: optionsState.selectedShippingId,
+                payment_method_id:  optionsState.selectedPaymentId,
+                coupon_code:        getCouponCode.value || null,
             });
             actions.setlocalStorageCustomer();
             state.carts = [];
+            state.note = '';
             resetCustomer();
+            useCheckoutOptions().reset();
             return true;
         } catch (e) {
             setErrors(e);

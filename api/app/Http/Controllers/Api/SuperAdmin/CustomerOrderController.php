@@ -14,7 +14,7 @@ class CustomerOrderController extends Controller
         Gate::authorize('view', $customer);
 
         $orders = $customer->orders()
-            ->with(['customer', 'shippings.stocks', 'shippings.notices', 'orderProducts', 'stocks', 'mark', 'notices'])
+            ->with(['customer', 'shippings.stocks', 'shippings.notices', 'orderProducts', 'stocks', 'mark'])
             ->paginate();
 
         return OrderIndexResource::collection($orders);

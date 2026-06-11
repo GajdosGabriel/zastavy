@@ -7,7 +7,7 @@
     <style>
         body { font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; background: #f5f5f5; }
         .wrapper { max-width: 560px; margin: 30px auto; background: #fff; border-radius: 6px; overflow: hidden; }
-        .header { background: #1a1a2e; color: #fff; padding: 28px 32px; }
+        .header { background: #1e3a5f; color: #fff; padding: 28px 32px; }
         .header h1 { margin: 0; font-size: 22px; font-weight: 600; }
         .header p { margin: 6px 0 0; font-size: 14px; color: #aaa; }
         .body { padding: 32px; }

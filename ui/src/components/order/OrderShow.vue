@@ -106,12 +106,11 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                         </div>
                     </div>
                 </div>
-                <!-- Notice -->
-                <div class="p-2 bg-green-300 mb-2 rounded-sm border-6 border-green-600"
-                    v-for="notice in getOrder.notices" :key="notice.id">
-                    {{ notice.notice }}
+                <!-- Zákaznícka poznámka -->
+                <div v-if="getOrder.note"
+                     class="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <span class="font-semibold">Poznámka:</span> {{ getOrder.note }}
                 </div>
-                <!-- End Notice -->
                 <div class="flex flex-col">
                     <div class="-my-2 sm:-mx-6 lg:-mx-8">
                         <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">

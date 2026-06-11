@@ -22,7 +22,9 @@ class OrderResource extends JsonResource
         $status = ModelStatus::fromOrder($this->resource);
 
         return [
-            'id' => $this->id,
+            'id'                => $this->id,
+            'shipping_method'   => $this->shippingMethod ? ['id' => $this->shippingMethod->id, 'name' => $this->shippingMethod->name] : null,
+            'payment_method'    => $this->paymentMethod  ? ['id' => $this->paymentMethod->id,  'name' => $this->paymentMethod->name]  : null,
             'uuid' => $this->uuid,
             'isOpened' => $this->isOpened,
             'isDelivered' => $this->isDelivered,
@@ -36,7 +38,7 @@ class OrderResource extends JsonResource
             'user' => $this->user ? new UserResource($this->user) : null,
             'shippings' => ShippingResource::collection($this->shippings),
             'price_sum' => $this->priceSum(),
-            'notices' => $this->notices,
+            'note'    => $this->note,
             'orderProducts' => OrderProductResource::collection($this->orderProducts),
             'stock_expedition' => $this->stockExpedition,
             'product_order_sum' => $this->productOrderSum,

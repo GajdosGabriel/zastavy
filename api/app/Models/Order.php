@@ -37,6 +37,21 @@ class Order extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function shippingMethod()
+    {
+        return $this->belongsTo(ShippingMethod::class);
+    }
+
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class);
+    }
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
