@@ -23,8 +23,6 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        Gate::authorize('view', $product);
-
         return response(new ProductResource($product->load(['images', 'categories'])));
     }
 
