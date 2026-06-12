@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import PanelDropdown from "../../layout/PanelDropdown.vue";
 import iconStar from "../../../components/icons/star.vue";
 import noticeLabel from "./noticeLabel.vue";
@@ -10,9 +10,25 @@ const props = defineProps(["order"]);
 
 const { destroyOrder, updateOrder, clickToMark } = useOrders();
 
+const showStornoModal = ref(false);
+const notifyCustomer = ref(true);
+const submitting = ref(false);
+
+const openStornoModal = () => {
+    notifyCustomer.value = true;
+    showStornoModal.value = true;
+};
+
+const confirmStorno = async () => {
+    submitting.value = true;
+    await updateOrder({ id: props.order.id, makeStorned: true, notify_customer: notifyCustomer.value });
+    submitting.value = false;
+    showStornoModal.value = false;
+};
+
 const actionMap = {
     update: { to: { name: "orders.edit", params: { orderId: props.order.id } } },
-    storno: { onClick: () => updateOrder({ id: props.order.id, makeStorned: true }) },
+    storno: { onClick: openStornoModal },
     delete: { onClick: () => destroyOrder(props.order.endpoints.destroy) },
 };
 
@@ -84,4 +100,31 @@ const dropdownItems = computed(() => {
             <panel-dropdown :items="dropdownItems" />
         </td>
     </tr>
+
+    <!-- Storno modal -->
+    <Teleport to="body">
+        <div v-if="showStornoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+            <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+                <h3 class="mb-1 text-lg font-semibold text-gray-800">Stornovať objednávku?</h3>
+                <p class="mb-4 text-sm text-gray-500">
+                    Objednávka č. <strong>{{ order.serial_number }}</strong> —
+                    neexpedované položky budú označené ako stornované.
+                </p>
+                <label class="mb-5 flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                    <input type="checkbox" v-model="notifyCustomer" class="rounded" />
+                    Informovať zákazníka emailom o storne
+                </label>
+                <div class="flex justify-end gap-2">
+                    <button type="button" @click="showStornoModal = false"
+                        class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                        Zrušiť
+                    </button>
+                    <button type="button" @click="confirmStorno" :disabled="submitting"
+                        class="rounded bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+                        {{ submitting ? '...' : 'Potvrdiť storno' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </Teleport>
 </template>

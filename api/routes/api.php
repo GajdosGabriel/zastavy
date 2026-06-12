@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Dashboard\OrderController;
 use App\Http\Controllers\Api\Dashboard\OrderMarkController;
 use App\Http\Controllers\Api\Dashboard\OrderProductController;
 use App\Http\Controllers\Api\Dashboard\OrderShippingController;
+use App\Http\Controllers\Api\Dashboard\OrderReturnController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\OrderDeliverySurveyController;
@@ -64,6 +65,11 @@ Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function 
         'orders.marks' => OrderMarkController::class,
         'orders.orderProducts' => OrderProductController::class,
     ]);
+
+    Route::apiResource('orders.returns', OrderReturnController::class)
+        ->parameters(['returns' => 'orderReturn']);
+    Route::post('orders/{order}/returns/{orderReturn}/process', [OrderReturnController::class, 'process'])->name('orders.returns.process');
+    Route::post('orders/{order}/returns/{orderReturn}/cancel', [OrderReturnController::class, 'cancel'])->name('orders.returns.cancel');
 
     Route::post('/logout', [SanctumController::class, 'logout'])->name('sanctum.logout');
 });

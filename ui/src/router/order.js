@@ -42,6 +42,22 @@ const order = [
         }
     },
     {
+        path: '/objednavky/:orderId/vratenie/create',
+        name: 'orders.returns.create',
+        components: {
+            default: () => import('../components/order/OrderReturnCreate.vue'),
+        },
+        meta: { title: 'Nové vrátenie tovaru' }
+    },
+    {
+        path: '/objednavky/:orderId/vratenie/:returnId',
+        name: 'orders.returns.show',
+        components: {
+            default: () => import('../components/order/OrderReturnShow.vue'),
+        },
+        meta: { title: 'Detail vrátenia' }
+    },
+    {
         path: '/objednavky/create',
         name: 'orders.create',
         components: {

@@ -17,6 +17,7 @@ use App\Actions\StoreOrder;
 use App\Models\PaymentMethod;
 use App\Models\ShippingMethod;
 use App\Notifications\OrderUpdated;
+use App\Notifications\OrderCancelled;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -71,6 +72,12 @@ class OrderController extends Controller
                 }
             });
 
+            if ($request->boolean('notify_customer', false)) {
+                $order->loadMissing(['customer', 'orderProducts.product', 'orderProducts.stocks']);
+                $notifiable = $order->customer ?? $order->user;
+                $notifiable?->notify(new OrderCancelled($order));
+            }
+
             return new OrderResource($order->refresh()->load(['customer.users', 'user']));
         }
 
@@ -79,8 +86,7 @@ class OrderController extends Controller
         $changes = $this->detectChanges($order, $request);
 
         $order->update($request->only([
-            'shipping_method_id', 'payment_method_id', 'status',
-            'isOpened', 'isDelivered',
+            'shipping_method_id', 'payment_method_id', 'status', 'isOpened',
         ]));
 
         if ($request->boolean('notify_customer') && !empty($changes)) {

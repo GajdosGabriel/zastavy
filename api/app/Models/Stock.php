@@ -27,6 +27,11 @@ class Stock extends Model
         return $this->belongsTo(Shipping::class);
     }
 
+    public function orderReturn()
+    {
+        return $this->belongsTo(OrderReturn::class);
+    }
+
 
     public function orderProduct()
     {

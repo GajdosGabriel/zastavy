@@ -72,6 +72,11 @@ class Order extends Model
         return $this->hasMany(Stock::class);
     }
 
+    public function orderReturns()
+    {
+        return $this->hasMany(OrderReturn::class);
+    }
+
     public function mark()
     {
         return $this->morphOne(Mark::class, 'fileable');
