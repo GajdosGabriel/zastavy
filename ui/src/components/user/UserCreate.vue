@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 import BaseLayout from "../layout/BaseLayout.vue";
 import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
-import validationBar from "../bars/ValidationBar.vue";
 import useAdminUsers from "../../store/StoreAdminUsers";
 import RequiredMark from "../forms/RequiredMark.vue";
 import FormInput from "../forms/FormInput.vue";
@@ -46,8 +45,6 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                 </div>
 
                 <form @submit.prevent="saveUser" class="rounded bg-white px-8 pt-6 pb-8 shadow-md">
-                    <validationBar :validations="null" />
-
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Meno <RequiredMark /></label>
