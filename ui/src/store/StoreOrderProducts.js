@@ -60,8 +60,40 @@ const actions = {
     },
 
     
-    addOrderProduct: () => {
-        state.orderProducts.push(state.orderProducts[0]);
+    addOrderProduct: (orderId) => {
+        const tempId = '__new__' + Date.now();
+        state.orderProducts.push({
+            id: tempId,
+            isNew: true,
+            order_id: orderId,
+            product_id: null,
+            quantity: 1,
+            price: 0,
+            storno: 0,
+            stockSum: 0,
+            name: '',
+            unit_value: '',
+            shipping_required_quantity: 1,
+            shipping_remaining_quantity: 1,
+            shipping_percentage: 0,
+            endpoints: {
+                store: `/orders/${orderId}/orderProducts`,
+                update: `/orders/${orderId}/orderProducts/${tempId}`,
+                destroy: `/orders/${orderId}/orderProducts/${tempId}`,
+            },
+        });
+    },
+
+    saveNewOrderProduct: async (item) => {
+        const response = await axiosInstance.post(item.endpoints.store, {
+            product_id: item.product_id,
+            quantity:   item.quantity,
+            price:      item.price,
+        });
+        const saved = response.data.data;
+        const idx = state.orderProducts.findIndex(p => p.id === item.id);
+        if (idx !== -1) state.orderProducts.splice(idx, 1, saved);
+        return saved;
     },
 
 

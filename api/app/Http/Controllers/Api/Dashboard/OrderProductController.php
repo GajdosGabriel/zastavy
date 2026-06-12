@@ -18,6 +18,28 @@ class OrderProductController extends Controller
         return OrderProductResource::collection($order->orderProducts);
     }
 
+    public function store(Order $order, Request $request)
+    {
+        Gate::authorize('update', $order);
+
+        $request->validate([
+            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'quantity'   => ['required', 'integer', 'min:1'],
+            'price'      => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $orderProduct = $order->orderProducts()->create([
+            'product_id' => $request->product_id,
+            'quantity'   => $request->quantity,
+            'price'      => $request->price,
+            'storno'     => 0,
+        ]);
+
+        $orderProduct->load('product');
+
+        return new OrderProductResource($orderProduct);
+    }
+
     public function update(Order $order, $orderProduct, Request $request)
     {
         Gate::authorize('update', $order);

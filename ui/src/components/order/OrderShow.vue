@@ -167,7 +167,7 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                                             <td colspan="2" class="tbody_td font-semibold text-3xl">
                                                 <shipping-button :order="getOrder" />
                                             </td>
-                                            <td colspan="1" class="tbody_td font-semibold" @click="addOrderProduct()">
+                                            <td colspan="1" class="tbody_td font-semibold" @click="addOrderProduct(orderId)">
                                                 <span class="text-3xl cursor-pointer">+</span>
                                             </td>
                                         </tr>
