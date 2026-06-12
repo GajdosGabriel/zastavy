@@ -36,8 +36,9 @@ const confirmNotice = async () => {
 
         <!-- Ikona dodacieho listu + ID v title -->
         <button @click="onClickShipping"
-            :title="`DL #${shipping.id}`"
-            class="flex items-center gap-1 text-blue-700 hover:text-blue-900">
+            :title="shipping.notices.length ? `DL #${shipping.id} – notifikácia odoslaná` : `DL #${shipping.id}`"
+            :class="shipping.notices.length ? 'text-green-700 cursor-default' : 'text-blue-700 hover:text-blue-900 cursor-pointer'"
+            class="flex items-center gap-1">
             <!-- delivery van icon -->
             <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="1" y="3" width="15" height="13" rx="1" stroke-linejoin="round"/>
@@ -45,19 +46,8 @@ const confirmNotice = async () => {
                 <circle cx="5.5" cy="18.5" r="2"/>
                 <circle cx="18.5" cy="18.5" r="2"/>
             </svg>
+            <span v-if="shipping.notices.length" class="text-xs">{{ shipping.notices[0].created_at_human }}</span>
         </button>
-
-        <!-- Odoslaný email -->
-        <div v-for="notice in shipping.notices" :key="notice.id">
-            <div class="flex items-center gap-1 text-xs text-green-700" :title="notice.created_at">
-                <!-- envelope icon -->
-                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-                <span>{{ notice.created_at_human }}</span>
-            </div>
-        </div>
     </div>
 
     <Teleport to="body">
