@@ -8,7 +8,7 @@ import useStock from "../../store/StoreStocks.js";
 import useAnnouncement from "../../store/StoreAnnouncements.js";
 import useNavigation from "../../store/StoreNavigation.js";
 import mainNavigationDropdown from "./navigationMainDropdown.vue";
-import kosik from "../icons/kosik.vue";
+import NavKosikLink from "../checkout/NavKosikLink.vue";
 import badge from "../plugins/badge.vue";
 import { APP_NAME, Page } from "../../constants.ts";
 import useOrder from "../../store/StoreOrders.js";
@@ -29,7 +29,7 @@ const onClickItem = (item: Page) => {
       }
 };
 
-const { getCarts, getlocalStorage } = useCheckouts();
+const { getlocalStorage } = useCheckouts();
 const { fetchUser, getUser } = useUser();
 const { getMainNavigation } = useNavigation();
 
@@ -71,12 +71,7 @@ onMounted(() => {
                         <div class="flex items-center gap-1 sm:ml-6">
                               <main-navigation-dropdown />
 
-                              <router-link class="nav_link" :to="{ name: 'public.cart.index' }">
-                                    <kosik class="text-blue-700" />
-                                    <badge :kosik="{ value: getCarts ? getCarts?.length : 0, title: 'Počet položiek', class: null }"
-                                          class="mr-2" />
-                                    Košík
-                              </router-link>
+                              <NavKosikLink />
 
                               <!-- Hamburger – only mobile -->
                               <button
