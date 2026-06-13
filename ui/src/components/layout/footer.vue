@@ -1,7 +1,8 @@
 <script setup>
 import { NAV_ITEMS } from '../../constants';
+import useUser from '../../store/StoreUsers.js';
 
-
+const { getUser } = useUser();
 </script>
 
 <!-- <template>
@@ -47,12 +48,11 @@ import { NAV_ITEMS } from '../../constants';
             </router-link>
           </li>
 
-
-          <!-- <li v-if="!getUser.isAuth">
-            <router-link :to="{ name: 'login.index' }">
-              Login
+          <li v-if="!getUser?.isAuth">
+            <router-link :to="{ name: 'public.login.index' }">
+              Vstúpiť
             </router-link>
-          </li> -->
+          </li>
         </ul>
       </div>
       <div class="clearfix"></div>

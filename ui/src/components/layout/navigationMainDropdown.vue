@@ -1,14 +1,6 @@
 <template>
     <div class="flex items-center">
-        <router-link
-            v-if="!getUser?.isAuth"
-            :to="{ name: guestMenuItem?.ROUTE || 'public.login.index' }"
-            class="nav_link"
-        >
-            {{ guestMenuItem?.NAME || 'Vstúpiť' }}
-        </router-link>
-
-        <div v-else class="relative right" width="48">
+        <div v-if="getUser?.isAuth" class="relative right" width="48">
             <button
                 @click.stop="isShow"
                 class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out"
