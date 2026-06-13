@@ -39,6 +39,8 @@ class OrderExpedition extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
+        $this->order->loadMissing(['customer', 'orderProducts.product', 'shippingMethod']);
+
         return (new MailMessage)
             ->subject('Vaša objednávka bola odoslaná – č. ' . $this->order->serial_number)
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')

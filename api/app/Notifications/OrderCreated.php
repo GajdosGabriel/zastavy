@@ -42,6 +42,13 @@ class OrderCreated extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
+        $this->order->loadMissing([
+            'customer',
+            'orderProducts.product',
+            'shippingMethod',
+            'paymentMethod',
+        ]);
+
         return (new MailMessage)
             ->subject("Objednávka | ". $this->order->customer->company)
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')

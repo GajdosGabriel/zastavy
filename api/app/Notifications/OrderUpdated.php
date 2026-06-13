@@ -24,6 +24,8 @@ class OrderUpdated extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
+        $this->order->loadMissing(['customer', 'orderProducts.product']);
+
         return (new MailMessage)
             ->subject('Zmena objednávky | ' . $this->order->customer->company)
             ->view('emails.orderUpdated', [
