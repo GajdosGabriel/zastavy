@@ -91,43 +91,43 @@ const onClickIco = async () => {
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Názov firmy <RequiredMark v-if="isRequired('company')" />
             </label>
-            <FormInput v-model="getCustomer.company" :invalid="isMissing('company')" :error="fieldError('company')" placeholder="Názov firmy" />
+            <FormInput v-model="getCustomer.company" :invalid="isMissing('company')" :error="fieldError('company')" placeholder="Názov firmy" field-key="customer.company" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Ulica a číslo <RequiredMark v-if="isRequired('street')" />
             </label>
-            <FormInput v-model="getCustomer.street" :invalid="isMissing('street')" :error="fieldError('street')" placeholder="Ulica a číslo" />
+            <FormInput v-model="getCustomer.street" :invalid="isMissing('street')" :error="fieldError('street')" placeholder="Ulica a číslo" field-key="customer.street" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 PSČ <RequiredMark v-if="isRequired('postcode')" />
             </label>
-            <FormInput v-model="getCustomer.postcode" :invalid="isMissing('postcode')" :error="fieldError('postcode')" placeholder="PSČ" />
+            <FormInput v-model="getCustomer.postcode" :invalid="isMissing('postcode')" :error="fieldError('postcode')" placeholder="PSČ" field-key="customer.postcode" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Mesto <RequiredMark v-if="isRequired('city')" />
             </label>
-            <FormInput v-model="getCustomer.city" :invalid="isMissing('city')" :error="fieldError('city')" placeholder="Mesto" />
+            <FormInput v-model="getCustomer.city" :invalid="isMissing('city')" :error="fieldError('city')" placeholder="Mesto" field-key="customer.city" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Kontaktné meno <RequiredMark v-if="isRequired('name')" />
             </label>
-            <FormInput v-model="getCustomer.name" :invalid="isMissing('name')" :error="fieldError('name')" placeholder="Meno kontaktnej osoby" />
+            <FormInput v-model="getCustomer.name" :invalid="isMissing('name')" :error="fieldError('name')" placeholder="Meno kontaktnej osoby" field-key="customer.name" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Email <RequiredMark v-if="isRequired('email')" />
             </label>
-            <FormInput v-model="getCustomer.email" type="email" :invalid="isMissing('email') || !!fieldError('email')" :error="fieldError('email')" placeholder="Email" />
+            <FormInput v-model="getCustomer.email" type="email" :invalid="isMissing('email') || !!fieldError('email')" :error="fieldError('email')" placeholder="Email" field-key="customer.email" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Telefón <RequiredMark v-if="isRequired('phone')" />
             </label>
-            <FormInput v-model="getCustomer.phone" :invalid="isMissing('phone')" :error="fieldError('phone')" placeholder="Telefón" />
+            <FormInput v-model="getCustomer.phone" :invalid="isMissing('phone')" :error="fieldError('phone')" placeholder="Telefón" field-key="customer.phone" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">IČO</label>

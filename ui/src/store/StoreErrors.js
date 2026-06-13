@@ -34,8 +34,18 @@ const actions = {
     }
   },
 
+  clearFieldError: (key) => {
+    const msgs = Array.isArray(state.fieldErrors[key])
+      ? state.fieldErrors[key]
+      : (state.fieldErrors[key] ? [state.fieldErrors[key]] : []);
+    if (msgs.length) {
+      state.errors = state.errors.filter(e => !msgs.includes(e));
+      delete state.fieldErrors[key];
+    }
+  },
+
   removeError: (index) => {
-    state.errors = state.errors.filter((_, i) => i !== index);;
+    state.errors = state.errors.filter((_, i) => i !== index);
   },
 
   resetErrors: () => {

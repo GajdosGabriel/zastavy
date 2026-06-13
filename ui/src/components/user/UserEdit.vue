@@ -4,8 +4,8 @@ import { useRoute, useRouter } from "vue-router";
 import BaseLayout from "../layout/BaseLayout.vue";
 import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
-import validationBar from "../bars/ValidationBar.vue";
 import useAdminUsers from "../../store/StoreAdminUsers";
+import useErrors from "../../store/StoreErrors";
 import RequiredMark from "../forms/RequiredMark.vue";
 import FormInput from "../forms/FormInput.vue";
 
@@ -23,6 +23,12 @@ const {
 
 const router = useRouter();
 const { params: { userId } } = useRoute();
+const { getFieldErrors } = useErrors();
+
+const fe = (field) => {
+    const e = getFieldErrors.value[field];
+    return Array.isArray(e) ? e[0] : (e ?? '');
+};
 
 onMounted(() => fetchUser(userId));
 
@@ -47,12 +53,12 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                 </div>
 
                 <form v-if="state.user?.id" @submit.prevent="saveUser" class="rounded bg-white px-8 pt-6 pb-8 shadow-md">
-                    <validationBar :validations="null" />
+
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Meno <RequiredMark /></label>
-                            <FormInput v-model="state.user.firstName" placeholder="Meno" required />
+                            <FormInput v-model="state.user.firstName" placeholder="Meno" required :error="fe('firstName')" field-key="firstName" />
                         </div>
 
                         <div>
@@ -67,12 +73,12 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
 
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Email <RequiredMark /></label>
-                            <FormInput v-model="state.user.email" type="email" placeholder="Email" required />
+                            <FormInput v-model="state.user.email" type="email" placeholder="Email" required :error="fe('email')" field-key="email" />
                         </div>
 
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Telefón</label>
-                            <FormInput v-model="state.user.phone" placeholder="Telefón" />
+                            <FormInput v-model="state.user.phone" placeholder="Telefón" :error="fe('phone')" field-key="phone" />
                         </div>
 
                         <div>
