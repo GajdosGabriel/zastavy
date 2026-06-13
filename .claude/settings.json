@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd C:\\\\www\\\\zastavy; $bytes = [System.IO.File]::ReadAllBytes\\(\"1781329857-scz0kqs2.sql.gz\"\\); $ms = New-Object System.IO.MemoryStream; $ms.Write\\($bytes, 0, $bytes.Length\\); $ms.Position = 0; $gz = New-Object System.IO.Compression.GZipStream\\($ms, [System.IO.Compression.CompressionMode]::Decompress\\); $sr = New-Object System.IO.StreamReader\\($gz\\); $content = $sr.ReadToEnd\\(\\); $lines = $content -split \"`n\"; $lines[0..300] -join \"`n\")",
+      "PowerShell(cd C:\\\\www\\\\zastavy; $bytes = [System.IO.File]::ReadAllBytes\\(\"1781329857-scz0kqs2.sql.gz\"\\); $ms = New-Object System.IO.MemoryStream; $ms.Write\\($bytes, 0, $bytes.Length\\); $ms.Position = 0; $gz = New-Object System.IO.Compression.GZipStream\\($ms, [System.IO.Compression.CompressionMode]::Decompress\\); $sr = New-Object System.IO.StreamReader\\($gz\\); $content = $sr.ReadToEnd\\(\\); $content | Out-File -Encoding utf8 \"C:\\\\www\\\\zastavy\\\\old_db.sql\"; Write-Host \"Done, size: $\\($content.Length\\) chars\")",
+      "PowerShell(Select-String -Path \"C:\\\\www\\\\zastavy\\\\old_db.sql\" -Pattern \"^CREATE TABLE\" | ForEach-Object { $_.Line })",
+      "PowerShell(mysql -u root -e \"CREATE DATABASE IF NOT EXISTS zastavy_legacy CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\" 2>&1)",
+      "Bash(gunzip -c /c/www/zastavy/1781329857-scz0kqs2.sql.gz)",
+      "Bash(mysql -u root zastavy_legacy)",
+      "PowerShell(cd C:\\\\www\\\\zastavy; $bytes = [System.IO.File]::ReadAllBytes\\(\"1781329857-scz0kqs2.sql.gz\"\\); $ms = New-Object System.IO.MemoryStream; $ms.Write\\($bytes, 0, $bytes.Length\\); $ms.Position = 0; $gz = New-Object System.IO.Compression.GZipStream\\($ms, [System.IO.Compression.CompressionMode]::Decompress\\); $sr = New-Object System.IO.StreamReader\\($gz\\); $content = $sr.ReadToEnd\\(\\); $sr.Close\\(\\); $gz.Close\\(\\); [System.IO.File]::WriteAllText\\(\"C:\\\\www\\\\zastavy\\\\old_db_import.sql\", $content, [System.Text.Encoding]::UTF8\\); Write-Host \"Extracted OK, size: $\\($content.Length\\)\")",
+      "PowerShell(cd C:\\\\www\\\\zastavy; mysql -u root zastavy_legacy --default-character-set=utf8mb4 -e \"source old_db_import.sql\" 2>&1; Write-Host \"Exit: $LASTEXITCODE\")",
+      "PowerShell(cd C:\\\\www\\\\zastavy; $lines = [System.IO.File]::ReadAllLines\\(\"old_db_import.sql\", [System.Text.Encoding]::UTF8\\); $lines[0] = \"-- sandbox mode removed\"; [System.IO.File]::WriteAllLines\\(\"old_db_clean.sql\", $lines, [System.Text.Encoding]::UTF8\\); Write-Host \"Done. First line now: $\\($lines[0]\\)\")",
+      "PowerShell(cd C:\\\\www\\\\zastavy; mysql -u root zastavy_legacy --default-character-set=utf8mb4 -e \"source old_db_clean.sql\" 2>&1; Write-Host \"Exit: $LASTEXITCODE\")",
+      "PowerShell(php -l C:\\\\www\\\\zastavy\\\\api\\\\lang\\\\sk\\\\validation.php)",
+      "Read(//c/www/zastavy/api/database/migrations/**)",
+      "Bash(gunzip -c 1781369918-scz0kqs2.sql.gz)",
+      "Bash(grep -A 40 \"^CREATE TABLE \\\\`customers\\\\`\")",
+      "Bash(grep -A 30 \"^CREATE TABLE \\\\`orders\\\\`\")",
+      "Bash(grep -A 30 \"^CREATE TABLE \\\\`order_products\\\\`\")",
+      "Bash(grep -A 25 \"^CREATE TABLE \\\\`stocks\\\\`\")",
+      "Bash(grep -A 25 \"^CREATE TABLE \\\\`shippings\\\\`\")",
+      "Bash(grep -A 25 \"^CREATE TABLE \\\\`users\\\\`\")",
+      "Bash(grep -A 20 \"^CREATE TABLE \\\\`images\\\\`\")"
+    ]
+  }
+}

@@ -21,7 +21,7 @@ return new class extends Migration
 
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
             $table->foreign('shipping_id')->references('id')->on('shippings')->onDelete('cascade');
-            $table->foreign('order_return_id')->references('id')->on('order_returns')->nullOnDelete();
+            // FK na order_returns sa pridá až keď existuje tabuľka (migrate:fresh bezpečné)
         });
     }
 

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('marks', function (Blueprint $table) {
             $table->id();
+            $table->string('status', 32)->default('active')->index();
             $table->unsignedBigInteger('fileable_id');
             $table->unsignedBigInteger('user_id');
             $table->string('fileable_type', 255);

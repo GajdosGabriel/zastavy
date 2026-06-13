@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('notices', function (Blueprint $table) {
             $table->id();
+            $table->string('status', 32)->default('active')->index();
             $table->unsignedBigInteger('fileable_id');
             $table->string('fileable_type', 255);
             $table->string('notice', 255)->nullable();
