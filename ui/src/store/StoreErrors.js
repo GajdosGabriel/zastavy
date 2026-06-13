@@ -19,12 +19,19 @@ const actions = {
   setErrors: (error) => {
     actions.resetErrors();
 
-    const message = error?.response?.data?.message
-      ?? error?.message
-      ?? "Nastala neočakávaná chyba.";
+    const fieldErrors = error?.response?.data?.errors ?? {};
+    state.fieldErrors = fieldErrors;
 
-    state.errors.push(message)
-    state.fieldErrors = error?.response?.data?.errors ?? {};
+    const fieldMessages = Object.values(fieldErrors).flat();
+
+    if (fieldMessages.length > 0) {
+      fieldMessages.forEach(msg => state.errors.push(msg));
+    } else {
+      const message = error?.response?.data?.message
+        ?? error?.message
+        ?? 'Nastala neočakávaná chyba.';
+      state.errors.push(message);
+    }
   },
 
   removeError: (index) => {

@@ -156,4 +156,107 @@ return [
     'uppercase' => ':Attribute musí obsahovať veľké znaky.',
     'url' => ':Attribute musí mať formát URL.',
     'uuid' => ':Attribute musí byť platné UUID.',
+
+    'attributes' => [
+        // Zákazník (checkout)
+        'customer'              => 'zákazník',
+        'customer.name'         => 'meno kontaktu',
+        'customer.company'      => 'názov firmy',
+        'customer.email'        => 'email',
+        'customer.phone'        => 'telefón',
+        'customer.street'       => 'ulica',
+        'customer.postcode'     => 'PSČ',
+        'customer.city'         => 'mesto',
+        'customer.ico'          => 'IČO',
+        'customer.dic'          => 'DIČ',
+        'customer.ic_dic'       => 'IČ DPH',
+
+        // Objednávka / položky
+        'orderProducts'                  => 'položky objednávky',
+        'orderProducts.*.id'             => 'produkt',
+        'orderProducts.*.input_order'    => 'množstvo',
+        'items'                          => 'položky',
+        'items.*.order_product_id'       => 'položka objednávky',
+        'items.*.quantity'               => 'množstvo',
+        'note'                           => 'poznámka',
+        'wants_coupon'                   => 'záujem o kupón',
+        'notify_customer'                => 'informovať zákazníka',
+        'shipping_method_id'             => 'spôsob dopravy',
+        'payment_method_id'              => 'spôsob platby',
+        'coupon_code'                    => 'kód kupónu',
+
+        // Používateľ
+        'firstName'     => 'meno',
+        'lastName'      => 'priezvisko',
+        'email'         => 'email',
+        'password'      => 'heslo',
+        'phone'         => 'telefón',
+        'username'      => 'používateľské meno',
+        'token'         => 'token',
+
+        // Produkt
+        'product_id'    => 'produkt',
+        'quantity'      => 'množstvo',
+        'price'         => 'cena',
+        'name'          => 'názov',
+        'code'          => 'kód',
+        'slug'          => 'URL slug',
+        'description'   => 'popis',
+        'weight'        => 'hmotnosť',
+        'sale_price'    => 'predajná cena',
+        'discount'      => 'zľava',
+        'vat'           => 'DPH',
+        'unit_value'    => 'jednotka',
+        'min_order'     => 'minimálne množstvo',
+
+        // Doprava / platba
+        'fee'           => 'poplatok',
+        'free_from_price' => 'doprava zdarma od',
+        'sort_order'    => 'poradie',
+        'active'        => 'aktívny',
+        'type'          => 'typ',
+
+        // Kupón
+        'value'           => 'hodnota',
+        'min_order_price' => 'minimálna suma objednávky',
+        'usage_limit'     => 'limit použití',
+        'valid_from'      => 'platný od',
+        'valid_to'        => 'platný do',
+
+        // Vrátenie
+        'reason'        => 'dôvod vrátenia',
+
+        // Obrázky
+        'images'        => 'obrázky',
+        'images.*'      => 'obrázok',
+        'ids'           => 'ID obrázkov',
+        'ids.*'         => 'ID obrázka',
+
+        // Používateľ — rozšírené
+        'customer_id'   => 'zákazník',
+        'roles'         => 'role',
+        'roles.*'       => 'rola',
+        'permissions'   => 'oprávnenia',
+        'permissions.*' => 'oprávnenie',
+
+        // Objednávka — rozšírené
+        'serial_number'      => 'číslo objednávky',
+        'isOpened'           => 'stav objednávky',
+        'status'             => 'stav',
+        'notify_customer'    => 'informovať zákazníka',
+
+        // Expedícia / stock
+        'items.*.order_product_id' => 'položka',
+        'items.*.quantity'         => 'množstvo',
+
+        // Ostatné
+        'cart_total'    => 'suma košíka',
+        'ico'           => 'IČO',
+        'dic'           => 'DIČ',
+        'ic_dic'        => 'IČ DPH',
+        'company'       => 'názov firmy',
+        'street'        => 'ulica',
+        'postcode'      => 'PSČ',
+        'city'          => 'mesto',
+    ],
 ];
