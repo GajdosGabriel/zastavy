@@ -6,13 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->string('status', 32)->default('active')->index();
+            $table->string('code', 100)->nullable()->index();
             $table->string('name', 255);
             $table->string('slug', 255);
             $table->text('description')->nullable();
@@ -21,10 +20,10 @@ return new class extends Migration
             $table->decimal('price', 8, 2)->nullable();
             $table->decimal('sale_price', 8, 2)->nullable();
             $table->decimal('discount', 8, 2)->nullable();
-            $table->tinyInteger('vat'); // Opravený zápis
+            $table->tinyInteger('vat');
             $table->unsignedInteger('image_id')->nullable();
-            $table->boolean('featured')->default(false); // Opravený boolean
-            $table->boolean('published')->default(true); // Opravený boolean
+            $table->boolean('featured')->default(false);
+            $table->boolean('published')->default(true);
             $table->string('attributes', 255)->nullable();
             $table->enum('unit_value', ['ks', 'l', 'kg'])->default('ks');
             $table->integer('min_order')->default(1);
@@ -33,9 +32,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('products');

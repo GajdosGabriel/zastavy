@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('shipping_methods', function (Blueprint $table) {
@@ -17,13 +14,12 @@ return new class extends Migration
             $table->decimal('price', 8, 2)->default(0);
             $table->decimal('free_from_price', 8, 2)->nullable();
             $table->boolean('active')->default(true);
+            $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('shipping_methods');

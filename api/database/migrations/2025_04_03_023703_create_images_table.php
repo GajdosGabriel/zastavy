@@ -6,23 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('images', function (Blueprint $table) {
             $table->id();
+            $table->unsignedInteger('sort_order')->default(0);
+            $table->string('status', 32)->default('active')->index();
+            $table->unsignedBigInteger('fileable_id')->nullable();
+            $table->string('fileable_type', 255)->nullable();
             $table->string('name', 60);
-            $table->string('slug', 60);
+            $table->string('path', 255)->nullable();
+            $table->string('org_name', 255)->nullable();
+            $table->string('mime', 100)->nullable();
+            $table->unsignedInteger('size')->nullable();
+            $table->unsignedInteger('heigh')->nullable();
+            $table->unsignedInteger('with')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('images');
