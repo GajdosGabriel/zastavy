@@ -1,220 +1,194 @@
 <script setup>
 import BaseLayout from '../layout/BaseLayout.vue';
-
 </script>
 
 <template>
     <BaseLayout>
-
         <template #main>
 
-            <h1 class="page-heading">Ochrana osobných údajov</h1>
+            <div class="col-span-12">
+                <div class="container mx-auto border-x border-b border-slate-300 bg-white shadow-sm">
+                    <div class="grid items-center gap-5 px-3 py-4 md:grid-cols-12 md:px-6">
+                        <div class="md:col-span-8">
+                            <img
+                                src="/src/assets/images/header.jpg"
+                                alt="Zástavy a vlajky"
+                                class="h-36 w-full rounded-md object-cover object-center md:h-48"
+                            >
+                        </div>
+                        <aside class="hidden md:col-span-4 md:block">
+                            <div class="ml-auto flex max-w-sm items-center gap-4 rounded-md border border-slate-200 bg-slate-50 px-5 py-4">
+                                <img
+                                    src="/src/assets/images/gabriel.jpg"
+                                    alt="Kontakt"
+                                    class="h-24 w-24 rounded-md object-cover shadow-sm"
+                                >
+                                <div>
+                                    <div class="text-xs font-semibold uppercase text-slate-500">Kontakt</div>
+                                    <strong class="mt-1 block text-lg text-slate-900">Tel.: 0905 320 616</strong>
+                                    <div class="mt-1 text-sm text-slate-600">Zástavy, vlajky a symboly</div>
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
 
-            <p class="mb-4">
-                Podmienky spracúvania osobných údajov na eshope
-                (www.zastavy-vlajky.sk). Ak ste mojim zákazníkom, odberateľom
-                noviniek alebo návštevníkom webu, zverujete mi svoje osobné údaje.
-                Zodpovedám za ich ochranu a zabezpečenie. Zoznámte sa preto, prosím,
-                s ochranou osobných údajov, zásadami a právami, ktoré máte v
-                súvislosti s GDPR (Nariadenie o ochrane osobných údajov platné od
-                25.5.2018).
-            </p>
+            <section class="gdpr-page px-4 pb-10 sm:px-7">
+                <div class="gdpr-shell overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
 
-            <p class="mb-4">
-                <strong>Kto je správca?</strong>
+                    <div class="bg-blue-900 px-5 py-8 text-white sm:px-8">
+                        <p class="text-sm font-semibold uppercase tracking-wide text-blue-100">
+                            Zástavy a vlajky
+                        </p>
+                        <h1 class="mt-2 text-3xl font-semibold sm:text-4xl">
+                            Ochrana osobných údajov
+                        </h1>
+                        <p class="mt-3 max-w-3xl text-base leading-7 text-blue-50">
+                            Podmienky spracúvania osobných údajov na eshope www.zastavy-vlajky.sk.
+                            Ak ste mojim zákazníkom, odberateľom noviniek alebo návštevníkom webu,
+                            zverujete mi svoje osobné údaje. Zodpovedám za ich ochranu a zabezpečenie.
+                        </p>
+                    </div>
 
-                Správcom osobných údajov pre zákazníkom, odberateľom noviniek je
-                firma Gajdoš Gabriel- Reprezent, Slatinská 14, 921 07 Bratislava, IČO: 14
-                287 315 (ďalej len „prevádzkovateľ“) spracúva vami poskytnuté osobné
-                údaje, v súlade s ustanoveniami Zákona č.122/2013 Z. z. o ochrane
-                osobných údajov a o zmene a doplnení niektorých zákonov v znení
-                zákona č. 84/2014 Z. z. v aktuálnom a platnom znení (ďalej len
-                „Zákon“). Vaše osobné údaje spracovávam ako správca, t.j. určujem,
-                ako budú spracované, za akým účelom a na ako dlho. Prípadne vyberám
-                ďalších spracovateľov, ktorí mi s ich spracovaním budú pomáhať.
-            </p>
-            <p class="mb-4">
-                <strong>Kontaktné údaje</strong>
+                    <div class="space-y-8 p-5 text-slate-700 leading-7 sm:p-8">
 
-                Kontaktovať správcu osobných údajov môžete z tejto webovej stránky v
-                záložke Kontakt.
-            </p>
-            <p class="mb-4">
-                <strong>Prehlásenie</strong>
+                        <section>
+                            <h2 class="mb-3 text-xl font-semibold text-slate-900">Kto je správca?</h2>
+                            <p>
+                                Správcom osobných údajov je firma Gajdoš Gabriel – Reprezent, Slatinská 14,
+                                921 07 Bratislava, IČO: 14 287 315 (ďalej len „prevádzkovateľ"), ktorá spracúva
+                                vami poskytnuté osobné údaje v súlade so zákonom č. 122/2013 Z. z. o ochrane
+                                osobných údajov v platnom znení. Vaše osobné údaje spracovávam ako správca –
+                                určujem, ako budú spracované, za akým účelom a na ako dlho.
+                            </p>
+                        </section>
 
-                Prehlasujem, že ako správca vašich osobných údajov spĺňam všetky
-                zákonné povinnosti vyžadované platnou legislatívou, najmä zákonom o
-                ochrane osobných údajov a GDPR, to znamená, že: Budem spracovávať
-                vaše osobné údaje len na základe platného právneho dôvodu, a to
-                predovšetkým oprávneného záujmu, plnenia zmluvy, zákonnej povinnosti
-                alebo udeleného súhlasu. Splním si podľa článku 13 GDPR informačnú
-                povinnosť ešte pred zahájením spracovania osobných údajov. Umožním
-                vám a budem vás podporovať v uplatňovaní a plnení si vašich práv
-                podľa zákona o ochrane osobných údajov a GDPR. Rozsah osobných
-                údajov a účely spracovania Spracovávam osobné údaje, ktoré mi sami
-                zveríte, a to z nasledujúcich dôvodov (pre naplnenie týchto účelov):
-                Poskytovanie služieb, plnenie zmluvy. Vaše osobné údaje v rozsahu:
-                e-mail, nevyhnutne potrebujeme k plneniu zmluvy (napr. zaslanie
-                prístupov do aplikácie, alebo informácií o produktoch).
-            </p>
-            <p class="mb-4">
-                <strong>Vedenie účtovníctva.</strong>
-                Ak ste mojimi zákazníkmi, tak vaše osobné údaje (fakturačné údaje)
-                nevyhnutne potrebujem, aby sa vyhovelo zákonnej povinnosti pre
-                vystavovanie a evidenciu daňových dokladov. Marketing – zasielanie
-                informačných mailov. Vaše osobné údaje (e-mail a meno), môžem
-                využívať za účelom priameho marketingu – zasielanie obchodných
-                oznámení. Ak ste mojim zákazníkom, robím tak z oprávneného záujmu,
-                pretože predpokladám, že vás moje novinky zaujímajú a to po dobu 5
-                rokov od poslednej objednávky. Ak mojim zákazníkom nie ste,
-                informačné maily zasielam len na základe vášho súhlasu, počas doby 5
-                rokov od jeho udelenia. V oboch prípadoch môžete tento súhlas
-                odvolať použitím odhlasovacieho odkazu nachádzajúceho sa v každom
-                e-maile. Vaše osobné údaje si ponechávam počas doby premlčacích
-                období, pokiaľ zákon nestanoví ďalšiu dobu k ich uchovaniu alebo som
-                v konkrétnych prípadoch neuviedli inak.
-            </p>
-            <p class="mb-4">
-                <strong>Cookies</strong>
+                        <section>
+                            <h2 class="mb-3 text-xl font-semibold text-slate-900">Kontaktné údaje</h2>
+                            <p>
+                                Správcu osobných údajov môžete kontaktovať z tejto webovej stránky
+                                v záložke <router-link to="/kontakt" class="text-blue-800 underline underline-offset-4 hover:text-blue-600">Kontakt</router-link>.
+                            </p>
+                        </section>
 
-                Pri prechádzaní našich webových stránok zaznamenávam vašu IP adresu,
-                ako dlho sa na stránke zdržíte a z ktorej stránke prichádzate.
-                Používanie cookies pre meranie návštevnosti webu a prispôsobenie
-                zobrazenia webových stránok vnímam ako svoj oprávenený záujem
-                správcu, pretože verím, že vďaka tomu vám môžem ponúknuť ešte lepšie
-                služby. Cookies pre cielenie reklamy budú spracované len na základe
-                vášho súhlasu. Moje webové stránky je možné prechádzať aj v režime,
-                ktorý neumožňuje zbieranie osobných údajov. Používanie cookies
-                môžete na svojom počítači zakázať.
-            </p>
-            <p class="mb-4">
-                Zabezpečenie a ochrana osobných údajov V maximálnej možnej miere
-                chránim osobné údaje pomocou moderných technológií, ktoré
-                zodpovedajú stupňu technického rozvoja. Chránim ich, ako keby boli
-                moje vlastné. Prijal som a udržiavam všetky možné (aktuálne známe)
-                technické a organizačné opatrenia, ktoré zamedzujú zneužitiu,
-                poškodeniu alebo zničeniu vašich osobných údajov.
+                        <section>
+                            <h2 class="mb-3 text-xl font-semibold text-slate-900">Prehlásenie</h2>
+                            <p class="mb-4">
+                                Prehlasujem, že ako správca vašich osobných údajov spĺňam všetky zákonné
+                                povinnosti vyžadované platnou legislatívou, najmä zákonom o ochrane osobných
+                                údajov a GDPR (platné od 25. 5. 2018):
+                            </p>
+                            <ul class="space-y-2 pl-5 list-disc">
+                                <li>Budem spracovávať vaše osobné údaje len na základe platného právneho dôvodu (oprávnený záujem, plnenie zmluvy, zákonná povinnosť alebo udelený súhlas).</li>
+                                <li>Splním informačnú povinnosť podľa článku 13 GDPR pred zahájením spracovania.</li>
+                                <li>Umožním vám uplatňovať vaše práva podľa zákona o ochrane osobných údajov a GDPR.</li>
+                            </ul>
+                        </section>
 
-                <strong>Poskytovanie osobných údajov tretím osobám</strong>
+                        <section>
+                            <h2 class="mb-3 text-xl font-semibold text-slate-900">Rozsah osobných údajov a účely spracovania</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <h3 class="mb-1 font-semibold text-slate-900">Poskytovanie služieb a plnenie zmluvy</h3>
+                                    <p>
+                                        Vaše osobné údaje v rozsahu e-mail, meno, adresa a telefón nevyhnutne
+                                        potrebujem k plneniu zmluvy – zaslanie tovaru, vystavenie faktúry,
+                                        informovanie o stave objednávky.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 class="mb-1 font-semibold text-slate-900">Vedenie účtovníctva</h3>
+                                    <p>
+                                        Fakturačné údaje potrebujem zo zákonnej povinnosti pre vystavovanie
+                                        a evidenciu daňových dokladov.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 class="mb-1 font-semibold text-slate-900">Marketing – zasielanie informačných mailov</h3>
+                                    <p>
+                                        Ak ste mojím zákazníkom, vaše osobné údaje (e-mail a meno) môžem využívať
+                                        na priamy marketing po dobu 5 rokov od poslednej objednávky na základe
+                                        oprávneného záujmu. Ak zákazníkom nie ste, informačné maily zasielam len
+                                        na základe vášho súhlasu (5 rokov od jeho udelenia). V oboch prípadoch
+                                        môžete súhlas odvolať kliknutím na odhlasovací odkaz v každom e-maile.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 class="mb-1 font-semibold text-slate-900">Cookies</h3>
+                                    <p>
+                                        Pri prechádzaní webu zaznamenávam IP adresu, dobu návštevy a zdrojovú
+                                        stránku. Cookies pre meranie návštevnosti považujem za oprávnený záujem
+                                        správcu. Cookies pre cielenie reklamy spracúvam len na základe vášho
+                                        súhlasu. Web je možné prechádzať aj v režime bez zberu osobných údajov;
+                                        cookies môžete vo svojom prehliadači zakázať.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
 
-                K vašim osobným údajom môžu mať prístup moji zamestnanci alebo
-                spolupracovníci. Pre zabezpečenie konkrétnych spracovateľských
-                operácií, ktoré nedokážem poskytovať vo vlastnej réžii, využívam
-                služba a aplikácie spracovateľov: Websuport s.r.o. Je možné, že sa
-                pre uľahčenie a skvalitnenie spracovania v budúcnosti rozhodnem
-                využiť ďalšie aplikácie alebo spracovateľov. Sľubujem vám však, že v
-                takomto prípade pri výbere budem na spracovateľov klásť minimálne
-                rovnaké nároky na zabezpečenie a kvalitu spracovania ako na seba.
-                Poskytovanie údajov mimo Európskej únii Akékoľvek spracovanie
-                osobných údajov bude vykonávané na území EU.
-            </p>
-            <p class="mb-4">
-                <strong>Vaše práva v súvislosti s ochranou osobných údajov</strong>
+                        <section>
+                            <h2 class="mb-3 text-xl font-semibold text-slate-900">Zabezpečenie a ochrana osobných údajov</h2>
+                            <p>
+                                V maximálnej možnej miere chránim osobné údaje pomocou moderných technológií
+                                zodpovedajúcich stupňu technického rozvoja. Prijal som a udržiavam všetky
+                                dostupné technické a organizačné opatrenia, ktoré zamedzujú zneužitiu,
+                                poškodeniu alebo zničeniu vašich osobných údajov.
+                            </p>
+                        </section>
 
-                Máte právo na informácie, ktoré sa napĺňa už touto informačnou
-                stránkou so zásadami spracovania osobných údajov. Vďaka právu na
-                prístup ma môžete kedykoľvek vyzvať a ja vám doložím do doby 10 dní,
-                aké vaše osobné údaje spracovávam a prečo. Ak sa u vás niečo zmení
-                alebo budete považovať svoje osobné údaje za neaktuálne alebo
-                neúplné, máte právo na doplnenie a zmenu osobných údajov. Právo na
-                obmedzenie spracovania môžete využiť ak sa domnievate, že
-                spracovávam vaše nepresné údaje, prípadne ak sa domnievate, že
-                vykonávam spracovávanie údajov nezákonne, ale nechcete ich všetky
-                zmazať alebo ak by ste vzniesli námietku proti ich spracovaniu.
-                Obmedziť môžete rozsah osobných údajov alebo účely spracovania
-                (napr. odhlásením sa z distribučného zoznamu obmedzujete účel
-                spracovania pre zasielanie obchodných oznámení). Právo na
-                prenositeľnosť. Pokiaľ by ste chceli svoje osobné údaje vziať a
-                preniesť k niekomu inému, budem postupovať rovnako ako pri využití
-                práva na prístup – len s tým rozdielom, že vám informácie dodám v
-                strojovo čitateľnej podobe. V tomto prípade potrebujem na to aspoň
-                20 dní.
-            </p>
-            <p class="mb-4">
-                <strong>Právo na výmaz.</strong> Vaším ďalším právom je právo na
-                výmaz (byť zabudnutý). Nechcem na vás zabudnúť, ale pokiaľ si to
-                budete želať, máte na to právo. V takomto prípade vymažem všetky
-                vaše osobné údaje zo svojho systému a zo systémov všetkých ďalších
-                spracovateľov a záloh. Na zabezpečenie práva na výmaz potrebujem 10
-                dní. V niektorých prípadoch som viazaný zákonnou povinnosťou, a
-                napr. musím evidovať vystavené daňové doklady počas doby stanovenej
-                zákonom. V tomto prípade teda zmažem všetky také osobné údaje, ktoré
-                nie sú viazané iným zákonom. O dokončení výmazu vás budem informovať
-                mailom. Sťažnosť na Úrad na ochranu osobných údajov. Ak máte pocit,
-                že s vašimi údajmi nezachádzam v súlade so zákonom, máte právo sa so
-                svojou žiadosťou kedykoľvek obrátiť na Úrad pre ochranu osobných
-                údajov. Budem rád, ak o takomto prípadnom podozrení budete
-                informovať najprv mňa, aby sme s tým mohli niečo urobiť a prípadne
-                pochybenie okamžite napraviť. Odhlásenie zo zasielania newsletterov
-                a obchodných oznámení. Inšpiratívne emaily, články, produkty alebo
-                služby vám posielam, ak ste môj zákazník na základe môjho
-                oprávneného záujmu. Ak zákazníkom ešte nie ste, posielam vám ich len
-                na základe vášho súhlasu. V oboch prípadoch môžete ukončiť odber
-                mojich emailov kliknutím na odhlasovací odkaz v každom zaslanom
-                maile.
-            </p>
-            <p class="mb-4">
-                <strong>Mlčanlivosť</strong>
+                        <section>
+                            <h2 class="mb-3 text-xl font-semibold text-slate-900">Poskytovanie osobných údajov tretím osobám</h2>
+                            <p>
+                                K vašim osobným údajom môžu mať prístup moji zamestnanci alebo spolupracovníci.
+                                Pre zabezpečenie konkrétnych spracovateľských operácií využívam služby
+                                spracovateľov (napr. Websupport s.r.o.). Na každého spracovateľa kladiem
+                                minimálne rovnaké nároky na zabezpečenie ako na seba. Akékoľvek spracovanie
+                                osobných údajov bude vykonávané na území EÚ.
+                            </p>
+                        </section>
 
-                Dovoľujeme si Vás uistiť, že moji zamestnanci i spolupracovníci,
-                ktorí budú spracovávať vaše osobné údaje sú povinní zachovávať
-                mlčanlivosť o osobných údajoch a bezpečnostných opatreniach, ktorých
-                zverejnenie by mohlo ohroziť zabezpečenie vaších osobných údajov.
-                Táto mlčanlivosť pritom trvá aj po skončení zmluvných záväzkov so
-                mnou. Bez vášho súhlasu nebudú vaše osobné údaje vydané žiadnej inej
-                tretej strane. Tieto zásady spracovania osobných údajov platia od
-                25.5.2018 a nahrádzajú predchádzajúcu Ochranu osobných údajov,
-                ktorej pôvodné znenie je tu:
-            </p>
-            <p class="mb-4">
-                Podmienky spracúvania osobných údajov prostredníctvom webovej
-                stránky internetového obchodu www.zastavy-vlajky.sk. firma Gajdoš
-                Gabriel- Reprezent, Slatinská 14, 921 07 Bratislava, IČO: 14 287 315
-                (ďalej len „prevádzkovateľ“) spracúva Vami poskytnuté osobné údaje,
-                v súlade s ustanoveniami Zákona č.122/2013 Z. z. o ochrane osobných
-                údajov a o zmene a doplnení niektorých zákonov v znení zákona č.
-                84/2014 Z. z. v aktuálnom a platnom znení (ďalej len „Zákon“).
-                Prevádzkovateľ spracúva Vami poskytnuté osobné údaje na webovej
-                stránke prevádzkovateľa za účelom predaja tovaru kupujúcim,
-                vyhotovenia faktúry a odoslania tovaru. Osobné údaje sa spracúvajú v
-                informačnom systéme IS elektronický obchod (e-shop). Rozsah
-                spracúvaných osobných údajov je : meno, priezvisko, adresa na
-                doručenie, telefónne číslo, e-mailová adresa, bankové spojenie.
-                Uvedené osobné údaje sa spracúvajú na žiadosť dotknutej osoby v
-                rámci zmluvného/predzmluvného vzťahu, súlade s § 10 ods. 3 písm. b)
-                Zákona a ďalších právnych predpisov, najmä Občianskeho zákonníka,
-                Obchodného zákonníka, Zákona č. 22/2004 Z. z. o elektronickom
-                obchode a o zmene a doplnení zákona č. 128/2002 Z. z. o štátnej
-                kontrole vnútorného trhu vo veciach ochrany spotrebiteľa a o zmene a
-                doplnení niektorých zákonov v znení zákona č. 284/2002 Z. z., zákona
-                č. 108/2000 Z. z. o ochrane spotrebiteľa pri podomovom predaji a
-                zásielkovom predaji, zákona č. 215/2002 Z. z. o elektronickom
-                podpise a o zmene a doplnení niektorých zákonov, vyhláška Národného
-                bezpečnostného úradu č. 542/2002 Z. z. o spôsobe a postupe
-                používania elektronického podpisu v obchodnom a administratívnom
-                styku. Uvedené osobné údaje poskytujete dobrovoľne, v prípade
-                neposkytnutia všetkých povinných vyššie uvedených osobných údajov,
-                Vám prevádzkovateľ nezaručuje poskytnutie služby. Poskytnutím vyššie
-                uvedených osobných údajov sa zaväzujete, že osobné údaje sa týkajú
-                Vašej osoby, alebo spoločnosti v mene ktorej ju máte právo
-                registrovať a údaje sú uvedené správne. Prevádzkovateľ nezodpovedá
-                za škody spôsobené uvedením nesprávnych údajov. Poskytnutie
-                nepravdivých osobných údajov je sankciované zo Zákona. Tretie
-                strany/Príjemcovia, ktorým môžu byť Vami poskytnuté osobné údaje
-                sprístupnené na nahliadnutie, prípadne poskytnuté na spracúvanie sú
-                oprávnené subjekty, ktorým to umožňuje osobitný zákon v zmysle § 10
-                ods. 2 zákona. Poskytnuté osobné údaje sa nebudú zverejňovať, ani
-                prenášať do tretích krajín mimo EU a EHP.
-            </p>
-            <p class="mb-4">
-                Vaše osobné údaje bude prevádzkovateľ spracúvať od zaregistrovania
-                na web stránke prevádzkovateľa až po dobu vášho odhlásenia z
-                databázy. Prostredníctvom odkazu nachádzajúcom sa v každom maile
-                budú Vaše osobné údaje bezpečne vymazané zo systému. Zároveň môžete
-                požiadať prevádzkovateľa o preukázanie totožnosti oprávnenej osoby u
-                prevádzkovateľa, ktorá získava Vaše osobné údaje, a využiť svoje
-                práva pri spracúvaní osobných údajov, podľa § 28 zákona.
-            </p>
+                        <section>
+                            <h2 class="mb-3 text-xl font-semibold text-slate-900">Vaše práva</h2>
+                            <div class="space-y-3">
+                                <p><strong class="text-slate-900">Právo na informácie</strong> – napĺňa sa touto stránkou.</p>
+                                <p><strong class="text-slate-900">Právo na prístup</strong> – môžete ma kedykoľvek vyzvať a do 10 dní vám doložím, aké vaše osobné údaje spracovávam a prečo.</p>
+                                <p><strong class="text-slate-900">Právo na opravu</strong> – ak sa niečo zmení alebo sú vaše údaje neaktuálne, máte právo na ich doplnenie a zmenu.</p>
+                                <p><strong class="text-slate-900">Právo na obmedzenie spracovania</strong> – môžete obmedziť rozsah alebo účely spracovania (napr. odhlásením sa z newslettera).</p>
+                                <p><strong class="text-slate-900">Právo na prenositeľnosť</strong> – na požiadanie vám dodám vaše údaje v strojovo čitateľnej podobe do 20 dní.</p>
+                                <p><strong class="text-slate-900">Právo na výmaz</strong> – ak si to budete priať, vymažem všetky vaše osobné údaje zo systému do 10 dní, s výnimkou údajov viazaných zákonnou povinnosťou (napr. daňové doklady).</p>
+                                <p><strong class="text-slate-900">Sťažnosť na Úrad</strong> – ak máte pocit, že s vašimi údajmi nezachádzam v súlade so zákonom, môžete sa obrátiť na Úrad pre ochranu osobných údajov SR.</p>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h2 class="mb-3 text-xl font-semibold text-slate-900">Mlčanlivosť</h2>
+                            <p>
+                                Moji zamestnanci a spolupracovníci sú povinní zachovávať mlčanlivosť o osobných
+                                údajoch a bezpečnostných opatreniach aj po skončení zmluvných záväzkov. Bez vášho
+                                súhlasu nebudú vaše osobné údaje vydané žiadnej tretej strane.
+                            </p>
+                            <p class="mt-4 text-sm text-slate-500">
+                                Tieto zásady spracovania osobných údajov platia od 25. 5. 2018.
+                            </p>
+                        </section>
+
+                    </div>
+                </div>
+            </section>
+
         </template>
     </BaseLayout>
 </template>
+
+<style scoped>
+.gdpr-page {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+}
+
+.gdpr-shell {
+    width: 100%;
+}
+</style>

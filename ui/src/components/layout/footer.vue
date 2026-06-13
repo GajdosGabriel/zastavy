@@ -42,9 +42,9 @@ const { getUser } = useUser();
         </h3>
         
         <ul class="footer_list">
-          <li v-for="item in NAV_ITEMS" :key="item.name">
-            <router-link :to="{ name: item.route }">
-              {{ item.name }}
+          <li v-for="item in NAV_ITEMS" :key="item.NAME">
+            <router-link :to="{ name: item.ROUTE }">
+              {{ item.NAME }}
             </router-link>
           </li>
 
