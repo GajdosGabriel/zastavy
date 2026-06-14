@@ -19,7 +19,7 @@ export const isActive = {
     key: 'isActive=',
     value: true,
     active: false,
-    iconRight: uuu.userOrder.isNotificated,
+    get iconRight() { return uuu.userOrder.isNotificated; },
 };
 
 export const isConfirmed = {
@@ -27,14 +27,14 @@ export const isConfirmed = {
     key: 'isOpened=',
     value: true,
     active: false,
-    iconRight: getUserOrder.value.isConfirmed,
+    get iconRight() { return getUserOrder.value.isConfirmed; },
 };
 export const isDeleted = {
     name: 'Zmazané',
     key: 'isDeleted=',
     value: true,
     active: false,
-    iconRight: getUserOrder.value.isDeleted,
+    get iconRight() { return getUserOrder.value.isDeleted; },
 };
 
 export const resetFilter = {

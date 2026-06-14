@@ -16,6 +16,7 @@ const { setPaginator, setLinks } = usePaginator();
 const { setErrors } = useErrors();
 const { setOrderProducts } = useOrderProducts();
 const { state: q, setQuery, removeQuery } = useQuery();
+const { fetchUser } = useUsers();
 
 
 const defaultState = reactive({
@@ -90,11 +91,11 @@ const actions = {
         }
         // When order was opened
         if (state.order.isOpened === 0) {
-            actions.updateOrder({
+            await actions.updateOrder({
                 id: id,
                 isOpened: 1,
-                // isOpened: new Date().toISOString().slice(0, 19).replace("T", " "),
             });
+            fetchUser();
         }
     },
 
