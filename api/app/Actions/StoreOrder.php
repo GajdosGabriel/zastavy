@@ -4,10 +4,13 @@ namespace App\Actions;
 
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\User;
 use App\Models\ShippingMethod;
+use App\Notifications\OrderCreated;
 use Illuminate\Http\Request;
 use App\Contracts\StoreOrderContract;
 use App\Models\PaymentMethod;
+use Illuminate\Support\Facades\Notification;
 
 
 class StoreOrder implements StoreOrderContract
@@ -46,6 +49,8 @@ class StoreOrder implements StoreOrderContract
         if ($couponId) {
             Coupon::where('id', $couponId)->increment('used_count');
         }
+
+        $this->notifyOrderCreated($order);
 
         return $order;
     }
@@ -88,6 +93,19 @@ class StoreOrder implements StoreOrderContract
     protected function storeOrderProducts($order)
     {
         new StoreOrderProduct($order, $this->request->orderProducts);
+    }
+
+    protected function notifyOrderCreated(Order $order): void
+    {
+        $order->load(['customer', 'orderProducts.product', 'shippingMethod', 'paymentMethod']);
+
+        $notification = new OrderCreated($order);
+
+        if ($order->customer?->email) {
+            $order->customer->notify($notification);
+        }
+
+        Notification::send(User::role('super-admin')->get(), $notification);
     }
 
     protected function serialNumber($customer, $order)
