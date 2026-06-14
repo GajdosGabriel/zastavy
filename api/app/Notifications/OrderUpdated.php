@@ -24,10 +24,12 @@ class OrderUpdated extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
-        $this->order->loadMissing(['customer', 'orderProducts.product']);
+        $this->order->load(['customer', 'orderProducts.product']);
 
         return (new MailMessage)
+            ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->subject('Zmena objednávky | ' . $this->order->customer->company)
+            ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderUpdated', [
                 'order'   => $this->order,
                 'changes' => $this->changes,

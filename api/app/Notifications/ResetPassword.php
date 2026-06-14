@@ -24,6 +24,7 @@ class ResetPassword extends Notification implements ShouldQueue
             . '&email=' . urlencode($notifiable->getEmailForPasswordReset());
 
         return (new \Illuminate\Notifications\Messages\MailMessage)
+            ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->subject('Obnovenie hesla')
             ->view('emails.resetPassword', [
                 'url'  => $url,

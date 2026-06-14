@@ -39,8 +39,10 @@ class OrderDeliverySurvey extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-        ->subject('Dodanie objednávky')
-        ->markdown('emails.orderDeliverySurvey', ['order' => $this->order]);
+            ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
+            ->subject('Dodanie objednávky')
+            ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
+            ->markdown('emails.orderDeliverySurvey', ['order' => $this->order]);
     }
 
     /**

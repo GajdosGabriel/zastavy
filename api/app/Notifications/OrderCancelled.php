@@ -21,9 +21,10 @@ class OrderCancelled extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
-        $this->order->loadMissing(['customer', 'orderProducts.product']);
+        $this->order->load(['customer', 'orderProducts.product']);
 
         return (new MailMessage)
+            ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->subject('Objednávka bola stornovaná – č. ' . $this->order->serial_number)
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderCancelled', ['order' => $this->order]);
