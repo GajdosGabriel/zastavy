@@ -42,7 +42,7 @@ class OrderCreated extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        $this->order->loadMissing([
+        $this->order->load([
             'customer',
             'orderProducts.product',
             'shippingMethod',
