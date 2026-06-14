@@ -8,9 +8,8 @@ use Illuminate\Http\Request;
 
 class StoreCheckout implements StoreCheckoutContract
 {
-    function __construct(Request $request)
+    public function __construct(private Request $request)
     {
-        $this->request = $request;
         $this->handle();
     }
 
