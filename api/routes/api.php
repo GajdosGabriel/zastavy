@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\Dashboard\OrderShippingController;
 use App\Http\Controllers\Api\Dashboard\OrderReturnController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\AnnouncementController;
-use App\Http\Controllers\Api\OrderDeliverySurveyController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\SanctumController;
 use App\Http\Controllers\Api\ShippingMethodController;
@@ -47,7 +46,6 @@ Route::get('/user', function (Request $request) {
 Route::apiResources([
     'checkouts' => CheckoutController::class,
     'homes' => HomeController::class,
-    'orderDeliverySurvey' => OrderDeliverySurveyController::class,
 ]);
 
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');

@@ -5,7 +5,6 @@ namespace App\Http\Requests;
 use Date;
 use Carbon\Carbon;
 use App\Notifications\OrderExpedition;
-use App\Notifications\OrderDeliverySurvey;
 use App\Services\ShippingService;
 use Illuminate\Foundation\Http\FormRequest;
 

@@ -344,7 +344,6 @@ class ImportLegacyDb extends Command
                             'wants_coupon'  => false,
                             'serial_number' => $o->serial_number,
                             'isOpened'      => $o->isOpened,
-                            'isDelivered'   => $o->isDelivered,
                             'shipping_method_id' => null,
                             'shipping_price'     => null,
                             'payment_method_id'  => null,
@@ -649,7 +648,6 @@ class ImportLegacyDb extends Command
     private function deriveOrderStatus(object $order): string
     {
         if ($order->deleted_at !== null) return 'cancelled';
-        if ($order->isDelivered)        return 'shipped';
         if ($order->isOpened)           return 'processing';
         return 'draft';
     }

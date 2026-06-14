@@ -28,7 +28,6 @@ class OrderIndexResource extends JsonResource
             'id' => $this->id,
             'uuid' => $this->uuid,
             'isOpened' => $this->isOpened,
-            'isDelivered' => $this->isDelivered,
             'serial_number' => $this->serial_number,
             'created_at' => $this->created_at->format('d.m.Y H:i:s'),
             'created_at_human' => Carbon::parse($this->created_at)->diffForhumans(),

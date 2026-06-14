@@ -27,7 +27,6 @@ class OrderResource extends JsonResource
             'payment_method'    => $this->paymentMethod  ? ['id' => $this->paymentMethod->id,  'name' => $this->paymentMethod->name]  : null,
             'uuid' => $this->uuid,
             'isOpened' => $this->isOpened,
-            'isDelivered' => $this->isDelivered,
             'serial_number' => $this->serial_number,
             'name' => $this->name,
             'email' => $this->email,

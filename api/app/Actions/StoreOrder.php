@@ -43,7 +43,7 @@ class StoreOrder implements StoreOrderContract
             'note'               => $this->request->input('note') ?: null,
             'wants_coupon'       => (bool) $this->request->input('wants_coupon', false),
         ]);
-        $this->serialNumber($customer, $order);
+        $this->serialNumber($order);
         $this->storeOrderProducts($order);
 
         if ($couponId) {
@@ -108,17 +108,18 @@ class StoreOrder implements StoreOrderContract
         Notification::send(User::role('super-admin')->get(), $notification);
     }
 
-    protected function serialNumber($customer, $order)
+    protected function serialNumber(Order $order): void
     {
-        if ($customer->ico) {
+        $year  = $order->created_at->format('Y');
+        $month = $order->created_at->format('m');
 
-            $countOrders = Order::whereHas('customer', function ($query) use ($customer) {
-                $query->whereIco($customer->ico);
-            })->count();
-        }
+        $position = Order::whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->where('id', '<=', $order->id)
+            ->count();
 
-        $idPostfix = $countOrders ?? 1;
-        $nextId =  STR_PAD((string)$idPostfix, 3, "0", STR_PAD_LEFT) . '/' . date("Y");
-        $order->update(['serial_number' => $nextId]);
+        $order->update([
+            'serial_number' => "{$year}-{$month}-" . str_pad($position, 4, '0', STR_PAD_LEFT),
+        ]);
     }
 }
