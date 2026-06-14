@@ -52,7 +52,7 @@ class OrderProductController extends Controller
 
     public function destroy(Order $order, OrderProduct $orderProduct)
     {
-        Gate::authorize('update', $order);
+        Gate::authorize('delete', $orderProduct);
 
         $orderProduct->delete();
         return response()->noContent();

@@ -57,6 +57,7 @@ const onChangeProduct = (productId) => {
         props.item.product_vat = product.vat;
         props.item.thumb       = product.thumb;
         props.item.name        = product.name;
+        props.item.quantity    = product.min_order ?? 1;
     }
 };
 </script>
@@ -120,7 +121,8 @@ const onChangeProduct = (productId) => {
                     class="cursor-pointer p-2 hover:bg-indigo-300 border-b-2 border-gray-200">
                     Uložiť
                 </div>
-                <div @click="onClickDelete(item)"
+                <div v-if="item.isNew || !item.stockSum"
+                    @click="onClickDelete(item)"
                     class="cursor-pointer p-2 hover:bg-indigo-300 border-b-2 border-gray-200">
                     Zmazať
                 </div>

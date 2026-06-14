@@ -19,7 +19,7 @@ import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
 
 const { getOrder, fetchOrder, customer, updateOrder } = useOrders();
-const { getOrderProducts, getStatement, addOrderProduct } = useOrderProducts();
+const { getOrderProducts, getStatement, addOrderProduct, saveNewOrderProduct } = useOrderProducts();
 const { fetchProducts } = useProducts();
 const { setErrors } = useErrors();
 
@@ -85,6 +85,9 @@ const confirmUpdate = async () => {
 const submitUpdate = async (notify) => {
     isSubmitting.value = true;
     try {
+        const pendingNew = getOrderProducts.value.filter(p => p.isNew && p.product_id);
+        await Promise.all(pendingNew.map(p => saveNewOrderProduct(p)));
+
         await axiosInstance.put(`/orders/${orderId}`, {
             shipping_method_id: selectedShippingId.value,
             payment_method_id:  selectedPaymentId.value,
@@ -219,10 +222,7 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
 
                 <div class="flex justify-between mt-5">
                     <buttonLink :item="buttonBack" />
-                    <button type="button" @click="onSaveClick" :disabled="isSubmitting"
-                        class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400">
-                        {{ isSubmitting ? 'Ukladám...' : 'Uložiť' }}
-                    </button>
+                    <buttonSubmitComponent :item="buttonSubmit" :loading="isSubmitting" type="button" @click="onSaveClick" />
                 </div>
             </div>
         </template>
