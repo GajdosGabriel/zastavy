@@ -20,7 +20,10 @@
       "Bash(grep -A 25 \"^CREATE TABLE \\\\`stocks\\\\`\")",
       "Bash(grep -A 25 \"^CREATE TABLE \\\\`shippings\\\\`\")",
       "Bash(grep -A 25 \"^CREATE TABLE \\\\`users\\\\`\")",
-      "Bash(grep -A 20 \"^CREATE TABLE \\\\`images\\\\`\")"
+      "Bash(grep -A 20 \"^CREATE TABLE \\\\`images\\\\`\")",
+      "WebFetch(domain:finstat.sk)",
+      "WebFetch(domain:skoly.sk)",
+      "WebFetch(domain:zsjferkakosuty.edupage.org)"
     ]
   }
 }
