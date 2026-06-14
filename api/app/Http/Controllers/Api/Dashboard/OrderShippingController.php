@@ -41,7 +41,7 @@ class OrderShippingController extends Controller
             $order->loadMissing(['customer', 'shippingMethod', 'paymentMethod', 'orderProducts.product', 'orderProducts.stocks']);
 
             if ($order->customer?->email) {
-                $order->customer->notify(new OrderExpedition($order));
+                $order->customer->notify(new OrderExpedition($order, $shipping));
             }
         }
 

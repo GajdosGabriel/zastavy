@@ -19,7 +19,7 @@ class ShippingNoticeController extends Controller
 
         if ($request->notifyType == 'email') {
             $shipping->loadMissing('order.user');
-            Notification::send(collect([$shipping->order->user])->filter()->all(), new OrderExpedition($shipping->order));
+            Notification::send(collect([$shipping->order->user])->filter()->all(), new OrderExpedition($shipping->order, $shipping));
         }
     }
 }

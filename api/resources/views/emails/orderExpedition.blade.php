@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vaša objednávka bola odoslaná</title>
+    <title>Expedícia objednávky</title>
     <style>
         body { font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; background: #f5f5f5; }
         .wrapper { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 6px; overflow: hidden; }
@@ -15,11 +15,16 @@
         table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
         th { text-align: left; font-size: 12px; text-transform: uppercase; color: #888; padding: 6px 0; border-bottom: 1px solid #e5e5e5; }
         td { padding: 9px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+        .sent-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 5px; padding: 16px 20px; margin-bottom: 24px; }
+        .sent-box .box-title { font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 10px; }
+        .sent-box table { margin-bottom: 0; }
+        .sent-box th { color: #15803d; border-bottom-color: #86efac; }
+        .sent-box td { font-size: 14px; color: #166534; border-bottom-color: #dcfce7; }
         .pending-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 5px; padding: 16px 20px; margin-bottom: 24px; }
-        .pending-box .pending-title { font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 8px; }
+        .pending-box .box-title { font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 10px; }
         .pending-box table { margin-bottom: 0; }
-        .pending-box td { font-size: 13px; color: #78350f; border-bottom-color: #fde68a; }
         .pending-box th { color: #a16207; border-bottom-color: #fcd34d; }
+        .pending-box td { font-size: 13px; color: #78350f; border-bottom-color: #fde68a; }
         .shipping-line { font-size: 14px; color: #555; margin-bottom: 24px; }
         .shipping-line strong { color: #1e3a5f; }
         .contact-block { background: #f7f9fc; border: 1px solid #e8edf3; border-radius: 5px; padding: 16px 20px; margin-bottom: 24px; font-size: 14px; }
@@ -30,16 +35,25 @@
 <body>
 @php
     $isPartial = !$order->isFinished();
-    $remainingItems = $order->orderProducts->filter(function ($item) {
+
+    // Items sent in THIS shipment
+    $sentItems = $shipping
+        ? $shipping->stocks->map(fn($s) => [
+            'name'     => $s->orderProduct?->product?->name ?? '—',
+            'quantity' => $s->quantity,
+            'unit'     => $s->orderProduct?->unit_value ?? 'ks',
+          ])
+        : collect();
+
+    // Remaining items still to be sent
+    $remainingItems = $order->orderProducts->map(function ($item) {
         $remaining = max(0, $item->quantity - ($item->storno ?? 0) - $item->stockSum);
-        return $remaining > 0;
-    })->map(function ($item) {
-        return [
-            'name'      => $item->product->name ?? '—',
-            'remaining' => max(0, $item->quantity - ($item->storno ?? 0) - $item->stockSum),
+        return $remaining > 0 ? [
+            'name'      => $item->product?->name ?? '—',
+            'remaining' => $remaining,
             'unit'      => $item->unit_value ?? 'ks',
-        ];
-    });
+        ] : null;
+    })->filter()->values();
 @endphp
 <div class="wrapper">
     <div class="header">
@@ -50,11 +64,10 @@
     </div>
 
     <div class="body">
-        <p style="font-size:15px; margin: 0 0 20px; line-height:1.6;">
+        <p style="font-size:15px; margin: 0 0 24px; line-height:1.6;">
             Dobrý deň, <strong>{{ $order->customer->company ?: $order->customer->name }}</strong>,<br>
             @if($isPartial)
-                dnes sme Vám odoslali časť Vašej objednávky.
-                Zvyšné položky Vám doručíme v najbližšom možnom termíne.
+                dnes sme Vám odoslali časť Vašej objednávky. Zostatok Vám pošleme hneď, ako bude tovar dostupný.
             @else
                 Vaša objednávka bola dnes kompletne expedovaná a je na ceste k Vám.
             @endif
@@ -66,27 +79,52 @@
         </div>
         @endif
 
+        {{-- Sent now --}}
+        @if($sentItems->count())
+        <div class="sent-box">
+            <div class="box-title">{{ $isPartial ? 'Dnes Vám posielame' : 'Odoslaný tovar' }}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tovar</th>
+                        <th style="text-align:right">Množstvo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($sentItems as $item)
+                    <tr>
+                        <td>{{ $item['name'] }}</td>
+                        <td style="text-align:right">{{ $item['quantity'] }} {{ $item['unit'] }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+        {{-- Fallback: no shipping data, show all order products --}}
         <p class="section-title">Objednané položky</p>
         <table>
             <thead>
                 <tr>
                     <th>Tovar</th>
-                    <th style="text-align:right">Objednané</th>
+                    <th style="text-align:right">Množstvo</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($order->orderProducts as $item)
                 <tr>
-                    <td>{{ $item->product->name ?? '—' }}</td>
+                    <td>{{ $item->product?->name ?? '—' }}</td>
                     <td style="text-align:right">{{ $item->quantity }} {{ $item->unit_value ?? 'ks' }}</td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
+        @endif
 
+        {{-- Remaining items --}}
         @if($isPartial && $remainingItems->count())
         <div class="pending-box">
-            <div class="pending-title">Položky, ktoré dorazia neskôr</div>
+            <div class="box-title">Zostatok – dorazia neskôr</div>
             <table>
                 <thead>
                     <tr>
