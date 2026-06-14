@@ -17,7 +17,9 @@ class ShippingService
     $stocks = collect();
 
     foreach ($order->orderProducts as $item) {
-      $alreadyShipped = $this->sumShippingItems($item);
+      $alreadyShipped = $item->relationLoaded('stocks')
+        ? (int) $item->stocks->sum('quantity')
+        : $this->sumShippingItems($item);
       $remaining = max(0, $item->quantity - $item->storno - $alreadyShipped);
 
       if ($remaining === 0) {

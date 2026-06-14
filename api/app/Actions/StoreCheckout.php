@@ -16,11 +16,6 @@ class StoreCheckout implements StoreCheckoutContract
 
     public function handle()
     {
-
-        if (!count($this->request->orderProducts)) {
-            return 'Prázdna objednávka';
-        }
-
         $this->getCustomer();
     }
 

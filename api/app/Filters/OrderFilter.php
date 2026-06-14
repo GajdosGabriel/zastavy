@@ -12,18 +12,12 @@ class OrderFilter extends Filters
 
     public function isActive($value)
     {
-        return $this->builder->whereDoesntHave('stocks', function (Builder $query) {
-            // return $this->builder->whereHas('stocks', function (Builder $query) {
-            // $query->where('content', 'like', 'code%');
-        });
-
-
-        // dd( $collection->get() );
+        return $this->builder->whereDoesntHave('stocks');
     }
 
     public function isOpened($value)
     {
-        return $this->builder->where('isOpened', $value ? 0 : $value);
+        return $this->builder->where('isOpened', 0);
     }
 
     public function isMarked()

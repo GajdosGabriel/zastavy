@@ -14,7 +14,6 @@ class OrderProduct extends Model
     use HasFactory, SoftDeletes, HasModelStatus;
 
     protected $guarded = [];
-    protected $appends = ['product'];
 
     protected $casts = [
         'status' => ModelStatus::class,
@@ -35,8 +34,10 @@ class OrderProduct extends Model
         return $this->hasMany(Stock::class);
     }
 
-    public function getStockSumAttribute()
+    public function getStockSumAttribute(): int
     {
-      return $this->stocks()->where('order_product_id', '=', $this->id)->get()->sum('quantity');
+        return $this->relationLoaded('stocks')
+            ? (int) $this->stocks->sum('quantity')
+            : (int) $this->stocks()->sum('quantity');
     }
 }
