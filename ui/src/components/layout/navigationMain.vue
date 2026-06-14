@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import useUser from "../../store/StoreUsers.js";
 import useCheckouts from "../../store/StoreCheckouts.js";
 import useCustomer from "../../store/StoreCustomers.ts";
@@ -14,6 +15,17 @@ import { APP_NAME, Page } from "../../constants.ts";
 import useOrder from "../../store/StoreOrders.js";
 
 const mobileMenuOpen = ref(false);
+const route = useRoute();
+const router = useRouter();
+
+const isNavActive = (page: Page): boolean => {
+    try {
+        const resolved = router.resolve({ name: page.ROUTE });
+        return route.path.startsWith(resolved.path) && resolved.path !== '/';
+    } catch {
+        return false;
+    }
+};
 
 const onClickItem = (item: Page) => {
       mobileMenuOpen.value = false;
@@ -58,7 +70,7 @@ onMounted(() => {
                               <ul class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                                     <li v-for="page in getMainNavigation" :key="page.ROUTE" class="nav_link">
                                           <router-link :to="{ name: page.ROUTE }" @click="onClickItem(page)"
-                                                class="nav_link">
+                                                class="nav_link" :class="{ nav_link_active: isNavActive(page) }">
                                                 {{ page.NAME }}
                                                 <badge v-if="getUser?.order?.isConfirmed && page.ICON === 'badge'"
                                                       :kosik="{ value: getUser.order.isConfirmed, title: 'Počet položiek', class: null }"
@@ -98,6 +110,7 @@ onMounted(() => {
                                     :to="{ name: page.ROUTE }"
                                     @click="onClickItem(page)"
                                     class="flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-300"
+                                    :class="{ 'font-bold text-blue-900': isNavActive(page) }"
                               >
                                     {{ page.NAME }}
                                     <badge v-if="getUser?.order?.isConfirmed && page.ICON === 'badge'"

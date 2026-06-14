@@ -50,6 +50,15 @@ onMounted(async () => {
     ]);
     shippingMethods.value = sm.data?.data ?? [];
     paymentMethods.value  = pm.data?.data ?? [];
+
+    if (!selectedShippingId.value) {
+        const def = shippingMethods.value.find(m => m.name?.toLowerCase().includes('slovenská pošta') || m.name?.toLowerCase().includes('slovenska posta'));
+        if (def) selectedShippingId.value = def.id;
+    }
+    if (!selectedPaymentId.value) {
+        const def = paymentMethods.value.find(m => m.name?.toLowerCase().includes('faktúra') || m.name?.toLowerCase().includes('faktura'));
+        if (def) selectedPaymentId.value = def.id;
+    }
 });
 
 watch(getOrder, (order) => {
