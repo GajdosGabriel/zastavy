@@ -63,7 +63,7 @@
             <strong>Odporúčame</strong> zmeniť heslo ihneď po prvom prihlásení.
         </div>
 
-        <p>V prípade otázok nás kontaktujte.</p>
+        <x-email.contact-block />
     </div>
     <div class="footer">
         Táto správa bola odoslaná automaticky, neodpovedajte na ňu.

@@ -96,9 +96,7 @@
             </tbody>
         </table>
 
-        <p style="font-size:14px; color:#555;">
-            V prípade otázok nás kontaktujte.
-        </p>
+        <x-email.contact-block />
     </div>
 
     <div class="footer">

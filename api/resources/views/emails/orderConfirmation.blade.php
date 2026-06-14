@@ -20,8 +20,6 @@
         th { text-align: left; font-size: 12px; text-transform: uppercase; color: #888; padding: 6px 0; border-bottom: 1px solid #e5e5e5; }
         td { padding: 10px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
         .total-row td { font-weight: 700; font-size: 15px; border-bottom: none; padding-top: 14px; }
-        .contact-block { background: #f7f9fc; border: 1px solid #e8edf3; border-radius: 5px; padding: 16px 20px; margin-bottom: 24px; font-size: 14px; }
-        .contact-block strong { display: block; margin-bottom: 6px; color: #1e3a5f; }
         .footer { background: #f9f9f9; padding: 20px 32px; font-size: 12px; color: #aaa; text-align: center; border-top: 1px solid #eee; }
     </style>
 </head>
@@ -136,11 +134,7 @@
         </div>
         @endif
 
-        <div class="contact-block">
-            <strong>Gajdoš Gabriel – Reprezent</strong>
-            V prípade otázok nás kontaktujte:<br>
-            Tel.: <a href="tel:+421905320616" style="color:#1e3a5f;">0905 320 616</a>
-        </div>
+        <x-email.contact-block />
     </div>
 
     <div class="footer">

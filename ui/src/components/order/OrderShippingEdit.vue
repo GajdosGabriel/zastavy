@@ -75,9 +75,14 @@ const normalizeQuantity = (item) => {
     shippingItems.value[item.id] = Math.min(item.remaining, Math.max(0, Math.floor(value)));
 };
 
-const removeShippingItem = (item) => {
-    shippingItems.value[item.id] = 0;
-    if (!excludedItemIds.value.includes(item.id)) {
+const isExcluded = (item) => excludedItemIds.value.includes(item.id);
+
+const toggleExcludeItem = (item) => {
+    if (isExcluded(item)) {
+        excludedItemIds.value = excludedItemIds.value.filter(id => id !== item.id);
+        shippingItems.value[item.id] = item.remaining;
+    } else {
+        shippingItems.value[item.id] = 0;
         excludedItemIds.value = [...excludedItemIds.value, item.id];
     }
 };
@@ -247,11 +252,13 @@ watch(allProducts, () => {
                         <tbody class="divide-y divide-gray-200">
                             <tr v-for="item in allProducts" :key="item.id"
                                 class="transition"
-                                :class="item.remaining === 0 && item.stornoQuantity === 0
-                                    ? 'bg-green-50 opacity-70'
-                                    : item.stornoQuantity > 0 && item.remaining === 0
-                                        ? 'bg-gray-100 opacity-60'
-                                        : 'hover:bg-gray-50'">
+                                :class="isExcluded(item)
+                                    ? 'bg-gray-100 opacity-60'
+                                    : item.remaining === 0 && item.stornoQuantity === 0
+                                        ? 'bg-green-50 opacity-70'
+                                        : item.stornoQuantity > 0 && item.remaining === 0
+                                            ? 'bg-gray-100 opacity-60'
+                                            : 'hover:bg-gray-50'">
 
                                 <td class="tbody_td">
                                     <div class="flex items-center gap-3">
@@ -313,13 +320,17 @@ watch(allProducts, () => {
                                     </div>
                                 </td>
 
-                                <!-- Teraz expedovať — len ak remaining > 0 a nie je excluded -->
+                                <!-- Teraz expedovať -->
                                 <td class="tbody_td text-center">
                                     <input
                                         v-if="item.remaining > 0"
                                         v-model.number="shippingItems[item.id]"
                                         type="number" min="0" :max="item.remaining"
-                                        class="w-24 rounded border border-gray-300 px-2 py-1 text-center"
+                                        :disabled="isExcluded(item)"
+                                        class="w-24 rounded border px-2 py-1 text-center transition"
+                                        :class="isExcluded(item)
+                                            ? 'border-gray-200 bg-gray-100 text-gray-400 line-through'
+                                            : 'border-gray-300'"
                                         @input="normalizeQuantity(item)"
                                     />
                                     <span v-else class="text-xs text-gray-400">—</span>
@@ -327,9 +338,12 @@ watch(allProducts, () => {
 
                                 <td class="tbody_td text-center">
                                     <button v-if="item.remaining > 0"
-                                        type="button" @click="removeShippingItem(item)"
-                                        class="rounded bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100">
-                                        Vymazať
+                                        type="button" @click="toggleExcludeItem(item)"
+                                        class="rounded px-3 py-1 text-xs font-semibold transition"
+                                        :class="isExcluded(item)
+                                            ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                                            : 'bg-orange-50 text-orange-700 hover:bg-orange-100'">
+                                        {{ isExcluded(item) ? 'Expedovať' : 'Neexpedovať' }}
                                     </button>
                                 </td>
                             </tr>

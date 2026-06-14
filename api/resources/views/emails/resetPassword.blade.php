@@ -34,6 +34,8 @@
         <p>Ak ste o obnovenie hesla nežiadali, tento email ignorujte — Vaše heslo zostane nezmenené.</p>
 
         <p class="url-fallback">Ak tlačidlo nefunguje, skopírujte tento odkaz do prehliadača:<br>{{ $url }}</p>
+
+        <x-email.contact-block />
     </div>
     <div class="footer">
         Táto správa bola vygenerovaná automaticky
