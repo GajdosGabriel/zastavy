@@ -105,6 +105,9 @@ const actions = {
 
         const response = await axiosInstance.get("/checkouts/" + ico);
         const company = response.data.data;
+        const source: string = response.data.source;
+
+        const fromDb = source === 'database' || source === 'database_with_internet';
 
         state.customer = {
             ...state.customer,
@@ -115,14 +118,14 @@ const actions = {
             ico: company.ico ?? ico,
             dic: company.dic ?? state.customer.dic,
             ic_dic: company.ic_dic ?? state.customer.ic_dic,
-            name: state.customer.name || company.name || '',
-            email: state.customer.email || company.email || '',
-            phone: state.customer.phone || company.phone || '',
+            name: fromDb ? (company.name || '') : '',
+            email: fromDb ? (company.email || '') : '',
+            phone: fromDb ? (company.phone || '') : '',
         };
 
         return {
             customer: state.customer,
-            source: response.data.source,
+            source,
         };
     },
 

@@ -35,6 +35,7 @@ const originalPaymentId  = ref(null);
 const showNotifyModal = ref(false);
 const notifyCustomer  = ref(true);
 const isSubmitting    = ref(false);
+const note            = ref('');
 
 onMounted(async () => {
     await fetchOrder(orderId);
@@ -43,6 +44,7 @@ onMounted(async () => {
     selectedPaymentId.value  = getOrder.value?.payment_method?.id  ?? null;
     originalShippingId.value = selectedShippingId.value;
     originalPaymentId.value  = selectedPaymentId.value;
+    note.value = getOrder.value?.note ?? '';
 
     const [sm, pm] = await Promise.all([
         axiosInstance.get('/shipping-methods'),
@@ -101,6 +103,7 @@ const submitUpdate = async (notify) => {
             shipping_method_id: selectedShippingId.value,
             payment_method_id:  selectedPaymentId.value,
             notify_customer:    notify,
+            note:               note.value || null,
         });
         originalShippingId.value = selectedShippingId.value;
         originalPaymentId.value  = selectedPaymentId.value;
@@ -180,11 +183,21 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                     </div>
                 </div>
 
-                <!-- Zákaznícka poznámka + záujem o kupón -->
-                <div v-if="getOrder.note || getOrder.wants_coupon"
-                     class="mb-4 space-y-1 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    <div v-if="getOrder.note"><span class="font-semibold">Poznámka:</span> {{ getOrder.note }}</div>
-                    <div v-if="getOrder.wants_coupon" class="font-semibold">Zákazník chce získať zľavový kupón na ďalší nákup</div>
+                <!-- Záujem o kupón -->
+                <div v-if="getOrder.wants_coupon"
+                     class="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+                    Zákazník chce získať zľavový kupón na ďalší nákup
+                </div>
+
+                <!-- Poznámka k objednávke -->
+                <div class="mb-4 bg-white p-4 border-2 border-gray-300 rounded-ms shadow">
+                    <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
+                    <input
+                        v-model="note"
+                        type="text"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Poznámka"
+                    />
                 </div>
 
                 <!-- Produkty -->

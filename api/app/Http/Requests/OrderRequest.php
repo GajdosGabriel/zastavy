@@ -54,7 +54,7 @@ class OrderRequest extends FormRequest
         }
 
         return [
-            // 'customer' => 'required|exists:customers,id',
+            'note' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
