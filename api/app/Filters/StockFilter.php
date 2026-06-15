@@ -2,21 +2,29 @@
 
 namespace App\Filters;
 
-use App\Models\Order;
-use App\Models\Customer;
 use App\Models\Product;
-use Illuminate\Http\Request;
 
 class StockFilter extends Filters
 {
-
-    protected $filters = ['bySearchInput'];
+    protected $filters = ['bySearchInput', 'byProduct'];
 
     public function bySearchInput($input)
     {
-       $products =  Product::where('name', 'like', '%' . $input . '%')->get()->pluck('id');
+        $productIds = Product::where('name', 'like', '%' . $input . '%')
+            ->orWhere('code', 'like', '%' . $input . '%')
+            ->pluck('id');
 
+        return $this->builder->where(function ($q) use ($productIds) {
+            $q->whereIn('product_id', $productIds)
+              ->orWhereHas('orderProduct', fn($q) => $q->whereIn('product_id', $productIds));
+        });
+    }
 
-        return $this->builder->whereIn('order_product_id',  $products )->get();
+    public function byProduct($productId)
+    {
+        return $this->builder->where(function ($q) use ($productId) {
+            $q->where('product_id', $productId)
+              ->orWhereHas('orderProduct', fn($q) => $q->where('product_id', $productId));
+        });
     }
 }

@@ -38,9 +38,17 @@ class Stock extends Model
         return $this->belongsTo(OrderProduct::class);
     }
 
-    public function product()
+    public function productDirect()
     {
-        return $this->orderProduct->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function getProductAttribute(): ?Product
+    {
+        if ($this->product_id) {
+            return $this->productDirect;
+        }
+        return $this->orderProduct?->product;
     }
 
     public function scopeFilter($query, $filters)
