@@ -33,6 +33,8 @@
     </div>
 
     <div class="body">
+        <x-email.customer :customer="$order->customer" />
+
         <p style="font-size:15px; margin: 0 0 20px; line-height:1.6;">
             Dobrý deň, <strong>{{ $order->customer->company ?: $order->customer->name }}</strong>,<br>
             Vaša objednávka č. <strong>{{ $order->serial_number }}</strong> bola stornovaná.

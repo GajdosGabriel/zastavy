@@ -62,6 +62,8 @@
     </div>
 
     <div class="body">
+        <x-email.customer :customer="$order->customer" />
+
         <p style="font-size:15px; margin: 0 0 24px; line-height:1.6;">
             Dobrý deň, <strong>{{ $order->customer->company ?: $order->customer->name }}</strong>,<br>
             @if($isPartial)

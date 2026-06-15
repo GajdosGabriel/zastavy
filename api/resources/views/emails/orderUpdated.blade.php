@@ -37,16 +37,7 @@
     </div>
 
     <div class="body">
-        <div class="info-block">
-            <p class="section-title">Zákazník</p>
-            @if($order->customer->company)
-                <p><strong>{{ $order->customer->company }}</strong></p>
-            @endif
-            <p>{{ $order->customer->name }}</p>
-            @if($order->customer->email)
-                <p>{{ $order->customer->email }}</p>
-            @endif
-        </div>
+        <x-email.customer :customer="$order->customer" />
 
         @if(!empty($changes))
         <div class="info-block">
