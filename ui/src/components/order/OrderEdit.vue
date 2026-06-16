@@ -19,7 +19,7 @@ import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
 
 const { getOrder, fetchOrder, customer, updateOrder } = useOrders();
-const { getOrderProducts, getStatement, addOrderProduct, saveNewOrderProduct } = useOrderProducts();
+const { getOrderProducts, getStatement, addOrderProduct, saveNewOrderProduct, updateOrderProducts } = useOrderProducts();
 const { fetchProducts } = useProducts();
 const { setErrors } = useErrors();
 
@@ -80,12 +80,8 @@ const hasChanges = () =>
     selectedPaymentId.value  !== originalPaymentId.value;
 
 const onSaveClick = () => {
-    if (hasChanges()) {
-        notifyCustomer.value = true;
-        showNotifyModal.value = true;
-    } else {
-        submitUpdate(false);
-    }
+    notifyCustomer.value = true;
+    showNotifyModal.value = true;
 };
 
 const confirmUpdate = async () => {
@@ -259,9 +255,9 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
     <Teleport to="body">
         <div v-if="showNotifyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
             <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
-                <h3 class="mb-2 text-lg font-semibold text-gray-800">Zmena objednávky</h3>
+                <h3 class="mb-2 text-lg font-semibold text-gray-800">Uložiť zmeny</h3>
                 <p class="mb-4 text-sm text-gray-600">
-                    Zmenili ste spôsob dopravy alebo platby. Chcete o tejto zmene informovať zákazníka emailom?
+                    Chcete zákazníka informovať o zmenách emailom?
                 </p>
                 <label class="mb-5 flex items-center gap-2 cursor-pointer text-sm text-gray-700">
                     <input type="checkbox" v-model="notifyCustomer" class="rounded" />

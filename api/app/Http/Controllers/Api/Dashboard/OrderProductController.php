@@ -32,6 +32,7 @@ class OrderProductController extends Controller
             'product_id' => $request->product_id,
             'quantity'   => $request->quantity,
             'price'      => $request->price,
+            'total'      => (float) $request->quantity * (float) $request->price,
             'storno'     => 0,
         ]);
 
@@ -44,9 +45,14 @@ class OrderProductController extends Controller
     {
         Gate::authorize('update', $order);
 
-        $orderProduct = OrderProduct::firstOrCreate([
-            'id' => $orderProduct
-        ])->update($request->only(['product_id', 'quantity', 'storno', 'price']));
+        $data = $request->only(['product_id', 'quantity', 'storno', 'price']);
+
+        if (isset($data['quantity']) && isset($data['price'])) {
+            $data['total'] = (float) $data['quantity'] * (float) $data['price'];
+        }
+
+        OrderProduct::firstOrCreate(['id' => $orderProduct])->update($data);
+
         return response()->noContent();
     }
 

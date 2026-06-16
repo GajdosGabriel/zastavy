@@ -38,7 +38,7 @@ class OrderIndexResource extends JsonResource
                 'city' => $this->customer?->city,
             ],
             'shippings' => ShippingResource::collection($this->shippings),
-            'price_sum' => $this->orderProducts->sum('total'),
+            'price_sum' => $this->orderProducts->sum(fn ($p) => ($p->price ?? 0) * ($p->quantity ?? 0)),
             'note'    => $this->note,
             'orderProducts' => OrderProductResource::collection($this->orderProducts),
             'stock_expedition' => $stockExpedition,
