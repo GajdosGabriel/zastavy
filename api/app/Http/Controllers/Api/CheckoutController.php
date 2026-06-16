@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Http;
 class CheckoutController extends Controller
 {
 
-    public function show($ico)
+    public function show(string $ico)
     {
         $ico = preg_replace('/\D+/', '', $ico);
 
@@ -74,7 +74,24 @@ class CheckoutController extends Controller
             return null;
         }
 
-        return $this->orsfToCheckoutData($response->json(), $ico);
+        return $this->orsfToCheckoutData($this->fixOrsfEncoding($response->json()), $ico);
+    }
+
+    private function fixOrsfEncoding(mixed $data): mixed
+    {
+        if (is_string($data)) {
+            $bytes = mb_convert_encoding($data, 'Windows-1250', 'UTF-8');
+            if ($bytes !== $data && mb_check_encoding($bytes, 'UTF-8')) {
+                return $bytes;
+            }
+            return $data;
+        }
+
+        if (is_array($data)) {
+            return array_map(fn ($v) => $this->fixOrsfEncoding($v), $data);
+        }
+
+        return $data;
     }
 
     private function findCustomerByIco(string $ico): ?Customer
