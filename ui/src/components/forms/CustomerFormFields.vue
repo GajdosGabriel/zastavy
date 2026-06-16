@@ -20,6 +20,7 @@ const { getCustomer, findCustomerByIco, getStatuses } = useCustomers();
 
 const isSearchingCompany = ref(false);
 const icoSearchMessage = ref("");
+const icoSearchInput = ref("");
 
 const isRequired = (field: string) => props.requiredFields.includes(field);
 
@@ -38,21 +39,35 @@ const icoValidationError = () => {
     return fieldError("ico");
 };
 
+const icoSearchValidationError = () => {
+    if (String(icoSearchInput.value).length > 8) {
+        return "IČO môže mať maximálne 8 číslic.";
+    }
+    return "";
+};
+
 const onlyDigits = (event: Event) => {
     getCustomer.value.ico = String((event.target as HTMLInputElement).value || "").replace(/\D/g, "");
 };
 
+const onlyDigitsSearch = (event: Event) => {
+    icoSearchInput.value = String((event.target as HTMLInputElement).value || "").replace(/\D/g, "");
+};
+
 const onClickIco = async () => {
     icoSearchMessage.value = "";
-    if (icoValidationError()) return;
+    if (icoSearchValidationError()) return;
 
     isSearchingCompany.value = true;
+    getCustomer.value.ico = icoSearchInput.value;
+
     try {
         await findCustomerByIco();
         icoSearchMessage.value = "Údaje firmy boli doplnené.";
     } catch (error: any) {
         icoSearchMessage.value = error.response?.data?.message || error.message || "Firmu sa nepodarilo nájsť.";
     } finally {
+        icoSearchInput.value = "";
         isSearchingCompany.value = false;
     }
 };
@@ -64,12 +79,12 @@ const onClickIco = async () => {
         <label class="mb-2 block text-sm font-semibold text-blue-900">Rýchle doplnenie — vyhľadajte firmu podľa IČO</label>
         <div class="flex gap-2">
             <FormInput
-                v-model="getCustomer.ico"
+                v-model="icoSearchInput"
                 placeholder="IČO organizácie"
                 inputmode="numeric"
                 pattern="[0-9]*"
-                :invalid="!!icoValidationError()"
-                @input="onlyDigits"
+                :invalid="!!icoSearchValidationError()"
+                @input="onlyDigitsSearch"
                 @keyup.enter="onClickIco"
             />
             <button
@@ -81,7 +96,7 @@ const onClickIco = async () => {
                 {{ isSearchingCompany ? "Hľadám..." : "Vyhľadať firmu" }}
             </button>
         </div>
-        <p v-if="icoValidationError()" class="mt-2 text-xs font-semibold text-red-600">{{ icoValidationError() }}</p>
+        <p v-if="icoSearchValidationError()" class="mt-2 text-xs font-semibold text-red-600">{{ icoSearchValidationError() }}</p>
         <p v-if="icoSearchMessage" class="mt-2 text-xs text-blue-700">{{ icoSearchMessage }}</p>
     </div>
 

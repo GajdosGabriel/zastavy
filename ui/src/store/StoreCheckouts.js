@@ -124,7 +124,7 @@ const actions = {
                 coupon_code:        getCouponCode.value || null,
                 wants_coupon:       getWantsCoupon.value,
             });
-            actions.setlocalStorageCustomer();
+            localStorage.removeItem(CUSTOMER_STORAGE_KEY);
             state.carts = [];
             state.note = '';
             resetCustomer();
