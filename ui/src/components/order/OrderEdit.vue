@@ -96,8 +96,13 @@ const confirmUpdate = async () => {
 const submitUpdate = async (notify) => {
     isSubmitting.value = true;
     try {
-        const pendingNew = getOrderProducts.value.filter(p => p.isNew && p.product_id);
-        await Promise.all(pendingNew.map(p => saveNewOrderProduct(p)));
+        const pendingNew      = getOrderProducts.value.filter(p => p.isNew && p.product_id);
+        const existingChanged = getOrderProducts.value.filter(p => !p.isNew);
+
+        await Promise.all([
+            ...pendingNew.map(p => saveNewOrderProduct(p)),
+            ...existingChanged.map(p => updateOrderProducts(p)),
+        ]);
 
         await axiosInstance.put(`/orders/${orderId}`, {
             shipping_method_id: selectedShippingId.value,
