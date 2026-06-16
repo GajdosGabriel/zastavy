@@ -3,8 +3,7 @@
     <p class="section-title">Zákazník</p>
     @if($customer->company)
         <p><strong>{{ $customer->company }}</strong></p>
-    @endif
-    @if($customer->name && trim($customer->name) !== trim($customer->company ?? ''))
+    @else
         <p>{{ $customer->name }}</p>
     @endif
     @if($customer->ico)
