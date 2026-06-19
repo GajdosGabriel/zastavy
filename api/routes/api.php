@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\Dashboard\OrderController;
 use App\Http\Controllers\Api\Dashboard\OrderMarkController;
@@ -47,6 +48,8 @@ Route::apiResources([
     'checkouts' => CheckoutController::class,
     'homes' => HomeController::class,
 ]);
+
+Route::get('/public-orders/{uuid}', [PublicOrderController::class, 'show'])->name('public-orders.show');
 
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/announcements/active', [AnnouncementController::class, 'active'])->name('announcements.active');

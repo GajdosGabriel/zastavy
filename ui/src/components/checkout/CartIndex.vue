@@ -58,11 +58,15 @@ const onClickForm = async () => {
       }
 
       isSubmitting.value = true;
-      const wasStored = await storeCheckout();
+      const result = await storeCheckout();
       isSubmitting.value = false;
 
-      if (wasStored) {
-            router.push({ name: "public.thankYouForOrder.show" });
+      if (result) {
+            const uuid = typeof result === 'string' ? result : null;
+            router.push({
+                  name: "public.thankYouForOrder.show",
+                  query: uuid ? { token: uuid } : {},
+            });
       }
 };
 </script>

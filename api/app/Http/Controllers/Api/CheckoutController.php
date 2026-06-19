@@ -60,8 +60,13 @@ class CheckoutController extends Controller
 
     public function store(OrderRequest $request)
     {
+        $checkout = new StoreCheckout($request);
+        $order = $checkout->getOrder();
 
-        new StoreCheckout($request);
+        return response()->json([
+            'uuid'          => $order->uuid,
+            'serial_number' => $order->serial_number,
+        ]);
     }
 
     private function findCompanyByIco(string $ico): ?array
@@ -74,24 +79,7 @@ class CheckoutController extends Controller
             return null;
         }
 
-        return $this->orsfToCheckoutData($this->fixOrsfEncoding($response->json()), $ico);
-    }
-
-    private function fixOrsfEncoding(mixed $data): mixed
-    {
-        if (is_string($data)) {
-            $bytes = mb_convert_encoding($data, 'Windows-1250', 'UTF-8');
-            if ($bytes !== $data && mb_check_encoding($bytes, 'UTF-8')) {
-                return $bytes;
-            }
-            return $data;
-        }
-
-        if (is_array($data)) {
-            return array_map(fn ($v) => $this->fixOrsfEncoding($v), $data);
-        }
-
-        return $data;
+        return $this->orsfToCheckoutData($response->json(), $ico);
     }
 
     private function findCustomerByIco(string $ico): ?Customer

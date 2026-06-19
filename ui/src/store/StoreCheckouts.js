@@ -115,7 +115,7 @@ const actions = {
     storeCheckout: async () => {
         const { state: optionsState, getCouponCode, getWantsCoupon } = useCheckoutOptions();
         try {
-            await axiosInstance.post("/checkouts", {
+            const response = await axiosInstance.post("/checkouts", {
                 customer: getCustomer.value,
                 orderProducts: state.carts,
                 note: state.note || null,
@@ -129,7 +129,7 @@ const actions = {
             state.note = '';
             resetCustomer();
             useCheckoutOptions().reset();
-            return true;
+            return response.data?.uuid ?? true;
         } catch (e) {
             setErrors(e);
             return false;

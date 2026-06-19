@@ -23,7 +23,14 @@ class CustomerService
         $customerData = $this->customerData($request);
 
         if ($customer) {
-            $customer->update($customerData);
+            $updateData = $customerData;
+            // Preserve existing tax IDs — don't overwrite with null if form field was empty
+            foreach (['ico', 'dic', 'ic_dic'] as $field) {
+                if (empty($updateData[$field]) && $customer->{$field}) {
+                    unset($updateData[$field]);
+                }
+            }
+            $customer->update($updateData);
         } else {
             $customer = Customer::create($customerData);
         }

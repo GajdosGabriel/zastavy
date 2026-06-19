@@ -5,7 +5,6 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: {
-    host: 'zastavy.local',
-    port: 5173, // voliteľné
+    port: 5173,
   },
 })

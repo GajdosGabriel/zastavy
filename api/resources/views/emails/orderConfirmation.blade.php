@@ -122,6 +122,13 @@
         </div>
         @endif
 
+        <div class="info-block" style="margin-top:24px; text-align:center;">
+            <a href="{{ env('FRONTEND_URL', config('app.url')) }}/objednavka/{{ $order->uuid }}"
+               style="display:inline-block; background:#1e3a5f; color:#fff; text-decoration:none; padding:12px 28px; border-radius:5px; font-size:14px; font-weight:600;">
+                Zobraziť objednávku online
+            </a>
+        </div>
+
         <x-email.contact-block />
     </div>
 

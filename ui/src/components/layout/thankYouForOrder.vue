@@ -1,5 +1,9 @@
 <script setup>
+import { useRoute } from 'vue-router';
 import BaseLayout from './BaseLayout.vue';
+
+const route = useRoute();
+const orderToken = route.query.token || null;
 </script>
 
 <template>
@@ -57,6 +61,15 @@ import BaseLayout from './BaseLayout.vue';
                                     Kontaktujte nás čo najskôr a uveďte údaje, pod ktorými bola objednávka odoslaná.
                                 </p>
                             </div>
+                        </div>
+
+                        <div v-if="orderToken" class="rounded-md border border-blue-100 bg-blue-50 p-4 text-center">
+                            <p class="mb-3 text-sm text-gray-700">Chcete si prezrieť detaily objednávky alebo ju zdieľať?</p>
+                            <router-link
+                                :to="{ name: 'public.order.show', params: { uuid: orderToken } }"
+                                class="inline-flex items-center justify-center rounded-md bg-blue-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                Zobraziť moju objednávku
+                            </router-link>
                         </div>
 
                         <div class="flex flex-col gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:items-center sm:justify-between">

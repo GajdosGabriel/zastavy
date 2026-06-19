@@ -117,6 +117,17 @@ const routes = [
     },
 
     {
+        path: '/objednavka/:uuid',
+        name: 'public.order.show',
+        components: {
+            default: () => import('../components/pages/PublicOrderView.vue'),
+        },
+        meta: {
+            title: 'Detail objednávky'
+        }
+    },
+
+    {
         path: '/login',
         name: 'public.login.index',
         components: {
