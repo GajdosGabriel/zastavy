@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Dashboard;
 
 use App\Enums\ModelStatus;
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\Stock;
 use App\Filters\OrderFilter;
@@ -58,7 +59,7 @@ class OrderController extends Controller
             Gate::authorize('storno', $order);
 
             DB::transaction(function () use ($order) {
-                $order->forceFill(['status' => ModelStatus::Cancelled])->save();
+                $order->forceFill(['status' => OrderStatus::Cancelled])->save();
 
                 foreach ($order->orderProducts as $product) {
                     $shippedQuantity = Stock::where('order_product_id', '=', $product->id)->sum('quantity');

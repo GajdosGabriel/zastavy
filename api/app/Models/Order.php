@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\ModelStatus;
+use App\Enums\OrderStatus;
 use App\Traits\HasModelStatus;
 use App\Traits\HasNotices;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,7 +20,7 @@ class Order extends Model
     protected $appends = ['productOrderSum'];
 
     protected $casts = [
-        'status' => ModelStatus::class,
+        'status' => OrderStatus::class,
     ];
 
     protected static function booted(): void
@@ -94,7 +94,7 @@ class Order extends Model
 
     public function isStorned()
     {
-        if ($this->status === ModelStatus::Cancelled) {
+        if ($this->status === OrderStatus::Cancelled) {
             return true;
         }
 

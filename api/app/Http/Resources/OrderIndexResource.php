@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\ModelStatus;
+use App\Enums\OrderStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -12,12 +12,12 @@ class OrderIndexResource extends JsonResource
     public function toArray(Request $request): array
     {
         $user = $request->user();
-        $status = ModelStatus::fromOrder($this->resource);
+        $status = OrderStatus::fromOrder($this->resource);
         $orderedQuantity = (int) $this->orderProducts->sum('quantity');
         $stornoQuantity = (int) $this->orderProducts->sum('storno');
         $requiredQuantity = max(0, $orderedQuantity - $stornoQuantity);
         $stockExpedition = (int) $this->stocks->sum('quantity');
-        $isStorned = $this->status === ModelStatus::Cancelled
+        $isStorned = $this->status === OrderStatus::Cancelled
             || ($orderedQuantity > 0 && $orderedQuantity === $stornoQuantity);
         $isFinished = ! $isStorned && $requiredQuantity === $stockExpedition;
         $shippingPercentage = $requiredQuantity === 0
@@ -56,6 +56,10 @@ class OrderIndexResource extends JsonResource
             'mark' => [
                 'isActive' => $this->mark !== null,
                 'endpoint' => route('orders.marks.store', $this->id),
+            ],
+            'links' => [
+                ['label' => 'Zákazník',  'path' => '/zakaznici/' . $this->customer?->id . '/objednavky'],
+                ['label' => 'Expedícia', 'path' => '/objednavky/' . $this->id . '/expedicia'],
             ],
             'endpoints' => [
                 'index' => route('orders.index'),

@@ -33,11 +33,18 @@ const actionMap = {
 };
 
 const dropdownItems = computed(() => {
-    if (!Object.keys(props.order.endpoints).length) return [];
+    const fixed = (props.order.links || []).map(link => ({
+        label: link.label,
+        to: { path: link.path },
+    }));
 
-    return Object.entries(props.order.permissions || {})
+    if (!Object.keys(props.order.endpoints).length) return fixed;
+
+    const permissionItems = Object.entries(props.order.permissions || {})
         .filter(([key, perm]) => perm.allowed && actionMap[key])
         .map(([key, perm]) => ({ label: perm.label, ...actionMap[key] }));
+
+    return [...fixed, ...permissionItems];
 });
 </script>
 
@@ -58,7 +65,7 @@ const dropdownItems = computed(() => {
         </td>
 
         <td class="tbody_td min-w-64 relative cursor-pointer hover:text-blue-800">
-            <router-link :to="{ name: 'customers.orders', params: { customerId: order.customer.id } }">
+            <router-link :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }">
                 <div v-if="order.customer.company" class="font-bold">
                     {{ order.customer.company.substring(0, 30) }}
                 </div>

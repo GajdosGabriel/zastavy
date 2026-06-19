@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\ModelStatus;
+use App\Enums\OrderStatus;
 use Carbon\Carbon;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ class OrderResource extends JsonResource
     public function toArray($request)
     {
         $user = $request->user();
-        $status = ModelStatus::fromOrder($this->resource);
+        $status = OrderStatus::fromOrder($this->resource);
 
         return [
             'id'                => $this->id,

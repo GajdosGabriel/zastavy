@@ -2,23 +2,19 @@
 
 namespace App\Enums;
 
-use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 
 enum ModelStatus: string
 {
-    case Draft = 'draft';
-    case Active = 'active';
-    case Hidden = 'hidden';
-    case OutOfStock = 'out_of_stock';
+    case Draft        = 'draft';
+    case Active       = 'active';
+    case Hidden       = 'hidden';
+    case OutOfStock   = 'out_of_stock';
     case Discontinued = 'discontinued';
-    case Processing = 'processing';
-    case PartiallyShipped = 'partially_shipped';
-    case Shipped = 'shipped';
-    case Cancelled = 'cancelled';
-    case Archived = 'archived';
-    case Blocked = 'blocked';
+    case Cancelled    = 'cancelled';
+    case Archived     = 'archived';
+    case Blocked      = 'blocked';
 
     public function isPubliclyVisible(): bool
     {
@@ -35,51 +31,47 @@ enum ModelStatus: string
         return in_array($this, [self::Archived, self::Discontinued], true);
     }
 
-    public function isOrderStatus(): bool
-    {
-        return in_array($this, [
-            self::Draft,
-            self::Processing,
-            self::PartiallyShipped,
-            self::Shipped,
-            self::Cancelled,
-            self::Archived,
-        ], true);
-    }
-
     public function label(): string
     {
         return match ($this) {
-            self::Draft => 'Koncept',
-            self::Active => 'Aktívny',
-            self::Hidden => 'Skrytý',
-            self::OutOfStock => 'Vypredaný',
+            self::Draft        => 'Koncept',
+            self::Active       => 'Aktívny',
+            self::Hidden       => 'Skrytý',
+            self::OutOfStock   => 'Vypredaný',
             self::Discontinued => 'Vyradený',
-            self::Processing => 'Spracováva sa',
-            self::PartiallyShipped => 'Čiastočne expedovaný',
-            self::Shipped => 'Expedovaný',
-            self::Cancelled => 'Stornovaný',
-            self::Archived => 'Archivovaný',
-            self::Blocked => 'Blokovaný',
+            self::Cancelled    => 'Stornovaný',
+            self::Archived     => 'Archivovaný',
+            self::Blocked      => 'Blokovaný',
         };
     }
 
     public function badgeColor(): string
     {
         return match ($this) {
-            self::Active => 'green',
-            self::Processing, self::PartiallyShipped => 'blue',
-            self::OutOfStock => 'amber',
-            self::Hidden, self::Draft => 'gray',
-            self::Cancelled, self::Blocked => 'red',
-            self::Shipped => 'emerald',
-            self::Discontinued, self::Archived => 'slate',
+            self::Active       => 'green',
+            self::OutOfStock   => 'amber',
+            self::Hidden,
+            self::Draft        => 'gray',
+            self::Cancelled,
+            self::Blocked      => 'red',
+            self::Discontinued,
+            self::Archived     => 'slate',
         };
     }
 
     /**
-     * Returns the allowed statuses for a given user as [value, label] pairs.
-     *
+     * @return array{value: string, label: string, color: string}
+     */
+    public function toArray(): array
+    {
+        return [
+            'value' => $this->value,
+            'label' => $this->label(),
+            'color' => $this->badgeColor(),
+        ];
+    }
+
+    /**
      * @return array<int, array{value: string, label: string, color: string}>
      */
     public static function allowedForUser(?User $user): array
@@ -93,18 +85,6 @@ enum ModelStatus: string
     public static function allowedValuesForUser(?User $user): array
     {
         return array_map(fn (self $status) => $status->value, self::allowedCasesForUser($user));
-    }
-
-    /**
-     * @return array{value: string, label: string, color: string}
-     */
-    public function toArray(): array
-    {
-        return [
-            'value' => $this->value,
-            'label' => $this->label(),
-            'color' => $this->badgeColor(),
-        ];
     }
 
     public static function fromProduct(Product $product): self
@@ -128,33 +108,30 @@ enum ModelStatus: string
         return self::Active;
     }
 
-    public static function fromOrder(Order $order): self
+    /**
+     * @return array<int, self>
+     */
+    protected static function allowedCasesForUser(?User $user): array
     {
-        if ($order->status === self::Cancelled) {
-            return self::Cancelled;
+        if (self::isSuperAdmin($user)) {
+            return self::cases();
         }
 
-        if ($order->status instanceof self && $order->status->isArchived()) {
-            return $order->status;
+        if (self::isAdmin($user)) {
+            return array_values(array_filter(
+                self::cases(),
+                fn (self $status) => !in_array($status, [self::Cancelled, self::Blocked], true)
+            ));
         }
 
-        if ($order->status === self::Draft) {
-            return self::Draft;
-        }
-
-        if ($order->isStorned()) {
-            return self::Cancelled;
-        }
-
-        if ($order->isFinished()) {
-            return self::Shipped;
-        }
-
-        if ($order->stockExpedition > 0) {
-            return self::PartiallyShipped;
-        }
-
-        return self::Processing;
+        return [
+            self::Draft,
+            self::Active,
+            self::Hidden,
+            self::OutOfStock,
+            self::Discontinued,
+            self::Archived,
+        ];
     }
 
     protected static function isAdmin(?User $user): bool
@@ -172,39 +149,10 @@ enum ModelStatus: string
         }
 
         if ($user->relationLoaded('roles')) {
-            return $user->roles
-                ->pluck('name')
-                ->intersect(['super-admin', 'admin'])
-                ->isNotEmpty();
+            return $user->roles->pluck('name')->intersect(['super-admin', 'admin'])->isNotEmpty();
         }
 
         return false;
-    }
-
-    /**
-     * @return array<int, self>
-     */
-    protected static function allowedCasesForUser(?User $user): array
-    {
-        if (self::isSuperAdmin($user)) {
-            return self::cases();
-        }
-
-        if (self::isAdmin($user)) {
-            return array_values(array_filter(
-                self::cases(),
-                fn (self $status) => ! in_array($status, [self::Cancelled, self::Blocked], true)
-            ));
-        }
-
-        return [
-            self::Draft,
-            self::Active,
-            self::Hidden,
-            self::OutOfStock,
-            self::Discontinued,
-            self::Archived,
-        ];
     }
 
     protected static function isSuperAdmin(?User $user): bool
@@ -222,9 +170,7 @@ enum ModelStatus: string
         }
 
         if ($user->relationLoaded('roles')) {
-            return $user->roles
-                ->pluck('name')
-                ->contains('super-admin');
+            return $user->roles->pluck('name')->contains('super-admin');
         }
 
         return false;

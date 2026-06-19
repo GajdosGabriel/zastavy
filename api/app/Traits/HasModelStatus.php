@@ -9,14 +9,18 @@ trait HasModelStatus
 {
     public function isArchived(): bool
     {
-        return $this->status instanceof ModelStatus
-            ? $this->status->isArchived()
-            : $this->status === ModelStatus::Archived->value;
+        $status = $this->status;
+
+        if ($status instanceof \BackedEnum) {
+            return $status->value === 'archived';
+        }
+
+        return $status === 'archived';
     }
 
     public function archive(): bool
     {
-        return $this->forceFill(['status' => ModelStatus::Archived])->save();
+        return $this->forceFill(['status' => 'archived'])->save();
     }
 
     public function activate(): bool
@@ -24,9 +28,11 @@ trait HasModelStatus
         return $this->forceFill(['status' => ModelStatus::Active])->save();
     }
 
-    public function scopeWithStatus(Builder $query, ModelStatus|string $status): Builder
+    public function scopeWithStatus(Builder $query, \BackedEnum|string $status): Builder
     {
-        return $query->where('status', $status instanceof ModelStatus ? $status->value : $status);
+        $value = $status instanceof \BackedEnum ? $status->value : $status;
+
+        return $query->where('status', $value);
     }
 
     /**
@@ -34,10 +40,12 @@ trait HasModelStatus
      */
     public function statusData(): ?array
     {
-        if ($this->status instanceof ModelStatus) {
-            return $this->status->toArray();
+        $status = $this->status;
+
+        if ($status instanceof \BackedEnum && method_exists($status, 'toArray')) {
+            return $status->toArray();
         }
 
-        return ModelStatus::tryFrom((string) $this->status)?->toArray();
+        return ModelStatus::tryFrom((string) $status)?->toArray();
     }
 }
