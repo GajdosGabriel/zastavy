@@ -114,6 +114,18 @@ class OrderController extends Controller
             $changes[] = ['label' => 'Spôsob platby', 'old' => $oldMethod, 'new' => $newMethod];
         }
 
+        if ($request->has('note') && ($request->note ?? '') !== ($order->note ?? '')) {
+            $changes[] = ['label' => 'Poznámka', 'old' => $order->note ?? '—', 'new' => $request->note ?? '—'];
+        }
+
+        if ($request->has('wants_coupon') && $request->boolean('wants_coupon') !== (bool) $order->wants_coupon) {
+            $changes[] = [
+                'label' => 'Zľavový kupón',
+                'old'   => $order->wants_coupon ? 'Áno' : 'Nie',
+                'new'   => $request->boolean('wants_coupon') ? 'Áno' : 'Nie',
+            ];
+        }
+
         return $changes;
     }
 
