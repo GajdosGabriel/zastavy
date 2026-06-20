@@ -13,6 +13,8 @@ const { params: { orderId, returnId } } = useRoute();
 const editing = ref(false);
 const confirming = ref(null);
 const submitting = ref(false);
+const showProcessModal = ref(false);
+const notifyCustomer = ref(true);
 
 const editReason = ref('');
 const editNote = ref('');
@@ -73,9 +75,9 @@ async function saveEdit() {
 
 async function doProcess() {
     submitting.value = true;
-    await processReturn(orderId, returnId);
+    await processReturn(orderId, returnId, notifyCustomer.value);
     submitting.value = false;
-    confirming.value = null;
+    showProcessModal.value = false;
 }
 
 async function doCancel() {
@@ -234,18 +236,7 @@ async function doDelete() {
 
                 <!-- Akcie -->
                 <div v-if="ret.status === 'pending' && !editing" class="flex flex-wrap items-center gap-3">
-                    <!-- Process -->
-                    <template v-if="confirming === 'process'">
-                        <div class="flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm text-green-800">
-                            <span class="font-semibold">Potvrdiť vrátenie na sklad?</span>
-                            <button @click="doProcess" :disabled="submitting"
-                                class="ml-2 rounded bg-green-600 px-3 py-1 font-semibold text-white hover:bg-green-700 disabled:opacity-50">
-                                {{ submitting ? '...' : 'Áno, vrátiť' }}
-                            </button>
-                            <button @click="confirming = null" class="rounded px-3 py-1 text-gray-600 hover:bg-green-100">Nie</button>
-                        </div>
-                    </template>
-                    <template v-else-if="confirming === 'cancel'">
+                    <template v-if="confirming === 'cancel'">
                         <div class="flex items-center gap-2 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-sm text-gray-700">
                             <span class="font-semibold">Zrušiť vrátenie?</span>
                             <button @click="doCancel" :disabled="submitting"
@@ -266,7 +257,7 @@ async function doDelete() {
                         </div>
                     </template>
                     <template v-else>
-                        <button @click="confirming = 'process'"
+                        <button @click="showProcessModal = true"
                             class="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
                             Vrátiť na sklad
                         </button>
@@ -287,4 +278,33 @@ async function doDelete() {
             </div>
         </template>
     </BaseLayout>
+
+    <!-- Modal: Vrátiť na sklad -->
+    <Teleport to="body">
+        <div v-if="showProcessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+            <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+                <h3 class="mb-1 text-lg font-semibold text-gray-800">Vrátiť tovar na sklad?</h3>
+                <p class="mb-1 text-sm text-gray-500">
+                    Tovar bude zaúčtovaný späť na sklad a objednávka bude čakať na ďalšiu expedíciu.
+                </p>
+                <p v-if="ret" class="mb-4 text-sm font-medium text-amber-700">
+                    Dôvod: {{ ret.reason_label }}
+                </p>
+                <label class="mb-5 flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                    <input type="checkbox" v-model="notifyCustomer" class="rounded" />
+                    Informovať zákazníka emailom o vrátení
+                </label>
+                <div class="flex justify-end gap-2">
+                    <button type="button" @click="showProcessModal = false"
+                        class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                        Zrušiť
+                    </button>
+                    <button type="button" @click="doProcess" :disabled="submitting"
+                        class="rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">
+                        {{ submitting ? '...' : 'Vrátiť na sklad' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </Teleport>
 </template>

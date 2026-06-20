@@ -58,9 +58,11 @@ const actions = {
         }
     },
 
-    processReturn: async (orderId, returnId) => {
+    processReturn: async (orderId, returnId, notifyCustomer = false) => {
         try {
-            const response = await axiosInstance.post(`/orders/${orderId}/returns/${returnId}/process`);
+            const response = await axiosInstance.post(`/orders/${orderId}/returns/${returnId}/process`, {
+                notify_customer: notifyCustomer,
+            });
             const updated = response.data.data;
             state.currentReturn = updated;
             const idx = state.returns.findIndex(r => r.id === returnId);

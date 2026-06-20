@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderReturnResource;
 use App\Http\Resources\OrderResource;
+use App\Notifications\OrderReturnProcessed;
 
 class OrderReturnController extends Controller
 {
@@ -158,12 +159,19 @@ class OrderReturnController extends Controller
 
         $orderReturn->load(['items.orderProduct.product', 'createdBy', 'processedBy']);
 
+        if ($request->boolean('notify_customer')) {
+            $customer = $order->customer;
+            if ($customer?->email) {
+                $customer->notify(new OrderReturnProcessed($order, $orderReturn));
+            }
+        }
+
         return (new OrderReturnResource($orderReturn))->additional([
             'order' => new OrderResource($order),
         ]);
     }
 
-    public function cancel(Order $order, OrderReturn $orderReturn, Request $request)
+    public function cancel(Order $order, OrderReturn $orderReturn)
     {
         Gate::authorize('update', $order);
         abort_if($orderReturn->order_id !== $order->id, 404);

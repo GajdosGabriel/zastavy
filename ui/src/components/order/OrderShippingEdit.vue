@@ -6,6 +6,7 @@ import buttonLink from "../layout/page/ButtonLink.vue";
 import useOrders from "../../store/StoreOrders";
 import useShippings from "../../store/StoreShippings";
 import useOrderProducts from "../../store/StoreOrderProducts";
+import useReturns from "../../store/StoreReturns";
 import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 import axiosInstance from "../../axiosInstance";
@@ -14,6 +15,7 @@ import useErrors from "../../store/StoreErrors";
 const { getOrder, fetchOrder, customer } = useOrders();
 const { storeShipping } = useShippings();
 const { updateOrderProducts } = useOrderProducts();
+const { fetchReturns, getReturns } = useReturns();
 const { setErrors } = useErrors();
 
 const router = useRouter();
@@ -135,7 +137,7 @@ const saveStorno = async (item) => {
 };
 
 onMounted(async () => {
-    await fetchOrder(orderId);
+    await Promise.all([fetchOrder(orderId), fetchReturns(orderId)]);
     resetShippingItems(true);
     initStornoEdits();
 });
@@ -392,6 +394,72 @@ watch(allProducts, () => {
                             <tr v-if="!shippedRows.length">
                                 <td colspan="5" class="tbody_td py-6 text-center text-gray-500">
                                     K objednávke zatiaľ nie je vytvorený žiadny dodací list.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Vrátenia tovaru -->
+                <div class="mb-5 overflow-x-auto border-2 bg-white shadow"
+                    :class="getReturns.length ? 'border-orange-300' : 'border-gray-300'">
+                    <div class="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+                        <span class="text-sm font-semibold text-gray-900">
+                            Vrátenia tovaru
+                            <span v-if="getReturns.length"
+                                class="ml-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">
+                                {{ getReturns.length }}
+                            </span>
+                        </span>
+                        <router-link v-if="shippedQuantity > 0"
+                            :to="{ name: 'orders.returns.create', params: { orderId } }"
+                            class="text-sm font-semibold text-red-600 hover:text-red-800">
+                            + Nové vrátenie
+                        </router-link>
+                    </div>
+
+                    <div v-if="!getReturns.length" class="px-4 py-5 text-center text-sm text-gray-400">
+                        K tejto objednávke zatiaľ nie je zaznamenané žiadne vrátenie.
+                    </div>
+
+                    <table v-else class="min-w-full divide-y divide-gray-200">
+                        <thead class="thead">
+                            <tr>
+                                <th class="thead_th text-center">Vrátenie</th>
+                                <th class="thead_th text-center">Dátum</th>
+                                <th class="thead_th text-left">Dôvod</th>
+                                <th class="thead_th text-left">Položky</th>
+                                <th class="thead_th text-center">Stav</th>
+                                <th class="thead_th text-center"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr v-for="ret in getReturns" :key="ret.id" class="hover:bg-orange-50">
+                                <td class="tbody_td text-center font-semibold text-gray-700">#{{ ret.id }}</td>
+                                <td class="tbody_td text-center text-sm text-gray-500">{{ ret.created_at }}</td>
+                                <td class="tbody_td text-sm text-gray-900">{{ ret.reason_label }}</td>
+                                <td class="tbody_td">
+                                    <div v-for="item in ret.items" :key="item.id" class="text-sm text-gray-700">
+                                        {{ item.product_name }}
+                                        <span class="font-semibold">× {{ item.quantity }}</span>
+                                    </div>
+                                </td>
+                                <td class="tbody_td text-center">
+                                    <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                                        :class="{
+                                            'bg-amber-100 text-amber-800': ret.status === 'pending',
+                                            'bg-green-100 text-green-800': ret.status === 'processed',
+                                            'bg-gray-100 text-gray-500': ret.status === 'cancelled',
+                                        }">
+                                        {{ { pending: 'Čaká na spracovanie', processed: 'Spracované — tovar na sklade', cancelled: 'Zrušené' }[ret.status] ?? ret.status }}
+                                    </span>
+                                </td>
+                                <td class="tbody_td text-center">
+                                    <router-link
+                                        :to="{ name: 'orders.returns.show', params: { orderId, returnId: ret.id } }"
+                                        class="rounded bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200">
+                                        Detail
+                                    </router-link>
                                 </td>
                             </tr>
                         </tbody>
