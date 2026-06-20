@@ -122,6 +122,16 @@
         </div>
         @endif
 
+        @if($order->wants_coupon)
+        <div class="info-block" style="background:#fff7ed; border:1px solid #fed7aa; border-radius:5px; padding:14px 18px; margin-bottom:24px; display:flex; align-items:flex-start; gap:12px;">
+            <span style="font-size:22px; line-height:1;">🎟️</span>
+            <div>
+                <strong style="font-size:14px; color:#9a3412; display:block; margin-bottom:3px;">Záujem o zľavový kupón</strong>
+                <span style="font-size:13px; color:#c2410c;">Zaregistrovali sme Váš záujem o zľavový kupón na ďalší nákup. Kupón Vám pošleme spolu s expedíciou objednávky.</span>
+            </div>
+        </div>
+        @endif
+
         <div class="info-block" style="margin-top:24px; text-align:center;">
             <a href="{{ env('FRONTEND_URL', config('app.url')) }}/objednavka/{{ $order->uuid }}"
                style="display:inline-block; background:#1e3a5f; color:#fff; text-decoration:none; padding:12px 28px; border-radius:5px; font-size:14px; font-weight:600;">

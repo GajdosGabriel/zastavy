@@ -179,7 +179,12 @@ watch(allProducts, () => {
                         <div class="mb-3 flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <div class="text-sm text-gray-500">Objednávka</div>
-                                <div class="text-xl font-semibold text-gray-900">{{ getOrder.serial_number }}</div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl font-semibold text-gray-900">{{ getOrder.serial_number }}</span>
+                                    <span v-if="getOrder.wants_coupon"
+                                        class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white"
+                                        title="Zákazník požaduje zľavový kupón">K</span>
+                                </div>
                             </div>
                             <div class="text-right">
                                 <div class="text-sm text-gray-500">Zákazník</div>

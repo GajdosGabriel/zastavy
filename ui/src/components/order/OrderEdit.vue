@@ -3,7 +3,7 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import useOrders from "../../store/StoreOrders";
 import useOrderProducts from "../../store/StoreOrderProducts";
 import useProducts from "../../store/StoreProducts";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { onMounted, ref, watch } from "vue";
 import productTableRow from "../orderProducts/productTableRow.vue";
 import { formatDecimal } from "../../models/functions";
@@ -23,6 +23,7 @@ const { getOrderProducts, getStatement, addOrderProduct, saveNewOrderProduct, up
 const { fetchProducts } = useProducts();
 const { setErrors } = useErrors();
 
+const router = useRouter();
 const { params: { orderId } } = useRoute();
 
 const shippingMethods = ref([]);
@@ -36,6 +37,7 @@ const showNotifyModal = ref(false);
 const notifyCustomer  = ref(true);
 const isSubmitting    = ref(false);
 const note            = ref('');
+const wantsCoupon     = ref(false);
 
 onMounted(async () => {
     await fetchOrder(orderId);
@@ -44,7 +46,8 @@ onMounted(async () => {
     selectedPaymentId.value  = getOrder.value?.payment_method?.id  ?? null;
     originalShippingId.value = selectedShippingId.value;
     originalPaymentId.value  = selectedPaymentId.value;
-    note.value = getOrder.value?.note ?? '';
+    note.value        = getOrder.value?.note ?? '';
+    wantsCoupon.value = !!getOrder.value?.wants_coupon;
 
     const [sm, pm] = await Promise.all([
         axiosInstance.get('/shipping-methods'),
@@ -105,9 +108,11 @@ const submitUpdate = async (notify) => {
             payment_method_id:  selectedPaymentId.value,
             notify_customer:    notify,
             note:               note.value || null,
+            wants_coupon:       wantsCoupon.value,
         });
         originalShippingId.value = selectedShippingId.value;
         originalPaymentId.value  = selectedPaymentId.value;
+        router.push({ name: 'orders.index' });
     } catch (e) {
         setErrors(e);
     } finally {
@@ -185,9 +190,16 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                 </div>
 
                 <!-- Záujem o kupón -->
-                <div v-if="getOrder.wants_coupon"
-                     class="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-                    Zákazník chce získať zľavový kupón na ďalší nákup
+                <div class="mb-4 rounded-md border bg-white px-4 py-3 shadow"
+                     :class="wantsCoupon ? 'border-orange-300 bg-orange-50' : 'border-gray-300'">
+                    <label class="flex cursor-pointer items-center gap-3">
+                        <input type="checkbox" v-model="wantsCoupon" class="h-4 w-4 rounded border-gray-300 text-orange-500" />
+                        <span class="flex items-center gap-2 text-sm font-semibold"
+                              :class="wantsCoupon ? 'text-orange-800' : 'text-gray-600'">
+                            <span class="text-base">🎟️</span>
+                            Zákazník chce zľavový kupón na ďalší nákup
+                        </span>
+                    </label>
                 </div>
 
                 <!-- Poznámka k objednávke -->

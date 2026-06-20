@@ -55,9 +55,14 @@ const dropdownItems = computed(() => {
         { 'bg-gray-200': order.isStorned },
     ]">
         <td class="tbody_td whitespace-nowrap font-semibold">
-            <router-link :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }" class="hover:text-blue-700">
-                {{ order.serial_number }}
-            </router-link>
+            <div class="flex items-center gap-1.5">
+                <router-link :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }" class="hover:text-blue-700">
+                    {{ order.serial_number }}
+                </router-link>
+                <span v-if="order.wants_coupon"
+                    class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white"
+                    title="Zákazník požaduje zľavový kupón">K</span>
+            </div>
         </td>
 
         <td class="tbody_td w-10">

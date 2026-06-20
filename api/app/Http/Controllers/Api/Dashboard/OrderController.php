@@ -87,7 +87,7 @@ class OrderController extends Controller
         $changes = $this->detectChanges($order, $request);
 
         $order->update($request->only([
-            'shipping_method_id', 'payment_method_id', 'status', 'isOpened', 'note',
+            'shipping_method_id', 'payment_method_id', 'status', 'isOpened', 'note', 'wants_coupon',
         ]));
 
         if ($request->boolean('notify_customer') && !empty($changes)) {
