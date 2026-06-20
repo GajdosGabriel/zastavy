@@ -98,7 +98,7 @@ class OrderController extends Controller
         return new OrderResource($order);
     }
 
-    private function detectChanges(Order $order, $request): array
+    private function detectChanges(Order $order, Request $request): array
     {
         $changes = [];
 
@@ -124,6 +124,10 @@ class OrderController extends Controller
                 'old'   => $order->wants_coupon ? 'Áno' : 'Nie',
                 'new'   => $request->boolean('wants_coupon') ? 'Áno' : 'Nie',
             ];
+        }
+
+        if ($request->boolean('has_product_changes')) {
+            $changes[] = ['label' => 'Položky objednávky', 'old' => '—', 'new' => 'Pridané nové položky'];
         }
 
         return $changes;

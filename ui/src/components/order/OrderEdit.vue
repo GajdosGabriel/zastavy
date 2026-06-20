@@ -104,11 +104,12 @@ const submitUpdate = async (notify) => {
         ]);
 
         await axiosInstance.put(`/orders/${orderId}`, {
-            shipping_method_id: selectedShippingId.value,
-            payment_method_id:  selectedPaymentId.value,
-            notify_customer:    notify,
-            note:               note.value || null,
-            wants_coupon:       wantsCoupon.value,
+            shipping_method_id:  selectedShippingId.value,
+            payment_method_id:   selectedPaymentId.value,
+            notify_customer:     notify,
+            note:                note.value || null,
+            wants_coupon:        wantsCoupon.value,
+            has_product_changes: pendingNew.length > 0,
         });
         originalShippingId.value = selectedShippingId.value;
         originalPaymentId.value  = selectedPaymentId.value;
