@@ -98,7 +98,7 @@ class OrderController extends Controller
         return new OrderResource($order);
     }
 
-    private function detectChanges(Order $order, Request $request): array
+    private function detectChanges(Order $order, OrderRequest $request): array
     {
         $changes = [];
 
