@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import BaseLayout from "../layout/BaseLayout.vue";
 import buttonLink from "../layout/page/ButtonLink.vue";
+import OrderCustomerCard from "./component/OrderCustomerCard.vue";
 import useOrders from "../../store/StoreOrders";
 import useShippings from "../../store/StoreShippings";
 import useOrderProducts from "../../store/StoreOrderProducts";
@@ -173,26 +174,14 @@ watch(allProducts, () => {
                     </div>
                 </div>
 
-                <!-- Súhrn + nový dodací list -->
+                <!-- Zákazník + objednávka -->
+                <div class="mb-4">
+                    <OrderCustomerCard :customer="customer" :user="getOrder.user" :order="getOrder" />
+                </div>
+
+                <!-- Súhrn expedície + nový dodací list -->
                 <div class="mb-4 grid gap-4 lg:grid-cols-3">
                     <div class="border-2 border-gray-300 bg-white p-4 shadow lg:col-span-2">
-                        <div class="mb-3 flex flex-wrap items-start justify-between gap-3">
-                            <div>
-                                <div class="text-sm text-gray-500">Objednávka</div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xl font-semibold text-gray-900">{{ getOrder.serial_number }}</span>
-                                    <span v-if="getOrder.wants_coupon"
-                                        class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white"
-                                        title="Zákazník požaduje zľavový kupón">K</span>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-sm text-gray-500">Zákazník</div>
-                                <div class="font-semibold text-gray-900">{{ customer.company || customer.name }}</div>
-                                <div class="text-sm text-gray-600">{{ customer.city }}</div>
-                            </div>
-                        </div>
-
                         <div class="grid gap-3 sm:grid-cols-4">
                             <div class="rounded border border-gray-200 bg-gray-50 p-3">
                                 <div class="text-xs uppercase text-gray-500">Stav</div>

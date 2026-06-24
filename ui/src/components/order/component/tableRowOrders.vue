@@ -27,7 +27,8 @@ const confirmStorno = async () => {
 };
 
 const actionMap = {
-    update: { to: { name: "orders.edit", params: { orderId: props.order.id } } },
+    view:   { to: { name: "orders.show",  params: { orderId: props.order.id } } },
+    update: { to: { name: "orders.edit",  params: { orderId: props.order.id } } },
     storno: { onClick: openStornoModal },
     delete: { onClick: () => destroyOrder(props.order.endpoints.destroy) },
 };

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import useCustomers from "../../store/StoreCustomers";
 import FormInput from "./FormInput.vue";
 import RequiredMark from "./RequiredMark.vue";
@@ -46,13 +46,18 @@ const icoSearchValidationError = () => {
     return "";
 };
 
-const onlyDigits = (event: Event) => {
-    getCustomer.value.ico = String((event.target as HTMLInputElement).value || "").replace(/\D/g, "");
-};
+const stripDigits = (val: unknown) => String(val ?? "").replace(/\D/g, "");
 
-const onlyDigitsSearch = (event: Event) => {
-    icoSearchInput.value = String((event.target as HTMLInputElement).value || "").replace(/\D/g, "");
-};
+watch(icoSearchInput, (val) => {
+    const cleaned = stripDigits(val);
+    if (cleaned !== val) icoSearchInput.value = cleaned;
+}, { flush: "sync" });
+
+watch(() => getCustomer.value?.ico, (val) => {
+    if (!getCustomer.value || val === undefined) return;
+    const cleaned = stripDigits(val);
+    if (cleaned !== String(val)) getCustomer.value.ico = cleaned;
+}, { flush: "sync" });
 
 const onClickIco = async () => {
     icoSearchMessage.value = "";
@@ -84,7 +89,6 @@ const onClickIco = async () => {
                 inputmode="numeric"
                 pattern="[0-9]*"
                 :invalid="!!icoSearchValidationError()"
-                @input="onlyDigitsSearch"
                 @keyup.enter="onClickIco"
             />
             <button
@@ -146,7 +150,7 @@ const onClickIco = async () => {
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">IČO</label>
-            <FormInput v-model="getCustomer.ico" :invalid="!!icoValidationError()" :error="icoValidationError()" inputmode="numeric" pattern="[0-9]*" placeholder="IČO" @input="onlyDigits" @keyup.enter="onClickIco" />
+            <FormInput v-model="getCustomer.ico" :invalid="!!icoValidationError()" :error="icoValidationError()" inputmode="numeric" pattern="[0-9]*" placeholder="IČO" @keyup.enter="onClickIco" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">DIČ</label>
