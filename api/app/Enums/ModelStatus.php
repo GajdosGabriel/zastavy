@@ -33,16 +33,7 @@ enum ModelStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Draft        => 'Koncept',
-            self::Active       => 'Aktívny',
-            self::Hidden       => 'Skrytý',
-            self::OutOfStock   => 'Vypredaný',
-            self::Discontinued => 'Vyradený',
-            self::Cancelled    => 'Stornovaný',
-            self::Archived     => 'Archivovaný',
-            self::Blocked      => 'Blokovaný',
-        };
+        return __('statuses.' . $this->value);
     }
 
     public function badgeColor(): string

@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import PanelDropdown from "../../layout/PanelDropdown.vue";
 
-const props = defineProps(["user", "index"]);
+const props = defineProps(["user"]);
 
 const fullName = (user) => {
     return [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || "-";
@@ -32,8 +32,8 @@ const dropdownItems = computed(() => [
 
 <template>
     <tr>
-        <td class="tbody_td" :title="`ID: ${user.id}`">
-            {{ index }}
+        <td class="tbody_td text-gray-500">
+            {{ user.id }}
         </td>
 
         <td class="tbody_td">
@@ -42,9 +42,9 @@ const dropdownItems = computed(() => [
                     {{ fullName(user) }}
                 </router-link>
             </div>
-            <div class="text-sm text-gray-500">
+            <!-- <div v-if="user.firstName || user.lastName" class="text-sm text-gray-500">
                 {{ user.username || "-" }}
-            </div>
+            </div> -->
         </td>
 
         <td class="tbody_td">
@@ -72,6 +72,20 @@ const dropdownItems = computed(() => [
                 </span>
                 <span v-if="!user.roles?.length" class="text-gray-500">-</span>
             </div>
+        </td>
+
+        <td class="tbody_td">
+            <span v-if="user.status" :class="[
+                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                user.status.color === 'green'  ? 'bg-green-100 text-green-800' :
+                user.status.color === 'red'    ? 'bg-red-100 text-red-800' :
+                user.status.color === 'amber'  ? 'bg-amber-100 text-amber-800' :
+                user.status.color === 'slate'  ? 'bg-slate-100 text-slate-700' :
+                                                 'bg-gray-100 text-gray-700'
+            ]">
+                {{ user.status.label }}
+            </span>
+            <span v-else class="text-gray-400">-</span>
         </td>
 
         <td class="tbody_td">

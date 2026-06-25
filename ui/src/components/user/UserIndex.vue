@@ -56,19 +56,20 @@ const template = () => {
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="thead">
                             <tr>
-                                <th class="thead_th">Por.</th>
-                                <th class="thead_th">Pouzivatel</th>
+                                <th class="thead_th">ID</th>
+                                <th class="thead_th">Používateľ</th>
                                 <th class="thead_th">Kontakt</th>
-                                <th class="thead_th">Zakaznik</th>
-                                <th class="thead_th">Objednavky</th>
+                                <th class="thead_th">Zákazník</th>
+                                <th class="thead_th">Objednávky</th>
                                 <th class="thead_th">Role</th>
-                                <th class="thead_th">Vytvoreny</th>
+                                <th class="thead_th">Status</th>
+                                <th class="thead_th">Vytvorený</th>
                                 <th class="thead_th"></th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <spinnerTable v-if="loadingStore.isLoading" />
-                            <table-row v-else v-for="(user, index) in getUsers" :user="user" :index="index + 1" :key="user.id" />
+                            <table-row v-else v-for="user in getUsers" :user="user" :key="user.id" />
                         </tbody>
                     </table>
                 </div>
