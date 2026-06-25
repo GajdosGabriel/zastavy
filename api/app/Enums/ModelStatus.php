@@ -78,6 +78,22 @@ enum ModelStatus: string
         return array_map(fn (self $status) => $status->value, self::allowedCasesForUser($user));
     }
 
+    /**
+     * Statuses relevant for a user account (not product-specific).
+     *
+     * @return array<int, array{value: string, label: string, color: string}>
+     */
+    public static function allowedForUserAccount(?User $authUser): array
+    {
+        $cases = [self::Draft, self::Active, self::Archived];
+
+        if (self::isSuperAdmin($authUser)) {
+            $cases[] = self::Blocked;
+        }
+
+        return array_map(fn (self $status) => $status->toArray(), $cases);
+    }
+
     public static function fromProduct(Product $product): self
     {
         if ($product->status instanceof self && $product->status !== self::Active) {

@@ -228,7 +228,7 @@ class UserController extends Controller
             'portal_permissions' => collect(self::PORTAL_PERMISSIONS)
                 ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
                 ->values(),
-            'statuses' => ModelStatus::allowedForUser($authUser),
+            'statuses' => ModelStatus::allowedForUserAccount($authUser),
         ];
     }
 
@@ -248,7 +248,7 @@ class UserController extends Controller
                         ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
                         ->values()
                     : [],
-                'statuses' => ModelStatus::allowedForUser($authUser),
+                'statuses' => ModelStatus::allowedForUserAccount($authUser),
             ],
         ];
     }
