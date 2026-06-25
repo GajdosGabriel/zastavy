@@ -24,6 +24,7 @@ const orderProducts = ref([]);
 const selectedProductId = ref("");
 const productSearch = ref("");
 const notifyCustomer = ref(true);
+const wantsCoupon = ref(false);
 const showSaveModal = ref(false);
 const isSubmitting = ref(false);
 const highlightMissingRequired = ref(false);
@@ -180,6 +181,7 @@ const confirmSave = async (sendNotification = notifyCustomer.value) => {
         orderProducts: orderProducts.value,
         note: orderState.order.note || null,
         notify_customer: Boolean(sendNotification),
+        wants_coupon: wantsCoupon.value,
         shipping_method_id: selectedShippingId.value,
         payment_method_id:  selectedPaymentId.value,
     });
@@ -412,6 +414,18 @@ onMounted(async () => {
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         placeholder="Poznámka"
                                     />
+                                </div>
+
+                                <div class="mt-4 rounded-md border px-4 py-3 shadow"
+                                     :class="wantsCoupon ? 'border-orange-300 bg-orange-50' : 'border-gray-300 bg-white'">
+                                    <label class="flex cursor-pointer items-center gap-3">
+                                        <input type="checkbox" v-model="wantsCoupon" class="h-4 w-4 rounded border-gray-300 text-orange-500" />
+                                        <span class="flex items-center gap-2 text-sm font-semibold"
+                                              :class="wantsCoupon ? 'text-orange-800' : 'text-gray-600'">
+                                            <span class="text-base">🎟️</span>
+                                            Zákazník chce zľavový kupón na ďalší nákup
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
                         </div>

@@ -16,7 +16,6 @@ const { setPaginator, setLinks } = usePaginator();
 const { setErrors } = useErrors();
 const { setOrderProducts } = useOrderProducts();
 const { state: q, setQuery, removeQuery } = useQuery();
-const { fetchUser } = useUsers();
 
 
 const defaultState = reactive({
@@ -95,7 +94,7 @@ const actions = {
                 id: id,
                 isOpened: 1,
             });
-            fetchUser();
+            useUsers().fetchUser();
         }
     },
 
