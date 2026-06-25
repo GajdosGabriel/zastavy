@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Ak je to existujúci súbor alebo adresár, obsluž ho priamo
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Všetko ostatné presmeruj na index.html (Vue Router)
+    RewriteRule ^ index.html [L]
+</IfModule>
