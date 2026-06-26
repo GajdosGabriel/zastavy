@@ -148,3 +148,7 @@ watch(state, () => {
     mutations.grandCalculate();
     actions.setlocalStorage();
 });
+
+watch(getCustomer, () => {
+    actions.setlocalStorageCustomer();
+}, { deep: true });
