@@ -43,7 +43,16 @@ class CustomerService
     public function updateWithUser(Customer $customer, $request): array
     {
         $request = $this->normalizeRequest($request);
-        $customer->update($this->customerData($request));
+        $customerData = $this->customerData($request);
+
+        // Preserve existing tax IDs — don't overwrite with null if form field was empty
+        foreach (['ico', 'dic', 'ic_dic'] as $field) {
+            if (empty($customerData[$field]) && $customer->{$field}) {
+                unset($customerData[$field]);
+            }
+        }
+
+        $customer->update($customerData);
         $user = $this->storeUser($customer, $request);
 
         return [$customer, $user];
