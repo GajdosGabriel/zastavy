@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Dashboard;
 
 
+use App\Actions\IssueCouponForOrder;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Services\ShippingService;
@@ -47,6 +48,11 @@ class OrderShippingController extends Controller
 
         $shipping?->load('notices');
         $order->refresh()->load(['customer.users', 'user', 'shippings.notices', 'orderProducts', 'stocks']);
+
+        if ($order->isFinished()) {
+            $order->loadMissing(['customer', 'orderProducts']);
+            (new IssueCouponForOrder)->handle($order);
+        }
 
         return (new ShippingResource($shipping))->additional([
             'order' => new OrderResource($order)
