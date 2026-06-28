@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\SuperAdmin\ProductController;
 use App\Http\Controllers\Api\SuperAdmin\ProductImageController;
 use App\Http\Controllers\Api\SuperAdmin\ShippingMethodController as AdminShippingMethodController;
 use App\Http\Controllers\Api\SuperAdmin\ShippingNoticeController;
+use App\Http\Controllers\Api\SuperAdmin\CouponSettingsController;
 use App\Http\Controllers\Api\SuperAdmin\StockController;
 use App\Http\Controllers\Api\SuperAdmin\UserController;
 use App\Http\Controllers\Api\PasswordResetController;
@@ -101,6 +102,8 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
         Route::post('payment-methods/{id}/restore', [AdminPaymentMethodController::class, 'restore'])->name('admin.payment-methods.restore');
         Route::apiResource('coupons', AdminCouponController::class)->except(['show', 'create', 'edit']);
         Route::post('coupons/{id}/restore', [AdminCouponController::class, 'restore'])->name('admin.coupons.restore');
+        Route::get('coupon-settings', [CouponSettingsController::class, 'show'])->name('admin.coupon-settings.show');
+        Route::put('coupon-settings', [CouponSettingsController::class, 'update'])->name('admin.coupon-settings.update');
     });
 });
 

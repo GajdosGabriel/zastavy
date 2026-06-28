@@ -14,6 +14,7 @@ use App\Http\Resources\OrderResource;
 use App\Http\Resources\OrderStatisticResource;
 use App\Services\CustomerService;
 use App\Services\OrderStatisticsService;
+use App\Actions\IssueCouponForOrder;
 use App\Actions\StoreOrder;
 use App\Models\PaymentMethod;
 use App\Models\ShippingMethod;
@@ -86,9 +87,18 @@ class OrderController extends Controller
 
         $changes = $this->detectChanges($order, $request);
 
+        $previousStatus = $order->status;
+
         $order->update($request->only([
             'shipping_method_id', 'payment_method_id', 'status', 'isOpened', 'note', 'wants_coupon',
         ]));
+
+        $newStatus = $order->fresh()->status;
+
+        if ($previousStatus !== OrderStatus::Archived && $newStatus === OrderStatus::Archived) {
+            $order->loadMissing(['customer', 'orderProducts']);
+            (new IssueCouponForOrder)->handle($order);
+        }
 
         if ($request->boolean('notify_customer') && !empty($changes)) {
             $notifiable = $order->user ?? $order->customer;
