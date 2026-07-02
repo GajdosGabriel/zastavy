@@ -12,6 +12,9 @@ enum OrderStatus: string
     /** Spracováva sa — žiadna expedícia ešte nezačala (vypočítané) */
     case Processing = 'processing';
 
+    /** Pripravená na odoslanie, čaká na vyzdvihnutie kuriérom (uložené v DB) */
+    case ReadyToShip = 'ready_to_ship';
+
     /** Čiastočne expedovaná (vypočítané) */
     case PartiallyShipped = 'partially_shipped';
 
@@ -21,7 +24,7 @@ enum OrderStatus: string
     /** Stornovaná (uložené v DB) */
     case Cancelled = 'cancelled';
 
-    /** Vybavená / archivovaná (uložené v DB) */
+    /** Manuálne archivovaná adminom (uložené v DB) */
     case Archived = 'archived';
 
     public function label(): string
@@ -29,6 +32,7 @@ enum OrderStatus: string
         return match ($this) {
             self::Draft            => 'Nová',
             self::Processing       => 'Spracováva sa',
+            self::ReadyToShip      => 'Pripravené na odoslanie',
             self::PartiallyShipped => 'Čiastočne expedovaná',
             self::Shipped          => 'Expedovaná',
             self::Cancelled        => 'Stornovaná',
@@ -41,6 +45,7 @@ enum OrderStatus: string
         return match ($this) {
             self::Draft            => 'gray',
             self::Processing       => 'blue',
+            self::ReadyToShip      => 'indigo',
             self::PartiallyShipped => 'amber',
             self::Shipped          => 'emerald',
             self::Cancelled        => 'red',
@@ -59,16 +64,12 @@ enum OrderStatus: string
 
     public static function fromOrder(Order $order): self
     {
-        if ($order->status === self::Cancelled) {
+        if ($order->status === self::Cancelled || $order->isStorned()) {
             return self::Cancelled;
         }
 
         if ($order->status === self::Archived) {
             return self::Archived;
-        }
-
-        if ($order->isStorned()) {
-            return self::Cancelled;
         }
 
         if ($order->isFinished()) {
@@ -77,6 +78,14 @@ enum OrderStatus: string
 
         if ($order->stockExpedition > 0) {
             return self::PartiallyShipped;
+        }
+
+        if ($order->status === self::ReadyToShip) {
+            return self::ReadyToShip;
+        }
+
+        if (! $order->isOpened) {
+            return self::Draft;
         }
 
         return self::Processing;

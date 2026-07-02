@@ -26,12 +26,22 @@ const confirmStorno = async () => {
     showStornoModal.value = false;
 };
 
+const markReadyToShip = () => updateOrder({ id: props.order.id, status: "ready_to_ship" });
+const archiveOrder = () => updateOrder({ id: props.order.id, status: "archived" });
+
 const actionMap = {
-    view:   { to: { name: "orders.show",  params: { orderId: props.order.id } } },
-    update: { to: { name: "orders.edit",  params: { orderId: props.order.id } } },
-    storno: { onClick: openStornoModal },
-    delete: { onClick: () => destroyOrder(props.order.endpoints.destroy) },
+    view:    { to: { name: "orders.show",  params: { orderId: props.order.id } } },
+    update:  { to: { name: "orders.edit",  params: { orderId: props.order.id } } },
+    storno:  { onClick: openStornoModal },
+    delete:  { onClick: () => destroyOrder(props.order.endpoints.destroy) },
+    archive: { onClick: archiveOrder },
 };
+
+// Objednávka ešte nemá žiadnu expedíciu ani nie je stornovaná/archivovaná — dá sa označiť ako pripravená na odoslanie
+const canMarkReadyToShip = computed(() => props.order.permissions?.update?.allowed
+    && !props.order.isStorned
+    && props.order.stock_expedition === 0
+    && props.order.status?.value !== "ready_to_ship");
 
 const dropdownItems = computed(() => {
     const fixed = (props.order.links || []).map(link => ({
@@ -45,7 +55,11 @@ const dropdownItems = computed(() => {
         .filter(([key, perm]) => perm.allowed && actionMap[key])
         .map(([key, perm]) => ({ label: perm.label, ...actionMap[key] }));
 
-    return [...fixed, ...permissionItems];
+    const readyToShipItem = canMarkReadyToShip.value
+        ? [{ label: "Pripravené na odoslanie", onClick: markReadyToShip }]
+        : [];
+
+    return [...fixed, ...readyToShipItem, ...permissionItems];
 });
 </script>
 

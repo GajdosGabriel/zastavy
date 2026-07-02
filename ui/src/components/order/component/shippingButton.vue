@@ -35,7 +35,13 @@ const shippingPercentage = computed(() => Number(props.order.shipping_percentage
             Prázdna
         </span>
 
-        <!-- Vybavená 100% — archivovaná, neklikateľná -->
+        <!-- Pripravená na odoslanie — zabalená, čaká na vyzdvihnutie kuriérom -->
+        <span v-else-if="showPackStatus && order.status?.value === 'ready_to_ship'"
+            class="inline-flex min-w-28 items-center justify-center rounded bg-indigo-600 px-2 py-1 text-xs font-semibold text-white">
+            Pripravené na odoslanie
+        </span>
+
+        <!-- Vybavená 100% — plne expedovaná -->
         <span v-else-if="showPackStatus && order.isFinished"
             class="inline-flex min-w-28 items-center justify-center rounded bg-green-600 px-2 py-1 text-xs font-semibold text-white">
             Vybavená 100 %

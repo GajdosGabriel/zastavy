@@ -13,7 +13,7 @@ import loadingStore from "../../store/StoreLoading";
 import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
 
-const { getOrder, fetchOrder, customer } = useOrders();
+const { getOrder, fetchOrder, updateOrder, customer } = useOrders();
 const { storeShipping } = useShippings();
 const { updateOrderProducts } = useOrderProducts();
 const { fetchReturns, getReturns } = useReturns();
@@ -37,6 +37,18 @@ const remainingQuantity = computed(() => Number(getOrder.value?.shipping_remaini
 const shippedQuantity = computed(() => Number(getOrder.value?.stock_expedition ?? 0));
 const requiredQuantity = computed(() => Number(getOrder.value?.shipping_required_quantity ?? 0));
 const statusLabel = computed(() => getOrder.value?.shipping_status_label ?? (getOrder.value?.isFinished ? "Vybavená" : "Nevybavená"));
+
+const markingReady = ref(false);
+const canMarkReadyToShip = computed(() => !getOrder.value?.isStorned
+    && Number(getOrder.value?.stock_expedition ?? 0) === 0
+    && getOrder.value?.status?.value !== "ready_to_ship");
+
+const markReadyToShip = async () => {
+    markingReady.value = true;
+    await updateOrder({ id: orderId, status: "ready_to_ship" });
+    await fetchOrder(orderId);
+    markingReady.value = false;
+};
 
 // All products enriched — no filtering
 const allProducts = computed(() => orderProducts.value.map((item) => ({
@@ -186,6 +198,10 @@ watch(allProducts, () => {
                             <div class="rounded border border-gray-200 bg-gray-50 p-3">
                                 <div class="text-xs uppercase text-gray-500">Stav</div>
                                 <div class="font-semibold text-gray-900">{{ statusLabel }}</div>
+                                <button v-if="canMarkReadyToShip" type="button" @click="markReadyToShip" :disabled="markingReady"
+                                    class="mt-2 rounded bg-indigo-600 px-2 py-1 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
+                                    {{ markingReady ? '...' : 'Označiť ako pripravené na odoslanie' }}
+                                </button>
                             </div>
                             <div class="rounded border border-gray-200 bg-gray-50 p-3 text-center">
                                 <div class="text-xs uppercase text-gray-500">Vybavené</div>
