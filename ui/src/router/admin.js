@@ -32,6 +32,17 @@ const admin = [
             superAdminOnly: true,
         },
     },
+    {
+        path: '/admin/export-pouzivatelov',
+        name: 'users.export.index',
+        components: {
+            default: () => import('../components/admin/UserExportIndex.vue'),
+        },
+        meta: {
+            title: 'Export používateľov',
+            superAdminOnly: true,
+        },
+    },
 ];
 
 export default admin;

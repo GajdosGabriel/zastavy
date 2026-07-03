@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\SuperAdmin\ShippingNoticeController;
 use App\Http\Controllers\Api\SuperAdmin\CouponSettingsController;
 use App\Http\Controllers\Api\SuperAdmin\StockController;
 use App\Http\Controllers\Api\SuperAdmin\UserController;
+use App\Http\Controllers\Api\SuperAdmin\UserExportController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Middleware\AdminMiddleware;
@@ -93,6 +94,8 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     ]);
 
     Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+    Route::get('users/export/attributes', [UserExportController::class, 'attributes'])->name('users.export.attributes');
+    Route::get('users/export', [UserExportController::class, 'export'])->name('users.export');
     Route::apiResource('users', UserController::class)->only(['index', 'show', 'update', 'store']);
     Route::apiResource('products', ProductController::class)->except(['show']);
     Route::prefix('admin')->group(function () {

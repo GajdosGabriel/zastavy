@@ -117,6 +117,19 @@ onMounted(() => {
                                                 Vytvárať a spravovať zľavové kupóny, limity a platnosti.
                                           </p>
                                     </router-link>
+
+                                    <router-link
+                                          :to="{ name: 'users.export.index' }"
+                                          class="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+                                    >
+                                          <p class="text-sm text-slate-500">Super admin</p>
+                                          <h2 class="mt-2 text-2xl font-semibold text-slate-900">
+                                                Export používateľov
+                                          </h2>
+                                          <p class="mt-3 text-slate-600">
+                                                Exportovať zoznam používateľov do CSV s voliteľnými atribútmi.
+                                          </p>
+                                    </router-link>
                               </template>
                         </div>
                   </section>

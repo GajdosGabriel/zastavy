@@ -40,6 +40,13 @@ export const PAGE_USER: Page = {
     ICON: ''
 }
 
+export const PAGE_USER_EXPORT: Page = {
+    NAME: 'Export používateľov',
+    URL: URL_BASE_API + '/users/export',
+    ROUTE: 'users.export.index',
+    ICON: ''
+}
+
 export const PAGE_PRODUCT: Page = {
     NAME: 'Produkty',
     URL: URL_BASE_API + '/products',
