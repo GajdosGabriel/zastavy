@@ -109,12 +109,3 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
         Route::put('coupon-settings', [CouponSettingsController::class, 'update'])->name('admin.coupon-settings.update');
     });
 });
-
-Route::get('artisan/run', function () {
-    \Artisan::call('cache:clear');
-    \Artisan::call('view:clear');
-    \Artisan::call('config:clear');
-    \Artisan::call('optimize:clear');
-
-    dd("All is cleared");
-});

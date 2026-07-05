@@ -4,13 +4,16 @@ namespace App\Actions;
 
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\User;
 use App\Models\ShippingMethod;
 use App\Notifications\OrderCreated;
 use Illuminate\Http\Request;
 use App\Contracts\StoreOrderContract;
 use App\Models\PaymentMethod;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 
 
 class StoreOrder implements StoreOrderContract
@@ -26,8 +29,12 @@ class StoreOrder implements StoreOrderContract
     {
         $contact = $this->request->input('customer', []);
 
+        // Ceny sa berú z databázy, nie z requestu — klientom poslané ceny sa ignorujú.
+        $items = $this->resolveItems();
+        $cartTotal = $items->sum(fn ($item) => $item['price'] * $item['quantity']);
+
         [$shippingMethodId, $shippingPrice, $paymentMethodId, $paymentFee, $couponId, $discountAmount] =
-            $this->resolveCheckoutFields();
+            $this->resolveCheckoutFields($cartTotal);
 
         $order = $customer->orders()->create([
             'user_id'            => $user?->id,
@@ -44,7 +51,7 @@ class StoreOrder implements StoreOrderContract
             'wants_coupon'       => (bool) $this->request->input('wants_coupon', false),
         ]);
         $this->serialNumber($order);
-        $this->storeOrderProducts($order);
+        $this->storeOrderProducts($order, $items);
 
         if ($couponId) {
             Coupon::where('id', $couponId)->increment('used_count');
@@ -55,7 +62,35 @@ class StoreOrder implements StoreOrderContract
         return $order;
     }
 
-    protected function resolveCheckoutFields(): array
+    /**
+     * Načíta produkty z databázy a vráti položky objednávky so serverovou cenou.
+     */
+    protected function resolveItems(): Collection
+    {
+        $requested = collect($this->request->input('orderProducts', []));
+
+        $products = Product::whereIn('id', $requested->pluck('id')->filter())
+            ->get()
+            ->keyBy('id');
+
+        return $requested->map(function ($item) use ($products) {
+            $product = $products->get($item['id'] ?? null);
+
+            if (! $product) {
+                throw ValidationException::withMessages([
+                    'orderProducts' => ['Niektorý z produktov v košíku už nie je dostupný.'],
+                ]);
+            }
+
+            return [
+                'product_id' => $product->id,
+                'quantity'   => max(1, (int) ($item['input_order'] ?? 0)),
+                'price'      => (float) $product->active_price,
+            ];
+        });
+    }
+
+    protected function resolveCheckoutFields(float $cartTotal): array
     {
         $shippingMethodId = $this->request->input('shipping_method_id');
         $paymentMethodId  = $this->request->input('payment_method_id');
@@ -64,9 +99,7 @@ class StoreOrder implements StoreOrderContract
         $shippingPrice = 0.0;
         if ($shippingMethodId) {
             $method = ShippingMethod::find($shippingMethodId);
-            $cartTotal = collect($this->request->input('orderProducts', []))
-                ->sum(fn ($p) => ($p['active_price'] ?? 0) * ($p['input_order'] ?? 0));
-            $shippingPrice = $method ? $method->resolvePrice((float) $cartTotal) : 0.0;
+            $shippingPrice = $method ? $method->resolvePrice($cartTotal) : 0.0;
         }
 
         $paymentFee = 0.0;
@@ -79,33 +112,41 @@ class StoreOrder implements StoreOrderContract
         $discountAmount = 0.0;
         if ($couponCode) {
             $coupon = Coupon::where('code', strtoupper($couponCode))->first();
-            if ($coupon) {
-                $cartTotal ??= collect($this->request->input('orderProducts', []))
-                    ->sum(fn ($p) => ($p['active_price'] ?? 0) * ($p['input_order'] ?? 0));
-                $couponId = $coupon->id;
-                $discountAmount = $coupon->calculateDiscount((float) $cartTotal);
+
+            if (! $coupon || ! $coupon->isValid($cartTotal)) {
+                throw ValidationException::withMessages([
+                    'coupon_code' => ['Kupón nie je platný alebo nespĺňa podmienky.'],
+                ]);
             }
+
+            $couponId = $coupon->id;
+            $discountAmount = $coupon->calculateDiscount($cartTotal);
         }
 
         return [$shippingMethodId, $shippingPrice, $paymentMethodId, $paymentFee, $couponId, $discountAmount];
     }
 
-    protected function storeOrderProducts($order)
+    protected function storeOrderProducts($order, Collection $items)
     {
-        new StoreOrderProduct($order, $this->request->orderProducts);
+        new StoreOrderProduct($order, $items);
     }
 
     protected function notifyOrderCreated(Order $order): void
     {
-        $order->load(['customer', 'orderProducts.product', 'shippingMethod', 'paymentMethod']);
+        try {
+            $order->load(['customer', 'orderProducts.product', 'shippingMethod', 'paymentMethod']);
 
-        $notification = new OrderCreated($order);
+            $notification = new OrderCreated($order);
 
-        if ($order->customer?->email) {
-            $order->customer->notify($notification);
+            if ($order->customer?->email) {
+                $order->customer->notify($notification);
+            }
+
+            Notification::send(User::role('super-admin')->get(), $notification);
+        } catch (\Throwable $e) {
+            // Zlyhanie notifikácie nesmie zhodiť vytvorenie objednávky.
+            report($e);
         }
-
-        Notification::send(User::role('super-admin')->get(), $notification);
     }
 
     protected function serialNumber(Order $order): void
@@ -113,7 +154,10 @@ class StoreOrder implements StoreOrderContract
         $year  = $order->created_at->format('Y');
         $month = $order->created_at->format('m');
 
-        $position = Order::whereYear('created_at', $year)
+        // withTrashed: soft-deleted objednávky musia ostať v poradí,
+        // inak sa po zmazaní pridelí už existujúce sériové číslo.
+        $position = Order::withTrashed()
+            ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->where('id', '<=', $order->id)
             ->count();

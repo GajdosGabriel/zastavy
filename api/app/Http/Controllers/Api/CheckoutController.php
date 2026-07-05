@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Actions\StoreCheckout;
 use App\Http\Requests\OrderRequest;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 
@@ -60,8 +61,9 @@ class CheckoutController extends Controller
 
     public function store(OrderRequest $request)
     {
-        $checkout = new StoreCheckout($request);
-        $order = $checkout->getOrder();
+        $order = DB::transaction(function () use ($request) {
+            return (new StoreCheckout($request))->getOrder();
+        });
 
         return response()->json([
             'uuid'          => $order->uuid,
