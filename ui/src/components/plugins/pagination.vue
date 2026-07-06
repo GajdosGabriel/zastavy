@@ -1,8 +1,11 @@
 <script setup>
 import usePaginator from '../../store/StorePaginator';
+import { storeToRefs } from 'pinia';
 import { computed, onBeforeUnmount } from 'vue';
 
-const { getPaginator, resetPaginator, getLinks } = usePaginator();
+const paginatorStore = usePaginator();
+const { getPaginator, getLinks } = storeToRefs(paginatorStore);
+const { resetPaginator } = paginatorStore;
 
 const emit = defineEmits(['setUrl']);
 

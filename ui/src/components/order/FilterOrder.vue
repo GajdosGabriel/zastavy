@@ -1,12 +1,15 @@
 <script setup>
 import { onUnmounted, reactive, watch } from "vue";
+import { storeToRefs } from "pinia";
 import useOrders from "../../store/StoreOrders";
 import useQuery from "../../store/StoreQuery";
 import FilterOrderLabel from "./FilterOrderLabel.vue";
 import { isActive, isConfirmed, isDeleted, isNotificated, resetFilter } from "../../models/filterLabels";
 
 const { fetchOrders } = useOrders();
-const { state, setQuery, removeQuery, resetQuery } = useQuery();
+const queryStore = useQuery();
+const { getQuery } = storeToRefs(queryStore);
+const { setQuery, removeQuery, resetQuery } = queryStore;
 const labelList = reactive([isActive, isConfirmed, isDeleted, isNotificated]);
 
 const input = reactive({
@@ -14,9 +17,9 @@ const input = reactive({
     product: null,
 });
 
-watch(state, () => {
+watch(getQuery, () => {
     fetchOrders();
-});
+}, { deep: true });
 
 const searchInputText = (object) => {
     removeQuery(object);
@@ -89,7 +92,7 @@ const onClickLabel = (object) => {
             <div class="flex flex-wrap gap-2">
                 <FilterOrderLabel v-for="label in labelList" :key="label.key" :label="label"
                     @labelemit="onClickLabel" />
-                <FilterOrderLabel v-if="state.query.length" :label="resetFilter" @labelemit="onClearQuery" />
+                <FilterOrderLabel v-if="getQuery.length" :label="resetFilter" @labelemit="onClearQuery" />
             </div>
         </div>
     </div>

@@ -57,7 +57,7 @@ export const useStocks = defineStore('stocks', {
     actions: {
         async fetchStocks(): Promise<void> {
             try {
-                const { state: q } = useQuery();
+                const q = useQuery();
                 const paginator = usePaginator();
                 const parts = [
                     q.stringForUrl ? q.stringForUrl.slice(1) : '',

@@ -5,6 +5,7 @@ import useOrderProducts from "../../store/StoreOrderProducts";
 import { useProducts } from "../../store/StoreProducts";
 import { useRoute, useRouter } from "vue-router";
 import { onMounted, ref, watch } from "vue";
+import { storeToRefs } from "pinia";
 import productTableRow from "../orderProducts/productTableRow.vue";
 import { formatDecimal } from "../../models/functions";
 import shippingButton from "./component/shippingButton.vue";
@@ -18,8 +19,12 @@ import buttonLink from '../layout/page/ButtonLink.vue';
 import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
 
-const { getOrder, fetchOrder, customer, updateOrder } = useOrders();
-const { getOrderProducts, getStatement, addOrderProduct, saveNewOrderProduct, updateOrderProducts } = useOrderProducts();
+const ordersStore = useOrders();
+const { getOrder, customer } = storeToRefs(ordersStore);
+const { fetchOrder, updateOrder } = ordersStore;
+const orderProductsStore = useOrderProducts();
+const { getOrderProducts, getStatement } = storeToRefs(orderProductsStore);
+const { addOrderProduct, saveNewOrderProduct, updateOrderProducts } = orderProductsStore;
 const { fetchProducts } = useProducts();
 const { setErrors } = useErrors();
 

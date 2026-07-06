@@ -14,7 +14,9 @@ import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
 import { storeToRefs } from "pinia";
 
-const { getOrder, fetchOrder, updateOrder, customer } = useOrders();
+const ordersStore = useOrders();
+const { getOrder, customer } = storeToRefs(ordersStore);
+const { fetchOrder, updateOrder } = ordersStore;
 const { storeShipping } = useShippings();
 const { updateOrderProducts } = useOrderProducts();
 const returnsStore = useReturns();

@@ -1,6 +1,7 @@
 <script setup>
 import BaseLayout from "../layout/BaseLayout.vue";
 import { onMounted, ref } from "vue";
+import { storeToRefs } from "pinia";
 import useCheckouts from "../../store/StoreCheckouts";
 import useCustomers from "../../store/StoreCustomers";
 import useErrors from "../../store/StoreErrors";
@@ -20,7 +21,9 @@ const {
       state: checkoutState,
 } = useCheckouts();
 
-const { getCustomer, setCustomer } = useCustomers();
+const customersStore = useCustomers();
+const { getCustomer } = storeToRefs(customersStore);
+const { setCustomer } = customersStore;
 const { getFieldErrors } = useErrors();
 const isSubmitting = ref(false);
 

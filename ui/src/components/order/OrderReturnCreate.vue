@@ -1,12 +1,15 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
+import { storeToRefs } from "pinia";
 import { useRoute, useRouter } from "vue-router";
 import BaseLayout from "../layout/BaseLayout.vue";
 import buttonLink from "../layout/page/ButtonLink.vue";
 import useOrders from "../../store/StoreOrders";
 import { useReturns } from "../../store/StoreReturns";
 
-const { getOrder, fetchOrder } = useOrders();
+const ordersStore = useOrders();
+const { getOrder } = storeToRefs(ordersStore);
+const { fetchOrder } = ordersStore;
 const { storeReturn } = useReturns();
 
 const router = useRouter();

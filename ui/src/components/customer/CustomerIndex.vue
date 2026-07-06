@@ -20,15 +20,14 @@ import loadingStore from '../../store/StoreLoading';
 
 
 
-const {
-    state,
-    fetchCustomers,
-    setPaginator,
-    getCustomers,
-} = useCustomers();
+const customersStore = useCustomers();
+const { getCustomers } = storeToRefs(customersStore);
+const { fetchCustomers, setPaginator } = customersStore;
 const { getUserCan } = storeToRefs(useUser());
 
-const { state: q, setQuery, getQuery, getQueryStringUrl, removeQuery, resetQuery } = useQuery();
+const queryStore = useQuery();
+const { getQueryStringUrl } = storeToRefs(queryStore);
+const { setQuery, removeQuery, resetQuery } = queryStore;
 
 const sortById = ref<boolean>(false);
 const sortByOrders = ref<boolean>(false);
@@ -66,7 +65,7 @@ const paginatorUrl = (url: string): void => {
 const onClickMark = (): void => {
     iconStatus.value = !iconStatus.value;
 };
-templateCustomer(state);
+templateCustomer(customersStore);
 
 const template = () => {
     return {
@@ -79,7 +78,7 @@ const template = () => {
         page_bottom: {
             buttonBottomLeft: { name: 'Späť', spinner: true, link: '/zakaznici', icon: 'arrow-left' }
         },
-        buttonLink: state.buttonLink,
+        buttonLink: customersStore.buttonLink,
     }
 }
 

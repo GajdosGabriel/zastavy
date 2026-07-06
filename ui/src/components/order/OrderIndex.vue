@@ -16,7 +16,9 @@ import spinnerTable from '../icons/spinnerTable.vue';
 
 
 
-const { state, fetchOrders, setPaginator, getOrders, fetchMarkSelected } = useOrders();
+const ordersStore = useOrders();
+const { getOrders } = storeToRefs(ordersStore);
+const { fetchOrders, setPaginator, fetchMarkSelected } = ordersStore;
 const { getUserCan } = storeToRefs(useUser());
 
 onMounted(() => {
@@ -40,7 +42,7 @@ const template = () => {
                   // buttonLink: { name: 'Späť', spinner: true, link: 'products.index', icon: 'arrow-left' },
                   // buttonSubmit: { name: 'Uložiť', spinner: true, link: 'products.create', icon: 'plus' }
             },
-            buttonLink: state.buttonLink,
+            buttonLink: ordersStore.buttonLink,
       }
 }
 </script>
@@ -71,7 +73,7 @@ const template = () => {
                                                                   </th>
                                                                   <th class="thead_th">
                                                                         <icon-star
-                                                                              :status="state.statement.markSelected"
+                                                                              :status="ordersStore.statement.markSelected"
                                                                               @click="fetchMarkSelected"
                                                                               class="mx-auto" />
                                                                   </th>
@@ -84,7 +86,7 @@ const template = () => {
                                                       </thead>
                                                       <tbody class="">
 
-                                                            <spinnerTable v-if="state.isLoading" />
+                                                            <spinnerTable v-if="ordersStore.isLoading" />
 
                                                             <tableRowOrders v-else v-for="order in getOrders"
                                                                   :key="order.id" :order="templateOrder(order)">

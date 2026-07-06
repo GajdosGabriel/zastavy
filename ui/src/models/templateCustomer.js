@@ -1,6 +1,5 @@
 
 import { formatDecimal } from './functions'
-import useOrder from '../store/StoreOrders';
 
 
 export default function templateCustomer(state) {

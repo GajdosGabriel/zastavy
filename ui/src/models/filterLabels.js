@@ -2,10 +2,8 @@
 import useUsers from "../store/StoreUsers";
 import useQuery from "../store/StoreQuery";
 
-// StoreUsers je Pinia — volaj lazy vnútri getterov (nie na module-level, spadlo by pred app.use(pinia)).
-// StoreQuery je zatiaľ starý factory, preto smie ostať na module-level.
-const { getQueryLength } = useQuery();
-
+// StoreUsers aj StoreQuery sú Pinia — volaj lazy vnútri getterov
+// (nie na module-level, spadlo by pred app.use(pinia)).
 
 export const isNotificated = {
     name: 'Neoznámené',
@@ -43,5 +41,5 @@ export const resetFilter = {
     key: 'resetFilter',
     value: true,
     active: false,
-    iconRight: getQueryLength,
+    get iconRight() { return useQuery().getQueryLength; },
 };

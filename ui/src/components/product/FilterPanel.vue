@@ -9,7 +9,9 @@ const { fetchSearchInput, fetchProducts } = useProducts();
 const categoriesStore = useCategories();
 const { categories } = storeToRefs(categoriesStore);
 const { fetchCategories } = categoriesStore;
-const { state: sq, setQuery, removeQuery } = useQuery();
+const queryStore = useQuery();
+const { getQueryStringUrl } = storeToRefs(queryStore);
+const { setQuery, removeQuery } = queryStore;
 
 const onSearchInput = ref("");
 const onCategory = ref("");
@@ -40,7 +42,7 @@ onMounted(() => {
     fetchCategories();
 });
 
-watch(sq, () => {
+watch(getQueryStringUrl, () => {
     fetchProducts();
 });
 

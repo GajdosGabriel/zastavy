@@ -90,7 +90,7 @@ export const useProducts = defineStore('products', () => {
 
     const fetchProducts = async (): Promise<void> => {
         try {
-            const { state: q } = useQuery();
+            const q = useQuery();
             const paginator = usePaginator();
             const response = await axiosInstance.get(url.value + q.stringForUrl);
             products.value = await response.data.data;

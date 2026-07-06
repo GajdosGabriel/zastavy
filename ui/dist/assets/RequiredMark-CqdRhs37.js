@@ -1,1 +1,0 @@
-import{_ as e,c as n,o}from"./index-BoPDgu-x.js";const t={},a={class:"text-red-600 text-sm align-top leading-none","aria-label":"povinné pole"};function c(r,s){return o(),n("span",a,"*")}const i=e(t,[["render",c]]);export{i as R};

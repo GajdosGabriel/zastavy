@@ -1,207 +1,193 @@
+import { defineStore } from "pinia";
 import axiosInstance from "../axiosInstance";
-import { computed, reactive } from "vue";
-import router from "../router";
-import usePaginator from './StorePaginator';
-import useQuery from './StoreQuery';
-import useOrders from './StoreOrders';
-import useErrors from './StoreErrors';
+import usePaginator from "./StorePaginator";
+import useQuery from "./StoreQuery";
+import useOrders from "./StoreOrders";
+import useErrors from "./StoreErrors";
 import { PAGE_CUSTOMER } from "../constants";
 import { AxiosResponse } from "axios";
 import { ApiResponse } from "../types";
-import { URL_BASE_API } from "../constants";
 
 interface Customer {
-    id: string
-    name: string
-    company: string
-    street: string
-    postcode: number
-    city: string
-    email: string
-    phone: string
-    ico: number
-    dic: number
-    ic_dic: string
-    created_at: string
-    updated_at: string
-    deleted_at: string | null
-    status: any
-};
+    id: string;
+    name: string;
+    company: string;
+    street: string;
+    postcode: number;
+    city: string;
+    email: string;
+    phone: string;
+    ico: number;
+    dic: number;
+    ic_dic: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    status: any;
+    [key: string]: any;
+}
 
-interface Statement {
-    spinner: boolean;
-    markSelected: boolean;
-};
+interface CustomersState {
+    statement: { markSelected: boolean };
+    url: string;
+    customers: Customer[];
+    customer: Customer;
+    statuses: any[];
+}
 
+export const useCustomers = defineStore("customers", {
+    state: (): CustomersState => ({
+        statement: {
+            markSelected: false,
+        },
+        url: PAGE_CUSTOMER.URL,
+        customers: [],
+        customer: {} as Customer,
+        statuses: [],
+    }),
 
-const { setOrders } = useOrders();
-const { setErrors } = useErrors();
-const { setPaginator, setLinks } = usePaginator();
-const { getQueryStringUrl, setQuery, removeQuery } = useQuery();
-
-const defaultState = {
-    statement: {
-        markSelected: false,
-    } as Statement,
-    url: PAGE_CUSTOMER.URL as string,
-    customers: [] as Customer[],
-    customer: {} as Customer,
-    statuses: []
-};
-
-const state = reactive(defaultState);
-
-const getters = {
-    getCustomers: computed<Customer[]>(() => state.customers),
-    getCustomer: computed<Customer>(() => state.customer),
-    getStatuses: computed(() => state.statuses),
-    getNumberOfCustomers: () => {
-        return computed<number>(() => state.customers.length);
-    },
-};
-const actions = {
-    fetchCustomers: async () => {
-        try {
-            const response = await axiosInstance.get<ApiResponse<Customer[]>>(
-                state.url + getQueryStringUrl.value
-            );
-
-            state.customers = response.data.data;
-            setPaginator(response.data.meta);
-            setLinks(response.data.links);
-        } catch (error) {
-            state.customers = [];
-            setErrors(error);
-        }
+    getters: {
+        getCustomers: (state): Customer[] => state.customers,
+        getCustomer: (state): Customer => state.customer,
+        getStatuses: (state): any[] => state.statuses,
     },
 
-    fetchCustomer: async (id: number) => {
-        try {
-            const response = await axiosInstance.get(PAGE_CUSTOMER.URL + '/' + id);
-            state.customer = response.data.data;
-            state.statuses = response.data.meta?.statuses || [];
-        } finally {
-        }
-    },
+    actions: {
+        async fetchCustomers(): Promise<void> {
+            const { setPaginator, setLinks } = usePaginator();
+            const q = useQuery();
 
-    fetchCustomerOrders: async (customerId: number) => {
-        try {
-            setOrders([]);
-            const response: AxiosResponse<ApiResponse<any[]>> = await axiosInstance.get(PAGE_CUSTOMER.URL + '/' + customerId + '/order');
-            setOrders(response.data.data);
-            setPaginator(response.data.meta);
-            setLinks(response.data.links);
-        } catch (e) {
-            setErrors(e);
-        }
-    },
+            try {
+                const response = await axiosInstance.get<ApiResponse<Customer[]>>(
+                    this.url + q.getQueryStringUrl
+                );
 
-    findCustomerByIco: async () => {
-        const ico = String(state.customer.ico || '').replace(/\D/g, '');
+                this.customers = response.data.data;
+                setPaginator(response.data.meta);
+                setLinks(response.data.links);
+            } catch (error) {
+                this.customers = [];
+                useErrors().setErrors(error);
+            }
+        },
 
-        if (!ico) {
-            throw new Error('Zadajte IČO.');
-        }
+        async fetchCustomer(id: number | string): Promise<void> {
+            const response = await axiosInstance.get(PAGE_CUSTOMER.URL + "/" + id);
+            this.customer = response.data.data;
+            this.statuses = response.data.meta?.statuses || [];
+        },
 
-        const response = await axiosInstance.get("/checkouts/" + ico);
-        const company = response.data.data;
-        const source: string = response.data.source;
+        async fetchCustomerOrders(customerId: number | string): Promise<void> {
+            const { setOrders } = useOrders();
+            const { setPaginator, setLinks } = usePaginator();
 
-        const fromDb = source === 'database' || source === 'database_with_internet';
+            try {
+                setOrders([]);
+                const response: AxiosResponse<ApiResponse<any[]>> = await axiosInstance.get(
+                    PAGE_CUSTOMER.URL + "/" + customerId + "/order"
+                );
+                setOrders(response.data.data);
+                setPaginator(response.data.meta);
+                setLinks(response.data.links);
+            } catch (e) {
+                useErrors().setErrors(e);
+            }
+        },
 
-        state.customer = {
-            ...state.customer,
-            company: company.company ?? state.customer.company,
-            street: company.street ?? state.customer.street,
-            postcode: company.postcode ?? state.customer.postcode,
-            city: company.city ?? state.customer.city,
-            ico: company.ico ?? ico,
-            dic: company.dic ?? state.customer.dic,
-            ic_dic: company.ic_dic ?? state.customer.ic_dic,
-            name: fromDb ? (company.name || '') : '',
-            email: fromDb ? (company.email || '') : '',
-            phone: fromDb ? (company.phone || '') : '',
-        };
+        async findCustomerByIco(): Promise<{ customer: Customer; source: string }> {
+            const ico = String(this.customer.ico || "").replace(/\D/g, "");
 
-        return {
-            customer: state.customer,
-            source,
-        };
-    },
+            if (!ico) {
+                throw new Error("Zadajte IČO.");
+            }
 
-    updateCustomer: async () => {
-        try {
-            const payload = {
-                ...state.customer,
-                status: state.customer.status?.value || state.customer.status,
+            const response = await axiosInstance.get("/checkouts/" + ico);
+            const company = response.data.data;
+            const source: string = response.data.source;
+
+            const fromDb = source === "database" || source === "database_with_internet";
+
+            this.customer = {
+                ...this.customer,
+                company: company.company ?? this.customer.company,
+                street: company.street ?? this.customer.street,
+                postcode: company.postcode ?? this.customer.postcode,
+                city: company.city ?? this.customer.city,
+                ico: company.ico ?? ico,
+                dic: company.dic ?? this.customer.dic,
+                ic_dic: company.ic_dic ?? this.customer.ic_dic,
+                name: fromDb ? (company.name || "") : "",
+                email: fromDb ? (company.email || "") : "",
+                phone: fromDb ? (company.phone || "") : "",
             };
 
-            await axiosInstance.put(
-                PAGE_CUSTOMER.URL + '/' + state.customer.id,
-                payload
-            );
-            // state.customer = response.data;
-        } catch (e) {
-            if (e.response.status === 422) {
-                // state.errors = e.response.data.errors;
-            }
-        }
-        actions.fetchCustomers();
-    },
-    storeCustomer: async () => {
-        try {
-            const response = await axiosInstance.post(PAGE_CUSTOMER.URL, state.customer);
-            state.customer = response.data.data;
-            // router.push({ name: "customers.index" });
-        } catch (e) {
-            // if (e.response.status === 422) {
-            //     state.errors = e.response.data.errors;
-            // }
-        } finally {
-        }
-    },
-    destroyCustomer: async (url: string) => {
-        if (!window.confirm("Vymazať zákazníka!")) {
-            return;
-        }
+            return {
+                customer: this.customer,
+                source,
+            };
+        },
 
-        try {
+        async updateCustomer(): Promise<void> {
+            try {
+                const payload = {
+                    ...this.customer,
+                    status: this.customer.status?.value || this.customer.status,
+                };
+
+                await axiosInstance.put(
+                    PAGE_CUSTOMER.URL + "/" + this.customer.id,
+                    payload
+                );
+            } catch (e) {
+                useErrors().setErrors(e);
+            }
+            this.fetchCustomers();
+        },
+
+        async storeCustomer(): Promise<void> {
+            try {
+                const response = await axiosInstance.post(PAGE_CUSTOMER.URL, this.customer);
+                this.customer = response.data.data;
+            } catch (e) {
+                useErrors().setErrors(e);
+            }
+        },
+
+        async destroyCustomer(url: string): Promise<void> {
+            if (!window.confirm("Vymazať zákazníka!")) {
+                return;
+            }
+
             await axiosInstance.delete(url).then((res) => {
-                const index = state.customers.findIndex(item => item.id === res.data.id);
+                const index = this.customers.findIndex((item) => item.id === res.data.id);
                 if (index !== -1) {
-                    state.customers.splice(index, 1);
+                    this.customers.splice(index, 1);
                 }
             });
-        } finally {
+        },
 
-        }
+        setCustomer(data: Customer): void {
+            this.customer = data;
+        },
 
+        setPaginator(data: string): void {
+            this.url = data;
+            this.fetchCustomers();
+        },
+
+        async clickToMark(val: string): Promise<void> {
+            await axiosInstance.post(val).then((res) => {
+                const index = this.customers.findIndex((item) => item.id === res.data.id);
+                if (index !== -1) {
+                    this.customers.splice(index, 1, res.data);
+                }
+            });
+        },
+
+        resetCustomer(): void {
+            this.customer = {} as Customer;
+        },
     },
-    setCustomer: (data): void => {
-        state.customer = data
-    },
-
-    setPaginator: (data): void => {
-        state.url = data;
-        actions.fetchCustomers();
-    },
-
-    clickToMark: async (val: string) => {
-        await axiosInstance.post(val).then((res) => {
-            const index = state.customers.findIndex(item => item.id === res.data.id);
-            if (index !== -1) {
-                state.customers.splice(index, 1, res.data);
-            }
-        });
-    },
-    resetCustomer: () => {
-        state.customer = {} as Customer
-    }
-};
-
-export default () => ({
-    state,
-    ...getters,
-    ...actions,
 });
 
+export default useCustomers;

@@ -1,8 +1,9 @@
 <script setup>
 import { computed } from "vue";
+import { storeToRefs } from "pinia";
 import useOrders from "../../store/StoreOrders";
 
-const { getOrderStatistics } = useOrders();
+const { getOrderStatistics } = storeToRefs(useOrders());
 
 const orders = computed(() => getOrderStatistics.value.orders || {});
 const products = computed(() => getOrderStatistics.value.products || []);

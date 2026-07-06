@@ -4,9 +4,6 @@ import useErrors from './StoreErrors';
 import useCustomer from './StoreCustomers';
 import useCheckoutOptions from './StoreCheckoutOptions';
 
-const { getCustomer, resetCustomer } = useCustomer();
-const { setErrors } = useErrors();
-
 const CART_STORAGE_KEY = 'form';
 const CUSTOMER_STORAGE_KEY = 'customer';
 
@@ -95,7 +92,7 @@ const actions = {
     },
 
     setlocalStorageCustomer: () => {
-        localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify(getCustomer.value));
+        localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify(useCustomer().getCustomer));
     },
 
     getlocalStorage: () => {
@@ -117,7 +114,7 @@ const actions = {
         const options = useCheckoutOptions();
         try {
             const response = await axiosInstance.post("/checkouts", {
-                customer: getCustomer.value,
+                customer: useCustomer().getCustomer,
                 orderProducts: state.carts,
                 note: state.note || null,
                 shipping_method_id: options.selectedShippingId,
@@ -128,28 +125,38 @@ const actions = {
             localStorage.removeItem(CUSTOMER_STORAGE_KEY);
             state.carts = [];
             state.note = '';
-            resetCustomer();
+            useCustomer().resetCustomer();
             options.reset();
             return response.data?.uuid ?? true;
         } catch (e) {
-            setErrors(e);
+            // StoreErrors je Pinia — volaj lazy (nie module-level destructuring).
+            useErrors().setErrors(e);
             return false;
         }
     }
 };
 
-export default () => ({
-    state,
-    ...actions,
-    ...getters,
-    ...mutations,
-});
+let customerWatchStarted = false;
+
+export default () => {
+    // Pinia store (StoreCustomers) sa smie volať až v aktívnom Pinia kontexte (setup),
+    // preto sa watch na zákazníka registruje lazy pri prvom použití – nie na module-top-level.
+    if (!customerWatchStarted) {
+        customerWatchStarted = true;
+        watch(() => useCustomer().getCustomer, () => {
+            actions.setlocalStorageCustomer();
+        }, { deep: true });
+    }
+
+    return {
+        state,
+        ...actions,
+        ...getters,
+        ...mutations,
+    };
+};
 
 watch(state, () => {
     mutations.grandCalculate();
     actions.setlocalStorage();
 });
-
-watch(getCustomer, () => {
-    actions.setlocalStorageCustomer();
-}, { deep: true });

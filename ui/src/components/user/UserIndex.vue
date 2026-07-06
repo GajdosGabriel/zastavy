@@ -16,7 +16,9 @@ import { useUsers as useUser } from "../../store/StoreUsers";
 const adminUsersStore = useAdminUsers();
 const { getUsers } = storeToRefs(adminUsersStore);
 const { fetchUsers, setPaginator, resetUrl } = adminUsersStore;
-const { resetQuery, getQueryStringUrl } = useQuery();
+const queryStore = useQuery();
+const { getQueryStringUrl } = storeToRefs(queryStore);
+const { resetQuery } = queryStore;
 const { getUserCan } = storeToRefs(useUser());
 
 onMounted(() => {

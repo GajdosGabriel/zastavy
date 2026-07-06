@@ -8,12 +8,12 @@ import useCustomer from "../../store/StoreCustomers.ts";
 import { useProducts as useProduct } from "../../store/StoreProducts";
 import { useStocks as useStock } from "../../store/StoreStocks";
 import { useAnnouncements as useAnnouncement } from "../../store/StoreAnnouncements";
-import useNavigation from "../../store/StoreNavigation.js";
+import useNavigation from "../../store/StoreNavigation";
 import mainNavigationDropdown from "./navigationMainDropdown.vue";
 import NavKosikLink from "../checkout/NavKosikLink.vue";
 import badge from "../plugins/badge.vue";
 import { APP_NAME, Page } from "../../constants.ts";
-import useOrder from "../../store/StoreOrders.js";
+import useOrder from "../../store/StoreOrders";
 
 const mobileMenuOpen = ref(false);
 const route = useRoute();
@@ -46,7 +46,7 @@ const { getlocalStorage } = useCheckouts();
 const usersStore = useUser();
 const { getUser } = storeToRefs(usersStore);
 const { fetchUser } = usersStore;
-const { getMainNavigation } = useNavigation();
+const { getMainNavigation } = storeToRefs(useNavigation());
 
 onMounted(() => {
       if (localStorage.getItem('authToken') && !getUser.value?.isAuth) {

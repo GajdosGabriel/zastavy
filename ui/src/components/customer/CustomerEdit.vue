@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
+import { storeToRefs } from "pinia";
 import BaseLayout from "../layout/BaseLayout.vue";
 import PageHeader from "../layout/page/pageHeader.vue";
 import useCustomers from "../../store/StoreCustomers";
@@ -9,7 +10,9 @@ import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 import useUnsavedChanges from "../../models/useUnsavedChanges";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 
-const { updateCustomer, fetchCustomer, getCustomer } = useCustomers();
+const customersStore = useCustomers();
+const { getCustomer } = storeToRefs(customersStore);
+const { updateCustomer, fetchCustomer } = customersStore;
 const { setOriginalData, markAsSaved } = useUnsavedChanges(() => getCustomer.value);
 const { params: { customerId } } = useRoute();
 

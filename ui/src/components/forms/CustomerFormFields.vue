@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import { storeToRefs } from "pinia";
 import useCustomers from "../../store/StoreCustomers";
 import FormInput from "./FormInput.vue";
 import RequiredMark from "./RequiredMark.vue";
@@ -16,7 +17,9 @@ const props = withDefaults(defineProps<{
     withStatus: false,
 });
 
-const { getCustomer, findCustomerByIco, getStatuses } = useCustomers();
+const customersStore = useCustomers();
+const { getCustomer, getStatuses } = storeToRefs(customersStore);
+const { findCustomerByIco } = customersStore;
 
 const isSearchingCompany = ref(false);
 const icoSearchMessage = ref("");

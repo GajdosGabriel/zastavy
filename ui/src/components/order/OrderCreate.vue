@@ -15,8 +15,11 @@ import loadingStore from "../../store/StoreLoading";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import { storeToRefs } from "pinia";
 
-const { getCustomer, setCustomer, fetchCustomer } = useCustomers();
-const { storeOrder, state: orderState } = useOrders();
+const customersStore = useCustomers();
+const { getCustomer } = storeToRefs(customersStore);
+const { setCustomer, fetchCustomer } = customersStore;
+const ordersStore = useOrders();
+const { storeOrder } = ordersStore;
 const productsStore = useProducts();
 const { getProducts } = storeToRefs(productsStore);
 const { fetchProducts } = productsStore;
@@ -182,7 +185,7 @@ const confirmSave = async (sendNotification = notifyCustomer.value) => {
     const order = await storeOrder({
         customer: getCustomer.value,
         orderProducts: orderProducts.value,
-        note: orderState.order.note || null,
+        note: ordersStore.order.note || null,
         notify_customer: Boolean(sendNotification),
         wants_coupon: wantsCoupon.value,
         shipping_method_id: selectedShippingId.value,
@@ -412,7 +415,7 @@ onMounted(async () => {
                                 <div class="mt-4">
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
                                     <input
-                                        v-model="orderState.order.note"
+                                        v-model="ordersStore.order.note"
                                         type="text"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         placeholder="Poznámka"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, watch, computed } from "vue";
+import { storeToRefs } from "pinia";
 import BaseLayout from "../layout/BaseLayout.vue";
 import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
@@ -10,8 +11,10 @@ import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import PanelDropdown from "../layout/PanelDropdown.vue";
 
 const route = useRoute();
-const { fetchCustomer, getCustomer, fetchCustomerOrders, destroyCustomer } = useCustomers();
-const { getOrders } = useOrders();
+const customersStore = useCustomers();
+const { getCustomer } = storeToRefs(customersStore);
+const { fetchCustomer, fetchCustomerOrders, destroyCustomer } = customersStore;
+const { getOrders } = storeToRefs(useOrders());
 
 onMounted(() => { document.title = "Detail zákazníka"; });
 

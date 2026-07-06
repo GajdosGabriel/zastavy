@@ -15,17 +15,13 @@ import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
 import buttonLink from '../layout/page/ButtonLink.vue';
 
 
-const {
-    getOrder,
-    fetchOrder,
-    customer,
-} = useOrders();
+const ordersStore = useOrders();
+const { getOrder, customer } = storeToRefs(ordersStore);
+const { fetchOrder } = ordersStore;
 
-const {
-    getOrderProducts,
-    getStatement,
-    addOrderProduct,
-} = useOrderProducts();
+const orderProductsStore = useOrderProducts();
+const { getOrderProducts, getStatement } = storeToRefs(orderProductsStore);
+const { addOrderProduct } = orderProductsStore;
 
 const { fetchProducts } = useProducts();
 const returnsStore = useReturns();

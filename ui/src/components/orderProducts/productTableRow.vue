@@ -9,8 +9,8 @@ import { storeToRefs } from "pinia";
 
 const props = defineProps(["item"]);
 
-const { isOrderFinished } = useOrders();
-const { updateOrderProducts, destroyOrderProducts, saveNewOrderProduct } = useOrderProducts();
+const { isOrderFinished } = storeToRefs(useOrders());
+const { updateOrderProducts, destroyOrderProducts, saveNewOrderProduct, removeOrderProduct } = useOrderProducts();
 const { getProducts } = storeToRefs(useProducts());
 const { setErrors } = useErrors();
 
@@ -37,10 +37,8 @@ const onClickSave = async (item) => {
 
 const onClickDelete = async (item) => {
     if (item.isNew) {
-        // Remove temp item from state directly via index
-        const { state } = useOrderProducts();
-        const idx = state.orderProducts.findIndex(p => p.id === item.id);
-        if (idx !== -1) state.orderProducts.splice(idx, 1);
+        // Remove temp (unsaved) item from the store
+        removeOrderProduct(item.id);
         return;
     }
     if (item.stockSum) {
