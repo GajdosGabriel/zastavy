@@ -166,7 +166,13 @@ class Order extends Model
 
     public function getStockExpeditionAttribute()
     {
-        return $this->stocks()->get()->sum('quantity');
+        // Ak je relácia eager-loadnutá (napr. v zozname objednávok), sčítaj z pamäte;
+        // inak agreguj priamo v DB namiesto hydratácie všetkých riadkov skladu.
+        if ($this->relationLoaded('stocks')) {
+            return (int) $this->stocks->sum('quantity');
+        }
+
+        return (int) $this->stocks()->sum('quantity');
     }
 
     public function scopeFilter($query, $filters)

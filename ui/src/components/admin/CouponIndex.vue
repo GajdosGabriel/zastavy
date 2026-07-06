@@ -5,15 +5,17 @@ import PageHeader from '../layout/page/pageHeader.vue';
 import ButtonSubmit from '../layout/page/ButtonSubmit.vue';
 import PanelDropdown from '../layout/PanelDropdown.vue';
 import FormInput from '../forms/FormInput.vue';
-import useCoupons from '../../store/StoreCoupons';
+import { storeToRefs } from 'pinia';
+import { useCoupons } from '../../store/StoreCoupons';
 import axiosInstance from '../../axiosInstance';
 import { formatDecimal } from '../../models/functions';
 
+const store = useCoupons();
+const { coupon, getCoupons, getTrashedCoupons } = storeToRefs(store);
 const {
-    state, getCoupons, getTrashedCoupons,
     fetchCoupons, saveCoupon, editCoupon,
     destroyCoupon, restoreCoupon, resetCoupon, generateCode,
-} = useCoupons();
+} = store;
 
 const settings = ref({
     delay_days:           14,
@@ -116,7 +118,7 @@ const dropdownItems = (coupon) => [
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Kód kupóna</label>
                             <div class="flex gap-2">
-                                <FormInput v-model="state.coupon.code" placeholder="SUMMER10" required class="uppercase flex-1" />
+                                <FormInput v-model="coupon.code" placeholder="SUMMER10" required class="uppercase flex-1" />
                                 <button type="button" @click="generateCode"
                                     title="Generovať kód"
                                     class="rounded border border-slate-300 bg-slate-100 px-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 whitespace-nowrap">
@@ -126,35 +128,35 @@ const dropdownItems = (coupon) => [
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Typ zľavy</label>
-                            <select v-model="state.coupon.type" required class="form-control rounded border px-3 py-2 w-full">
+                            <select v-model="coupon.type" required class="form-control rounded border px-3 py-2 w-full">
                                 <option value="percent">Percentuálna (%)</option>
                                 <option value="fixed">Fixná (€)</option>
                             </select>
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">
-                                Hodnota {{ state.coupon.type === 'percent' ? '(%)' : '(€)' }}
+                                Hodnota {{ coupon.type === 'percent' ? '(%)' : '(€)' }}
                             </label>
-                            <FormInput v-model.number="state.coupon.value" type="number" step="0.01" min="0" placeholder="10" required />
+                            <FormInput v-model.number="coupon.value" type="number" step="0.01" min="0" placeholder="10" required />
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Min. hodnota objednávky (€)</label>
-                            <FormInput v-model="state.coupon.min_order_price" type="number" step="0.01" min="0" placeholder="Voliteľné" />
+                            <FormInput v-model="coupon.min_order_price" type="number" step="0.01" min="0" placeholder="Voliteľné" />
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Limit použití</label>
-                            <FormInput v-model="state.coupon.usage_limit" type="number" min="1" placeholder="Voliteľné" />
+                            <FormInput v-model="coupon.usage_limit" type="number" min="1" placeholder="Voliteľné" />
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Platný od</label>
-                            <input v-model="state.coupon.valid_from" type="date" class="form-control rounded border px-3 py-2 w-full" />
+                            <input v-model="coupon.valid_from" type="date" class="form-control rounded border px-3 py-2 w-full" />
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Platný do</label>
-                            <input v-model="state.coupon.valid_to" type="date" class="form-control rounded border px-3 py-2 w-full" />
+                            <input v-model="coupon.valid_to" type="date" class="form-control rounded border px-3 py-2 w-full" />
                         </div>
                         <div class="flex items-center gap-2 md:col-span-2 self-end pb-1">
-                            <input id="coupon-active" type="checkbox" v-model="state.coupon.active" class="h-4 w-4 accent-blue-600" />
+                            <input id="coupon-active" type="checkbox" v-model="coupon.active" class="h-4 w-4 accent-blue-600" />
                             <label for="coupon-active" class="text-sm font-medium text-slate-700">Aktívny</label>
                         </div>
                     </div>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from "vue";
 import useQuery from "../../store/StoreQuery";
-import useStocks from "../../store/StoreStocks";
+import { useStocks } from "../../store/StoreStocks";
 
 const { setQuery, removeQuery, resetQuery } = useQuery();
 const { fetchSearchInput } = useStocks();

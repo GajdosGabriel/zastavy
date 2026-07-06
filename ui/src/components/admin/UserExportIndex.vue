@@ -2,12 +2,14 @@
 import { onMounted } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import PageHeader from "../layout/page/pageHeader.vue";
-import useUserExport from "../../store/StoreUserExport";
+import { storeToRefs } from "pinia";
+import { useUserExport } from "../../store/StoreUserExport";
 
+const store = useUserExport();
+const { getAttributes, getSelected, isExporting } = storeToRefs(store);
 const {
-    state, getAttributes, getSelected, isExporting,
     fetchAttributes, toggleAttribute, selectAllAttributes, clearAttributes, exportUsers,
-} = useUserExport();
+} = store;
 
 onMounted(() => {
     fetchAttributes();

@@ -3,10 +3,11 @@ import { onMounted, computed } from 'vue';
 import BaseLayout from '../layout/BaseLayout.vue';
 import OrderStatistics from '../order/OrderStatistics.vue';
 import useOrders from '../../store/StoreOrders';
-import useUser from '../../store/StoreUsers';
+import { storeToRefs } from 'pinia';
+import { useUsers as useUser } from '../../store/StoreUsers';
 
 const { fetchOrderStatistics } = useOrders();
-const { getUser } = useUser();
+const { getUser } = storeToRefs(useUser());
 
 const isSuperAdmin = computed(() => getUser.value?.roles?.includes('super-admin'));
 

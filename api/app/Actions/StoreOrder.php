@@ -69,7 +69,10 @@ class StoreOrder implements StoreOrderContract
     {
         $requested = collect($this->request->input('orderProducts', []));
 
+        // Verejný e-shop smie objednať iba publikované produkty (aj cez priame ID
+        // v requeste). Interný staff môže do objednávky pridať aj nepublikované.
         $products = Product::whereIn('id', $requested->pluck('id')->filter())
+            ->when(! $this->isStaffRequest(), fn ($query) => $query->where('published', 1))
             ->get()
             ->keyBy('id');
 
@@ -82,12 +85,21 @@ class StoreOrder implements StoreOrderContract
                 ]);
             }
 
+            // Minimálne odberné množstvo sa vynucuje na serveri, nielen v UI.
+            $minOrder = max(1, (int) ($product->min_order ?? 1));
+
             return [
                 'product_id' => $product->id,
-                'quantity'   => max(1, (int) ($item['input_order'] ?? 0)),
+                'quantity'   => max($minOrder, (int) ($item['input_order'] ?? 0)),
                 'price'      => (float) $product->active_price,
             ];
         });
+    }
+
+    protected function isStaffRequest(): bool
+    {
+        return (bool) $this->request->user('sanctum')
+            ?->hasAnyRole(['super-admin', 'admin', 'manager', 'sales', 'warehouse']);
     }
 
     protected function resolveCheckoutFields(float $cartTotal): array
@@ -111,7 +123,12 @@ class StoreOrder implements StoreOrderContract
         $couponId = null;
         $discountAmount = 0.0;
         if ($couponCode) {
-            $coupon = Coupon::where('code', strtoupper($couponCode))->first();
+            // lockForUpdate drží riadok kupónu do commitu transakcie, takže kontrola
+            // usage_limit a následný increment sú atomické — limit sa nedá prekročiť
+            // súbežnými objednávkami (race condition).
+            $coupon = Coupon::where('code', strtoupper($couponCode))
+                ->lockForUpdate()
+                ->first();
 
             if (! $coupon || ! $coupon->isValid($cartTotal)) {
                 throw ValidationException::withMessages([

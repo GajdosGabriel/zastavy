@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import PanelDropdown from "../../layout/PanelDropdown.vue";
-import useStocks from "../../../store/StoreStocks";
+import { useStocks } from "../../../store/StoreStocks";
 
 const props = defineProps(["item"]);
 const { destroyStock } = useStocks();

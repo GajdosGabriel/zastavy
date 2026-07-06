@@ -113,22 +113,23 @@ const actions = {
     },
 
     storeCheckout: async () => {
-        const { state: optionsState, getCouponCode, getWantsCoupon } = useCheckoutOptions();
+        // Pinia store — hodnoty sa čítajú priamo (bez .value), state je na top-level.
+        const options = useCheckoutOptions();
         try {
             const response = await axiosInstance.post("/checkouts", {
                 customer: getCustomer.value,
                 orderProducts: state.carts,
                 note: state.note || null,
-                shipping_method_id: optionsState.selectedShippingId,
-                payment_method_id:  optionsState.selectedPaymentId,
-                coupon_code:        getCouponCode.value || null,
-                wants_coupon:       getWantsCoupon.value,
+                shipping_method_id: options.selectedShippingId,
+                payment_method_id:  options.selectedPaymentId,
+                coupon_code:        options.getCouponCode || null,
+                wants_coupon:       options.getWantsCoupon,
             });
             localStorage.removeItem(CUSTOMER_STORAGE_KEY);
             state.carts = [];
             state.note = '';
             resetCustomer();
-            useCheckoutOptions().reset();
+            options.reset();
             return response.data?.uuid ?? true;
         } catch (e) {
             setErrors(e);

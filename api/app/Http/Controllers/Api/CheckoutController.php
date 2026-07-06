@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Actions\StoreCheckout;
 use App\Http\Requests\OrderRequest;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Http;
 class CheckoutController extends Controller
 {
 
-    public function show(string $ico)
+    public function show(Request $request, string $ico)
     {
         $ico = preg_replace('/\D+/', '', $ico);
 
@@ -22,6 +23,13 @@ class CheckoutController extends Controller
             return response()->json([
                 'message' => 'Zadajte platné IČO.',
             ], 422);
+        }
+
+        // Kontaktné údaje zákazníka (meno, e-mail, telefón) sa smú predvyplniť
+        // iba prihlásenému internému používateľovi. Verejný e-shop aj portáloví
+        // zákazníci dostanú výhradne firemné údaje z verejného registra (GDPR).
+        if (! $this->isStaff($request)) {
+            return $this->companyFromRegistry($ico);
         }
 
         $customer = $this->findCustomerByIco($ico);
@@ -45,9 +53,14 @@ class CheckoutController extends Controller
             ]);
         }
 
+        return $this->companyFromRegistry($ico);
+    }
+
+    private function companyFromRegistry(string $ico)
+    {
         $company = $this->findCompanyByIco($ico);
 
-        if (!$company) {
+        if (! $company) {
             return response()->json([
                 'message' => 'Firmu podľa zadaného IČO sa nepodarilo nájsť.',
             ], 404);
@@ -57,6 +70,12 @@ class CheckoutController extends Controller
             'data' => $company,
             'source' => 'internet',
         ]);
+    }
+
+    private function isStaff(Request $request): bool
+    {
+        return (bool) $request->user('sanctum')
+            ?->hasAnyRole(['super-admin', 'admin', 'manager', 'sales', 'warehouse']);
     }
 
     public function store(OrderRequest $request)

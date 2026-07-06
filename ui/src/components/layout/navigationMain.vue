@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import useUser from "../../store/StoreUsers.js";
+import { storeToRefs } from "pinia";
+import { useUsers as useUser } from "../../store/StoreUsers";
 import useCheckouts from "../../store/StoreCheckouts.js";
 import useCustomer from "../../store/StoreCustomers.ts";
-import useProduct from "../../store/StoreProducts.ts";
-import useStock from "../../store/StoreStocks.js";
-import useAnnouncement from "../../store/StoreAnnouncements.js";
+import { useProducts as useProduct } from "../../store/StoreProducts";
+import { useStocks as useStock } from "../../store/StoreStocks";
+import { useAnnouncements as useAnnouncement } from "../../store/StoreAnnouncements";
 import useNavigation from "../../store/StoreNavigation.js";
 import mainNavigationDropdown from "./navigationMainDropdown.vue";
 import NavKosikLink from "../checkout/NavKosikLink.vue";
@@ -42,7 +43,9 @@ const onClickItem = (item: Page) => {
 };
 
 const { getlocalStorage } = useCheckouts();
-const { fetchUser, getUser } = useUser();
+const usersStore = useUser();
+const { getUser } = storeToRefs(usersStore);
+const { fetchUser } = usersStore;
 const { getMainNavigation } = useNavigation();
 
 onMounted(() => {

@@ -5,14 +5,16 @@ import PageHeader from '../layout/page/pageHeader.vue';
 import ButtonSubmit from '../layout/page/ButtonSubmit.vue';
 import PanelDropdown from '../layout/PanelDropdown.vue';
 import FormInput from '../forms/FormInput.vue';
-import usePaymentMethods from '../../store/StorePaymentMethods';
+import { storeToRefs } from 'pinia';
+import { usePaymentMethods } from '../../store/StorePaymentMethods';
 import { formatDecimal } from '../../models/functions';
 
+const store = usePaymentMethods();
+const { paymentMethod, getPaymentMethods, getTrashedMethods, getPaymentTypes } = storeToRefs(store);
 const {
-    state, getPaymentMethods, getTrashedMethods, getPaymentTypes,
     fetchPaymentMethods, savePaymentMethod, editPaymentMethod,
     destroyPaymentMethod, restorePaymentMethod, resetPaymentMethod,
-} = usePaymentMethods();
+} = store;
 
 onMounted(fetchPaymentMethods);
 
@@ -34,24 +36,24 @@ const dropdownItems = (method) => [
                     <div class="grid gap-4 md:grid-cols-3">
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Názov</label>
-                            <FormInput v-model="state.paymentMethod.name" placeholder="Napr. Bankový prevod" required />
+                            <FormInput v-model="paymentMethod.name" placeholder="Napr. Bankový prevod" required />
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Poplatok (€)</label>
-                            <FormInput v-model.number="state.paymentMethod.fee" type="number" step="0.01" min="0" placeholder="0.00" required />
+                            <FormInput v-model.number="paymentMethod.fee" type="number" step="0.01" min="0" placeholder="0.00" required />
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Typ platby</label>
-                            <select v-model="state.paymentMethod.type" required class="form-control rounded border px-3 py-2 w-full">
+                            <select v-model="paymentMethod.type" required class="form-control rounded border px-3 py-2 w-full">
                                 <option v-for="t in getPaymentTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
                             </select>
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Poradie</label>
-                            <FormInput v-model.number="state.paymentMethod.sort_order" type="number" min="0" placeholder="99" />
+                            <FormInput v-model.number="paymentMethod.sort_order" type="number" min="0" placeholder="99" />
                         </div>
                         <div class="flex items-center gap-2 md:col-span-2 self-end pb-1">
-                            <input id="payment-active" type="checkbox" v-model="state.paymentMethod.active" class="h-4 w-4 accent-blue-600" />
+                            <input id="payment-active" type="checkbox" v-model="paymentMethod.active" class="h-4 w-4 accent-blue-600" />
                             <label for="payment-active" class="text-sm font-medium text-slate-700">Aktívny</label>
                         </div>
                     </div>

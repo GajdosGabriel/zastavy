@@ -1,8 +1,9 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import useStocks from "../../store/StoreStocks";
-import useUser from "../../store/StoreUsers";
+import { useStocks } from "../../store/StoreStocks";
+import { useUsers as useUser } from "../../store/StoreUsers";
 import useQuery from "../../store/StoreQuery";
+import { storeToRefs } from "pinia";
 import PaginationComponent from "../plugins/pagination.vue";
 import tableRow from "./component/tableRow.vue";
 import BaseLayout from "../layout/BaseLayout.vue";
@@ -11,8 +12,10 @@ import spinnerTable from "../icons/spinnerTable.vue";
 import loadingStore from "../../store/StoreLoading";
 import { PAGE_STOCK } from "../../constants";
 
-const { state, fetchStocks, fetchSummary, setPaginator, selectProduct, getStocks, getSummary, getSelectedProductId, getSelectedProduct } = useStocks();
-const { getUserCan } = useUser();
+const store = useStocks();
+const { getStocks, getSummary, getSelectedProductId, getSelectedProduct } = storeToRefs(store);
+const { fetchStocks, fetchSummary, setPaginator, selectProduct } = store;
+const { getUserCan } = storeToRefs(useUser());
 const { setQuery, removeQuery } = useQuery();
 
 const searchInput = ref("");
@@ -24,7 +27,7 @@ const onSearch = (val) => {
     } else {
         removeQuery({ key: 'bySearchInput=', value: '' });
     }
-    state.url = PAGE_STOCK.URL;
+    store.url = PAGE_STOCK.URL;
     fetchStocks();
 };
 

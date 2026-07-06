@@ -1,17 +1,21 @@
 <script setup>
 import { computed, onUnmounted, ref, watch } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
-import useProducts from "../../store/StoreProducts";
-import useImages from "../../store/StoreImages";
+import { useProducts } from "../../store/StoreProducts";
+import { useImages } from "../../store/StoreImages";
 import useCheckouts from "../../store/StoreCheckouts";
 import { useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
 import kosik from "../checkout/kosikLink.vue";
 import kosikButton from "../icons/kosik.vue";
 import { formatDecimal, formatPriceWithoutVat } from "../../models/functions";
 import RequiredMark from "../forms/RequiredMark.vue";
 
-const { state, getProduct, fetchProduct, resetProduct } = useProducts();
-const { getImages } = useImages();
+// store.product je reaktívny aj mutovateľný (Pinia proxy); getProduct getter cez storeToRefs.
+const productStore = useProducts();
+const { getProduct } = storeToRefs(productStore);
+const { fetchProduct, resetProduct } = productStore;
+const { getImages } = storeToRefs(useImages());
 const { submitCartToIndex } = useCheckouts();
 const route = useRoute();
 const messages = ref([]);
@@ -20,7 +24,7 @@ const currentImage = ref(0);
 const productLoaded = computed(() => String(getProduct.value.id) === String(route.params.productId));
 const selectedImage = computed(() => getImages.value?.[currentImage.value]?.path ?? getProduct.value.thumb);
 const activePrice = computed(() => Number(getProduct.value.active_price ?? 0));
-const inputOrder = computed(() => Number(state.product.input_order ?? getProduct.value.min_order ?? 1));
+const inputOrder = computed(() => Number(productStore.product.input_order ?? getProduct.value.min_order ?? 1));
 const orderTotal = computed(() => formatDecimal(inputOrder.value * activePrice.value));
 const minOrderTotal = computed(() => formatDecimal(Number(getProduct.value.min_order ?? 1) * activePrice.value));
 const hasDiscount = computed(() => Number(getProduct.value.sale_price ?? 0) > 0);
@@ -32,8 +36,8 @@ const loadProduct = async (productId) => {
 };
 
 const submitCart = () => {
-    submitCartToIndex(state.product);
-    messages.value.push(state.product.input_order);
+    submitCartToIndex(productStore.product);
+    messages.value.push(productStore.product.input_order);
 };
 
 const onClickImage = (index) => {
@@ -137,7 +141,7 @@ onUnmounted(() => {
                                         Množstvo <RequiredMark />
                                     </label>
                                     <div class="flex gap-3">
-                                        <input id="input_order" type="number" v-model="state.product.input_order"
+                                        <input id="input_order" type="number" v-model="productStore.product.input_order"
                                             class="w-28 rounded border-gray-300 text-center"
                                             :min="getProduct.min_order" required />
                                         <button

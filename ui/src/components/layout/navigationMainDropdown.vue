@@ -57,7 +57,8 @@
 <script>
 import { computed, ref } from "vue";
 import router from "../../router";
-import useUser from "../../store/StoreUsers";
+import { storeToRefs } from "pinia";
+import { useUsers as useUser } from "../../store/StoreUsers";
 
 export default {
     created() {
@@ -85,7 +86,9 @@ export default {
     },
 
     setup() {
-        const { logout, getUser } = useUser();
+        const usersStore = useUser();
+        const { getUser } = storeToRefs(usersStore);
+        const { logout } = usersStore;
         const show = ref(false);
         const isShow = () => (show.value = !show.value);
         const closeMenu = () => (show.value = false);

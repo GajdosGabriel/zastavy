@@ -1,0 +1,1 @@
+const u=(t=null)=>t==null?"0.00":Number(t).toFixed(2),s=(t=0)=>t===1?"kus":t>1&&t<9?"kusy":"kusov",a=(t,r)=>{let e=Math.round(Number(t)-Number(t)/100*Number(r));return u(e)};export{u as a,a as b,s as f};

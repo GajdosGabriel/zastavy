@@ -37,19 +37,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/verify-email/{uuid}', [UserController::class, 'verifyEmail'])->name('users.verifyEmail');
-Route::post('/login', [SanctumController::class, 'login'])->name('sanctum.login');
-Route::post('/register', [RegisteredUserController::class, 'store'])->name('auth.register');
-Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->name('password.forgot');
-Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.reset');
+
+// Autentifikačné endpointy — throttle proti brute-force útokom.
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/login', [SanctumController::class, 'login'])->name('sanctum.login');
+    Route::post('/register', [RegisteredUserController::class, 'store'])->name('auth.register');
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->name('password.forgot');
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.reset');
+});
 
 Route::get('/user', function (Request $request) {
     return new UserResource($request->user('sanctum'));
 });
 
-Route::apiResources([
-    'checkouts' => CheckoutController::class,
-    'homes' => HomeController::class,
-]);
+Route::apiResource('homes', HomeController::class);
+
+// Verejný checkout a IČO lookup — throttle proti spamu objednávok a scrapingu kontaktov.
+Route::apiResource('checkouts', CheckoutController::class)->middleware('throttle:30,1');
 
 Route::get('/public-orders/{uuid}', [PublicOrderController::class, 'show'])->name('public-orders.show');
 
@@ -57,7 +61,9 @@ Route::get('/products/{product}', [ProductController::class, 'show'])->name('pro
 Route::get('/announcements/active', [AnnouncementController::class, 'active'])->name('announcements.active');
 Route::get('/shipping-methods', [ShippingMethodController::class, 'index'])->name('shipping-methods.index');
 Route::get('/payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
-Route::post('/coupons/validate', [CouponController::class, 'validate'])->name('coupons.validate');
+Route::post('/coupons/validate', [CouponController::class, 'validate'])
+    ->middleware('throttle:20,1')
+    ->name('coupons.validate');
 
 Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function () {
     Route::get('/orders/statistics', [OrderController::class, 'statistics'])->name('orders.statistics');

@@ -1,9 +1,10 @@
 <script setup>
 import BaseLayout from '../layout/BaseLayout.vue';
 import { ref, watch, onMounted, onUnmounted, computed } from "@vue/runtime-core";
-import useProducts from "../../store/StoreProducts";
-import useImages from "../../store/StoreImages";
-import UseCategories from "../../store/StoreCategories";
+import { useProducts } from "../../store/StoreProducts";
+import { useImages } from "../../store/StoreImages";
+import { useCategories } from "../../store/StoreCategories";
+import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import router from "../../router";
 import { formatDecimal } from "../../models/functions";
@@ -13,7 +14,10 @@ import buttonRouterLink from '../layout/page/ButtonLink.vue';
 import useUnsavedChanges from '../../models/useUnsavedChanges';
 import RequiredMark from '../forms/RequiredMark.vue';
 
-const { state, getProduct, updateProduct, storeProduct, fetchProduct, setProduct } = useProducts();
+// store.product je reaktívny aj mutovateľný (Pinia proxy); getProduct getter cez storeToRefs.
+const productStore = useProducts();
+const { getProduct } = storeToRefs(productStore);
+const { updateProduct, storeProduct, fetchProduct, setProduct } = productStore;
 const { destroyImage, storeImages, reorderImages } = useImages();
 
 const dragIndex = ref(null);
@@ -22,15 +26,17 @@ const onDragStart = (index) => { dragIndex.value = index; };
 const onDragOver = (e) => { e.preventDefault(); };
 const onDrop = async (targetIndex) => {
     if (dragIndex.value === null || dragIndex.value === targetIndex) return;
-    const imgs = [...state.product.images];
+    const imgs = [...productStore.product.images];
     const [moved] = imgs.splice(dragIndex.value, 1);
     imgs.splice(targetIndex, 0, moved);
-    state.product.images = imgs;
+    productStore.product.images = imgs;
     dragIndex.value = null;
-    await reorderImages(state.product.id, imgs.map(i => i.id));
+    await reorderImages(productStore.product.id, imgs.map(i => i.id));
 };
 
-const { categories, fetchCategories } = UseCategories();
+const categoriesStore = useCategories();
+const { categories } = storeToRefs(categoriesStore);
+const { fetchCategories } = categoriesStore;
 const productId = computed(() => useRoute().params.productId);
 const { setOriginalData, markAsSaved, isFormChanged } = useUnsavedChanges(() => getProduct.value);
 
@@ -55,7 +61,7 @@ const handleImageSelected = (event) => {
 };
 
 const onSubmitForm = async () => {
-    if (state.product.price < state.product.sale_price) {
+    if (productStore.product.price < productStore.product.sale_price) {
         alert('Cena po zľave nemôže byť vyššia ako je základná cena.');
         return;
     }
@@ -66,7 +72,7 @@ const onSubmitForm = async () => {
         if (selectedImageFiles.value.length) {
             const product = await storeImages(productId.value, selectedImageFiles.value);
             if (product) {
-                state.product.images = product.images;
+                productStore.product.images = product.images;
                 selectedImageFiles.value = [];
                 imageUrls.value = [];
             }
@@ -99,9 +105,9 @@ watch(selectedImageFiles, (files) => {
 });
 
 const onClickImageRemove = async (imageId) => {
-    const wasDeleted = await destroyImage(state.product.id, imageId);
+    const wasDeleted = await destroyImage(productStore.product.id, imageId);
     if (wasDeleted) {
-        state.product.images = state.product.images.filter((image) => image.id !== imageId);
+        productStore.product.images = productStore.product.images.filter((image) => image.id !== imageId);
     }
 };
 
@@ -112,8 +118,8 @@ const buttonSubmit = { name: 'Uložiť', spinner: true };
 const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'arrow-left' };
 
 const calculatedSalePrice = computed(() => {
-    const price = Number(state.product.price);
-    const discount = Number(state.product.discount);
+    const price = Number(productStore.product.price);
+    const discount = Number(productStore.product.discount);
     if (!price || !discount) return null;
     return formatDecimal(price - (price / 100) * discount);
 });
@@ -312,11 +318,11 @@ const calculatedSalePrice = computed(() => {
                             </div>
 
                             <!-- Existujúce s drag&drop -->
-                            <div v-if="state.product.images?.length">
+                            <div v-if="productStore.product.images?.length">
                                 <p class="mb-2 text-xs text-gray-400">Potiahnite obrázky pre zmenu poradia</p>
                                 <div class="flex flex-wrap gap-3">
                                     <div
-                                        v-for="(image, index) in state.product.images"
+                                        v-for="(image, index) in productStore.product.images"
                                         :key="image.id"
                                         draggable="true"
                                         @dragstart="onDragStart(index)"

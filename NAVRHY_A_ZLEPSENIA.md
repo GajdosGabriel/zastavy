@@ -32,7 +32,7 @@ Nechránená routa, ktorou ktokoľvek zmaže cache, config a views produkčnej a
 
 **Riešenie:** Odstrániť, alebo presunúť za admin middleware / artisan príkaz.
 
-### 4. Únik osobných údajov cez IČO lookup
+### 4. ✅ VYRIEŠENÉ — Únik osobných údajov cez IČO lookup
 **Súbor:** [CheckoutController.php:16-59](api/app/Http/Controllers/Api/CheckoutController.php:16)
 
 `GET /checkouts/{ico}` je verejný a pri zhode v databáze vráti **e-mail, telefón a meno kontaktnej osoby zákazníka** (`customerToCheckoutData`). Útočník môže enumerovať IČO (verejne dostupné) a harvestovať kontakty všetkých zákazníkov → GDPR problém.
@@ -53,14 +53,17 @@ Admin `OrderController::store` transakciu používa, verejný checkout nie. Ak z
 
 **Riešenie:** Samostatná tabuľka čítačov (rok+mesiac → posledné číslo) s `lockForUpdate()`, alebo `withTrashed()` pri počítaní + unique index na `serial_number`.
 
-### 7. Race condition na `used_count` kupónu
+### 7. ✅ VYRIEŠENÉ — Race condition na `used_count` kupónu
 **Súbor:** [StoreOrder.php:49-51](api/app/Actions/StoreOrder.php:49)
 
 `usage_limit` sa kontroluje len pri `validate` endpointe, increment nie je atomický s kontrolou → limit sa dá prekročiť súbežnými objednávkami.
 
 **Riešenie:** V transakcii `Coupon::where(...)->lockForUpdate()` + kontrola limitu tesne pred inkrementom.
 
-### 8. Chýbajúca validácia položiek objednávky
+### 8. ✅ VYRIEŠENÉ — Chýbajúca validácia položiek objednávky
+> Doplnené: `exists:products,id`, `integer`, `max:100000` na množstvo, serverové vynútenie `min_order` a filtrovanie `published` produktov pre verejný checkout (staff môže objednať aj nepublikované). Kontrola/rezervácia skladu ostáva ako samostatný bod #13.
+
+**Pôvodný popis:**
 **Súbor:** [OrderRequest.php:44-46](api/app/Http/Requests/OrderRequest.php:44)
 
 - `orderProducts.*.id` má len `required` — chýba `exists:products,id` (a kontrola `published`). Dá sa objednať nepublikovaný/zmazaný produkt alebo vyvolať FK chybu.
@@ -78,40 +81,66 @@ Checkout naviaže objednávku na **existujúceho používateľa nájdeného len 
 
 ## 🟠 Ďalšie chyby a nedostatky
 
-### 10. Chýba rate limiting na citlivých endpointoch
+### 10. ✅ VYRIEŠENÉ — Chýba rate limiting na citlivých endpointoch
 - `POST /login` — brute-force hesiel (default `throttle:api` 60/min je priveľa).
 - `POST /coupons/validate` — verejný, dá sa enumerovať kódy kupónov.
 - `GET /checkouts/{ico}` a `POST /checkouts` — spam objednávok / scraping.
 
 **Riešenie:** `->middleware('throttle:5,1')` na login/forgot-password, `throttle:10,1` na kupóny a checkout. Zvážiť honeypot/captcha na checkout.
 
-### 11. Preklep `$filleable` v Product
+### 11. ✅ VYRIEŠENÉ — Preklep `$filleable` v Product
 **Súbor:** [Product.php:25](api/app/Models/Product.php:25) — má byť `$fillable`; momentálne mŕtvy kód, lebo `$guarded = []` povoľuje všetko. Zvážiť explicitný `$fillable` namiesto `$guarded = []` pri všetkých modeloch (obrana pred mass-assignment).
 
-### 12. Placeholder obrázok z Unsplash
+### 12. ✅ VYRIEŠENÉ — Placeholder obrázok z Unsplash
 **Súbor:** [Product.php:97](api/app/Models/Product.php:97) — fallback thumbnail ťahá externú URL (výkon, súkromie, môže zaniknúť). Nahradiť lokálnym SVG/PNG placeholderom.
 
 ### 13. Žiadna práca so skladom pri objednávke
 Produkt má `quantity`, ale checkout nekontroluje dostupnosť ani nerezervuje tovar. Sklad sa rieši až pri expedícii (`stocks`). Ak je to zámer (B2B na objednávku), aspoň zobraziť dostupnosť; inak pridať kontrolu/rezerváciu v transakcii.
 
-### 14. `N+1` a výkonové problémy
+### 14. ✅ ČIASTOČNE VYRIEŠENÉ — `N+1` a výkonové problémy
+> `getStockExpeditionAttribute` teraz uprednostní eager-loadnutú reláciu a inak agreguje cez DB (`SUM`) namiesto hydratácie všetkých riadkov. Odporúčanie na indexy (`orders.uuid`, `serial_number`, `customers.ico`, `products.slug`, `coupons.code`) a `$appends` na Order ostáva na posúdenie pri migrácii.
+
+**Pôvodný popis:**
 - [Order.php:167-170](api/app/Models/Order.php:167) — `getStockExpeditionAttribute` robí `$this->stocks()->get()->sum()` (nový query + hydratácia pri každom prístupe; použiť `$this->stocks()->sum('quantity')` alebo `withSum`).
 - `$appends = ['productOrderSum']` na Order spôsobí lazy-load `orderProducts` pri každej serializácii.
 - Skontrolovať indexy: `orders.uuid` (unique), `orders.serial_number`, `customers.ico`, `products.slug`, `coupons.code`.
 
-### 15. Takmer žiadne testy
+### 15. ✅ ČIASTOČNE VYRIEŠENÉ — Takmer žiadne testy
+> Pribudol `CheckoutTest` (17 testov, 50 assertions): manipulácia ceny, sale_price, kupóny (expirácia/limit/percent/fixed cap), min_order, max množstvo, publikované vs. nepublikované produkty, PII gate (verejný/staff/portál), doprava zdarma od limitu, `grand_total` cez verejný detail, recyklácia sériového čísla. Ďalej dopokryť: storno flow, expedícia/sklad, admin update objednávky.
+
+**Pôvodný popis:**
 `api/tests` obsahuje len example testy + 1 feature test. Minimálne pokryť: checkout happy-path, manipuláciu ceny (po fixe #1), kupóny (expirácia/limit), storno, výpočet `grand_total`, IČO lookup.
 
-### 16. Nekonzistentný jazyk a typovanie v UI
+### 16. 🔶 ROZBEHNUTÉ (pilot hotový) — Nekonzistentný jazyk a typovanie v UI
+> Pinia nainštalovaná a zapojená v [main.js](ui/src/main.js). Prevedené na Pinia + TS:
+> [StoreCheckoutOptions.ts](ui/src/store/StoreCheckoutOptions.ts) (pilot, overené v prehliadači),
+> [StoreShippingMethods.ts](ui/src/store/StoreShippingMethods.ts) a
+> [StorePaymentMethods.ts](ui/src/store/StorePaymentMethods.ts),
+> [StoreCoupons.ts](ui/src/store/StoreCoupons.ts), [StoreNotices.ts](ui/src/store/StoreNotices.ts),
+> [StoreUserExport.ts](ui/src/store/StoreUserExport.ts), StoreCategories, StoreReturns, StoreStocks,
+> StoreAnnouncements (overené `vite build`; announcements aj runtime v prehliadači) — vrátane konzumentov.
+> Ďalej StoreHome, StoreAdminUsers a StoreProducts (setup-store kvôli `watch`; 11 konzumentov;
+> overený runtime proti backendu). Tým sa odblokoval a hneď migroval StoreImages
+> (Pinia→Pinia volanie z akcie overené).
+> Ďalej StoreShippings a StoreUsers (16 konzumentov vrátane router guardu + `filterLabels.js`;
+> overený runtime — boot/guard/login bez chýb). Tým sa odblokoval StoreNavigation.
+> **Hotových 16 storov**, ~9 zostáva. Postup a poradie v [ui/MIGRATION_PINIA.md](ui/MIGRATION_PINIA.md).
+> Pozn.: `StoreNavigation` odložené (volá ho `StoreUsers.js` na module-level — migrovať až so `StoreUsers`);
+> `StoreValidations` je mŕtvy kód.
+
+**Pôvodný popis:**
 `ui/src/store` mieša `.js` a `.ts` (StoreCustomers.ts vs StoreCheckouts.js), vlastný store pattern namiesto Pinia. Funguje to, ale dlhodobo zvážiť zjednotenie na TypeScript + Pinia (devtools, HMR, testovateľnosť).
 
 ### 17. Ceny v košíku môžu byť zastarané
 Košík sa drží v `localStorage` vrátane ceny — ak sa cena medzičasom zmení, zákazník odošle starú. Po fixe #1 to prestane byť bezpečnostný problém, ale UX: pri načítaní košíka refreshnúť ceny z API a upozorniť na zmenu.
 
-### 18. `OrderRequest` obsahuje cudziu logiku
+### 18. ✅ VYRIEŠENÉ — `OrderRequest` obsahuje cudziu logiku
 [OrderRequest.php:61-67](api/app/Http/Requests/OrderRequest.php:61) — metóda `isFinished()` s update-om modelu nepatrí do FormRequestu. Odstrániť/presunúť.
 
-### 19. Prázdny exception handling
+### 19. ✅ ČIASTOČNE VYRIEŠENÉ — Prázdny exception handling
+> API teraz vždy renderuje chyby v JSON (`shouldRenderJsonWhen` pre `api/*`). Napojenie na Sentry/Flare a produkčné logovanie ostáva ako ops úloha (viď #20).
+
+**Pôvodný popis:**
 `bootstrap/app.php` — `withExceptions` je prázdny; API by malo mať konzistentné JSON error odpovede a logovanie (napr. Sentry/Flare pre produkciu).
 
 ### 20. Queue worker pre notifikácie

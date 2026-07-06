@@ -4,22 +4,23 @@ import { useRouter } from "vue-router";
 import BaseLayout from "../layout/BaseLayout.vue";
 import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
-import useAdminUsers from "../../store/StoreAdminUsers";
+import { storeToRefs } from "pinia";
+import { useAdminUsers } from "../../store/StoreAdminUsers";
 import useErrors from "../../store/StoreErrors";
 import RequiredMark from "../forms/RequiredMark.vue";
 import FormInput from "../forms/FormInput.vue";
 
+// store.user je reaktívny aj mutovateľný (Pinia proxy); gettery cez storeToRefs.
+const store = useAdminUsers();
 const {
-    state,
-    fetchCreateOptions,
-    storeUser,
     getRoles,
     getStatuses,
     getPortalPermissions,
     getCustomers,
     canManageRoles,
     canManagePermissions,
-} = useAdminUsers();
+} = storeToRefs(store);
+const { fetchCreateOptions, storeUser } = store;
 
 const router = useRouter();
 const { getFieldErrors } = useErrors();
@@ -55,27 +56,27 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Meno <RequiredMark /></label>
-                            <FormInput v-model="state.user.firstName" placeholder="Meno" required :error="fe('firstName')" field-key="firstName" />
+                            <FormInput v-model="store.user.firstName" placeholder="Meno" required :error="fe('firstName')" field-key="firstName" />
                         </div>
 
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Priezvisko</label>
-                            <FormInput v-model="state.user.lastName" placeholder="Priezvisko" />
+                            <FormInput v-model="store.user.lastName" placeholder="Priezvisko" />
                         </div>
 
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Email <RequiredMark /></label>
-                            <FormInput v-model="state.user.email" type="email" placeholder="Email" required :error="fe('email')" field-key="email" />
+                            <FormInput v-model="store.user.email" type="email" placeholder="Email" required :error="fe('email')" field-key="email" />
                         </div>
 
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Telefón</label>
-                            <FormInput v-model="state.user.phone" placeholder="Telefón" :error="fe('phone')" field-key="phone" />
+                            <FormInput v-model="store.user.phone" placeholder="Telefón" :error="fe('phone')" field-key="phone" />
                         </div>
 
                         <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-bold text-gray-700">Zákazník <RequiredMark /></label>
-                            <select v-model="state.user.customer_id" required class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            <select v-model="store.user.customer_id" required class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
                                 <option :value="undefined" disabled>— Vybrať zákazníka —</option>
                                 <option v-for="c in getCustomers" :key="c.value" :value="c.value">
                                     {{ c.label }}
@@ -88,7 +89,7 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                             <label class="mb-2 block text-sm font-bold text-gray-700">Role</label>
                             <div class="flex flex-wrap gap-3 rounded border p-3">
                                 <label v-for="role in getRoles" :key="role.value" class="inline-flex items-center gap-2 text-sm">
-                                    <input v-model="state.user.roles" type="checkbox" :value="role.value" />
+                                    <input v-model="store.user.roles" type="checkbox" :value="role.value" />
                                     {{ role.label }}
                                 </label>
                             </div>
@@ -103,7 +104,7 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                                 </p>
                                 <div class="grid gap-2 sm:grid-cols-2">
                                     <label v-for="perm in getPortalPermissions" :key="perm.value" class="inline-flex items-center gap-2 text-sm">
-                                        <input v-model="state.user.permissions" type="checkbox" :value="perm.value" class="rounded" />
+                                        <input v-model="store.user.permissions" type="checkbox" :value="perm.value" class="rounded" />
                                         {{ perm.label }}
                                     </label>
                                 </div>

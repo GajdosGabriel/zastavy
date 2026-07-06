@@ -204,20 +204,21 @@ router.beforeResolve(async (to, from, next) => {
     useStoreErrors().resetErrors();
     useStoreOrders().resetOrder();
 
-    const { fetchUser, getUser } = useUser();
+    // Pinia store — hodnoty cez store (getUser je getter, bez .value).
+    const usersStore = useUser();
 
-    if (localStorage.getItem('authToken') && !getUser.value?.isAuth) {
-        await fetchUser();
+    if (localStorage.getItem('authToken') && !usersStore.getUser?.isAuth) {
+        await usersStore.fetchUser();
     }
 
-    if (to.meta.guestOnly && getUser.value?.isAuth) {
+    if (to.meta.guestOnly && usersStore.getUser?.isAuth) {
         next({ name: 'dashboard.index' });
         return;
     }
 
-    if (to.meta.superAdminOnly && !getUser.value?.roles?.some((role) => ['super-admin', 'admin'].includes(role))) {
+    if (to.meta.superAdminOnly && !usersStore.getUser?.roles?.some((role) => ['super-admin', 'admin'].includes(role))) {
         next({
-            name: getUser.value?.isAuth ? 'dashboard.index' : 'public.login.index'
+            name: usersStore.getUser?.isAuth ? 'dashboard.index' : 'public.login.index'
         });
         return;
     }

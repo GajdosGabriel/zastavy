@@ -5,18 +5,21 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import buttonLink from "../layout/page/ButtonLink.vue";
 import OrderCustomerCard from "./component/OrderCustomerCard.vue";
 import useOrders from "../../store/StoreOrders";
-import useShippings from "../../store/StoreShippings";
+import { useShippings } from "../../store/StoreShippings";
 import useOrderProducts from "../../store/StoreOrderProducts";
-import useReturns from "../../store/StoreReturns";
+import { useReturns } from "../../store/StoreReturns";
 import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
+import { storeToRefs } from "pinia";
 
 const { getOrder, fetchOrder, updateOrder, customer } = useOrders();
 const { storeShipping } = useShippings();
 const { updateOrderProducts } = useOrderProducts();
-const { fetchReturns, getReturns } = useReturns();
+const returnsStore = useReturns();
+const { getReturns } = storeToRefs(returnsStore);
+const { fetchReturns } = returnsStore;
 const { setErrors } = useErrors();
 
 const router = useRouter();

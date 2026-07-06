@@ -1,8 +1,8 @@
 <script setup>
 import BaseLayout from '../layout/BaseLayout.vue';
 import { onMounted, ref } from "vue";
-import useProducts from "../../store/StoreProducts";
-import useUser from "../../store/StoreUsers";
+import { useProducts } from "../../store/StoreProducts";
+import { useUsers as useUser } from "../../store/StoreUsers";
 import paginationComponent from "../plugins/pagination.vue";
 import filterPanel from "./FilterPanel.vue";
 import tableRowProduct from "./components/tableRowProduct.vue";
@@ -10,11 +10,12 @@ import PageHeader from '../layout/page/pageHeader.vue';
 import PageBottom from '../layout/page/pageBottom.vue';
 import spinnerTable from '../icons/spinnerTable.vue';
 import loadingStore from '../../store/StoreLoading';
+import { storeToRefs } from "pinia";
 
-const {
-      state, fetchProducts, setUrl, getProducts
-} = useProducts();
-const { getUserCan } = useUser();
+const store = useProducts();
+const { getProducts } = storeToRefs(store);
+const { fetchProducts, setUrl } = store;
+const { getUserCan } = storeToRefs(useUser());
 
 const quickMark = ref([]);
 
@@ -54,7 +55,7 @@ const template = (product) => {
                   // buttonLink: { name: 'Späť', spinner: true, link: 'products.index', icon: 'arrow-left' },
                   // buttonSubmit: { name: 'Uložiť', spinner: true, link: 'products.create', icon: 'plus' }
             },
-            buttonLink: state.buttonLink,
+            buttonLink: store.buttonLink,
             quickMark: quickMark.value.includes(product)
       }
 }

@@ -2,7 +2,7 @@
 import BaseLayout from "../layout/BaseLayout.vue";
 import useOrders from "../../store/StoreOrders";
 import useOrderProducts from "../../store/StoreOrderProducts";
-import useProducts from "../../store/StoreProducts";
+import { useProducts } from "../../store/StoreProducts";
 import { useRoute, useRouter } from "vue-router";
 import { onMounted, ref, watch } from "vue";
 import productTableRow from "../orderProducts/productTableRow.vue";

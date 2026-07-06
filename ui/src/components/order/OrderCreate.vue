@@ -4,8 +4,8 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import PageHeader from "../layout/page/pageHeader.vue";
 import useCustomers from "../../store/StoreCustomers";
 import useOrders from "../../store/StoreOrders";
-import useProducts from "../../store/StoreProducts";
-import useUser from "../../store/StoreUsers";
+import { useProducts } from "../../store/StoreProducts";
+import { useUsers as useUser } from "../../store/StoreUsers";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
 import axiosInstance from "../../axiosInstance";
@@ -13,11 +13,14 @@ import { formatDecimal } from "../../models/functions";
 import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
+import { storeToRefs } from "pinia";
 
 const { getCustomer, setCustomer, fetchCustomer } = useCustomers();
 const { storeOrder, state: orderState } = useOrders();
-const { fetchProducts, getProducts } = useProducts();
-const { getUser } = useUser();
+const productsStore = useProducts();
+const { getProducts } = storeToRefs(productsStore);
+const { fetchProducts } = productsStore;
+const { getUser } = storeToRefs(useUser());
 const { getFieldErrors, setErrors, resetErrors } = useErrors();
 
 const orderProducts = ref([]);

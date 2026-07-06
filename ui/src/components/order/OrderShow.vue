@@ -2,9 +2,10 @@
 import BaseLayout from "../layout/BaseLayout.vue";
 import useOrders from "../../store/StoreOrders";
 import useOrderProducts from "../../store/StoreOrderProducts";
-import useProducts from "../../store/StoreProducts";
-import useReturns from "../../store/StoreReturns";
+import { useProducts } from "../../store/StoreProducts";
+import { useReturns } from "../../store/StoreReturns";
 import { useRoute, useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 import { computed, onMounted } from "vue";
 import productTableRow from "../orderProducts/productTableRow.vue";
 import { formatDecimal } from "../../models/functions";
@@ -27,7 +28,9 @@ const {
 } = useOrderProducts();
 
 const { fetchProducts } = useProducts();
-const { fetchReturns, getReturns } = useReturns();
+const returnsStore = useReturns();
+const { getReturns } = storeToRefs(returnsStore);
+const { fetchReturns } = returnsStore;
 
 const router = useRouter();
 const { params: { orderId } } = useRoute();

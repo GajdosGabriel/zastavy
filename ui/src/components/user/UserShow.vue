@@ -3,9 +3,12 @@ import { onMounted } from "vue";
 import { useRoute } from "vue-router";
 import BaseLayout from "../layout/BaseLayout.vue";
 import buttonRouterLink from "../layout/page/ButtonLink.vue";
-import useAdminUsers from "../../store/StoreAdminUsers";
+import { storeToRefs } from "pinia";
+import { useAdminUsers } from "../../store/StoreAdminUsers";
 
-const { fetchUser, getUser } = useAdminUsers();
+const adminUsersStore = useAdminUsers();
+const { getUser } = storeToRefs(adminUsersStore);
+const { fetchUser } = adminUsersStore;
 const { params: { userId } } = useRoute();
 
 onMounted(() => fetchUser(userId));

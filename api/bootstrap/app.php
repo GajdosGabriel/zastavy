@@ -17,5 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SetLocale::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // API vždy odpovedá v JSON (aj chyby), nie HTML/redirect.
+        $exceptions->shouldRenderJsonWhen(
+            fn ($request) => $request->is('api/*') || $request->expectsJson()
+        );
     })->create();

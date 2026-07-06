@@ -20,24 +20,6 @@ class Product extends Model
     use HasFactory, SoftDeletes, HasNotices, HasModelStatus;
 
     protected $guarded = [];
-    // protected $appends = ['activePrice'];
-
-    protected $filleable = [
-        'code',
-        'name',
-        'slug',
-        'description',
-        'quantity',
-        'weight',
-        'price',
-        'sale_price',
-        'discount',
-        'vat',
-        'featured',
-        'published',
-        'unit_value',
-        'min_order',
-    ];
 
     protected $casts = [
         'status' => ModelStatus::class,
@@ -94,7 +76,8 @@ class Product extends Model
             return Storage::disk('public')->url($path);
         }
 
-        return url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=4&w=256&h=256&q=60');
+        // Lokálny placeholder — bez závislosti na externej službe (výkon, súkromie, dostupnosť).
+        return asset('images/product-placeholder.svg');
     }
 
     public function scopeFilter($query, $filters)

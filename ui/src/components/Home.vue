@@ -4,10 +4,13 @@ import BaseLayout from './layout/BaseLayout.vue';
 import cart from './checkout/cart.vue';
 import nazoryZakaznikov from './pages/nazoryZakaznikov.vue';
 import kosikLink from './checkout/kosikLink.vue';
-import useHome from "../store/StoreHome";
+import { storeToRefs } from "pinia";
+import { useHome } from "../store/StoreHome";
 import templateProduct from '../models/templateProduct';
 
-const { getProducts, fetchProducts } = useHome();
+const homeStore = useHome();
+const { getProducts } = storeToRefs(homeStore);
+const { fetchProducts } = homeStore;
 
 onMounted(() => {
       fetchProducts();

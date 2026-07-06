@@ -1,95 +1,89 @@
+import { defineStore } from "pinia";
 import axiosInstance from "../axiosInstance";
-import { computed, reactive } from "vue";
 import useImages from "./StoreImages";
 import useErrors from './StoreErrors';
 import usePaginator from './StorePaginator';
 import useQuery from './StoreQuery';
 import { PAGE_HOME } from "../constants";
 
-
-interface Product {
-    id: string
-    name: string
-    slug: string
-    description: string
-    quantity: number
-    weight: number
-    price: number
-    sale_price: number
-    discount: number
-    vat: number
-    image_id: number
-    published: boolean
-    unit_value: 'ks' | '1' | 'kg' | 'l' | 'm' | 'm2' | 'm3' | 'cm' | 'cm2' | 'cm3' | 'mm' | 'mm2' | 'mm3' | 'g' | 'mg' | 't' | 'l' | 'ml' | 'm3' | 'm2' | 'm' | 'cm' | 'cm2' | 'cm3' | 'mm' | 'mm2' | 'mm3' | 'g' | 'mg' | 't' | 'l' | 'ml' | 'm3' | 'm2' | 'm' | 'cm' | 'cm2' | 'cm3' | 'mm' | 'mm2' | 'mm3' | 'g' | 'mg' | 't' | 'l' | 'ml' | 'm3' | 'm2' | 'm' | 'cm' | 'cm2' | 'cm3' | 'mm' | 'mm2' | 'mm3' | 'g' | 'mg' | 't' | 'l' | 'ml' | 'm3' | 'm2' | 'm' | 'cm' | 'cm2' | 'cm3' | 'mm' | 'mm2' | 'mm3' | 'g' | 'mg' | 't' | 'l' | 'ml' | 'm3' | 'm2' | 'm' | 'cm' | 'cm2' | 'cm3' | 'mm' | 'mm2' | 'mm3' | 'g' | 'mg' | 't' | 'l' | 'ml' | 'm3' | 'm2' | 'm' | 'cm' | 'cm2' | 'cm3' | 'mm' | 'mm2' | 'mm3' | 'g' | 'mg' | 't' | 'l' | 'ml' | 'm3' | 'm2' | 'm' | 'cm' | 'cm2' | 'cm3' | 'mm' | 'mm2' | 'mm3' | 'g' | 'mg' | 't' | 'l' | 'm'
-    min_order: number
-    created_at: string
-    deleted_at: string
-    updated_at: string
+export interface HomeProduct {
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    quantity: number;
+    weight: number;
+    price: number;
+    sale_price: number;
+    discount: number;
+    vat: number;
+    image_id: number;
+    published: boolean;
+    unit_value: string;
+    min_order: number;
+    created_at: string;
+    deleted_at: string;
+    updated_at: string;
     endpoints: {
-        update: string
-        destroy: string
-    }
-};
+        update: string;
+        destroy: string;
+    };
+}
 
+interface HomeState {
+    searchUrl: string;
+    url: string;
+    products: HomeProduct[];
+    product: HomeProduct;
+}
 
+export const useHome = defineStore('home', {
+    state: (): HomeState => ({
+        searchUrl: "",
+        url: PAGE_HOME.URL,
+        products: [],
+        product: { sale_price: 0 } as HomeProduct,
+    }),
 
-const { setPaginator, setLinks } = usePaginator();
-
-const { setImages } = useImages();
-const { setErrors } = useErrors();
-const { state: q, setQuery } = useQuery();
-
-const defaultState = {
-    searchUrl: "" as string,
-    url: PAGE_HOME.URL as string,
-    products: [] as Product[],
-    product: {
-        sale_price: 0,
-    } as Product,
-};
-
-const state = reactive(defaultState);
-
-const getters = {
-    getProducts: computed<Product[]>(() => state.products),
-    getProduct: computed<Product>(() => state.product),
-};
-
-const actions = {
-    fetchProducts: async () => {
-        try {
-            const response = await axiosInstance.get(state.url + q.stringForUrl);
-            state.products = await (response).data.data;
-            setPaginator(response.data.meta);
-            setLinks(response.data.links);
-        } catch (e) {
-            setErrors(e);
-        }
+    getters: {
+        getProducts: (s): HomeProduct[] => s.products,
+        getProduct: (s): HomeProduct => s.product,
     },
 
-    fetchProduct: async (id: number) => {
-        try {
-            const response = await axiosInstance.get(PAGE_HOME.URL + '/' + id);
-            state.product = await response.data;
-            setImages(response.data.images);
-        } catch (e) {
-            setErrors(e);
-        }
-    },
+    actions: {
+        async fetchProducts(): Promise<void> {
+            try {
+                const { state: q } = useQuery();
+                const paginator = usePaginator();
+                const response = await axiosInstance.get(this.url + q.stringForUrl);
+                this.products = await response.data.data;
+                paginator.setPaginator(response.data.meta);
+                paginator.setLinks(response.data.links);
+            } catch (e) {
+                useErrors().setErrors(e);
+            }
+        },
 
-    setPaginator: (url) => {
-        state.url = url;
-        actions.fetchProducts();
-    },
+        async fetchProduct(id: number): Promise<void> {
+            try {
+                const response = await axiosInstance.get(PAGE_HOME.URL + '/' + id);
+                this.product = await response.data;
+                useImages().setImages(response.data.images);
+            } catch (e) {
+                useErrors().setErrors(e);
+            }
+        },
 
-    setProduct: (data) => {
-        state.product = data;
-    },
-};
+        // Vlastná akcia (nezamieňať s paginátorovým setPaginator voľaným vo fetchProducts).
+        setPaginator(url: string): void {
+            this.url = url;
+            this.fetchProducts();
+        },
 
-export default () => ({
-    state,
-    ...actions,
-    ...getters,
+        setProduct(data: HomeProduct): void {
+            this.product = data;
+        },
+    },
 });
 
+export default useHome;

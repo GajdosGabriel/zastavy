@@ -3,10 +3,17 @@
 namespace Tests\Feature;
 
 use App\Models\Coupon;
+use App\Models\Customer;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\ShippingMethod;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class CheckoutTest extends TestCase
@@ -132,6 +139,97 @@ class CheckoutTest extends TestCase
         $this->assertEquals(1, Coupon::first()->used_count);
     }
 
+    public function test_coupon_over_usage_limit_is_rejected(): void
+    {
+        $product = $this->makeProduct(50.00);
+
+        Coupon::create([
+            'code' => 'LIMIT1',
+            'type' => 'percent',
+            'value' => 10,
+            'active' => true,
+            'usage_limit' => 1,
+            'used_count' => 1,
+        ]);
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1, 'active_price' => 50.00],
+            ],
+            'coupon_code' => 'LIMIT1',
+        ])->assertStatus(422)->assertJsonValidationErrors('coupon_code');
+
+        $this->assertSame(0, Order::count());
+    }
+
+    public function test_quantity_below_min_order_is_bumped_to_min_order(): void
+    {
+        $product = $this->makeProduct(10.00);
+        $product->update(['min_order' => 5]);
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 2, 'active_price' => 10.00],
+            ],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('order_products', [
+            'product_id' => $product->id,
+            'quantity' => 5,
+        ]);
+    }
+
+    public function test_absurd_quantity_is_rejected(): void
+    {
+        $product = $this->makeProduct();
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 999999999, 'active_price' => 25.50],
+            ],
+        ])->assertStatus(422);
+
+        $this->assertSame(0, Order::count());
+    }
+
+    public function test_unpublished_product_cannot_be_ordered(): void
+    {
+        $product = $this->makeProduct();
+        $product->update(['published' => 0]);
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1, 'active_price' => 25.50],
+            ],
+        ])->assertStatus(422);
+
+        $this->assertSame(0, Order::count());
+    }
+
+    public function test_staff_can_order_unpublished_product(): void
+    {
+        $product = $this->makeProduct();
+        $product->update(['published' => 0]);
+
+        Role::findOrCreate('super-admin', 'web');
+        $staff = User::factory()->create();
+        $staff->assignRole('super-admin');
+        Sanctum::actingAs($staff);
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1, 'active_price' => 25.50],
+            ],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('order_products', ['product_id' => $product->id]);
+    }
+
     public function test_unknown_product_is_rejected(): void
     {
         $this->postJson('/api/checkouts', [
@@ -142,6 +240,155 @@ class CheckoutTest extends TestCase
         ])->assertStatus(422);
 
         $this->assertSame(0, Order::count());
+    }
+
+    private function makeCustomerWithContact(): Customer
+    {
+        return Customer::create([
+            'name' => 'Kontaktná osoba',
+            'company' => 'Firma s.r.o.',
+            'email' => 'tajny@example.com',
+            'phone' => '+421911222333',
+            'street' => 'Hlavná 1',
+            'postcode' => '01001',
+            'city' => 'Žilina',
+            'ico' => '12345678',
+        ]);
+    }
+
+    public function test_public_ico_lookup_does_not_leak_customer_contact(): void
+    {
+        $customer = $this->makeCustomerWithContact();
+
+        // Verejná vetva ide do registra — externé API zamockujeme.
+        Http::fake([
+            'api.orsf.sk/*' => Http::response([
+                'name' => 'Firma s.r.o.',
+                'address' => ['city' => 'Žilina', 'postalCode' => '01001'],
+            ], 200),
+        ]);
+
+        $response = $this->getJson('/api/checkouts/' . $customer->ico);
+
+        $response->assertOk()->assertJsonPath('source', 'internet');
+
+        // E-mail ani telefón zákazníka sa nesmú objaviť v odpovedi.
+        $this->assertStringNotContainsString('tajny@example.com', $response->getContent());
+        $this->assertStringNotContainsString('+421911222333', $response->getContent());
+    }
+
+    public function test_staff_ico_lookup_returns_customer_contact(): void
+    {
+        $customer = $this->makeCustomerWithContact();
+
+        Role::findOrCreate('super-admin', 'web');
+        $staff = User::factory()->create();
+        $staff->assignRole('super-admin');
+        Sanctum::actingAs($staff);
+
+        $response = $this->getJson('/api/checkouts/' . $customer->ico);
+
+        $response->assertOk()
+            ->assertJsonPath('source', 'database')
+            ->assertJsonPath('data.email', 'tajny@example.com')
+            ->assertJsonPath('data.phone', $customer->fresh()->phone);
+    }
+
+    public function test_portal_customer_does_not_get_contact_prefill(): void
+    {
+        $customer = $this->makeCustomerWithContact();
+
+        Http::fake([
+            'api.orsf.sk/*' => Http::response(['name' => 'Firma s.r.o.'], 200),
+        ]);
+
+        // Prihlásený portálový zákazník (bez staff roly) nesmie dostať PII iného zákazníka.
+        $portalUser = User::factory()->create(['customer_id' => $customer->id]);
+        Sanctum::actingAs($portalUser);
+
+        $response = $this->getJson('/api/checkouts/' . $customer->ico);
+
+        $response->assertOk()->assertJsonPath('source', 'internet');
+        $this->assertStringNotContainsString('tajny@example.com', $response->getContent());
+    }
+
+    public function test_fixed_coupon_discount_is_capped_at_cart_total(): void
+    {
+        $product = $this->makeProduct(30.00);
+
+        Coupon::create([
+            'code' => 'MINUS50',
+            'type' => 'fixed',
+            'value' => 50, // vyššie ako suma košíka (30 €)
+            'active' => true,
+        ]);
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1, 'active_price' => 30.00],
+            ],
+            'coupon_code' => 'MINUS50',
+        ])->assertOk();
+
+        // Zľava sa nesmie prevýšiť sumu košíka → 30 €, nie 50 €.
+        $this->assertEquals(30.00, (float) Order::first()->discount_amount);
+    }
+
+    public function test_free_shipping_above_threshold(): void
+    {
+        $product = $this->makeProduct(100.00);
+
+        $freeFrom = ShippingMethod::create([
+            'name' => 'Kuriér',
+            'price' => 5.00,
+            'free_from_price' => 80.00,
+            'active' => true,
+        ]);
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1, 'active_price' => 100.00],
+            ],
+            'shipping_method_id' => $freeFrom->id,
+        ])->assertOk();
+
+        $this->assertEquals(0.0, (float) Order::first()->shipping_price);
+    }
+
+    public function test_public_order_grand_total_matches_components(): void
+    {
+        $product = $this->makeProduct(100.00);
+
+        $shipping = ShippingMethod::create([
+            'name' => 'Kuriér', 'price' => 4.00, 'active' => true,
+        ]);
+        $payment = PaymentMethod::create([
+            'name' => 'Dobierka', 'fee' => 1.50, 'type' => 'cash_on_delivery', 'active' => true,
+        ]);
+        Coupon::create([
+            'code' => 'ZLAVA10', 'type' => 'percent', 'value' => 10, 'active' => true,
+        ]);
+
+        $response = $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 2, 'active_price' => 100.00],
+            ],
+            'shipping_method_id' => $shipping->id,
+            'payment_method_id' => $payment->id,
+            'coupon_code' => 'ZLAVA10',
+        ])->assertOk();
+
+        $uuid = $response->json('uuid');
+
+        // subtotal 200 + doprava 4 + poplatok 1.5 - zľava 20 = 185.5
+        $this->getJson('/api/public-orders/' . $uuid)
+            ->assertOk()
+            ->assertJsonPath('data.subtotal', 200)
+            ->assertJsonPath('data.discount_amount', 20)
+            ->assertJsonPath('data.grand_total', 185.5);
     }
 
     public function test_serial_number_is_not_reused_after_soft_delete(): void

@@ -5,14 +5,16 @@ import PageHeader from '../layout/page/pageHeader.vue';
 import ButtonSubmit from '../layout/page/ButtonSubmit.vue';
 import PanelDropdown from '../layout/PanelDropdown.vue';
 import FormInput from '../forms/FormInput.vue';
-import useShippingMethods from '../../store/StoreShippingMethods';
+import { storeToRefs } from 'pinia';
+import { useShippingMethods } from '../../store/StoreShippingMethods';
 import { formatDecimal } from '../../models/functions';
 
+const store = useShippingMethods();
+const { shippingMethod, getShippingMethods, getTrashedMethods } = storeToRefs(store);
 const {
-    state, getShippingMethods, getTrashedMethods,
     fetchShippingMethods, saveShippingMethod, editShippingMethod,
     destroyShippingMethod, restoreShippingMethod, resetShippingMethod,
-} = useShippingMethods();
+} = store;
 
 onMounted(fetchShippingMethods);
 
@@ -32,22 +34,22 @@ const dropdownItems = (method) => [
                     <div class="grid gap-4 md:grid-cols-3">
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Názov</label>
-                            <FormInput v-model="state.shippingMethod.name" placeholder="Napr. Packeta" required />
+                            <FormInput v-model="shippingMethod.name" placeholder="Napr. Packeta" required />
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Cena (€)</label>
-                            <FormInput v-model.number="state.shippingMethod.price" type="number" step="0.01" min="0" placeholder="4.99" required />
+                            <FormInput v-model.number="shippingMethod.price" type="number" step="0.01" min="0" placeholder="4.99" required />
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Zdarma od (€)</label>
-                            <FormInput v-model="state.shippingMethod.free_from_price" type="number" step="0.01" min="0" placeholder="50.00 (voliteľné)" />
+                            <FormInput v-model="shippingMethod.free_from_price" type="number" step="0.01" min="0" placeholder="50.00 (voliteľné)" />
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Poradie</label>
-                            <FormInput v-model.number="state.shippingMethod.sort_order" type="number" min="0" placeholder="99" />
+                            <FormInput v-model.number="shippingMethod.sort_order" type="number" min="0" placeholder="99" />
                         </div>
                         <div class="flex items-center gap-2 md:col-span-2 self-end pb-1">
-                            <input id="shipping-active" type="checkbox" v-model="state.shippingMethod.active" class="h-4 w-4 accent-blue-600" />
+                            <input id="shipping-active" type="checkbox" v-model="shippingMethod.active" class="h-4 w-4 accent-blue-600" />
                             <label for="shipping-active" class="text-sm font-medium text-slate-700">Aktívny</label>
                         </div>
                     </div>

@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import PanelDropdown from "../../layout/PanelDropdown.vue";
-import useProducts from "../../../store/StoreProducts";
+import { useProducts } from "../../../store/StoreProducts";
 import Checkmark from "../../icons/checkmark.vue";
 import CheckmarkLight from "../../icons/checkmarkLight.vue";
 import spinnerIcon from "../../icons/spinnerTable.vue";

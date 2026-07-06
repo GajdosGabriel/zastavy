@@ -3,9 +3,12 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import BaseLayout from "../layout/BaseLayout.vue";
 import buttonLink from "../layout/page/ButtonLink.vue";
-import useReturns from "../../store/StoreReturns";
+import { storeToRefs } from "pinia";
+import { useReturns } from "../../store/StoreReturns";
 
-const { fetchReturn, getCurrentReturn, updateReturn, processReturn, cancelReturn, deleteReturn } = useReturns();
+const returnsStore = useReturns();
+const { getCurrentReturn } = storeToRefs(returnsStore);
+const { fetchReturn, updateReturn, processReturn, cancelReturn, deleteReturn } = returnsStore;
 
 const router = useRouter();
 const { params: { orderId, returnId } } = useRoute();

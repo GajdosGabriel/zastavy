@@ -2,7 +2,8 @@
 import BaseLayout from '../layout/BaseLayout.vue';
 import { onMounted } from "vue";
 import useOrders from "../../store/StoreOrders";
-import useUser from "../../store/StoreUsers";
+import { storeToRefs } from "pinia";
+import { useUsers as useUser } from "../../store/StoreUsers";
 import tableRowOrders from "./component/tableRowOrders.vue";
 import filterOrder from "./FilterOrder.vue";
 import iconStar from "../../components/icons/star.vue";
@@ -16,7 +17,7 @@ import spinnerTable from '../icons/spinnerTable.vue';
 
 
 const { state, fetchOrders, setPaginator, getOrders, fetchMarkSelected } = useOrders();
-const { getUserCan } = useUser();
+const { getUserCan } = storeToRefs(useUser());
 
 onMounted(() => {
       fetchOrders();

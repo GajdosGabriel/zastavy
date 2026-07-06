@@ -1,8 +1,11 @@
 <script setup>
 import { onMounted } from "vue";
-import useAnnouncements from "../../store/StoreAnnouncements";
+import { storeToRefs } from "pinia";
+import { useAnnouncements } from "../../store/StoreAnnouncements";
 
-const { fetchActiveAnnouncements, getActiveTopAnnouncements } = useAnnouncements();
+const announcementsStore = useAnnouncements();
+const { getActiveTopAnnouncements } = storeToRefs(announcementsStore);
+const { fetchActiveAnnouncements } = announcementsStore;
 
 onMounted(() => {
     fetchActiveAnnouncements("top");

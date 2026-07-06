@@ -2,15 +2,16 @@
 import useOrders from "../../store/StoreOrders";
 import { formatDecimal } from "../../models/functions";
 import useOrderProducts from "../../store/StoreOrderProducts";
-import useProducts from "../../store/StoreProducts";
+import { useProducts } from "../../store/StoreProducts";
 import PanelDropdown from "../layout/PanelDropdown.vue";
 import useErrors from "../../store/StoreErrors";
+import { storeToRefs } from "pinia";
 
 const props = defineProps(["item"]);
 
 const { isOrderFinished } = useOrders();
 const { updateOrderProducts, destroyOrderProducts, saveNewOrderProduct } = useOrderProducts();
-const { getProducts } = useProducts();
+const { getProducts } = storeToRefs(useProducts());
 const { setErrors } = useErrors();
 
 const isNew = () => !!props.item.isNew;

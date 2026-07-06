@@ -8,13 +8,16 @@ import FilterPanel from "./FilterPanel.vue";
 import tableRow from "./component/tableRowUsers.vue";
 import spinnerTable from "../icons/spinnerTable.vue";
 import loadingStore from "../../store/StoreLoading";
-import useAdminUsers from "../../store/StoreAdminUsers";
+import { storeToRefs } from "pinia";
+import { useAdminUsers } from "../../store/StoreAdminUsers";
 import useQuery from "../../store/StoreQuery";
-import useUser from "../../store/StoreUsers";
+import { useUsers as useUser } from "../../store/StoreUsers";
 
-const { fetchUsers, setPaginator, getUsers, resetUrl } = useAdminUsers();
+const adminUsersStore = useAdminUsers();
+const { getUsers } = storeToRefs(adminUsersStore);
+const { fetchUsers, setPaginator, resetUrl } = adminUsersStore;
 const { resetQuery, getQueryStringUrl } = useQuery();
-const { getUserCan } = useUser();
+const { getUserCan } = storeToRefs(useUser());
 
 onMounted(() => {
     resetUrl();

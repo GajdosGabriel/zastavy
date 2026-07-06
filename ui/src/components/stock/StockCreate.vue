@@ -1,15 +1,19 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import useStocks from "../../store/StoreStocks";
-import useProducts from "../../store/StoreProducts";
+import { useStocks } from "../../store/StoreStocks";
+import { useProducts } from "../../store/StoreProducts";
 import useErrors from "../../store/StoreErrors";
 import BaseLayout from "../layout/BaseLayout.vue";
 import PageHeader from "../layout/page/pageHeader.vue";
 import ButtonLink from "../layout/page/ButtonLink.vue";
 import router from "../../router";
+import { storeToRefs } from "pinia";
 
-const { state, storeStock } = useStocks();
-const { fetchProducts, getProducts } = useProducts();
+// Pinia store inštancia je reaktívna aj mutovateľná v scripte aj template (bez .value).
+const store = useStocks();
+const { storeStock } = store;
+const { getProducts } = storeToRefs(useProducts());
+const { fetchProducts } = useProducts();
 const { getFieldErrors } = useErrors();
 
 const isSubmitting = ref(false);
@@ -19,7 +23,7 @@ const buttonBack = { name: "Späť", link: "stocks.index", icon: "arrow-left" };
 
 onMounted(() => {
     fetchProducts();
-    state.create = { product_id: null, quantity: "", price: "", note: "" };
+    store.create = { product_id: null, quantity: "", price: "", note: "" };
 });
 
 const filteredProducts = computed(() => {
@@ -32,11 +36,11 @@ const filteredProducts = computed(() => {
 });
 
 const selectedProduct = computed(() =>
-    (getProducts.value ?? []).find(p => p.id === state.create.product_id) ?? null
+    (getProducts.value ?? []).find(p => p.id === store.create.product_id) ?? null
 );
 
 const onSubmit = async () => {
-    if (!state.create.product_id || !state.create.quantity) return;
+    if (!store.create.product_id || !store.create.quantity) return;
     isSubmitting.value = true;
     await storeStock();
     isSubmitting.value = false;
@@ -78,7 +82,7 @@ const onSubmit = async () => {
                                         Produkt <span class="text-red-500">*</span>
                                     </label>
                                     <select
-                                        v-model="state.create.product_id"
+                                        v-model="store.create.product_id"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     >
                                         <option :value="null">— Vyberte produkt —</option>
@@ -112,7 +116,7 @@ const onSubmit = async () => {
                                         </label>
                                         <div class="flex items-center gap-2">
                                             <input
-                                                v-model.number="state.create.quantity"
+                                                v-model.number="store.create.quantity"
                                                 type="number"
                                                 min="1"
                                                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -129,7 +133,7 @@ const onSubmit = async () => {
                                             Nákupná cena / ks (€)
                                         </label>
                                         <input
-                                            v-model="state.create.price"
+                                            v-model="store.create.price"
                                             type="number"
                                             step="0.01"
                                             min="0"
@@ -142,7 +146,7 @@ const onSubmit = async () => {
                                 <div>
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka</label>
                                     <input
-                                        v-model="state.create.note"
+                                        v-model="store.create.note"
                                         type="text"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         placeholder="Číslo dodacieho listu, dodávateľ, …"
@@ -171,14 +175,14 @@ const onSubmit = async () => {
                                     <div class="flex justify-between text-gray-600">
                                         <span>Množstvo</span>
                                         <span class="font-semibold text-gray-900">
-                                            {{ state.create.quantity || 0 }}
+                                            {{ store.create.quantity || 0 }}
                                             {{ selectedProduct?.unit_value ?? '' }}
                                         </span>
                                     </div>
-                                    <div v-if="state.create.price" class="flex justify-between text-gray-600">
+                                    <div v-if="store.create.price" class="flex justify-between text-gray-600">
                                         <span>Cena celkom</span>
                                         <span class="font-semibold text-gray-900">
-                                            {{ (Number(state.create.price) * Number(state.create.quantity || 0)).toFixed(2) }} €
+                                            {{ (Number(store.create.price) * Number(store.create.quantity || 0)).toFixed(2) }} €
                                         </span>
                                     </div>
                                 </div>
@@ -190,7 +194,7 @@ const onSubmit = async () => {
                                     <button
                                         type="button"
                                         @click="onSubmit"
-                                        :disabled="isSubmitting || !state.create.product_id || !state.create.quantity"
+                                        :disabled="isSubmitting || !store.create.product_id || !store.create.quantity"
                                         class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
                                     >
                                         <svg v-if="isSubmitting" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

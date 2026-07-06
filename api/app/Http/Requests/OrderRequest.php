@@ -2,10 +2,6 @@
 
 namespace App\Http\Requests;
 
-use Date;
-use Carbon\Carbon;
-use App\Notifications\OrderExpedition;
-use App\Services\ShippingService;
 use Illuminate\Foundation\Http\FormRequest;
 
 
@@ -43,7 +39,7 @@ class OrderRequest extends FormRequest
                 'customer.ic_dic' => ['nullable'],
                 'orderProducts' => ['required', 'array', 'min:1'],
                 'orderProducts.*.id' => ['required', 'integer', 'exists:products,id'],
-                'orderProducts.*.input_order' => ['required', 'integer', 'min:1'],
+                'orderProducts.*.input_order' => ['required', 'integer', 'min:1', 'max:100000'],
                 'note'         => ['nullable', 'string', 'max:1000'],
                 'wants_coupon' => ['boolean'],
                 'notify_customer'     => ['sometimes', 'boolean'],
@@ -56,13 +52,5 @@ class OrderRequest extends FormRequest
         return [
             'note' => ['nullable', 'string', 'max:1000'],
         ];
-    }
-
-    public function isFinished($order)
-    {
-
-        if (!$order->isOpened) {
-            $order->update(['isOpened' => 1]);
-        }
     }
 }

@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
-import useUser from "../../store/StoreUsers";
+import { useUsers as useUser } from "../../store/StoreUsers";
 import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 

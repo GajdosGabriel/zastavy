@@ -5,22 +5,20 @@ import PageHeader from "../layout/page/pageHeader.vue";
 import ButtonSubmit from "../layout/page/ButtonSubmit.vue";
 import PaginationComponent from "../plugins/pagination.vue";
 import PanelDropdown from "../layout/PanelDropdown.vue";
-import useAnnouncements from "../../store/StoreAnnouncements";
+import { storeToRefs } from "pinia";
+import { useAnnouncements } from "../../store/StoreAnnouncements";
 import FormInput from "../forms/FormInput.vue";
 
+const store = useAnnouncements();
+const { announcement, getAnnouncements, getStatuses, getPlacements, getStyleClasses } = storeToRefs(store);
 const {
-    state,
     fetchAnnouncements,
     saveAnnouncement,
     editAnnouncement,
     destroyAnnouncement,
     resetAnnouncement,
     setPaginator,
-    getAnnouncements,
-    getStatuses,
-    getPlacements,
-    getStyleClasses,
-} = useAnnouncements();
+} = store;
 
 onMounted(fetchAnnouncements);
 
@@ -55,12 +53,12 @@ const dropdownItems = (announcement) => [
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Názov</label>
-                            <FormInput v-model="state.announcement.title" placeholder="Názov oznamu" required />
+                            <FormInput v-model="announcement.title" placeholder="Názov oznamu" required />
                         </div>
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Umiestnenie</label>
-                            <select v-model="state.announcement.placement" required class="form-control rounded border px-3 py-2">
+                            <select v-model="announcement.placement" required class="form-control rounded border px-3 py-2">
                                 <option v-for="placement in getPlacements" :key="placement.value" :value="placement.value">
                                     {{ placement.label }}
                                 </option>
@@ -69,12 +67,12 @@ const dropdownItems = (announcement) => [
 
                         <div class="md:col-span-2">
                             <label class="mb-1 block text-sm font-bold text-slate-700">Text</label>
-                            <textarea v-model="state.announcement.body" rows="3" class="form-control rounded border px-3 py-2"></textarea>
+                            <textarea v-model="announcement.body" rows="3" class="form-control rounded border px-3 py-2"></textarea>
                         </div>
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Farba</label>
-                            <select v-model="state.announcement.style_class" required class="form-control rounded border px-3 py-2">
+                            <select v-model="announcement.style_class" required class="form-control rounded border px-3 py-2">
                                 <option v-for="styleClass in getStyleClasses" :key="styleClass.value" :value="styleClass.value">
                                     {{ styleClass.label }}
                                 </option>
@@ -83,7 +81,7 @@ const dropdownItems = (announcement) => [
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Status</label>
-                            <select v-model="state.announcement.status.value" required class="form-control rounded border px-3 py-2">
+                            <select v-model="announcement.status.value" required class="form-control rounded border px-3 py-2">
                                 <option v-for="status in getStatuses" :key="status.value" :value="status.value">
                                     {{ status.label }}
                                 </option>
@@ -92,17 +90,17 @@ const dropdownItems = (announcement) => [
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Zobrazovať od</label>
-                            <input v-model="state.announcement.published_from" type="datetime-local" class="form-control rounded border px-3 py-2" />
+                            <input v-model="announcement.published_from" type="datetime-local" class="form-control rounded border px-3 py-2" />
                         </div>
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Zobrazovať do</label>
-                            <input v-model="state.announcement.published_until" type="datetime-local" class="form-control rounded border px-3 py-2" />
+                            <input v-model="announcement.published_until" type="datetime-local" class="form-control rounded border px-3 py-2" />
                         </div>
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Poradie</label>
-                            <input v-model.number="state.announcement.sort_order" type="number" min="0" class="form-control rounded border px-3 py-2" />
+                            <input v-model.number="announcement.sort_order" type="number" min="0" class="form-control rounded border px-3 py-2" />
                         </div>
                     </div>
 

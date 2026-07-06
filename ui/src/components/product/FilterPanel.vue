@@ -1,11 +1,14 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
-import useProducts from "../../store/StoreProducts";
-import useCategories from "../../store/StoreCategories";
+import { storeToRefs } from "pinia";
+import { useProducts } from "../../store/StoreProducts";
+import { useCategories } from "../../store/StoreCategories";
 import useQuery from "../../store/StoreQuery";
 
 const { fetchSearchInput, fetchProducts } = useProducts();
-const { categories, fetchCategories } = useCategories();
+const categoriesStore = useCategories();
+const { categories } = storeToRefs(categoriesStore);
+const { fetchCategories } = categoriesStore;
 const { state: sq, setQuery, removeQuery } = useQuery();
 
 const onSearchInput = ref("");

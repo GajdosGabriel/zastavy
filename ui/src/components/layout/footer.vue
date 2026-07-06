@@ -1,8 +1,9 @@
 <script setup>
 import { NAV_ITEMS } from '../../constants';
-import useUser from '../../store/StoreUsers.js';
+import { storeToRefs } from 'pinia';
+import { useUsers as useUser } from '../../store/StoreUsers';
 
-const { getUser } = useUser();
+const { getUser } = storeToRefs(useUser());
 </script>
 
 <!-- <template>

@@ -2,8 +2,9 @@
 import useUsers from "../store/StoreUsers";
 import useQuery from "../store/StoreQuery";
 
-const { state: uuu, getUserOrder } = useUsers();
-const { state: q, getQueryLength } = useQuery();
+// StoreUsers je Pinia — volaj lazy vnútri getterov (nie na module-level, spadlo by pred app.use(pinia)).
+// StoreQuery je zatiaľ starý factory, preto smie ostať na module-level.
+const { getQueryLength } = useQuery();
 
 
 export const isNotificated = {
@@ -19,7 +20,7 @@ export const isActive = {
     key: 'isActive=',
     value: true,
     active: false,
-    get iconRight() { return uuu.userOrder.isNotificated; },
+    get iconRight() { return useUsers().userOrder?.isNotificated; },
 };
 
 export const isConfirmed = {
@@ -27,14 +28,14 @@ export const isConfirmed = {
     key: 'isOpened=',
     value: true,
     active: false,
-    get iconRight() { return getUserOrder.value.isConfirmed; },
+    get iconRight() { return useUsers().getUserOrder?.isConfirmed; },
 };
 export const isDeleted = {
     name: 'Zmazané',
     key: 'isDeleted=',
     value: true,
     active: false,
-    get iconRight() { return getUserOrder.value.isDeleted; },
+    get iconRight() { return useUsers().getUserOrder?.isDeleted; },
 };
 
 export const resetFilter = {

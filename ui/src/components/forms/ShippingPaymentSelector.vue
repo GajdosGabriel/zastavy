@@ -1,12 +1,16 @@
 <script setup>
 import { onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
 import { formatDecimal } from '../../models/functions';
-import useCheckoutOptions from '../../store/StoreCheckoutOptions';
+import { useCheckoutOptions } from '../../store/StoreCheckoutOptions';
 
 const props = defineProps({
     cartTotal: { type: Number, default: 0 },
 });
 
+const store = useCheckoutOptions();
+
+// storeToRefs zachová reaktivitu pri destructuringu state + getterov.
 const {
     getShippingMethods,
     getPaymentMethods,
@@ -17,9 +21,15 @@ const {
     getCouponError,
     getCouponCode,
     isCouponLoading,
-    shippingPrice,
     paymentFee,
     discountAmount,
+    selectedShippingId,
+    selectedPaymentId,
+} = storeToRefs(store);
+
+// Akcie (vrátane shippingPrice) sú v Pinia automaticky naviazané na store,
+// takže sa dajú destructurovať priamo.
+const {
     fetchShippingMethods,
     fetchPaymentMethods,
     selectShipping,
@@ -28,8 +38,8 @@ const {
     setCouponCode,
     validateCoupon,
     clearCoupon,
-    state,
-} = useCheckoutOptions();
+    shippingPrice,
+} = store;
 
 onMounted(async () => {
     await Promise.all([fetchShippingMethods(), fetchPaymentMethods()]);
@@ -56,7 +66,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                     :key="method.id"
                     :class="[
                         'flex cursor-pointer items-center justify-between rounded-lg border px-4 py-3 transition',
-                        state.selectedShippingId === method.id
+                        selectedShippingId === method.id
                             ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
                             : 'border-gray-200 bg-white hover:border-gray-300'
                     ]"
@@ -65,7 +75,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                         <input
                             type="radio"
                             :value="method.id"
-                            :checked="state.selectedShippingId === method.id"
+                            :checked="selectedShippingId === method.id"
                             @change="selectShipping(method.id)"
                             class="accent-blue-600"
                         />
@@ -95,7 +105,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                     :key="method.id"
                     :class="[
                         'flex cursor-pointer items-center justify-between rounded-lg border px-4 py-3 transition',
-                        state.selectedPaymentId === method.id
+                        selectedPaymentId === method.id
                             ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
                             : 'border-gray-200 bg-white hover:border-gray-300'
                     ]"
@@ -104,7 +114,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                         <input
                             type="radio"
                             :value="method.id"
-                            :checked="state.selectedPaymentId === method.id"
+                            :checked="selectedPaymentId === method.id"
                             @change="selectPayment(method.id)"
                             class="accent-blue-600"
                         />

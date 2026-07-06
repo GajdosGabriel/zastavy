@@ -2,7 +2,8 @@
 import { onMounted, watch, ref } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import useCustomers from "../../store/StoreCustomers";
-import useUser from "../../store/StoreUsers";
+import { storeToRefs } from "pinia";
+import { useUsers as useUser } from "../../store/StoreUsers";
 import useQuery from "../../store/StoreQuery";
 import PaginationComponent from "../plugins/pagination.vue";
 import FilterPanel from "./FilterPanel.vue";
@@ -25,7 +26,7 @@ const {
     setPaginator,
     getCustomers,
 } = useCustomers();
-const { getUserCan } = useUser();
+const { getUserCan } = storeToRefs(useUser());
 
 const { state: q, setQuery, getQuery, getQueryStringUrl, removeQuery, resetQuery } = useQuery();
 

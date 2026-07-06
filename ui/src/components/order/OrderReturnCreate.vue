@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import BaseLayout from "../layout/BaseLayout.vue";
 import buttonLink from "../layout/page/ButtonLink.vue";
 import useOrders from "../../store/StoreOrders";
-import useReturns from "../../store/StoreReturns";
+import { useReturns } from "../../store/StoreReturns";
 
 const { getOrder, fetchOrder } = useOrders();
 const { storeReturn } = useReturns();

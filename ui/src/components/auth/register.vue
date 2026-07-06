@@ -1,7 +1,7 @@
 <script setup>
 import { reactive } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
-import useUser from "../../store/StoreUsers";
+import { useUsers as useUser } from "../../store/StoreUsers";
 import RequiredMark from "../forms/RequiredMark.vue";
 
 

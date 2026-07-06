@@ -2,7 +2,7 @@
 import { reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import BaseLayout from "../layout/BaseLayout.vue";
-import useUser from "../../store/StoreUsers";
+import { useUsers as useUser } from "../../store/StoreUsers";
 import router from "../../router";
 import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";

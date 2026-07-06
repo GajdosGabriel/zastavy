@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import useNotices from "../../../store/StoreNotices";
+import { useNotices } from "../../../store/StoreNotices";
 import useOrders from "../../../store/StoreOrders";
 import SpinnerButton from "../../icons/spinnerButton.vue";
 import loadingStore from "../../../store/StoreLoading";
