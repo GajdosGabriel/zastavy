@@ -10,21 +10,20 @@ import { formatDecimal } from "../../models/functions";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import ShippingPaymentSelector from "../forms/ShippingPaymentSelector.vue";
 
+const checkoutsStore = useCheckouts();
+const { getCarts, getCheckout, note } = storeToRefs(checkoutsStore);
 const {
       removeCart,
       storeCheckout,
-      getCarts,
-      getCheckout,
       getlocalStorage,
       resetCarts,
       updateCartQuantity,
-      state: checkoutState,
-} = useCheckouts();
+} = checkoutsStore;
 
 const customersStore = useCustomers();
 const { getCustomer } = storeToRefs(customersStore);
 const { setCustomer } = customersStore;
-const { getFieldErrors } = useErrors();
+const { getFieldErrors } = storeToRefs(useErrors());
 const isSubmitting = ref(false);
 
 const parseStoredCustomer = () => {
@@ -195,7 +194,7 @@ const onClickForm = async () => {
                                 />
                                 <div class="mt-4">
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
-                                    <input v-model="checkoutState.note" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />
+                                    <input v-model="note" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />
                                 </div>
                             </div>
                         </div>

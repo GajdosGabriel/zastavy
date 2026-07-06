@@ -1,9 +1,10 @@
 <script setup>
 import kosik from "../icons/kosik.vue";
 import badge from "../plugins/badge.vue";
+import { storeToRefs } from "pinia";
 import useCheckouts from "../../store/StoreCheckouts";
 
-const { getCarts } = useCheckouts();
+const { getCarts } = storeToRefs(useCheckouts());
 </script>
 
 <template>

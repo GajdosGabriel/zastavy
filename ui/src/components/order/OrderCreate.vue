@@ -24,7 +24,9 @@ const productsStore = useProducts();
 const { getProducts } = storeToRefs(productsStore);
 const { fetchProducts } = productsStore;
 const { getUser } = storeToRefs(useUser());
-const { getFieldErrors, setErrors, resetErrors } = useErrors();
+const errorsStore = useErrors();
+const { getFieldErrors } = storeToRefs(errorsStore);
+const { setErrors, resetErrors } = errorsStore;
 
 const orderProducts = ref([]);
 const selectedProductId = ref("");

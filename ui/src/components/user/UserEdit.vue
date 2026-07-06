@@ -24,7 +24,7 @@ const { fetchUser, updateUser } = store;
 
 const router = useRouter();
 const { params: { userId } } = useRoute();
-const { getFieldErrors } = useErrors();
+const { getFieldErrors } = storeToRefs(useErrors());
 
 const fe = (field) => {
     const e = getFieldErrors.value[field];

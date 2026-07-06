@@ -1,9 +1,10 @@
 <script setup>
 import { nextTick, ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import ErrorPanel from './ErrorPanel.vue';
 import useErrors from '../../store/StoreErrors';
 
-const { getErrors } = useErrors();
+const { getErrors } = storeToRefs(useErrors());
 const errorPanelRef = ref(null);
 
 watch(

@@ -23,7 +23,7 @@ const {
 const { fetchCreateOptions, storeUser } = store;
 
 const router = useRouter();
-const { getFieldErrors } = useErrors();
+const { getFieldErrors } = storeToRefs(useErrors());
 
 const fe = (field) => {
     const e = getFieldErrors.value[field];

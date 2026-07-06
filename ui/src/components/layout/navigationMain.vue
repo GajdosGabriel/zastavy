@@ -3,7 +3,7 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import { useUsers as useUser } from "../../store/StoreUsers";
-import useCheckouts from "../../store/StoreCheckouts.js";
+import useCheckouts from "../../store/StoreCheckouts";
 import useCustomer from "../../store/StoreCustomers.ts";
 import { useProducts as useProduct } from "../../store/StoreProducts";
 import { useStocks as useStock } from "../../store/StoreStocks";

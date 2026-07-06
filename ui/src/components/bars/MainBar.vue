@@ -2,7 +2,7 @@
 import { onUnmounted } from 'vue';
 import useErrors from '../../store/StoreErrors';
 
-const { state, getErrors, resetErrors } = useErrors();
+const { resetErrors } = useErrors();
 
 onUnmounted(() => {
     resetErrors();

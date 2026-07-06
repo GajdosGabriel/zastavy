@@ -1,7 +1,8 @@
 <script setup>
+import { storeToRefs } from 'pinia';
 import useCheckouts from '../../store/StoreCheckouts';
 
-const { getCarts } = useCheckouts();
+const { getCarts } = storeToRefs(useCheckouts());
 </script>
 
 <template>

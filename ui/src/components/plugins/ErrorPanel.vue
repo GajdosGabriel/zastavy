@@ -1,7 +1,10 @@
 <script setup>
+import { storeToRefs } from 'pinia';
 import useErrors from '../../store/StoreErrors';
 
-const { state, getErrors, removeError } = useErrors();
+const errorsStore = useErrors();
+const { getErrors } = storeToRefs(errorsStore);
+const { removeError } = errorsStore;
 </script>
 
 <template>

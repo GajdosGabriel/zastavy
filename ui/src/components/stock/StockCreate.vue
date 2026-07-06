@@ -14,7 +14,7 @@ const store = useStocks();
 const { storeStock } = store;
 const { getProducts } = storeToRefs(useProducts());
 const { fetchProducts } = useProducts();
-const { getFieldErrors } = useErrors();
+const { getFieldErrors } = storeToRefs(useErrors());
 
 const isSubmitting = ref(false);
 const productSearch = ref("");

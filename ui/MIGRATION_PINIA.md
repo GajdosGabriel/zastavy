@@ -123,11 +123,30 @@ Migruj po jednom store + jeho konzumentov, každý samostatne otestuj v prehliad
    > Postup: presuň **vlastné** module-level `useX()` volania (util stores) dovnútra akcií/getterov;
    > util stores (Errors/Query/Paginator/Images) ostávajú staré, volanie z Pinia akcie je OK.
    > **Ak má store module-level `watch`/side-effect → použi setup-store syntax** (`defineStore('x', () => {...})`).
-5. Vysoký blast radius (na koniec): `StorePaginator`, `StoreLoading`, `StoreQuery`, `StoreErrors`.
-6. **Naposledy `StoreCheckouts`** — má module-level `watch` + závisí na Customers/Errors/CheckoutOptions;
-   preveď až keď sú závislosti hotové.
+   ✅ **StoreNavigation**, ✅ **StoreCustomers**, ✅ **StoreOrders**, ✅ **StoreOrderProducts** — hotové
+   (overené `vite build`). `StoreOrderProducts`: `getStatement` prevedený na computed getter
+   (nahradil module-level `watch`+`grandCalculate`), vypustený mŕtvy `findProduct`/`orderProduct`,
+   pridaná `removeOrderProduct` akcia.
+5. ✅ Vysoký blast radius — hotové (overené `vite build`):
+   ✅ **StorePaginator** (gettery cez `storeToRefs` v `pagination.vue`; Pinia stores volajú len akcie).
+   ✅ **StoreLoading** — **zámerne NIE Pinia**: prierezový `reactive` singleton mutovaný priamo v
+   axios interceptoroch (mimo Vue/Pinia lifecycle). Prevedený len `.js`→`.ts` s typom, API identické.
+   ✅ **StoreQuery** — `const { state: q } = useQuery()` v stores → `const q = useQuery()` (Pinia
+   inštancia JE state proxy); `getQueryStringUrl.value` → bez `.value`; komponenty cez `storeToRefs`;
+   `filterLabels.js` module-level `useQuery()` → lazy getter.
+   ✅ **StoreErrors** — Pinia stores volajú `useErrors().setErrors()` (akcia, bez zmeny); komponenty
+   s `getFieldErrors`/`getErrors` cez `storeToRefs`; `StoreCheckouts.js` module-level `useErrors()`
+   spravený lazy pred migráciou.
+6. ✅ **StoreCheckouts** — hotové (overené `vite build`). **Setup-store** (`defineStore('checkouts', () => {...})`)
+   kvôli interným `watch` (perzistencia košíka/zákazníka do localStorage). `getCheckout` prevedený na
+   computed getter (nahradil `grandCalculate`+module-level `watch`). Konzumenti: `getCarts`/`getCheckout`/`note`
+   cez `storeToRefs`, akcie priamo; `navigationMain.vue` import `StoreCheckouts.js` → extensionless.
 
-> **`StoreValidations`** má 0 konzumentov — de facto mŕtvy kód. Nemigrovať; kandidát na zmazanie (samostatne).
+> **✅ `StoreValidations`** — mŕtvy kód (jediný konzument `ValidationPanel.vue` nebol nikde importovaný).
+> Zmazané oba súbory (store aj panel).
+
+> **🎉 Migrácia dokončená** — všetky stores sú Pinia + TS (okrem `StoreLoading`, ktorý je zámerne
+> typovaný `reactive` singleton). V `src/store/` nezostali žiadne `.js` súbory.
 
 > **Lekcia 1 (potvrdená):** pred migráciou storu skontroluj, či ho iný **nemigrovaný store**
 > nevolá na module-level — grepni **`.js` aj `.ts`** stores (`grep -rn "useX()" src/store/`).
