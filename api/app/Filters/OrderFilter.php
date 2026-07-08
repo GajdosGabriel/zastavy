@@ -2,6 +2,7 @@
 
 namespace App\Filters;
 
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrderFilter extends Filters
@@ -12,7 +13,12 @@ class OrderFilter extends Filters
 
     public function isActive($value)
     {
-        return $this->builder->whereDoesntHave('stocks');
+        return $this->builder
+            ->whereDoesntHave('stocks')
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', '!=', OrderStatus::Cancelled->value);
+            });
     }
 
     public function isOpened($value)
