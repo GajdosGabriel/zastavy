@@ -28,10 +28,15 @@ temp/
 # Laravel / PHP
 **/storage/*.key
 **/storage/framework/cache/*
+!**/storage/framework/cache/.gitignore
 **/storage/framework/sessions/*
+!**/storage/framework/sessions/.gitignore
 **/storage/framework/testing/*
+!**/storage/framework/testing/.gitignore
 **/storage/framework/views/*
+!**/storage/framework/views/.gitignore
 **/storage/logs/*
+!**/storage/logs/.gitignore
 **/bootstrap/cache/*
 .phpunit.result.cache
 
