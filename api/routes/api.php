@@ -105,11 +105,11 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::apiResource('users', UserController::class)->only(['index', 'show', 'update', 'store']);
     Route::apiResource('products', ProductController::class)->except(['show']);
     Route::prefix('admin')->group(function () {
-        Route::apiResource('shipping-methods', AdminShippingMethodController::class)->except(['show', 'create', 'edit']);
+        Route::apiResource('shipping-methods', AdminShippingMethodController::class)->except(['show', 'create', 'edit'])->names('admin.shipping-methods');
         Route::post('shipping-methods/{id}/restore', [AdminShippingMethodController::class, 'restore'])->name('admin.shipping-methods.restore');
-        Route::apiResource('payment-methods', AdminPaymentMethodController::class)->except(['show', 'create', 'edit']);
+        Route::apiResource('payment-methods', AdminPaymentMethodController::class)->except(['show', 'create', 'edit'])->names('admin.payment-methods');
         Route::post('payment-methods/{id}/restore', [AdminPaymentMethodController::class, 'restore'])->name('admin.payment-methods.restore');
-        Route::apiResource('coupons', AdminCouponController::class)->except(['show', 'create', 'edit']);
+        Route::apiResource('coupons', AdminCouponController::class)->except(['show', 'create', 'edit'])->names('admin.coupons');
         Route::post('coupons/{id}/restore', [AdminCouponController::class, 'restore'])->name('admin.coupons.restore');
         Route::get('coupon-settings', [CouponSettingsController::class, 'show'])->name('admin.coupon-settings.show');
         Route::put('coupon-settings', [CouponSettingsController::class, 'update'])->name('admin.coupon-settings.update');
