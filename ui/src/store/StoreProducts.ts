@@ -154,6 +154,7 @@ export const useProducts = defineStore('products', () => {
         unit_value: product.value.unit_value,
         published: product.value.published,
         featured: product.value.featured,
+        made_to_order: product.value.made_to_order ?? false,
         categories: product.value.categories?.map((c: any) => c.id ?? c) ?? [],
         status: product.value.status?.value || product.value.status,
     });

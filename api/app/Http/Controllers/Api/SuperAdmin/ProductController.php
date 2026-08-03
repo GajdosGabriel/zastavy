@@ -38,7 +38,9 @@ class ProductController extends Controller
     {
         Gate::authorize('create', Product::class);
 
-        $product = Product::create($request->all());
+        // categories je väzba, nie stĺpec — do create/update nesmie vojsť.
+        $product = Product::create($request->safe()->except('categories'));
+        $product->categories()->sync($request->input('categories', []));
 
         new StoreImage($product, $request->images);
 
@@ -49,8 +51,8 @@ class ProductController extends Controller
     {
         Gate::authorize('update', $product);
 
-        $product->update($request->validated());
-        $product->categories()->sync($request->categories);
+        $product->update($request->safe()->except('categories'));
+        $product->categories()->sync($request->input('categories', []));
 
         return new ProductResource($product->refresh()->load(['images', 'categories']));
     }
