@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from "vue";
 import useOrders from "../../store/StoreOrders";
 import { formatDecimal } from "../../models/functions";
 import useOrderProducts from "../../store/StoreOrderProducts";
@@ -20,8 +21,8 @@ const canEditProduct = () => isNew() || (!isOrderFinished.value && !props.item.s
 const canEditQty     = () => isNew() || !isOrderFinished.value;
 
 const onClickSave = async (item) => {
-    if (!item.product_id) {
-        alert("Vyberte produkt.");
+    if (item.isNew && !item.product_variant_id) {
+        alert("Vyberte variant.");
         return;
     }
     try {
@@ -48,16 +49,31 @@ const onClickDelete = async (item) => {
     await destroyOrderProducts(item);
 };
 
-const onChangeProduct = (productId) => {
-    const product = getProducts.value.find(p => p.id == productId);
-    if (product) {
-        props.item.price       = product.active_price ?? product.sale_price ?? product.price ?? props.item.price;
-        props.item.unit_value  = product.unit_value;
-        props.item.product_vat = product.vat;
-        props.item.thumb       = product.thumb;
-        props.item.name        = product.name;
-        props.item.quantity    = product.min_order ?? 1;
-    }
+// Do výberu ide každý variant zvlášť — cena aj min. odber patria variantu.
+const variantRows = computed(() =>
+    (getProducts.value ?? []).flatMap((product) =>
+        (product.variants ?? []).map((variant) => ({
+            id: variant.id,
+            label: variant.name ? `${product.name} — ${variant.name}` : product.name,
+            product,
+            variant,
+        }))
+    )
+);
+
+const onChangeVariant = (variantId) => {
+    const row = variantRows.value.find(r => r.id == variantId);
+    if (!row) return;
+
+    props.item.product_id         = row.product.id;
+    props.item.product_variant_id = row.variant.id;
+    props.item.variant_name       = row.variant.name;
+    props.item.price              = row.variant.active_price ?? row.variant.price ?? props.item.price;
+    props.item.unit_value         = row.product.unit_value;
+    props.item.product_vat        = row.product.vat;
+    props.item.thumb              = row.variant.thumb ?? row.product.thumb;
+    props.item.name               = row.product.name;
+    props.item.quantity           = row.variant.min_order ?? 1;
 };
 </script>
 
@@ -67,17 +83,25 @@ const onChangeProduct = (productId) => {
             <div class="mr-3 overflow-hidden rounded-full border-2 border-gray-200">
                 <img v-if="item.thumb" :src="item.thumb" :alt="item.name" class="object-cover h-8 w-8" />
             </div>
-            <select
-                class="shadow w-full appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="product"
-                v-model="item.product_id"
-                :disabled="!canEditProduct()"
-                @change="onChangeProduct(item.product_id)">
-                <option :value="null" disabled>— vybrať produkt —</option>
-                <option v-for="product in getProducts" :key="product.id" :value="product.id">
-                    {{ product.name }}
-                </option>
-            </select>
+            <div class="w-full">
+                <select v-if="item.isNew"
+                    class="shadow w-full appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="product"
+                    v-model="item.product_variant_id"
+                    :disabled="!canEditProduct()"
+                    @change="onChangeVariant(item.product_variant_id)">
+                    <option :value="null" disabled>— vybrať variant —</option>
+                    <option v-for="row in variantRows" :key="row.id" :value="row.id">
+                        {{ row.label }}
+                    </option>
+                </select>
+                <template v-else>
+                    <div>{{ item.name }}</div>
+                    <div v-if="item.variant_name" class="text-xs font-medium text-blue-700">
+                        {{ item.variant_name }}
+                    </div>
+                </template>
+            </div>
         </td>
 
         <td class="tbody_td">

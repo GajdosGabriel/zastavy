@@ -33,6 +33,17 @@ const admin = [
         },
     },
     {
+        path: '/admin/vlastnosti',
+        name: 'attributes.index',
+        components: {
+            default: () => import('../components/admin/AttributeIndex.vue'),
+        },
+        meta: {
+            title: 'Vlastnosti produktov',
+            superAdminOnly: true,
+        },
+    },
+    {
         path: '/admin/export-pouzivatelov',
         name: 'users.export.index',
         components: {

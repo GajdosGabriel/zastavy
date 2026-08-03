@@ -16,14 +16,22 @@ class ProductController extends Controller
     {
         Gate::authorize('viewAny', Product::class);
 
-        $products = Product::filter($productFilter)->paginate();
+        $products = Product::with(['variants', 'defaultVariant'])
+            ->filter($productFilter)
+            ->paginate();
 
         return ProductResource::collection($products);
     }
 
     public function show(Product $product)
     {
-        return response(new ProductResource($product->load(['images', 'categories'])));
+        return response(new ProductResource($product->load([
+            'images',
+            'categories',
+            'variants.attributeValues.attribute',
+            'defaultVariant',
+            'attributesTaxonomy.values',
+        ])));
     }
 
     public function store(ProductRequest $request)

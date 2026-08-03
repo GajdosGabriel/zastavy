@@ -20,7 +20,10 @@ const { getUserCan } = storeToRefs(useUser());
 const quickMark = ref([]);
 
 const quickMarkSum = () => {
-      return quickMark.value.reduce((acumulator, item) => acumulator + (item.sale_price * item.quantity), null);
+      return quickMark.value.reduce(
+            (acumulator, item) => acumulator + Number(item.price_from ?? 0) * Number(item.total_quantity ?? 0),
+            0
+      );
 };
 
 onMounted(() => {
@@ -86,7 +89,7 @@ const template = (product) => {
                                           <th scope="col" class="thead_th">
                                                 Publikované
                                           </th>
-                                          <th scope="col" class="thead_th">Zľava</th>
+                                          <th scope="col" class="thead_th">Varianty</th>
                                           <th scope="col" class="thead_th">Sklad</th>
                                           <th scope="col" class="thead_th">
                                                 <span>Panel</span>

@@ -3,6 +3,7 @@
 namespace App\Enums;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 
 enum ModelStatus: string
@@ -108,7 +109,30 @@ enum ModelStatus: string
             return self::Hidden;
         }
 
-        if ($product->quantity !== null && (int) $product->quantity <= 0) {
+        // Sklad sa vedie na variantoch — produkt je vypredaný, až keď je
+        // vypredaný každý jeho predajný variant.
+        if (!$product->is_in_stock) {
+            return self::OutOfStock;
+        }
+
+        return self::Active;
+    }
+
+    public static function fromVariant(ProductVariant $variant): self
+    {
+        if ($variant->status instanceof self && $variant->status !== self::Active) {
+            return $variant->status;
+        }
+
+        if ($variant->deleted_at !== null) {
+            return self::Archived;
+        }
+
+        if (!$variant->published) {
+            return self::Hidden;
+        }
+
+        if (!$variant->is_in_stock) {
             return self::OutOfStock;
         }
 

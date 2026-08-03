@@ -23,24 +23,36 @@ const buttonBack = { name: "Späť", link: "stocks.index", icon: "arrow-left" };
 
 onMounted(() => {
     fetchProducts();
-    store.create = { product_id: null, quantity: "", price: "", note: "" };
+    store.create = { product_variant_id: null, quantity: "", price: "", note: "" };
 });
 
-const filteredProducts = computed(() => {
+// Sklad sa vedie na variantoch — do výberu ide každý variant zvlášť.
+const variantRows = computed(() =>
+    (getProducts.value ?? []).flatMap((product) =>
+        (product.variants ?? []).map((variant) => ({
+            id: variant.id,
+            code: variant.code,
+            label: variant.name ? `${product.name} — ${variant.name}` : product.name,
+            product,
+            variant,
+        }))
+    )
+);
+
+const filteredVariants = computed(() => {
     const s = productSearch.value.trim().toLowerCase();
-    const all = getProducts.value ?? [];
-    if (!s) return all;
-    return all.filter(p =>
-        [p.code, p.name].filter(Boolean).some(v => String(v).toLowerCase().includes(s))
+    if (!s) return variantRows.value;
+    return variantRows.value.filter(row =>
+        [row.code, row.label].filter(Boolean).some(v => String(v).toLowerCase().includes(s))
     );
 });
 
-const selectedProduct = computed(() =>
-    (getProducts.value ?? []).find(p => p.id === store.create.product_id) ?? null
+const selectedRow = computed(() =>
+    variantRows.value.find(row => row.id === store.create.product_variant_id) ?? null
 );
 
 const onSubmit = async () => {
-    if (!store.create.product_id || !store.create.quantity) return;
+    if (!store.create.product_variant_id || !store.create.quantity) return;
     isSubmitting.value = true;
     await storeStock();
     isSubmitting.value = false;
@@ -67,37 +79,40 @@ const onSubmit = async () => {
                             <div class="p-5 space-y-4">
                                 <div>
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">
-                                        Filtrovať produkt
+                                        Filtrovať skladovú položku
                                     </label>
                                     <input
                                         v-model="productSearch"
                                         type="text"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                        placeholder="Hľadajte podľa kódu alebo názvu"
+                                        placeholder="Hľadajte podľa kódu, názvu alebo prevedenia"
                                     />
                                 </div>
 
                                 <div>
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">
-                                        Produkt <span class="text-red-500">*</span>
+                                        Variant <span class="text-red-500">*</span>
                                     </label>
                                     <select
-                                        v-model="store.create.product_id"
+                                        v-model="store.create.product_variant_id"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     >
-                                        <option :value="null">— Vyberte produkt —</option>
-                                        <option v-for="p in filteredProducts" :key="p.id" :value="p.id">
-                                            {{ p.code ? `[${p.code}] ` : '' }}{{ p.name }}
+                                        <option :value="null">— Vyberte variant —</option>
+                                        <option v-for="row in filteredVariants" :key="row.id" :value="row.id">
+                                            [{{ row.code }}] {{ row.label }}
                                         </option>
                                     </select>
+                                    <p v-if="!variantRows.length" class="mt-1.5 text-xs text-amber-700">
+                                        Žiadny produkt zatiaľ nemá variant — sklad sa nedá naskladniť.
+                                    </p>
                                 </div>
 
-                                <div v-if="selectedProduct" class="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                                    <div class="font-semibold">{{ selectedProduct.name }}</div>
+                                <div v-if="selectedRow" class="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                                    <div class="font-semibold">{{ selectedRow.label }}</div>
                                     <div class="mt-0.5 text-xs text-blue-600">
-                                        Kód: {{ selectedProduct.code ?? '—' }} &nbsp;·&nbsp;
-                                        Jednotka: {{ selectedProduct.unit_value ?? '—' }} &nbsp;·&nbsp;
-                                        Min. odber: {{ selectedProduct.min_order ?? 1 }}
+                                        Kód: {{ selectedRow.code }} &nbsp;·&nbsp;
+                                        Jednotka: {{ selectedRow.product.unit_value ?? '—' }} &nbsp;·&nbsp;
+                                        Na sklade: {{ selectedRow.variant.quantity ?? 'nesleduje sa' }}
                                     </div>
                                 </div>
                             </div>
@@ -122,8 +137,8 @@ const onSubmit = async () => {
                                                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                                 placeholder="0"
                                             />
-                                            <span v-if="selectedProduct?.unit_value" class="shrink-0 text-sm text-gray-500">
-                                                {{ selectedProduct.unit_value }}
+                                            <span v-if="selectedRow?.product.unit_value" class="shrink-0 text-sm text-gray-500">
+                                                {{ selectedRow.product.unit_value }}
                                             </span>
                                         </div>
                                     </div>
@@ -169,14 +184,14 @@ const onSubmit = async () => {
                                     <div class="flex justify-between text-gray-600">
                                         <span>Produkt</span>
                                         <span class="font-semibold text-gray-900 text-right max-w-[60%] truncate">
-                                            {{ selectedProduct?.name ?? '—' }}
+                                            {{ selectedRow?.label ?? "—" }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between text-gray-600">
                                         <span>Množstvo</span>
                                         <span class="font-semibold text-gray-900">
                                             {{ store.create.quantity || 0 }}
-                                            {{ selectedProduct?.unit_value ?? '' }}
+                                            {{ selectedRow?.product.unit_value ?? '' }}
                                         </span>
                                     </div>
                                     <div v-if="store.create.price" class="flex justify-between text-gray-600">

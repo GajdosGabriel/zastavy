@@ -68,7 +68,12 @@
             <tbody>
                 @foreach($order->orderProducts as $item)
                 <tr>
-                    <td>{{ $item->product->name ?? '—' }}</td>
+                    <td>
+                        {{ $item->product->name ?? '—' }}
+                        @if($item->variant_name)
+                            <br><span style="color:#64748b;font-size:12px">{{ $item->variant_name }}</span>
+                        @endif
+                    </td>
                     <td style="text-align:right">{{ $item->quantity }} ks</td>
                     @if($order->orderProducts->first()?->price)
                         <td style="text-align:right">{{ number_format($item->price, 2, ',', ' ') }} €</td>

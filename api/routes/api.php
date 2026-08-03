@@ -10,10 +10,13 @@ use App\Http\Controllers\Api\Dashboard\OrderShippingController;
 use App\Http\Controllers\Api\Dashboard\OrderReturnController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\AnnouncementController;
+use App\Http\Controllers\Api\AttributeFacetController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\SanctumController;
 use App\Http\Controllers\Api\ShippingMethodController;
 use App\Http\Controllers\Api\SuperAdmin\AnnouncementController as SuperAdminAnnouncementController;
+use App\Http\Controllers\Api\SuperAdmin\AttributeController;
+use App\Http\Controllers\Api\SuperAdmin\AttributeValueController;
 use App\Http\Controllers\Api\SuperAdmin\CategoryController;
 use App\Http\Controllers\Api\SuperAdmin\CouponController as AdminCouponController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerController;
@@ -22,6 +25,7 @@ use App\Http\Controllers\Api\SuperAdmin\CustomerOrderController;
 use App\Http\Controllers\Api\SuperAdmin\PaymentMethodController as AdminPaymentMethodController;
 use App\Http\Controllers\Api\SuperAdmin\ProductController;
 use App\Http\Controllers\Api\SuperAdmin\ProductImageController;
+use App\Http\Controllers\Api\SuperAdmin\ProductVariantController;
 use App\Http\Controllers\Api\SuperAdmin\ShippingMethodController as AdminShippingMethodController;
 use App\Http\Controllers\Api\SuperAdmin\ShippingNoticeController;
 use App\Http\Controllers\Api\SuperAdmin\CouponSettingsController;
@@ -58,6 +62,7 @@ Route::apiResource('checkouts', CheckoutController::class)->middleware('throttle
 Route::get('/public-orders/{uuid}', [PublicOrderController::class, 'show'])->name('public-orders.show');
 
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/attribute-facets', [AttributeFacetController::class, 'index'])->name('attribute-facets.index');
 Route::get('/announcements/active', [AnnouncementController::class, 'active'])->name('announcements.active');
 Route::get('/shipping-methods', [ShippingMethodController::class, 'index'])->name('shipping-methods.index');
 Route::get('/payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
@@ -104,6 +109,15 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::get('users/export', [UserExportController::class, 'export'])->name('users.export');
     Route::apiResource('users', UserController::class)->only(['index', 'show', 'update', 'store']);
     Route::apiResource('products', ProductController::class)->except(['show']);
+
+    // Taxonómia vlastností a varianty produktu.
+    Route::apiResource('attributes', AttributeController::class);
+    Route::apiResource('attributes.values', AttributeValueController::class)
+        ->parameters(['values' => 'value'])
+        ->except(['show']);
+    Route::apiResource('products.variants', ProductVariantController::class)
+        ->parameters(['variants' => 'variant']);
+
     Route::prefix('admin')->group(function () {
         Route::apiResource('shipping-methods', AdminShippingMethodController::class)->except(['show', 'create', 'edit'])->names('admin.shipping-methods');
         Route::post('shipping-methods/{id}/restore', [AdminShippingMethodController::class, 'restore'])->name('admin.shipping-methods.restore');

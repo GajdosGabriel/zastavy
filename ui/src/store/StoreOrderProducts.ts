@@ -47,6 +47,8 @@ export const useOrderProducts = defineStore("orderProducts", {
                 isNew: true,
                 order_id: orderId,
                 product_id: null,
+                product_variant_id: null,
+                variant_name: null,
                 quantity: 1,
                 price: 0,
                 storno: 0,
@@ -71,7 +73,8 @@ export const useOrderProducts = defineStore("orderProducts", {
 
         async saveNewOrderProduct(item: Record<string, any>): Promise<any> {
             const response = await axiosInstance.post(item.endpoints.store, {
-                product_id: item.product_id,
+                // Položka objednávky visí na variante — produkt si server dohľadá sám.
+                product_variant_id: item.product_variant_id,
                 quantity: item.quantity,
                 price: item.price,
             });

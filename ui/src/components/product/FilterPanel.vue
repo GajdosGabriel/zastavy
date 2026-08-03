@@ -122,9 +122,9 @@ const searchInputText = (object) => {
                 <div v-if="quickMark.length" class="divide-y divide-slate-200 bg-white">
                     <div class="grid grid-cols-3 gap-4 px-4 py-2 text-sm" v-for="product in quickMark" :key="product.id">
                         <span class="font-semibold text-slate-900">{{ product.name }}</span>
-                        <span class="text-slate-700">{{ product.quantity }} ks</span>
+                        <span class="text-slate-700">{{ product.total_quantity ?? '—' }} ks</span>
                         <span class="text-right font-medium text-slate-900">
-                            {{ Math.trunc(product.active_price * product.quantity) }},- €
+                            {{ Math.trunc(Number(product.price_from ?? 0) * Number(product.total_quantity ?? 0)) }},- €
                         </span>
                     </div>
                 </div>

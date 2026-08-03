@@ -46,6 +46,7 @@ class PublicOrderController extends Controller
                 ] : null,
                 'order_products' => $order->orderProducts->map(fn($op) => [
                     'name'     => $op->product->name ?? '—',
+                    'variant'  => $op->variant_name,
                     'quantity' => $op->quantity,
                     'price'    => $op->price,
                     'total'    => $op->total,

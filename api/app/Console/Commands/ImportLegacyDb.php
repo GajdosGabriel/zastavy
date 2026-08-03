@@ -15,6 +15,9 @@ class ImportLegacyDb extends Command
     // Mapa customer_id → user_id, plnená po importUsers
     private array $customerUserMap = [];
 
+    // Mapa product_id → [variant_id, label], plnená po importProducts
+    private array $productVariantMap = [];
+
     public function handle(): int
     {
         $legacyDb = $this->option('legacy-db');
@@ -70,6 +73,8 @@ class ImportLegacyDb extends Command
             'stocks', 'notices', 'marks',
             'order_products', 'shippings',
             'orders', 'images',
+            'attribute_value_product_variant', 'attribute_value_product', 'attribute_product',
+            'product_variants', 'attribute_values', 'attributes',
             'category_product', 'products', 'categories',
             'users', 'customers',
         ] as $table) {
@@ -143,7 +148,38 @@ class ImportLegacyDb extends Command
                 $this->customerUserMap[$u->customer_id] = $u->id;
             }
         }
+
+        // Truncate users zmaže aj model_has_roles — bez tohto by po importe
+        // nemal do administrácie prístup nikto.
+        $this->assignSuperAdminRole($users->pluck('id')->all());
+
         $this->line("    → {$users->count()} admin user(ov)");
+    }
+
+    /**
+     * @param  array<int, int>  $userIds
+     */
+    private function assignSuperAdminRole(array $userIds): void
+    {
+        if (empty($userIds)) {
+            return;
+        }
+
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $role = \Spatie\Permission\Models\Role::findOrCreate('super-admin', 'web');
+
+        foreach ($userIds as $userId) {
+            DB::table('model_has_roles')->updateOrInsert([
+                'role_id'    => $role->id,
+                'model_type' => \App\Models\User::class,
+                'model_id'   => $userId,
+            ]);
+        }
+
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->line('    → super-admin rola priradená (' . count($userIds) . ')');
     }
 
     private function importUsersFromCustomers(): void
@@ -250,24 +286,147 @@ class ImportLegacyDb extends Command
                 'name'        => $r->name,
                 'slug'        => $r->slug,
                 'description' => $r->description,
-                'quantity'    => $r->quantity,
-                'weight'      => $r->weight,
-                'price'       => $r->price,
-                'sale_price'  => $r->sale_price,
-                'discount'    => $r->discount,
                 'vat'         => $r->vat,
                 'image_id'    => $r->image_id,
                 'featured'    => $r->featured ?? false,
                 'published'   => $r->published ?? true,
-                'attributes'  => $r->attributes,
                 'unit_value'  => $r->unit_value ?? 'ks',
-                'min_order'   => $r->min_order ?? 1,
                 'created_at'  => $r->created_at,
                 'updated_at'  => $r->updated_at,
                 'deleted_at'  => $r->deleted_at ?? null,
             ])->toArray()
         );
         $this->line("    → {$rows->count()} produktov");
+
+        $this->importProductVariants($rows);
+    }
+
+    /**
+     * Stará DB nemala varianty — každý produkt dostane jeden default variant
+     * s pôvodnou cenou a skladom, reťazec attributes sa naparsuje do taxonómie.
+     */
+    private function importProductVariants($rows): void
+    {
+        $this->line('  Product variants...');
+        $now = now();
+
+        $rozmerId = $this->legacyAttributeId('rozmer', 'Rozmer', 'cm', 0, $now);
+        $prevedenieId = $this->legacyAttributeId('prevedenie', 'Prevedenie', null, 1, $now);
+
+        foreach ($rows as $r) {
+            $valueId = $this->legacyValueId($r->attributes ?? null, $rozmerId, $prevedenieId, $now);
+            $label = $valueId
+                ? DB::table('attribute_values')->where('id', $valueId)->value('value')
+                : null;
+
+            $code = sprintf('TOV-%06d', $r->id);
+            if ($valueId) {
+                $code .= '-' . Str::upper(DB::table('attribute_values')->where('id', $valueId)->value('code'));
+            }
+
+            $variantId = DB::table('product_variants')->insertGetId([
+                'status'     => ($r->published ?? true) ? 'active' : 'hidden',
+                'product_id' => $r->id,
+                'code'       => Str::limit($code, 100, ''),
+                'name'       => $label,
+                'price'      => $r->price ?? 0,
+                'sale_price' => ($r->sale_price ?? 0) > 0 ? $r->sale_price : null,
+                'discount'   => $r->discount,
+                'quantity'   => $r->quantity,
+                'weight'     => $r->weight,
+                'min_order'  => max(1, (int) ($r->min_order ?? 1)),
+                'image_id'   => $r->image_id,
+                'is_default' => true,
+                'published'  => $r->published ?? true,
+                'sort_order' => 0,
+                'created_at' => $r->created_at,
+                'updated_at' => $r->updated_at,
+                'deleted_at' => $r->deleted_at ?? null,
+            ]);
+
+            $this->productVariantMap[$r->id] = ['id' => $variantId, 'label' => $label];
+
+            if ($valueId) {
+                DB::table('attribute_value_product_variant')->insert([
+                    'product_variant_id' => $variantId,
+                    'attribute_value_id' => $valueId,
+                ]);
+                DB::table('attribute_value_product')->insert([
+                    'product_id'         => $r->id,
+                    'attribute_value_id' => $valueId,
+                    'is_variant_option'  => true,
+                ]);
+                DB::table('attribute_product')->insertOrIgnore([
+                    'product_id'   => $r->id,
+                    'attribute_id' => DB::table('attribute_values')->where('id', $valueId)->value('attribute_id'),
+                    'sort_order'   => 0,
+                ]);
+            }
+        }
+
+        $this->line('    → ' . count($this->productVariantMap) . ' variantov');
+    }
+
+    private function legacyAttributeId(string $code, string $name, ?string $unit, int $sort, $now): int
+    {
+        $existing = DB::table('attributes')->where('code', $code)->value('id');
+
+        if ($existing) {
+            return $existing;
+        }
+
+        return DB::table('attributes')->insertGetId([
+            'status'        => 'active',
+            'code'          => $code,
+            'name'          => $name,
+            'unit'          => $unit,
+            'input_type'    => 'select',
+            'is_variant'    => true,
+            'is_filterable' => true,
+            'is_public'     => true,
+            'sort_order'    => $sort,
+            'created_at'    => $now,
+            'updated_at'    => $now,
+        ]);
+    }
+
+    private function legacyValueId(?string $raw, int $rozmerId, int $prevedenieId, $now): ?int
+    {
+        $raw = trim((string) $raw);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d+)\s*[x×]\s*(\d+)\s*(cm|mm|m)?$/iu', $raw, $m)) {
+            $unit = strtolower($m[3] ?? 'cm');
+
+            return $this->legacyStoreValue($rozmerId, $m[1] . 'x' . $m[2], $m[1] . ' × ' . $m[2] . ' ' . $unit, $now);
+        }
+
+        return $this->legacyStoreValue($prevedenieId, Str::slug($raw), $raw, $now);
+    }
+
+    private function legacyStoreValue(int $attributeId, string $code, string $value, $now): int
+    {
+        $existing = DB::table('attribute_values')
+            ->where('attribute_id', $attributeId)
+            ->where('code', $code)
+            ->value('id');
+
+        if ($existing) {
+            return $existing;
+        }
+
+        return DB::table('attribute_values')->insertGetId([
+            'attribute_id' => $attributeId,
+            'code'         => $code,
+            'value'        => $value,
+            'slug'         => Str::slug($value),
+            'sort_order'   => 0,
+            'created_at'   => $now,
+            'updated_at'   => $now,
+        ]);
     }
 
     private function importImages(): void
@@ -376,6 +535,8 @@ class ImportLegacyDb extends Command
                         'status'     => $r->deleted_at ? 'cancelled' : 'active',
                         'order_id'   => $r->order_id,
                         'product_id' => $r->product_id,
+                        'product_variant_id' => $this->productVariantMap[$r->product_id]['id'] ?? null,
+                        'variant_label'      => $this->productVariantMap[$r->product_id]['label'] ?? null,
                         'quantity'   => $r->quantity,
                         'storno'     => $r->storno,
                         'sent_at'    => $r->sent_at,

@@ -120,7 +120,7 @@ const onClickForm = async () => {
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 bg-white">
-                                    <tr v-for="product in getCarts" :key="product.id" class="transition hover:bg-gray-50">
+                                    <tr v-for="product in getCarts" :key="product.key" class="transition hover:bg-gray-50">
                                         <td class="px-4 py-3">
                                             <div class="flex items-center gap-3">
                                                 <img
@@ -130,6 +130,9 @@ const onClickForm = async () => {
                                                 />
                                                 <div>
                                                     <p class="font-semibold text-gray-900">{{ product.name }}</p>
+                                                    <p v-if="product.variant_name" class="text-xs font-medium text-blue-700">
+                                                        {{ product.variant_name }}
+                                                    </p>
                                                     <p class="text-xs text-gray-400">{{ shortDescription(product) }}</p>
                                                 </div>
                                             </div>
@@ -211,9 +214,10 @@ const onClickForm = async () => {
                                     </h2>
                                 </div>
                                 <div class="divide-y divide-gray-50 px-5 py-3">
-                                    <div v-for="product in getCarts" :key="product.id" class="flex items-start justify-between gap-2 py-1.5 text-sm">
+                                    <div v-for="product in getCarts" :key="product.key" class="flex items-start justify-between gap-2 py-1.5 text-sm">
                                         <span class="text-gray-600 leading-snug">
                                             {{ product.name }}
+                                            <span v-if="product.variant_name" class="text-gray-500">({{ product.variant_name }})</span>
                                             <span class="text-gray-400">× {{ product.input_order }}</span>
                                         </span>
                                         <span class="shrink-0 font-medium text-gray-900">{{ productTotal(product) }} €</span>

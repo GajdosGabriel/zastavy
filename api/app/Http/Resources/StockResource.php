@@ -12,6 +12,7 @@ class StockResource extends JsonResource
         $user = $request->user();
 
         $product = $this->product;
+        $variant = $this->product_variant;
 
         return [
             'id'                        => $this->id,
@@ -19,6 +20,9 @@ class StockResource extends JsonResource
             'shipping_id'               => $this->shipping_id,
             'order_id'                  => $this->order_id,
             'product_id'                => $this->product_id ?? $product?->id,
+            'product_variant_id'        => $variant?->id,
+            'variant_name'              => $variant?->name,
+            'variant_code'              => $variant?->code,
             'company'                   => $this->shipping?->order?->customer?->company,
             'order_serial'              => $this->shipping?->order?->serial_number,
             'shipping_created_at_human' => $this->shipping
@@ -26,7 +30,7 @@ class StockResource extends JsonResource
                 : Carbon::parse($this->created_at)->diffForHumans(),
             'created_at_human'          => Carbon::parse($this->created_at)->diffForHumans(),
             'name'                      => $product?->name,
-            'code'                      => $product?->code,
+            'code'                      => $variant?->code ?? $product?->code,
             'product_unit_value'        => $product?->unit_value,
             'quantity'                  => $this->quantity,
             'price'                     => $this->price,

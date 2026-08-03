@@ -19,6 +19,9 @@
 
                     <td class="px-6 py-4 whitespace-nowrap">
                         {{ item.name }}
+                        <span v-if="item.variant_name" class="ml-1 text-xs text-blue-700">
+                            ({{ item.variant_name }})
+                        </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         {{ item.quantity }}

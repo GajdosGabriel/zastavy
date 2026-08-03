@@ -7,8 +7,8 @@ import { useCategories } from "../../store/StoreCategories";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import router from "../../router";
-import { formatDecimal } from "../../models/functions";
 import PageHeader from '../layout/page/pageHeader.vue';
+import VariantEditor from './components/VariantEditor.vue';
 import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
 import buttonRouterLink from '../layout/page/ButtonLink.vue';
 import useUnsavedChanges from '../../models/useUnsavedChanges';
@@ -61,11 +61,6 @@ const handleImageSelected = (event) => {
 };
 
 const onSubmitForm = async () => {
-    if (productStore.product.price < productStore.product.sale_price) {
-        alert('Cena po zľave nemôže byť vyššia ako je základná cena.');
-        return;
-    }
-
     if (productId.value) {
         await updateProduct();
 
@@ -116,13 +111,6 @@ onUnmounted(() => setProduct({}));
 const pageTitle = computed(() => productId.value ? 'Upraviť produkt' : 'Nový produkt');
 const buttonSubmit = { name: 'Uložiť', spinner: true };
 const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'arrow-left' };
-
-const calculatedSalePrice = computed(() => {
-    const price = Number(productStore.product.price);
-    const discount = Number(productStore.product.discount);
-    if (!price || !discount) return null;
-    return formatDecimal(price - (price / 100) * discount);
-});
 </script>
 
 <template>
@@ -168,82 +156,13 @@ const calculatedSalePrice = computed(() => {
                         </div>
                     </section>
 
-                    <!-- Ceny -->
+                    <!-- Jednotky a DPH -->
                     <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
                         <div class="border-b border-gray-100 px-6 py-3">
-                            <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Ceny a zľavy</h2>
+                            <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Jednotky a DPH</h2>
                         </div>
                         <div class="px-6 py-5">
                             <div class="grid gap-4 sm:grid-cols-3">
-
-                                <!-- Základná cena -->
-                                <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
-                                    <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500" for="price">
-                                        Základná cena <RequiredMark />
-                                    </label>
-                                    <div class="relative">
-                                        <input id="price" type="number" v-model.number="getProduct.price"
-                                            placeholder="0.00" step=".01" required
-                                            class="w-full rounded-md border border-gray-300 py-2 pl-3 pr-8 text-lg font-semibold text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                                        <span class="absolute right-3 top-2.5 text-sm text-gray-400">€</span>
-                                    </div>
-                                </div>
-
-                                <!-- Zľava -->
-                                <div class="rounded-md border border-orange-100 bg-orange-50 p-4">
-                                    <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-orange-500" for="discount">
-                                        Zľava
-                                    </label>
-                                    <div class="relative">
-                                        <input id="discount" type="number" v-model.number="getProduct.discount"
-                                            placeholder="0"
-                                            class="w-full rounded-md border border-orange-200 py-2 pl-3 pr-8 text-lg font-semibold text-orange-700 shadow-sm focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400" />
-                                        <span class="absolute right-3 top-2.5 text-sm text-orange-400">%</span>
-                                    </div>
-                                    <p v-if="calculatedSalePrice" class="mt-2 text-xs text-orange-600">
-                                        Vypočítaná cena: <strong>{{ calculatedSalePrice }} €</strong>
-                                    </p>
-                                </div>
-
-                                <!-- Cena po zľave -->
-                                <div class="rounded-md border p-4"
-                                    :class="getProduct.sale_price ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'">
-                                    <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide"
-                                        :class="getProduct.sale_price ? 'text-green-600' : 'text-gray-500'"
-                                        for="sale_price">
-                                        Cena po zľave
-                                    </label>
-                                    <div class="relative">
-                                        <input id="sale_price" type="number" v-model.number="getProduct.sale_price"
-                                            placeholder="0.00" step=".01"
-                                            class="w-full rounded-md border py-2 pl-3 pr-8 text-lg font-semibold shadow-sm focus:outline-none focus:ring-1"
-                                            :class="getProduct.sale_price
-                                                ? 'border-green-300 text-green-700 focus:border-green-500 focus:ring-green-400'
-                                                : 'border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500'" />
-                                        <span class="absolute right-3 top-2.5 text-sm"
-                                            :class="getProduct.sale_price ? 'text-green-400' : 'text-gray-400'">€</span>
-                                    </div>
-                                    <p class="mt-2 text-xs text-gray-400">Ručné zadanie prepíše výpočet</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Odber a jednotky -->
-                    <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
-                        <div class="border-b border-gray-100 px-6 py-3">
-                            <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Odber a jednotky</h2>
-                        </div>
-                        <div class="px-6 py-5">
-                            <div class="grid gap-4 sm:grid-cols-3">
-                                <div>
-                                    <label class="mb-1.5 block text-sm font-medium text-gray-700" for="min_order">
-                                        Min. odber <RequiredMark />
-                                    </label>
-                                    <input id="min_order" type="number" v-model.number="getProduct.min_order"
-                                        placeholder="1" required
-                                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                                </div>
                                 <div>
                                     <label class="mb-1.5 block text-sm font-medium text-gray-700" for="unit_value">
                                         Jednotka <RequiredMark />
@@ -269,6 +188,9 @@ const calculatedSalePrice = computed(() => {
                             </div>
                         </div>
                     </section>
+
+                    <!-- Varianty: cena a sklad žijú tu, nie na produkte -->
+                    <VariantEditor :productId="productId" />
 
                     <!-- Kategórie -->
                     <section class="rounded-lg border border-gray-200 bg-white shadow-sm">

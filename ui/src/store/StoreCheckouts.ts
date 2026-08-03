@@ -13,6 +13,14 @@ const toPositiveNumber = (value: any, fallback = 0): number => {
     return Number.isFinite(number) && number > 0 ? number : fallback;
 };
 
+/**
+ * Kľúč položky košíka je variant, nie produkt — dva rozmery tej istej vlajky
+ * sú dve samostatné položky. Staršie košíky v localStorage variant nemajú,
+ * tie sa kľúčujú produktom a server im doplní predvolený variant.
+ */
+const cartKey = (item: any): string =>
+    item?.variant_id ? `v${item.variant_id}` : `p${item?.product_id ?? item?.id}`;
+
 const normalizeCartItem = (item: any) => {
     const minOrder = toPositiveNumber(item?.min_order, 1);
     const inputOrder = Math.max(
@@ -22,10 +30,36 @@ const normalizeCartItem = (item: any) => {
 
     return {
         ...item,
+        product_id: item?.product_id ?? item?.id ?? null,
+        variant_id: item?.variant_id ?? null,
+        variant_name: item?.variant_name ?? null,
         active_price: toPositiveNumber(item?.active_price),
         input_order: inputOrder,
         min_order: minOrder,
+        key: cartKey(item),
     };
+};
+
+/**
+ * Položka košíka z produktu a zvoleného variantu.
+ */
+export const cartItemFrom = (product: any, variant: any, quantity: number) => {
+    const minOrder = toPositiveNumber(variant?.min_order, 1);
+
+    return normalizeCartItem({
+        product_id: product?.id,
+        variant_id: variant?.id ?? null,
+        name: product?.name,
+        variant_name: variant?.name ?? null,
+        slug: product?.slug,
+        description: product?.description,
+        thumb: variant?.thumb || product?.thumb,
+        unit_value: product?.unit_value,
+        vat: product?.vat,
+        active_price: variant?.active_price ?? variant?.price,
+        min_order: minOrder,
+        input_order: Math.max(toPositiveNumber(quantity, minOrder), minOrder),
+    });
 };
 
 const readJsonStorage = (key: string, fallback: any) => {
@@ -74,7 +108,7 @@ export const useCheckouts = defineStore("checkouts", () => {
 
     const submitCartToIndex = (data: any): void => {
         const cartItem = normalizeCartItem(data);
-        const existingItem = carts.value.find((item) => item.id === cartItem.id);
+        const existingItem = carts.value.find((item) => item.key === cartItem.key);
 
         if (existingItem) {
             existingItem.input_order =
@@ -84,8 +118,12 @@ export const useCheckouts = defineStore("checkouts", () => {
         }
     };
 
+    const addVariantToCart = (product: any, variant: any, quantity: number): void => {
+        submitCartToIndex(cartItemFrom(product, variant, quantity));
+    };
+
     const updateCartQuantity = (cart: any, value: any): void => {
-        const existingItem = carts.value.find((item) => item.id === cart.id);
+        const existingItem = carts.value.find((item) => item.key === cart.key);
 
         if (!existingItem) {
             return;
@@ -103,7 +141,7 @@ export const useCheckouts = defineStore("checkouts", () => {
     };
 
     const removeCart = (cart: any): void => {
-        carts.value = carts.value.filter((item) => item.id != cart.id);
+        carts.value = carts.value.filter((item) => item.key !== cart.key);
     };
 
     const resetCarts = (): void => {
@@ -115,7 +153,12 @@ export const useCheckouts = defineStore("checkouts", () => {
         try {
             const response = await axiosInstance.post("/checkouts", {
                 customer: useCustomer().getCustomer,
-                orderProducts: carts.value,
+                // Server si cenu aj tak berie z databázy — posielame len identitu a počet.
+                orderProducts: carts.value.map((item) => ({
+                    id: item.product_id,
+                    variant_id: item.variant_id,
+                    input_order: item.input_order,
+                })),
                 note: note.value || null,
                 shipping_method_id: options.selectedShippingId,
                 payment_method_id: options.selectedPaymentId,
@@ -148,6 +191,7 @@ export const useCheckouts = defineStore("checkouts", () => {
         getCarts,
         getCheckout,
         submitCartToIndex,
+        addVariantToCart,
         updateCartQuantity,
         setlocalStorage,
         setlocalStorageCustomer,

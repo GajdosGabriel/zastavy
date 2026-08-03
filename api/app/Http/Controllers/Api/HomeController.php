@@ -2,20 +2,30 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Filters\ProductFilter;
 use App\Models\Product;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(ProductFilter $productFilter)
     {
-        return ProductResource::collection(Product::wherePublished(1)->paginate());
+        $products = Product::wherePublished(1)
+            ->with(['variants', 'defaultVariant', 'images'])
+            ->filter($productFilter)
+            ->paginate();
+
+        return ProductResource::collection($products);
     }
 
     public function show(Product $product)
     {
-        return response(new ProductResource($product));
+        return response(new ProductResource($product->load([
+            'images',
+            'variants.attributeValues.attribute',
+            'defaultVariant',
+            'attributesTaxonomy.values',
+        ])));
     }
 }

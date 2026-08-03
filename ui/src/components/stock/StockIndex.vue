@@ -13,8 +13,8 @@ import loadingStore from "../../store/StoreLoading";
 import { PAGE_STOCK } from "../../constants";
 
 const store = useStocks();
-const { getStocks, getSummary, getSelectedProductId, getSelectedProduct } = storeToRefs(store);
-const { fetchStocks, fetchSummary, setPaginator, selectProduct } = store;
+const { getStocks, getSummary, getSelectedVariantId, getSelectedVariant } = storeToRefs(store);
+const { fetchStocks, fetchSummary, setPaginator, selectVariant } = store;
 const { getUserCan } = storeToRefs(useUser());
 const { setQuery, removeQuery } = useQuery();
 
@@ -38,7 +38,7 @@ onMounted(() => {
 
 const paginatorUrl = (url) => setPaginator(url);
 
-const onClickProduct = (productId) => selectProduct(productId);
+const onClickVariant = (variantId) => selectVariant(variantId);
 
 const balanceClass = (balance) => {
     if (balance > 10) return 'text-green-700 font-bold';
@@ -82,13 +82,16 @@ const balanceClass = (balance) => {
                             <tbody class="divide-y divide-gray-100 bg-white">
                                 <tr
                                     v-for="item in getSummary"
-                                    :key="item.product_id"
+                                    :key="item.product_variant_id"
                                     class="cursor-pointer transition hover:bg-blue-50"
-                                    :class="getSelectedProductId === item.product_id ? 'bg-blue-50 ring-1 ring-inset ring-blue-300' : ''"
-                                    @click="onClickProduct(item.product_id)"
+                                    :class="getSelectedVariantId === item.product_variant_id ? 'bg-blue-50 ring-1 ring-inset ring-blue-300' : ''"
+                                    @click="onClickVariant(item.product_variant_id)"
                                 >
                                     <td class="px-4 py-3">
                                         <div class="font-semibold text-gray-900">{{ item.name }}</div>
+                                        <div v-if="item.variant_name" class="text-xs font-medium text-blue-700">
+                                            {{ item.variant_name }}
+                                        </div>
                                         <div class="text-xs text-gray-400">{{ item.code }}</div>
                                     </td>
                                     <td class="px-4 py-3 text-center text-sm text-gray-600">
@@ -114,14 +117,17 @@ const balanceClass = (balance) => {
                         <div>
                             <h2 class="text-sm font-semibold text-gray-700">
                                 Pohyby
-                                <span v-if="getSelectedProduct" class="ml-1 font-normal text-blue-600">— {{ getSelectedProduct.name }}</span>
+                                <span v-if="getSelectedVariant" class="ml-1 font-normal text-blue-600">
+                                    — {{ getSelectedVariant.name }}
+                                    <span v-if="getSelectedVariant.variant_name">({{ getSelectedVariant.variant_name }})</span>
+                                </span>
                             </h2>
                         </div>
                         <button
-                            v-if="getSelectedProductId"
+                            v-if="getSelectedVariantId"
                             type="button"
                             class="text-xs text-gray-400 hover:text-gray-700"
-                            @click="onClickProduct(getSelectedProductId)"
+                            @click="onClickVariant(getSelectedVariantId)"
                         >
                             × Zrušiť filter
                         </button>

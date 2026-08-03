@@ -4,8 +4,10 @@ import BaseLayout from './layout/BaseLayout.vue';
 import cart from './checkout/cart.vue';
 import nazoryZakaznikov from './pages/nazoryZakaznikov.vue';
 import kosikLink from './checkout/kosikLink.vue';
+import CatalogFilter from './product/CatalogFilter.vue';
 import { storeToRefs } from "pinia";
 import { useHome } from "../store/StoreHome";
+import useQuery from "../store/StoreQuery";
 import templateProduct from '../models/templateProduct';
 
 const homeStore = useHome();
@@ -13,6 +15,8 @@ const { getProducts } = storeToRefs(homeStore);
 const { fetchProducts } = homeStore;
 
 onMounted(() => {
+      // Filtre z predchádzajúcej stránky by inak zúžili výpis bez zaškrtnutého políčka.
+      useQuery().resetQuery();
       fetchProducts();
 });
 
@@ -27,14 +31,18 @@ onMounted(() => {
                         <div class="grid gap-6 lg:grid-cols-12">
 
                               <div class="lg:col-span-9">
-                                    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                                    <div v-if="getProducts.length" class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                                           <cart v-for="card in getProducts" :item="templateProduct(card)"
                                                 :key="card.id" />
                                     </div>
+                                    <p v-else class="rounded-md border border-dashed border-slate-300 bg-white px-4 py-16 text-center text-slate-500">
+                                          Zvoleným filtrom nezodpovedá žiadny tovar.
+                                    </p>
                               </div>
 
                               <aside class="space-y-5 lg:col-span-3">
                                     <div class="sticky top-4 space-y-5">
+                                          <CatalogFilter />
                                           <kosikLink />
                                           <nazoryZakaznikov />
                                     </div>

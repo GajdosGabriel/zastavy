@@ -54,6 +54,13 @@ export const PAGE_PRODUCT: Page = {
     ICON: ''
 }
 
+export const PAGE_ATTRIBUTE: Page = {
+    NAME: 'Vlastnosti',
+    URL: URL_BASE_API + '/attributes',
+    ROUTE: 'attributes.index',
+    ICON: ''
+}
+
 export const PAGE_STOCK: Page = {
     NAME: 'Sklad',
     URL: URL_BASE_API + '/stocks',

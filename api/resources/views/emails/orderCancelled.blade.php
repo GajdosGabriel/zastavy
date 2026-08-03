@@ -57,7 +57,12 @@
             <tbody>
                 @foreach($cancelledItems as $item)
                 <tr>
-                    <td>{{ $item->product->name ?? '—' }}</td>
+                    <td>
+                        {{ $item->product->name ?? '—' }}
+                        @if($item->variant_name)
+                            <br><span style="color:#64748b;font-size:12px">{{ $item->variant_name }}</span>
+                        @endif
+                    </td>
                     <td style="text-align:right">{{ $item->storno }} {{ $item->product->unit_value ?? 'ks' }}</td>
                 </tr>
                 @endforeach
@@ -71,7 +76,7 @@
             Nasledujúce položky boli pred stornom odoslané a sú na ceste k Vám alebo už doručené:
             <ul style="margin:8px 0 0; padding-left:18px;">
                 @foreach($shippedItems as $item)
-                <li style="margin-bottom:4px;">{{ $item->product->name ?? '—' }} — {{ $item->stockSum }} {{ $item->product->unit_value ?? 'ks' }}</li>
+                <li style="margin-bottom:4px;">{{ $item->product->name ?? '—' }}@if($item->variant_name) ({{ $item->variant_name }})@endif — {{ $item->stockSum }} {{ $item->product->unit_value ?? 'ks' }}</li>
                 @endforeach
             </ul>
         </div>

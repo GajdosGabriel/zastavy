@@ -25,22 +25,31 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
-            'price' => $this->price,
-            'sale_price' => $this->sale_price,
-            'quantity' => $this->quantity,
             'published' => $this->published,
             'status' => $status->toArray(),
             'status_options' => ModelStatus::allowedForUser($user),
             'vat' => $this->vat,
-            'discount' => $this->discount,
             'thumb' => url($this->thumb),
-            'min_order' => $this->min_order,
-            'active_price' => $this->active_price,
             'unit_value' => $this->unit_value,
-            'input_order' => $this->min_order,
+
+            // Cena a sklad žijú na variantoch — produkt ukazuje len rozsah.
+            'price_from' => $this->price_from,
+            'price_to' => $this->price_to,
+            'total_quantity' => $this->total_quantity,
+            'is_in_stock' => $this->is_in_stock,
+            'variants_count' => $this->variants->count(),
+            'variants' => ProductVariantResource::collection(
+                $this->whenLoaded('variants')
+            ),
+            'default_variant' => new ProductVariantResource(
+                $this->whenLoaded('defaultVariant')
+            ),
+            'attributes_taxonomy' => AttributeResource::collection(
+                $this->whenLoaded('attributesTaxonomy')
+            ),
+
             'images' => ImageResource::collection($this->images),
             'categories' => CategoryResource::collection($this->categories),
-            // 'stock_quantity' => $this->stock->sum('quantity'),
 
             'endpoints' => [
                 'index'     => route('products.index'),
@@ -48,6 +57,7 @@ class ProductResource extends JsonResource
                 'update'    => route('products.update', $this->id),
                 'store'     => route('products.store'),
                 'destroy'   => route('products.destroy', $this->id),
+                'variants'  => route('products.variants.index', $this->id),
             ],
             'permissions' => [
                 'view' => [

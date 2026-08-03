@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Dashboard;
 
 use App\Models\Order;
 use App\Models\OrderProduct;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderProductResource;
@@ -23,20 +24,24 @@ class OrderProductController extends Controller
         Gate::authorize('update', $order);
 
         $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id'],
-            'quantity'   => ['required', 'integer', 'min:1'],
-            'price'      => ['required', 'numeric', 'min:0'],
+            'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'quantity'           => ['required', 'integer', 'min:1'],
+            'price'              => ['required', 'numeric', 'min:0'],
         ]);
+
+        $variant = ProductVariant::findOrFail($request->product_variant_id);
 
         $orderProduct = $order->orderProducts()->create([
-            'product_id' => $request->product_id,
-            'quantity'   => $request->quantity,
-            'price'      => $request->price,
-            'total'      => (float) $request->quantity * (float) $request->price,
-            'storno'     => 0,
+            'product_id'         => $variant->product_id,
+            'product_variant_id' => $variant->id,
+            'variant_label'      => $variant->name,
+            'quantity'           => $request->quantity,
+            'price'              => $request->price,
+            'total'              => (float) $request->quantity * (float) $request->price,
+            'storno'             => 0,
         ]);
 
-        $orderProduct->load('product');
+        $orderProduct->load(['product', 'variant']);
 
         return new OrderProductResource($orderProduct);
     }

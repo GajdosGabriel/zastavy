@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\SuperAdmin;
 use App\Filters\StockFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\StockResource;
-use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +17,13 @@ class StockController extends Controller
     {
         Gate::authorize('viewAny', Stock::class);
 
-        $stocks = Stock::with(['shipping.order.customer', 'orderProduct.product', 'productDirect'])
+        $stocks = Stock::with([
+                'shipping.order.customer',
+                'orderProduct.product',
+                'orderProduct.variant',
+                'productDirect',
+                'variant',
+            ])
             ->latest()
             ->filter($stockFilters)
             ->paginate();
@@ -29,40 +35,46 @@ class StockController extends Controller
     {
         Gate::authorize('viewAny', Stock::class);
 
-        // Incoming receipts grouped by product_id
+        // Príjmy — evidujú sa priamo na variante (skladovej položke).
         $totalIn = DB::table('stocks')
             ->whereNull('shipping_id')
-            ->whereNotNull('product_id')
+            ->whereNotNull('product_variant_id')
             ->whereNull('deleted_at')
-            ->groupBy('product_id')
-            ->select('product_id', DB::raw('SUM(quantity) as total'))
-            ->pluck('total', 'product_id');
+            ->groupBy('product_variant_id')
+            ->select('product_variant_id', DB::raw('SUM(quantity) as total'))
+            ->pluck('total', 'product_variant_id');
 
-        // Outgoing expeditions grouped by the product linked through order_products
+        // Výdaje — variant sa dohľadá cez položku objednávky.
         $totalOut = DB::table('stocks')
             ->join('order_products', 'stocks.order_product_id', '=', 'order_products.id')
             ->whereNotNull('stocks.shipping_id')
+            ->whereNotNull('order_products.product_variant_id')
             ->whereNull('stocks.deleted_at')
-            ->groupBy('order_products.product_id')
-            ->select('order_products.product_id', DB::raw('SUM(stocks.quantity) as total'))
-            ->pluck('total', 'product_id');
+            ->groupBy('order_products.product_variant_id')
+            ->select('order_products.product_variant_id', DB::raw('SUM(stocks.quantity) as total'))
+            ->pluck('total', 'product_variant_id');
 
-        $productIds = collect($totalIn->keys())->merge($totalOut->keys())->unique();
+        $variantIds = collect($totalIn->keys())->merge($totalOut->keys())->unique();
 
-        $products = Product::whereIn('id', $productIds)
-            ->get(['id', 'code', 'name', 'unit_value']);
+        $variants = ProductVariant::withTrashed()
+            ->whereIn('id', $variantIds)
+            ->with('product:id,name,unit_value')
+            ->get();
 
-        $summary = $products->map(function ($product) use ($totalIn, $totalOut) {
-            $in  = (int) ($totalIn[$product->id]  ?? 0);
-            $out = (int) ($totalOut[$product->id] ?? 0);
+        $summary = $variants->map(function (ProductVariant $variant) use ($totalIn, $totalOut) {
+            $in  = (int) ($totalIn[$variant->id]  ?? 0);
+            $out = (int) ($totalOut[$variant->id] ?? 0);
+
             return [
-                'product_id' => $product->id,
-                'code'       => $product->code,
-                'name'       => $product->name,
-                'unit_value' => $product->unit_value,
-                'total_in'   => $in,
-                'total_out'  => $out,
-                'balance'    => $in - $out,
+                'product_id'         => $variant->product_id,
+                'product_variant_id' => $variant->id,
+                'code'               => $variant->code,
+                'name'               => $variant->product?->name,
+                'variant_name'       => $variant->name,
+                'unit_value'         => $variant->product?->unit_value,
+                'total_in'           => $in,
+                'total_out'          => $out,
+                'balance'            => $in - $out,
             ];
         })->sortByDesc('total_out')->values();
 
@@ -80,9 +92,20 @@ class StockController extends Controller
     {
         Gate::authorize('create', Stock::class);
 
-        $stock = Stock::create($request->only(['product_id', 'quantity', 'price', 'note']));
+        $data = $request->validate([
+            'product_variant_id' => 'required|integer|exists:product_variants,id',
+            'quantity'           => 'required|integer',
+            'price'              => 'nullable|numeric|min:0',
+            'note'               => 'nullable|string|max:255',
+        ]);
 
-        return response(new StockResource($stock->load('productDirect')), 201);
+        // product_id sa dopĺňa z variantu — príjem nesmie skončiť na produkte
+        // bez určenia, ktorej skladovej položky sa týka.
+        $data['product_id'] = ProductVariant::whereKey($data['product_variant_id'])->value('product_id');
+
+        $stock = Stock::create($data);
+
+        return response(new StockResource($stock->load(['productDirect', 'variant'])), 201);
     }
 
     public function update(Stock $stock, Request $request)

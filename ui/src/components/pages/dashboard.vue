@@ -120,6 +120,19 @@ onMounted(() => {
                                     </router-link>
 
                                     <router-link
+                                          :to="{ name: 'attributes.index' }"
+                                          class="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+                                    >
+                                          <p class="text-sm text-slate-500">Super admin</p>
+                                          <h2 class="mt-2 text-2xl font-semibold text-slate-900">
+                                                Vlastnosti produktov
+                                          </h2>
+                                          <p class="mt-3 text-slate-600">
+                                                Rozmer, materiál, uchytenie — hodnoty, z ktorých sa skladajú varianty a filtre.
+                                          </p>
+                                    </router-link>
+
+                                    <router-link
                                           :to="{ name: 'users.export.index' }"
                                           class="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
                                     >

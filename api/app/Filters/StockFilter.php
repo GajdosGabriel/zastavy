@@ -6,7 +6,7 @@ use App\Models\Product;
 
 class StockFilter extends Filters
 {
-    protected $filters = ['bySearchInput', 'byProduct'];
+    protected $filters = ['bySearchInput', 'byProduct', 'byVariant'];
 
     public function bySearchInput($input)
     {
@@ -25,6 +25,17 @@ class StockFilter extends Filters
         return $this->builder->where(function ($q) use ($productId) {
             $q->where('product_id', $productId)
               ->orWhereHas('orderProduct', fn($q) => $q->where('product_id', $productId));
+        });
+    }
+
+    /**
+     * Príjem má variant priamo, výdaj cez položku objednávky.
+     */
+    public function byVariant($variantId)
+    {
+        return $this->builder->where(function ($q) use ($variantId) {
+            $q->where('product_variant_id', $variantId)
+              ->orWhereHas('orderProduct', fn($q) => $q->where('product_variant_id', $variantId));
         });
     }
 }

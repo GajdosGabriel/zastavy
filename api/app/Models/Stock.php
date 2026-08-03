@@ -43,12 +43,30 @@ class Stock extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
     public function getProductAttribute(): ?Product
     {
         if ($this->product_id) {
             return $this->productDirect;
         }
         return $this->orderProduct?->product;
+    }
+
+    /**
+     * Skladová položka, ktorej sa pohyb týka — príjem ju má priamo,
+     * výdaj cez položku objednávky.
+     */
+    public function getProductVariantAttribute(): ?ProductVariant
+    {
+        if ($this->product_variant_id) {
+            return $this->variant;
+        }
+
+        return $this->orderProduct?->variant;
     }
 
     public function scopeFilter($query, $filters)

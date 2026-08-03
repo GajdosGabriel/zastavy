@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import useCheckouts from "../../store/StoreCheckouts";
 import router from "../../router";
 import { formatDecimal, formatUnitName } from "../../models/functions";
@@ -7,13 +7,28 @@ import kosikButton from "../icons/kosik.vue";
 
 const props = defineProps(["item"]);
 
-const { submitCartToIndex } = useCheckouts();
+const { addVariantToCart } = useCheckouts();
 const messages = ref([]);
 
-const submitCart = (form) => {
-    submitCartToIndex(form);
-    messages.value.push(form.input_order + " " + formatUnitName(form.input_order));
-    props.item.input_order = Number(props.item.min_order) || 1;
+const variants = computed(() => (props.item.variants ?? []).filter((v) => v.published));
+const hasChoice = computed(() => variants.value.length > 1);
+
+// Pri jedinom variante sa dá kupovať priamo z karty, inak sa musí vybrať na detaile.
+const singleVariant = computed(() =>
+    hasChoice.value ? null : (props.item.default_variant ?? variants.value[0] ?? null)
+);
+
+const quantity = ref(Number(props.item.default_variant?.min_order ?? 1));
+
+const priceFrom = computed(() => Number(props.item.price_from ?? 0));
+const priceTo = computed(() => Number(props.item.price_to ?? 0));
+const isPriceRange = computed(() => hasChoice.value && priceTo.value > priceFrom.value);
+
+const submitCart = () => {
+    if (!singleVariant.value) return;
+    addVariantToCart(props.item, singleVariant.value, quantity.value);
+    messages.value.push(quantity.value + " " + formatUnitName(quantity.value));
+    quantity.value = Number(singleVariant.value.min_order) || 1;
 };
 
 const onClickProductCart = () => {
@@ -35,10 +50,14 @@ const onClickProductCart = () => {
             </a>
         </div>
 
-        <div class="flex h-56 items-center justify-center bg-slate-50 p-5">
+        <div class="relative flex h-56 items-center justify-center bg-slate-50 p-5">
             <a @click="onClickProductCart" class="cursor-pointer">
-                <img :src="item.images[0]?.path" class="max-h-48 w-full object-contain" :alt="item.name" />
+                <img :src="item.images?.[0]?.path ?? item.thumb" class="max-h-48 w-full object-contain" :alt="item.name" />
             </a>
+            <span v-if="!item.is_in_stock"
+                class="absolute right-3 top-3 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                vypredané
+            </span>
         </div>
 
         <div class="flex flex-1 flex-col px-4 py-4">
@@ -49,17 +68,23 @@ const onClickProductCart = () => {
             </h2>
 
             <div class="rounded-md bg-slate-100 px-3 py-2 text-center font-semibold text-slate-900">
-                Cena: {{ item.price }},- € <span class="text-xs font-medium text-slate-500">s DPH</span>
+                <span v-if="isPriceRange">od {{ formatDecimal(priceFrom) }} €</span>
+                <span v-else>Cena: {{ formatDecimal(priceFrom) }} €</span>
+                <span class="text-xs font-medium text-slate-500"> s DPH</span>
             </div>
 
-            <div v-if="item.discount" class="mt-3 rounded-md border border-red-100 bg-red-50 p-3 text-sm text-slate-900">
-                Zľava <span class="font-semibold">-{{ item.discount }} %</span><br />
-                Cena po zľave:
-                <span class="font-semibold">{{ item.sale_price }}</span>,- € <span class="text-xs">s DPH</span>
+            <div v-if="hasChoice" class="mt-3 flex flex-wrap justify-center gap-1.5">
+                <span v-for="variant in variants.slice(0, 4)" :key="variant.id"
+                    class="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-600">
+                    {{ variant.name }}
+                </span>
+                <span v-if="variants.length > 4" class="px-1 text-xs text-slate-400">
+                    +{{ variants.length - 4 }}
+                </span>
             </div>
 
-            <div v-if="item.attributes" class="mt-3 text-sm font-semibold text-slate-700">
-                Rozmery: <span>{{ item.attributes }}</span>
+            <div v-else-if="singleVariant?.name" class="mt-3 text-center text-sm font-semibold text-slate-700">
+                {{ singleVariant.name }}
             </div>
 
             <p v-if="item.description" class="mt-3 flex-1 text-xs leading-5 text-slate-500 md:text-sm">
@@ -69,13 +94,19 @@ const onClickProductCart = () => {
                 </a>
             </p>
 
-            <form class="mt-4" @submit.prevent="submitCart(item)">
+            <!-- Viac variantov = zákazník musí najprv vybrať, ktorý chce -->
+            <button v-if="hasChoice" type="button" @click="onClickProductCart"
+                class="mt-4 inline-flex w-full items-center justify-center rounded-md border-2 border-blue-700 px-4 py-2 font-semibold text-blue-700 transition hover:bg-blue-50">
+                Vybrať variant
+            </button>
+
+            <form v-else-if="singleVariant" class="mt-4" @submit.prevent="submitCart">
                 <div class="flex items-center justify-center gap-3">
                     <input
-                        v-model.number="item.input_order"
+                        v-model.number="quantity"
                         type="number"
                         class="w-24 rounded border-slate-300 text-center"
-                        :min="item.min_order"
+                        :min="singleVariant.min_order"
                         required
                     />
                     <button class="inline-flex items-center rounded-md bg-blue-700 px-4 py-2 font-semibold text-white transition hover:bg-blue-800">
@@ -85,9 +116,13 @@ const onClickProductCart = () => {
                 </div>
             </form>
 
-            <p class="pt-3 text-center text-xs text-slate-500 md:text-sm">
-                {{ item.input_order }} {{ formatUnitName(item.input_order) }} =
-                {{ formatDecimal(item.input_order * item.active_price) }},- € s DPH
+            <p v-else class="mt-4 rounded-md bg-slate-50 px-3 py-2 text-center text-sm text-slate-500">
+                Momentálne nie je v ponuke.
+            </p>
+
+            <p v-if="singleVariant" class="pt-3 text-center text-xs text-slate-500 md:text-sm">
+                {{ quantity }} {{ formatUnitName(quantity) }} =
+                {{ formatDecimal(quantity * Number(singleVariant.active_price ?? singleVariant.price)) }},- € s DPH
             </p>
 
             <router-link :to="{ name: 'public.cart.index' }">

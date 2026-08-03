@@ -16,7 +16,8 @@ export interface StockSummaryRow {
 }
 
 interface StockCreateForm {
-    product_id: number | null;
+    // Príjem ide vždy na konkrétnu skladovú položku, teda variant.
+    product_variant_id: number | null;
     quantity: number | string;
     price: number | string;
     note: string;
@@ -26,12 +27,12 @@ interface StocksState {
     url: string;
     stocks: StockRow[];
     summary: StockSummaryRow[];
-    selectedProductId: number | null;
+    selectedVariantId: number | null;
     create: StockCreateForm;
 }
 
 const emptyCreate = (): StockCreateForm => ({
-    product_id: null,
+    product_variant_id: null,
     quantity: '',
     price: '',
     note: '',
@@ -42,16 +43,16 @@ export const useStocks = defineStore('stocks', {
         url: PAGE_STOCK.URL,
         stocks: [],
         summary: [],
-        selectedProductId: null,
+        selectedVariantId: null,
         create: emptyCreate(),
     }),
 
     getters: {
         getStocks: (s): StockRow[] => s.stocks,
         getSummary: (s): StockSummaryRow[] => s.summary,
-        getSelectedProductId: (s): number | null => s.selectedProductId,
-        getSelectedProduct: (s): StockSummaryRow | null =>
-            s.summary.find((p) => p.product_id === s.selectedProductId) ?? null,
+        getSelectedVariantId: (s): number | null => s.selectedVariantId,
+        getSelectedVariant: (s): StockSummaryRow | null =>
+            s.summary.find((p) => p.product_variant_id === s.selectedVariantId) ?? null,
     },
 
     actions: {
@@ -61,7 +62,7 @@ export const useStocks = defineStore('stocks', {
                 const paginator = usePaginator();
                 const parts = [
                     q.stringForUrl ? q.stringForUrl.slice(1) : '',
-                    this.selectedProductId ? `byProduct=${this.selectedProductId}` : '',
+                    this.selectedVariantId ? `byVariant=${this.selectedVariantId}` : '',
                 ].filter(Boolean);
                 const qs = parts.length ? `?${parts.join('&')}` : '';
                 const response = await axiosInstance.get(this.url + qs);
@@ -82,8 +83,8 @@ export const useStocks = defineStore('stocks', {
             }
         },
 
-        selectProduct(productId: number): void {
-            this.selectedProductId = this.selectedProductId === productId ? null : productId;
+        selectVariant(variantId: number): void {
+            this.selectedVariantId = this.selectedVariantId === variantId ? null : variantId;
             this.fetchStocks();
         },
 
@@ -112,7 +113,7 @@ export const useStocks = defineStore('stocks', {
 
         resetUrl(): void {
             this.url = PAGE_STOCK.URL;
-            this.selectedProductId = null;
+            this.selectedVariantId = null;
         },
     },
 });

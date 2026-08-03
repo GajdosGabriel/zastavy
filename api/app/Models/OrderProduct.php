@@ -29,6 +29,20 @@ class OrderProduct extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    /**
+     * Popis variantu na doklade. Preferuje snapshot z času objednávky —
+     * variant sa mohol medzitým premenovať alebo zmazať.
+     */
+    public function getVariantNameAttribute(): ?string
+    {
+        return $this->variant_label ?: $this->variant?->name;
+    }
+
     public function stocks()
     {
         return $this->hasMany(Stock::class);

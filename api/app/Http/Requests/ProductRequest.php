@@ -35,15 +35,14 @@ class ProductRequest extends FormRequest
                 Rule::unique('products', 'code')->ignore($this->route('product')),
             ],
             'name' => 'required|min:2',
-            'price' => 'required',
-            'sale_price' => 'numeric|nullable',
-            'min_order' => 'required',
             'published' => 'required|boolean',
-            'discount' => 'numeric|nullable',
-            'quantity' => 'numeric|nullable',
             'description' => 'string|nullable',
+            'featured' => 'sometimes|boolean',
+            'unit_value' => ['sometimes', Rule::in(['ks', 'l', 'kg'])],
             'vat' => ['required', new VatRule()],
             'status' => ['sometimes', Rule::in(ModelStatus::allowedValuesForUser($this->user()))],
+            'categories' => 'sometimes|array',
+            'categories.*' => 'integer|exists:categories,id',
         ];
     }
 
@@ -51,7 +50,6 @@ class ProductRequest extends FormRequest
     {
         return [
             'name.required' => 'Názov produktu musí mať minimálne 2 znaky.',
-            'min_order.required' => 'Minimálna objednaný počet musí byť vyplnený',
         ];
     }
 }

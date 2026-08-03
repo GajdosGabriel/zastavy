@@ -3,8 +3,9 @@ import { formatDecimal, formatPriceWithoutVat } from './functions'
 
 export default function templateProduct(data) {
 
-  data.priceWithoutVat = formatPriceWithoutVat(data.active_price ?? 0, data.vat ?? 0)
-  data.snipper = false 
+  // Produkt nemá jednu cenu — pre orientačný prepočet berieme najnižšiu z variantov.
+  data.priceWithoutVat = formatPriceWithoutVat(data.price_from ?? 0, data.vat ?? 0)
+  data.snipper = false
 
   // mapCase.set('statusOfSettlementOfCosts', formatCaseStatusOfSettlementOfCosts(state.case.statusOfSettlementOfCosts))
   // mapCase.set('isEditable', state.case.statusOfSettlementOfCosts !== "STORNOVANA" && state.case.statusOfSettlementOfCosts == null)

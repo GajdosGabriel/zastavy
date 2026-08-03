@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use App\Models\ShippingMethod;
 use App\Notifications\OrderCreated;
@@ -63,35 +64,55 @@ class StoreOrder implements StoreOrderContract
     }
 
     /**
-     * Načíta produkty z databázy a vráti položky objednávky so serverovou cenou.
+     * Načíta varianty z databázy a vráti položky objednávky so serverovou cenou.
+     *
+     * Košík posiela variant_id. Ak chýba (staršia verzia frontendu), spadne sa
+     * na default variant produktu — objednávka tak nikdy neostane bez skladovej
+     * položky.
      */
     protected function resolveItems(): Collection
     {
         $requested = collect($this->request->input('orderProducts', []));
+        $isStaff = $this->isStaffRequest();
 
-        // Verejný e-shop smie objednať iba publikované produkty (aj cez priame ID
-        // v requeste). Interný staff môže do objednávky pridať aj nepublikované.
-        $products = Product::whereIn('id', $requested->pluck('id')->filter())
-            ->when(! $this->isStaffRequest(), fn ($query) => $query->where('published', 1))
+        $variants = ProductVariant::whereIn('id', $requested->pluck('variant_id')->filter())
+            ->with('product')
             ->get()
             ->keyBy('id');
 
-        return $requested->map(function ($item) use ($products) {
-            $product = $products->get($item['id'] ?? null);
+        $fallbackVariants = Product::whereIn('id', $requested->pluck('id')->filter())
+            ->with('defaultVariant')
+            ->get()
+            ->keyBy('id');
 
-            if (! $product) {
+        return $requested->map(function ($item) use ($variants, $fallbackVariants, $isStaff) {
+            $variant = isset($item['variant_id'])
+                ? $variants->get($item['variant_id'])
+                : $fallbackVariants->get($item['id'] ?? null)?->defaultVariant;
+
+            if (! $variant) {
                 throw ValidationException::withMessages([
-                    'orderProducts' => ['Niektorý z produktov v košíku už nie je dostupný.'],
+                    'orderProducts' => ['Niektorá z položiek v košíku už nie je dostupná.'],
+                ]);
+            }
+
+            // Verejný e-shop smie objednať iba publikovaný variant publikovaného
+            // produktu. Interný staff môže do objednávky pridať aj nepublikované.
+            if (! $isStaff && (! $variant->published || ! $variant->product?->published)) {
+                throw ValidationException::withMessages([
+                    'orderProducts' => ['Niektorá z položiek v košíku už nie je dostupná.'],
                 ]);
             }
 
             // Minimálne odberné množstvo sa vynucuje na serveri, nielen v UI.
-            $minOrder = max(1, (int) ($product->min_order ?? 1));
+            $minOrder = max(1, (int) ($variant->min_order ?? 1));
 
             return [
-                'product_id' => $product->id,
-                'quantity'   => max($minOrder, (int) ($item['input_order'] ?? 0)),
-                'price'      => (float) $product->active_price,
+                'product_id'         => $variant->product_id,
+                'product_variant_id' => $variant->id,
+                'variant_label'      => $variant->name,
+                'quantity'           => max($minOrder, (int) ($item['input_order'] ?? 0)),
+                'price'              => (float) $variant->active_price,
             ];
         });
     }

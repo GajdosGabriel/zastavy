@@ -1,11 +1,47 @@
 import { defineStore } from "pinia";
 import axiosInstance from "../axiosInstance";
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import useImages from "./StoreImages";
 import useErrors from './StoreErrors';
 import usePaginator from './StorePaginator';
 import useQuery from './StoreQuery';
 import { PAGE_PRODUCT } from "../constants";
+
+export interface AttributeValue {
+    id: number;
+    attribute_id: number;
+    code: string;
+    value: string;
+    slug: string;
+    color: string | null;
+    sort_order: number;
+    facet_slug?: string;
+}
+
+export interface ProductVariant {
+    id: number | null;
+    product_id?: number | string;
+    code: string;
+    ean: string | null;
+    name: string | null;
+    price: number | string;
+    sale_price: number | string | null;
+    discount: number | string | null;
+    active_price?: number | string;
+    quantity: number | null;
+    weight: number | string | null;
+    min_order: number;
+    is_default: boolean;
+    published: boolean;
+    sort_order: number;
+    is_in_stock?: boolean;
+    status?: any;
+    thumb?: string;
+    attribute_values?: AttributeValue[];
+    endpoints?: Record<string, string>;
+    permissions?: Record<string, any>;
+    [key: string]: any;
+}
 
 export interface Product {
     id: string;
@@ -13,31 +49,51 @@ export interface Product {
     name: string;
     slug: string;
     description: string;
-    quantity: number;
-    weight: number;
-    price: number;
-    sale_price: number;
-    discount: number;
     vat: number;
     image_id: number;
     published: boolean;
     unit_value: string;
-    min_order: number;
+    featured?: boolean;
     created_at: string;
     deleted_at: string;
     updated_at: string;
     status?: any;
-    active_price?: number;
-    input_order?: number;
     thumb?: string;
     images?: any[];
     categories?: any[];
+    // Cena a sklad sú odvodené z variantov — na produkte len ako rozsah.
+    price_from?: number | null;
+    price_to?: number | null;
+    total_quantity?: number | null;
+    is_in_stock?: boolean;
+    variants_count?: number;
+    variants?: ProductVariant[];
+    default_variant?: ProductVariant | null;
+    attributes_taxonomy?: any[];
     endpoints: {
         update: string;
         destroy: string;
+        variants?: string;
     };
     [key: string]: any;
 }
+
+export const defaultVariant = (): ProductVariant => ({
+    id: null,
+    code: '',
+    ean: null,
+    name: null,
+    price: 0,
+    sale_price: null,
+    discount: null,
+    quantity: null,
+    weight: null,
+    min_order: 1,
+    is_default: false,
+    published: true,
+    sort_order: 0,
+    attribute_values: [],
+});
 
 const defaultProduct = (): Product => ({
     id: '',
@@ -45,32 +101,36 @@ const defaultProduct = (): Product => ({
     name: '',
     slug: '',
     description: '',
-    quantity: 0,
-    weight: 0,
-    price: 0,
-    sale_price: 0,
-    discount: 0,
     vat: 23,
     image_id: 0,
     published: false,
     unit_value: 'ks',
-    min_order: 1,
+    featured: false,
     created_at: '',
     deleted_at: '',
     updated_at: '',
-    active_price: 0,
-    input_order: 1,
     thumb: '',
     images: [],
     categories: [],
+    price_from: null,
+    price_to: null,
+    total_quantity: null,
+    is_in_stock: false,
+    variants_count: 0,
+    variants: [],
+    default_variant: null,
+    attributes_taxonomy: [],
     endpoints: {
         update: '',
         destroy: '',
     },
 });
 
-// Setup-store (composition API) — má vlastný watch na `product` (form normalizácia),
-// ktorý v options-store definícii nie je možné vytvoriť.
+const variantUrl = (productId: number | string, variantId?: number | string | null): string =>
+    `${PAGE_PRODUCT.URL}/${productId}/variants` + (variantId ? `/${variantId}` : '');
+
+// Setup-store (composition API) — potrebuje vlastný lokálny stav mimo `state`
+// (productRequestId proti pretekaniu odpovedí pri rýchlom prepínaní produktov).
 export const useProducts = defineStore('products', () => {
     let productRequestId = 0;
 
@@ -81,10 +141,17 @@ export const useProducts = defineStore('products', () => {
 
     const getProducts = computed<Product[]>(() => products.value);
     const getProduct = computed<Product>(() => product.value);
+    const getVariants = computed<ProductVariant[]>(() => product.value.variants ?? []);
 
     const productPayload = () => ({
-        ...product.value,
+        name: product.value.name,
         code: product.value.code?.trim().toUpperCase(),
+        description: product.value.description,
+        vat: product.value.vat,
+        unit_value: product.value.unit_value,
+        published: product.value.published,
+        featured: product.value.featured,
+        categories: product.value.categories?.map((c: any) => c.id ?? c) ?? [],
         status: product.value.status?.value || product.value.status,
     });
 
@@ -160,6 +227,80 @@ export const useProducts = defineStore('products', () => {
         }
     };
 
+    // --- Varianty -----------------------------------------------------------
+
+    const variantPayload = (variant: ProductVariant) => ({
+        code: variant.code?.trim() || null,
+        ean: variant.ean?.toString().trim() || null,
+        price: Number(variant.price) || 0,
+        sale_price: variant.sale_price === '' || variant.sale_price === null
+            ? null
+            : Number(variant.sale_price),
+        discount: variant.discount === '' || variant.discount === null
+            ? null
+            : Number(variant.discount),
+        quantity: variant.quantity === '' || variant.quantity === null
+            ? null
+            : Number(variant.quantity),
+        weight: variant.weight === '' || variant.weight === null
+            ? null
+            : Number(variant.weight),
+        min_order: Number(variant.min_order) || 1,
+        is_default: !!variant.is_default,
+        published: !!variant.published,
+        sort_order: Number(variant.sort_order) || 0,
+        // Backend rozlišuje "prázdna kombinácia" od "kľúč neposlaný", preto vždy pole.
+        attribute_values: (variant.attribute_values ?? []).map((v: any) => v.id ?? v),
+    });
+
+    const fetchVariants = async (productId: number | string): Promise<void> => {
+        try {
+            const response = await axiosInstance.get(variantUrl(productId));
+            product.value.variants = response.data.data;
+        } catch (e) {
+            useErrors().setErrors(e);
+        }
+    };
+
+    const storeVariant = async (productId: number | string, variant: ProductVariant): Promise<any> => {
+        try {
+            const response = await axiosInstance.post(variantUrl(productId), variantPayload(variant));
+            await fetchVariants(productId);
+            return response.data.data ?? response.data;
+        } catch (e) {
+            useErrors().setErrors(e);
+            return null;
+        }
+    };
+
+    const updateVariant = async (productId: number | string, variant: ProductVariant): Promise<any> => {
+        try {
+            const response = await axiosInstance.put(
+                variantUrl(productId, variant.id),
+                variantPayload(variant)
+            );
+            await fetchVariants(productId);
+            return response.data.data ?? response.data;
+        } catch (e) {
+            useErrors().setErrors(e);
+            return null;
+        }
+    };
+
+    const destroyVariant = async (productId: number | string, variant: ProductVariant): Promise<boolean> => {
+        if (!window.confirm(`Skutočne zmazať variant ${variant.code}?`)) {
+            return false;
+        }
+        try {
+            await axiosInstance.delete(variantUrl(productId, variant.id));
+            await fetchVariants(productId);
+            return true;
+        } catch (e) {
+            useErrors().setErrors(e);
+            return false;
+        }
+    };
+
     const fetchSearchInput = (val: string): void => {
         searchUrl.value = val;
         fetchProducts();
@@ -180,20 +321,6 @@ export const useProducts = defineStore('products', () => {
         useImages().setImages([]);
     };
 
-    watch(
-        product,
-        ({ discount, price, sale_price }) => {
-            // Orezanie zľavy do povoleného rozsahu
-            product.value.discount = Math.min(100, Math.max(0, discount));
-
-            // Prepočet sale_price len ak je väčší ako 0
-            if (sale_price > 0) {
-                product.value.sale_price = price - (price * product.value.discount) / 100;
-            }
-        },
-        { deep: true }
-    );
-
     return {
         products,
         product,
@@ -201,13 +328,20 @@ export const useProducts = defineStore('products', () => {
         searchUrl,
         getProducts,
         getProduct,
+        getVariants,
         fetchProducts,
         fetchProduct,
         updateProduct,
         storeProduct,
         destroyProduct,
+        fetchVariants,
+        storeVariant,
+        updateVariant,
+        destroyVariant,
         fetchSearchInput,
         setPaginator,
+        // Alias pre stránkovanie v zozname produktov.
+        setUrl: setPaginator,
         setProduct,
         resetProduct,
     };

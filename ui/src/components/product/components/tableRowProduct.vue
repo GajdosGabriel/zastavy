@@ -13,6 +13,18 @@ const props = defineProps(["product"]);
 
 const { destroyProduct, updateProduct, setProduct, getStatment } = useProducts();
 
+// Produkt nemá jednu cenu — ukazujeme rozsah cez varianty.
+const priceLabel = computed(() => {
+    const from = props.product.price_from;
+    const to = props.product.price_to;
+
+    if (from === null || from === undefined) return '—';
+    if (to !== null && to !== undefined && Number(to) > Number(from)) {
+        return `${Number(from).toFixed(2)} – ${Number(to).toFixed(2)} €`;
+    }
+    return `${Number(from).toFixed(2)} €`;
+});
+
 const onClickUpdate = async () => {
     props.product.snipper = true;
     setProduct({ ...props.product, published: !props.product.published });
@@ -79,7 +91,7 @@ const dropdownItems = computed(() => {
             </div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm text-gray-900">{{ product.active_price }} €</div>
+            <div class="text-sm text-gray-900">{{ priceLabel }}</div>
             <div class="text-sm text-gray-500">DPH {{ product.vat }} %</div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
@@ -99,13 +111,18 @@ const dropdownItems = computed(() => {
             </span>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-            <span v-if="product.discount">{{ product.discount }} % </span><br />
-            <span v-if="product.discount">{{ product.sale_price }} €</span>
+            <span v-if="product.variants_count"
+                class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                {{ product.variants_count }}×
+            </span>
+            <span v-else class="text-xs font-semibold text-red-600">bez variantu</span>
         </td>
 
         <td class="px-6 py-4 whitespace-nowrap">
-            {{ product.quantity }}
-            {{ product.unit_value }}
+            <span v-if="product.total_quantity !== null">
+                {{ product.total_quantity }} {{ product.unit_value }}
+            </span>
+            <span v-else class="text-xs text-gray-400">nesleduje sa</span>
         </td>
 
         <td class="px-6 py-4 whitespace-nowrap flex justify-between">

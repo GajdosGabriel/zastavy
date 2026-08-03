@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -39,17 +40,33 @@ class CheckoutTest extends TestCase
         ];
     }
 
+    /**
+     * Cena a sklad žijú na variante — produkt bez variantu sa nedá objednať.
+     */
     private function makeProduct(float $price = 25.50): Product
     {
-        return Product::create([
+        $product = Product::create([
             'name' => 'Vlajka SR 100x150',
             'code' => 'VSR-100',
-            'price' => $price,
-            'sale_price' => 0,
             'vat' => 20,
             'published' => 1,
-            'min_order' => 1,
         ]);
+
+        $product->variants()->create([
+            'code' => 'VSR-100-100X150',
+            'name' => '100 × 150 cm',
+            'price' => $price,
+            'min_order' => 1,
+            'is_default' => true,
+            'published' => 1,
+        ]);
+
+        return $product->load('defaultVariant');
+    }
+
+    private function variant(Product $product): ProductVariant
+    {
+        return $product->defaultVariant()->firstOrFail();
     }
 
     public function test_order_uses_database_price_not_client_price(): void
@@ -76,7 +93,7 @@ class CheckoutTest extends TestCase
     public function test_order_uses_sale_price_when_set(): void
     {
         $product = $this->makeProduct(25.50);
-        $product->update(['sale_price' => 19.99]);
+        $this->variant($product)->update(['sale_price' => 19.99]);
 
         $this->postJson('/api/checkouts', [
             'customer' => $this->customerPayload(),
@@ -166,7 +183,7 @@ class CheckoutTest extends TestCase
     public function test_quantity_below_min_order_is_bumped_to_min_order(): void
     {
         $product = $this->makeProduct(10.00);
-        $product->update(['min_order' => 5]);
+        $this->variant($product)->update(['min_order' => 5]);
 
         $this->postJson('/api/checkouts', [
             'customer' => $this->customerPayload(),
@@ -412,5 +429,72 @@ class CheckoutTest extends TestCase
         $second = Order::latest('id')->first();
 
         $this->assertNotEquals($first->serial_number, $second->serial_number);
+    }
+
+    public function test_order_uses_price_of_selected_variant(): void
+    {
+        $product = $this->makeProduct(25.50);
+
+        $bigger = $product->variants()->create([
+            'code' => 'VSR-100-200X300',
+            'name' => '200 × 300 cm',
+            'price' => 64.00,
+            'min_order' => 1,
+            'published' => 1,
+        ]);
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'variant_id' => $bigger->id, 'input_order' => 1],
+            ],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('order_products', [
+            'product_id'         => $product->id,
+            'product_variant_id' => $bigger->id,
+            'variant_label'      => '200 × 300 cm',
+            'price'              => 64.00,
+        ]);
+    }
+
+    public function test_unpublished_variant_cannot_be_ordered(): void
+    {
+        $product = $this->makeProduct(25.50);
+
+        $hidden = $product->variants()->create([
+            'code' => 'VSR-100-SKRYTY',
+            'name' => 'Skrytý',
+            'price' => 1.00,
+            'min_order' => 1,
+            'published' => 0,
+        ]);
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'variant_id' => $hidden->id, 'input_order' => 1],
+            ],
+        ])->assertStatus(422);
+
+        $this->assertSame(0, Order::count());
+    }
+
+    public function test_order_falls_back_to_default_variant_without_variant_id(): void
+    {
+        $product = $this->makeProduct(25.50);
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1],
+            ],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('order_products', [
+            'product_id'         => $product->id,
+            'product_variant_id' => $this->variant($product)->id,
+            'price'              => 25.50,
+        ]);
     }
 }

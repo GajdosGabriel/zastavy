@@ -4,31 +4,10 @@ import useImages from "./StoreImages";
 import useErrors from './StoreErrors';
 import usePaginator from './StorePaginator';
 import useQuery from './StoreQuery';
+import type { Product } from "./StoreProducts";
 import { PAGE_HOME } from "../constants";
 
-export interface HomeProduct {
-    id: string;
-    name: string;
-    slug: string;
-    description: string;
-    quantity: number;
-    weight: number;
-    price: number;
-    sale_price: number;
-    discount: number;
-    vat: number;
-    image_id: number;
-    published: boolean;
-    unit_value: string;
-    min_order: number;
-    created_at: string;
-    deleted_at: string;
-    updated_at: string;
-    endpoints: {
-        update: string;
-        destroy: string;
-    };
-}
+export type HomeProduct = Product;
 
 interface HomeState {
     searchUrl: string;
@@ -42,7 +21,7 @@ export const useHome = defineStore('home', {
         searchUrl: "",
         url: PAGE_HOME.URL,
         products: [],
-        product: { sale_price: 0 } as HomeProduct,
+        product: { variants: [] } as unknown as HomeProduct,
     }),
 
     getters: {
@@ -82,6 +61,15 @@ export const useHome = defineStore('home', {
 
         setProduct(data: HomeProduct): void {
             this.product = data;
+        },
+
+        /**
+         * Zmena filtra musí zahodiť odkaz na konkrétnu stránku z paginátora,
+         * inak by sa query reťazec lepil na URL, ktorá už `?page=` obsahuje.
+         */
+        applyFilters(): void {
+            this.url = PAGE_HOME.URL;
+            this.fetchProducts();
         },
     },
 });
