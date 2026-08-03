@@ -1,7 +1,6 @@
 <script setup>
 import { computed, ref } from "vue";
 import useCheckouts from "../../store/StoreCheckouts";
-import router from "../../router";
 import { formatDecimal, formatUnitName } from "../../models/functions";
 import kosikButton from "../icons/kosik.vue";
 
@@ -31,29 +30,29 @@ const submitCart = () => {
     quantity.value = Number(singleVariant.value.min_order) || 1;
 };
 
-const onClickProductCart = () => {
-    router.push({
-        name: "public.products.show",
-        params: {
-            productId: props.item.id,
-            productSlug: props.item.slug,
-        },
-    });
-};
+// router-link namiesto @click: robot potrebuje skutočný <a href>, inak sa
+// na detaily tovaru z výpisu vôbec nedostane.
+const productRoute = computed(() => ({
+    name: "public.products.show",
+    params: {
+        productId: props.item.id,
+        productSlug: props.item.slug,
+    },
+}));
 </script>
 
 <template>
     <article class="flex h-full flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md">
         <div class="min-h-16 bg-blue-900 p-3 text-center text-sm font-bold text-gray-100 md:text-base">
-            <a @click="onClickProductCart" class="cursor-pointer">
+            <router-link :to="productRoute" class="cursor-pointer">
                 {{ item.name }}
-            </a>
+            </router-link>
         </div>
 
         <div class="relative flex h-56 items-center justify-center bg-slate-50 p-5">
-            <a @click="onClickProductCart" class="cursor-pointer">
+            <router-link :to="productRoute" class="cursor-pointer">
                 <img :src="item.images?.[0]?.path ?? item.thumb" class="max-h-48 w-full object-contain" :alt="item.name" />
-            </a>
+            </router-link>
             <span v-if="!item.is_in_stock"
                 class="absolute right-3 top-3 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
                 vypredané
@@ -62,9 +61,9 @@ const onClickProductCart = () => {
 
         <div class="flex flex-1 flex-col px-4 py-4">
             <h2 class="mb-3 text-center text-lg font-semibold text-slate-900">
-                <a @click="onClickProductCart" class="cursor-pointer hover:text-blue-800">
+                <router-link :to="productRoute" class="cursor-pointer hover:text-blue-800">
                     {{ item.name }}
-                </a>
+                </router-link>
             </h2>
 
             <div class="rounded-md bg-slate-100 px-3 py-2 text-center font-semibold text-slate-900">
@@ -89,16 +88,16 @@ const onClickProductCart = () => {
 
             <p v-if="item.description" class="mt-3 flex-1 text-xs leading-5 text-slate-500 md:text-sm">
                 {{ item.description.substring(0, 150) }}
-                <a @click="onClickProductCart" class="cursor-pointer">
+                <router-link :to="productRoute" class="cursor-pointer">
                     <span class="font-semibold text-blue-800 hover:underline">viac popisu</span>
-                </a>
+                </router-link>
             </p>
 
             <!-- Viac variantov = zákazník musí najprv vybrať, ktorý chce -->
-            <button v-if="hasChoice" type="button" @click="onClickProductCart"
+            <router-link v-if="hasChoice" :to="productRoute"
                 class="mt-4 inline-flex w-full items-center justify-center rounded-md border-2 border-blue-700 px-4 py-2 font-semibold text-blue-700 transition hover:bg-blue-50">
                 Vybrať variant
-            </button>
+            </router-link>
 
             <form v-else-if="singleVariant" class="mt-4" @submit.prevent="submitCart">
                 <div class="flex items-center justify-center gap-3">

@@ -31,6 +31,8 @@ class ProductResource extends JsonResource
             'vat' => $this->vat,
             'thumb' => url($this->thumb),
             'unit_value' => $this->unit_value,
+            // lastmod pre sitemap.xml (ui/scripts/generate-sitemap.mjs).
+            'updated_at' => $this->updated_at?->toIso8601String(),
 
             // Cena a sklad žijú na variantoch — produkt ukazuje len rozsah.
             'price_from' => $this->price_from,

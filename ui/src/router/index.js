@@ -10,6 +10,7 @@ import admin from './admin';
 import useStoreErrors from '../store/StoreErrors';
 import useStoreOrders from '../store/StoreOrders';
 import useUser from '../store/StoreUsers';
+import { applyRouteSeo, DEFAULT_TITLE, DEFAULT_DESCRIPTION } from '../models/seo';
 
 
 
@@ -29,7 +30,8 @@ const routes = [
             // navigation: () => import('../components/pages/navigationMain.vue')
         },
         meta: {
-            title: APP_NAME
+            title: DEFAULT_TITLE,
+            description: DEFAULT_DESCRIPTION,
         }
     },
     {
@@ -59,8 +61,9 @@ const routes = [
         components: {
             default: () => import('../components/product/PublicProductShow.vue'),
         },
+        // Titulok, popis aj structured data doplní komponent po načítaní produktu.
         meta: {
-            
+            title: APP_NAME,
         }
     },
     {
@@ -70,7 +73,9 @@ const routes = [
             default: () => import('../components/pages/obchodnePodmienky.vue'),
         },
         meta: {
-            title: 'Obchodné podmienky'
+            title: 'Obchodné podmienky',
+            description: 'Obchodné podmienky nákupu vlajok a zástav — objednávka, dodanie, platba, '
+                + 'reklamácie a odstúpenie od zmluvy.',
         }
     },
     {
@@ -80,7 +85,9 @@ const routes = [
             default: () => import('../components/pages/ochranaOsobnychUdajov.vue'),
         },
         meta: {
-            title: 'Ochrana osobných údajov'
+            title: 'Ochrana osobných údajov',
+            description: 'Aké osobné údaje spracúvame pri objednávke, na aký účel a ako dlho, '
+                + 'a aké práva máte podľa GDPR.',
         }
     },
     {
@@ -90,7 +97,9 @@ const routes = [
             default: () => import('../components/pages/contactUs.vue'),
         },
         meta: {
-            title: 'Kontaktné údaje'
+            title: 'Kontakt',
+            description: 'Kontakt na predajcu vlajok a zástav: obchod@zastavy-vlajky.sk, '
+                + 'tel. 0905 320 616. Poradíme obciam, školám aj firmám s výberom.',
         }
     },
 
@@ -222,24 +231,12 @@ router.beforeResolve(async (to, from, next) => {
         });
         return;
     }
-    
-    const title = to.meta.title
-
-    //Take the title from the parameters
-    const titleFromParams = to.params.pageTitle;
-    // If the route has a title, set it as the page title of the document/page
-    if (title) {
-        document.title = title
-    }
-    // If we have a title from the params, extend the title with the title
-    // from our params
-    if (titleFromParams) {
-        document.title = `${titleFromParams} - ${document.title}`;
-    }
-    // Continue resolving the route
-
-
     next()
+})
+
+// Titulok, popis, canonical, OG a structured data — <head> sa inak medzi routami nemení.
+router.afterEach((to) => {
+    applyRouteSeo(to);
 })
 
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
 import BaseLayout from './layout/BaseLayout.vue';
 import cart from './checkout/cart.vue';
 import nazoryZakaznikov from './pages/nazoryZakaznikov.vue';
@@ -9,6 +9,7 @@ import { storeToRefs } from "pinia";
 import { useHome } from "../store/StoreHome";
 import useQuery from "../store/StoreQuery";
 import templateProduct from '../models/templateProduct';
+import { setJsonLd, organizationJsonLd, websiteJsonLd, absoluteUrl } from '../models/seo';
 
 const homeStore = useHome();
 const { getProducts } = storeToRefs(homeStore);
@@ -18,6 +19,26 @@ onMounted(() => {
       // Filtre z predchádzajúcej stránky by inak zúžili výpis bez zaškrtnutého políčka.
       useQuery().resetQuery();
       fetchProducts();
+
+      setJsonLd('organization', organizationJsonLd());
+      setJsonLd('website', websiteJsonLd());
+});
+
+// Zoznam tovaru dáva robotovi odkazy na detaily aj mimo sitemap.
+watch(getProducts, (products) => {
+      if (!products.length) return;
+
+      setJsonLd('itemList', {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            name: 'Vlajky a zástavy',
+            itemListElement: products.map((product, index) => ({
+                  '@type': 'ListItem',
+                  position: index + 1,
+                  name: product.name,
+                  url: absoluteUrl(`/product/${product.id}/show/${product.slug}`),
+            })),
+      });
 });
 
 </script>

@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import BaseLayout from '../layout/BaseLayout.vue';
+import { setJsonLd, organizationJsonLd } from '../../models/seo';
+
+onMounted(() => {
+      setJsonLd('organization', organizationJsonLd());
+});
 </script>
 
 <template>

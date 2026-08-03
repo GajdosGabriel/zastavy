@@ -1,5 +1,6 @@
 
 export const APP_NAME: string = 'Zástavy a vlajky'
+export const SITE_NAME: string = 'Zástavy-vlajky.sk'
 export const URL_BASE: string = import.meta.env.VITE_URL_BASE;
 export const URL_BASE_API: string = import.meta.env.VITE_URL_BASE_API;
 

@@ -11,6 +11,7 @@ import kosikButton from "../icons/kosik.vue";
 import { formatDecimal, formatPriceWithoutVat } from "../../models/functions";
 import RequiredMark from "../forms/RequiredMark.vue";
 import VariantPicker from "./components/VariantPicker.vue";
+import { applySeo, setJsonLd, productJsonLd, breadcrumbJsonLd, organizationJsonLd } from "../../models/seo";
 
 // store.product je reaktívny aj mutovateľný (Pinia proxy); getProduct getter cez storeToRefs.
 const productStore = useProducts();
@@ -60,13 +61,52 @@ watch(selectedVariant, (variant) => {
     quantity.value = Number(variant?.min_order ?? 1);
 });
 
+// Produkt sa načítava asynchrónne, takže <head> sa dopĺňa až keď sú dáta k dispozícii.
+// Popis staviame z variantov — ľudia hľadajú konkrétny rozmer („vlajka Slovenska 150x100“).
 watch(
-    () => getProduct.value.name,
+    () => productLoaded.value && getProduct.value.name,
     (name) => {
-        if (name) {
-            document.title = name;
-        }
-    }
+        if (!name) return;
+
+        const product = getProduct.value;
+        const path = route.fullPath.split("?")[0];
+        const variantNames = (product.variants ?? [])
+            .filter((variant) => variant.published && variant.name)
+            .map((variant) => variant.name);
+
+        const priceLabel = Number(product.price_from) > 0
+            ? `${(product.variants ?? []).length > 1 ? "od " : ""}${formatDecimal(product.price_from)} € s DPH`
+            : "";
+
+        const description = [
+            product.description,
+            variantNames.length ? `Prevedenia: ${variantNames.slice(0, 6).join(", ")}.` : "",
+            priceLabel ? `Cena ${priceLabel}.` : "",
+            product.is_in_stock ? "Skladom, expedujeme ihneď." : "",
+        ]
+            .filter(Boolean)
+            .join(" ");
+
+        applySeo({
+            title: variantNames.length ? `${name} — ${variantNames[0]}` : name,
+            description,
+            image: product.images?.[0]?.path ?? product.thumb,
+            path,
+            type: "product",
+        });
+
+        // Organizácia musí byť na stránke prítomná, inak offers.seller odkazuje do prázdna.
+        setJsonLd("organization", organizationJsonLd());
+        setJsonLd("product", productJsonLd(product, path));
+        setJsonLd(
+            "breadcrumb",
+            breadcrumbJsonLd([
+                { name: "Domov", path: "/" },
+                { name, path },
+            ])
+        );
+    },
+    { immediate: true }
 );
 
 watch(
