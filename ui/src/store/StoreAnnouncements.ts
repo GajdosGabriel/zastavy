@@ -133,6 +133,27 @@ export const useAnnouncements = defineStore('announcements', {
             }
         },
 
+        /**
+         * Rýchle zapnutie/vypnutie oznamu priamo v zozname — text zostáva
+         * uložený, mení sa len status, takže sa dá kedykoľvek vrátiť späť.
+         */
+        async toggleAnnouncement(announcement: Announcement): Promise<void> {
+            const current = (announcement.status as AnnouncementStatus)?.value ?? announcement.status;
+            const next = current === 'active' ? 'hidden' : 'active';
+
+            try {
+                await axiosInstance.put(announcement.endpoints.update, {
+                    ...announcement,
+                    status: next,
+                    published_from: announcement.published_from || null,
+                    published_until: announcement.published_until || null,
+                });
+                await this.fetchAnnouncements();
+            } catch (error) {
+                useErrors().setErrors(error);
+            }
+        },
+
         editAnnouncement(announcement: Announcement): void {
             this.announcement = {
                 ...emptyAnnouncement(),

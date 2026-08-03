@@ -54,6 +54,8 @@ export interface Product {
     published: boolean;
     unit_value: string;
     featured?: boolean;
+    // Tovar na zákazku — nesleduje sa sklad a karta nehlási vypredané.
+    made_to_order?: boolean;
     created_at: string;
     deleted_at: string;
     updated_at: string;
@@ -106,6 +108,7 @@ const defaultProduct = (): Product => ({
     published: false,
     unit_value: 'ks',
     featured: false,
+    made_to_order: false,
     created_at: '',
     deleted_at: '',
     updated_at: '',

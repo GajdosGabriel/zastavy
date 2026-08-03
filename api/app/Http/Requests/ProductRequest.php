@@ -38,6 +38,7 @@ class ProductRequest extends FormRequest
             'published' => 'required|boolean',
             'description' => 'string|nullable',
             'featured' => 'sometimes|boolean',
+            'made_to_order' => 'sometimes|boolean',
             'unit_value' => ['sometimes', Rule::in(['ks', 'l', 'kg'])],
             'vat' => ['required', new VatRule()],
             'status' => ['sometimes', Rule::in(ModelStatus::allowedValuesForUser($this->user()))],

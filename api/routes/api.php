@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\SuperAdmin\AttributeValueController;
 use App\Http\Controllers\Api\SuperAdmin\CategoryController;
 use App\Http\Controllers\Api\SuperAdmin\CouponController as AdminCouponController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerController;
+use App\Http\Controllers\Api\SuperAdmin\CustomerExportController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerMarkController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerOrderController;
 use App\Http\Controllers\Api\SuperAdmin\PaymentMethodController as AdminPaymentMethodController;
@@ -92,6 +93,10 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::post('/product/{product}/image/reorder', [ProductImageController::class, 'reorder'])->name('product.image.reorder');
 
     Route::get('stocks/summary', [StockController::class, 'summary'])->name('stocks.summary');
+
+    // Musí byť pred apiResource('customers'), inak by "export" pohltilo {customer}.
+    Route::get('customers/export/attributes', [CustomerExportController::class, 'attributes'])->name('customers.export.attributes');
+    Route::get('customers/export', [CustomerExportController::class, 'export'])->name('customers.export');
 
     Route::apiResources([
         'categories' => CategoryController::class,

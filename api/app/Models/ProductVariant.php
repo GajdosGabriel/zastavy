@@ -75,6 +75,13 @@ class ProductVariant extends Model
 
     public function getIsInStockAttribute(): bool
     {
+        // Tovar na zákazku je dostupný bez ohľadu na sklad. Reláciu čítame len
+        // keď je načítaná — inak by si ju každý variant v zozname dotiahol
+        // vlastným dotazom (ProductResource ju nastavuje dopredu).
+        if ($this->relationLoaded('product') && $this->product?->made_to_order) {
+            return true;
+        }
+
         // quantity === null znamená "sklad sa nesleduje", nie "vypredané".
         return $this->quantity === null || (int) $this->quantity > 0;
     }

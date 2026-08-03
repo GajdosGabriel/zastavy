@@ -16,9 +16,12 @@ const {
     saveAnnouncement,
     editAnnouncement,
     destroyAnnouncement,
+    toggleAnnouncement,
     resetAnnouncement,
     setPaginator,
 } = store;
+
+const isVisible = (item) => (item.status?.value ?? item.status) === 'active';
 
 onMounted(fetchAnnouncements);
 
@@ -128,7 +131,20 @@ const dropdownItems = (announcement) => [
                                     <div class="text-slate-500">{{ announcement.body || "-" }}</div>
                                 </td>
                                 <td class="tbody_td">{{ announcement.placement }}</td>
-                                <td class="tbody_td">{{ announcement.status?.label || "-" }}</td>
+                                <td class="tbody_td">
+                                    <button type="button" @click="toggleAnnouncement(announcement)"
+                                        :title="isVisible(announcement)
+                                            ? 'Vypnúť zobrazovanie — text zostane uložený'
+                                            : 'Zapnúť zobrazovanie'"
+                                        class="inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold transition"
+                                        :class="isVisible(announcement)
+                                            ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
+                                            : 'border-slate-300 bg-slate-50 text-slate-500 hover:bg-slate-100'">
+                                        <span class="h-2 w-2 rounded-full"
+                                            :class="isVisible(announcement) ? 'bg-green-500' : 'bg-slate-400'" />
+                                        {{ isVisible(announcement) ? 'zobrazuje sa' : 'vypnutý' }}
+                                    </button>
+                                </td>
                                 <td class="tbody_td">
                                     <div>Od: {{ announcement.published_from || "-" }}</div>
                                     <div>Do: {{ announcement.published_until || "-" }}</div>

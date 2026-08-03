@@ -20,7 +20,8 @@ class Product extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'status' => ModelStatus::class,
+        'status'        => ModelStatus::class,
+        'made_to_order' => 'boolean',
     ];
 
     public function setNameAttribute($value)
@@ -114,6 +115,11 @@ class Product extends Model
 
     public function getIsInStockAttribute(): bool
     {
+        // Tovar na zákazku sa nevyrába na sklad — je dostupný vždy.
+        if ($this->made_to_order) {
+            return true;
+        }
+
         return $this->sellable()->contains(fn ($v) => $v->is_in_stock);
     }
 

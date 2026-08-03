@@ -6,6 +6,7 @@ import Checkmark from "../../icons/checkmark.vue";
 import CheckmarkLight from "../../icons/checkmarkLight.vue";
 import spinnerIcon from "../../icons/spinnerTable.vue";
 import routerLinkComponent from "../../layout/RouterLinkComponent.vue";
+import { htmlToText } from "../../../models/html";
 
 
 const emits = defineEmits(['checkmark']);
@@ -72,9 +73,7 @@ const dropdownItems = computed(() => {
                     <div v-show="product.code || product.description" class="text-sm text-gray-500">
                         <span v-if="product.code" class="mr-2 font-semibold text-gray-700">{{ product.code }}</span>
                         <span v-if="product.description">
-                            {{
-                                product.description.substring(0, 25)
-                            }}...</span>
+                            {{ htmlToText(product.description).substring(0, 25) }}...</span>
                     </div>
                     <!-- </router-link> -->
                 </div>

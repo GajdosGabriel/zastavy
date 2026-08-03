@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import useCheckouts from "../../store/StoreCheckouts";
 import { formatDecimal, formatUnitName } from "../../models/functions";
+import { htmlToText } from "../../models/html";
 import kosikButton from "../icons/kosik.vue";
 
 const props = defineProps(["item"]);
@@ -87,7 +88,7 @@ const productRoute = computed(() => ({
             </div>
 
             <p v-if="item.description" class="mt-3 flex-1 text-xs leading-5 text-slate-500 md:text-sm">
-                {{ item.description.substring(0, 150) }}
+                {{ htmlToText(item.description).substring(0, 150) }}
                 <router-link :to="productRoute" class="cursor-pointer">
                     <span class="font-semibold text-blue-800 hover:underline">viac popisu</span>
                 </router-link>

@@ -133,6 +133,19 @@ onMounted(() => {
                                     </router-link>
 
                                     <router-link
+                                          :to="{ name: 'customers.export.index' }"
+                                          class="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+                                    >
+                                          <p class="text-sm text-slate-500">Super admin</p>
+                                          <h2 class="mt-2 text-2xl font-semibold text-slate-900">
+                                                Export zákazníkov
+                                          </h2>
+                                          <p class="mt-3 text-slate-600">
+                                                Zoznam zákazníkov do CSV — stĺpce si vyberiete, napr. meno a e-mail.
+                                          </p>
+                                    </router-link>
+
+                                    <router-link
                                           :to="{ name: 'users.export.index' }"
                                           class="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
                                     >

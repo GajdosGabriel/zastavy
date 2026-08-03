@@ -44,6 +44,17 @@ const admin = [
         },
     },
     {
+        path: '/admin/export-zakaznikov',
+        name: 'customers.export.index',
+        components: {
+            default: () => import('../components/customer/CustomerExportIndex.vue'),
+        },
+        meta: {
+            title: 'Export zákazníkov',
+            superAdminOnly: true,
+        },
+    },
+    {
         path: '/admin/export-pouzivatelov',
         name: 'users.export.index',
         components: {

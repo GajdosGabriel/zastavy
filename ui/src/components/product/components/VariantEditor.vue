@@ -10,7 +10,7 @@ const props = defineProps({
 });
 
 const productStore = useProducts();
-const { getVariants } = storeToRefs(productStore);
+const { getVariants, getProduct } = storeToRefs(productStore);
 const { fetchVariants, storeVariant, updateVariant, destroyVariant } = productStore;
 
 const attributesStore = useAttributes();
@@ -116,10 +116,26 @@ const onAdd = async () => {
     }
 };
 
+// Varianty jedného produktu sa zvyčajne líšia v jedinom údaji, tak nový
+// nadviažeme na posledný — kód a EAN musia zostať prázdne, tie sú unikátne.
+const templateFrom = (variants) => {
+    const source = variants[variants.length - 1];
+    if (!source) return blankDraft();
+
+    return {
+        ...toDraft(source),
+        id: null,
+        code: '',
+        ean: '',
+        is_default: false,
+    };
+};
+
 const startAdding = () => {
-    newVariant.value = blankDraft();
+    const variants = getVariants.value ?? [];
+    newVariant.value = templateFrom(variants);
     // Prvý variant produktu musí byť predvolený, inak nemá karta čo ponúknuť.
-    newVariant.value.is_default = !(getVariants.value ?? []).length;
+    newVariant.value.is_default = !variants.length;
     isAdding.value = true;
 };
 
@@ -169,7 +185,11 @@ const hasAttributes = computed(() => getVariantAttributes.value.length > 0);
                                 class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
                                 predvolený
                             </span>
-                            <span class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                            <span v-if="getProduct.made_to_order"
+                                class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                                na zákazku
+                            </span>
+                            <span v-else class="rounded-full px-2 py-0.5 text-xs font-semibold"
                                 :class="variant.is_in_stock ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
                                 {{ variant.is_in_stock ? 'skladom' : 'vypredané' }}
                             </span>
@@ -282,6 +302,10 @@ const hasAttributes = computed(() => getVariantAttributes.value.length > 0);
             <!-- Nový variant -->
             <article v-if="isAdding" class="rounded-md border-2 border-dashed border-blue-300 bg-blue-50/40 p-4 space-y-4">
                 <h3 class="font-semibold text-gray-900">Nový variant</h3>
+                <p v-if="getVariants.length" class="text-xs text-gray-500">
+                    Hodnoty sú prevzaté z posledného variantu — zmeňte len to, čím sa líši.
+                    Kombinácia vlastností sa nesmie opakovať.
+                </p>
 
                 <div v-if="hasAttributes" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <div v-for="attribute in getVariantAttributes" :key="attribute.id">

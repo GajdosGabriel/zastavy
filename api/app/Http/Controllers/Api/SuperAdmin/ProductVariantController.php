@@ -21,9 +21,12 @@ class ProductVariantController extends Controller
     {
         Gate::authorize('view', $product);
 
-        return ProductVariantResource::collection(
-            $product->variants()->with('attributeValues.attribute')->get()
-        );
+        $variants = $product->variants()->with('attributeValues.attribute')->get();
+
+        // Bez rodiča by variant nevedel o príznaku "na zákazku" a hlásil by vypredané.
+        $variants->each->setRelation('product', $product);
+
+        return ProductVariantResource::collection($variants);
     }
 
     public function show(Product $product, ProductVariant $variant)

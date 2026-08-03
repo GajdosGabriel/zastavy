@@ -7,6 +7,7 @@ import useCustomers from "../../store/StoreCustomers";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
 import { formatDecimal } from "../../models/functions";
+import { htmlToText } from "../../models/html";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import ShippingPaymentSelector from "../forms/ShippingPaymentSelector.vue";
 
@@ -35,7 +36,7 @@ const parseStoredCustomer = () => {
       }
 };
 
-const shortDescription = (product) => String(product.description || '').substring(0, 25);
+const shortDescription = (product) => htmlToText(product.description).substring(0, 25);
 const productTotal = (product) => formatDecimal(Number(product.active_price || 0) * Number(product.input_order || 0));
 
 onMounted(() => {

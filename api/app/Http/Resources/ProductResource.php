@@ -23,6 +23,16 @@ class ProductResource extends JsonResource
         $staff = $this->staffUser($request);
         $status = ModelStatus::fromProduct($this->resource);
 
+        // Dostupnosť variantu závisí od príznaku na produkte. Reláciu doplníme
+        // dopredu, aby si ju variant nedoťahoval vlastným dotazom.
+        if ($this->resource->relationLoaded('variants')) {
+            $this->resource->variants->each->setRelation('product', $this->resource);
+        }
+
+        if ($this->resource->relationLoaded('defaultVariant')) {
+            $this->resource->defaultVariant?->setRelation('product', $this->resource);
+        }
+
         return [
             'id' => $this->id,
             'code' => $this->code,
@@ -30,6 +40,7 @@ class ProductResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             'published' => $this->published,
+            'made_to_order' => (bool) $this->made_to_order,
             'status' => $status->toArray(),
             'status_options' => ModelStatus::allowedForUser($user),
             'vat' => $this->vat,

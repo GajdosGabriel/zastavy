@@ -13,6 +13,7 @@ import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
 import buttonRouterLink from '../layout/page/ButtonLink.vue';
 import useUnsavedChanges from '../../models/useUnsavedChanges';
 import RequiredMark from '../forms/RequiredMark.vue';
+import HtmlEditor from '../forms/HtmlEditor.vue';
 
 // store.product je reaktívny aj mutovateľný (Pinia proxy); getProduct getter cez storeToRefs.
 const productStore = useProducts();
@@ -149,9 +150,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                                 <label class="mb-1.5 block text-sm font-medium text-gray-700" for="description">
                                     Popis
                                 </label>
-                                <textarea id="description" v-model="getProduct.description"
-                                    placeholder="Popis produktu" rows="4"
-                                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                                <HtmlEditor v-model="getProduct.description" placeholder="Popis produktu" />
                             </div>
                         </div>
                     </section>
@@ -186,6 +185,28 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                                     </select>
                                 </div>
                             </div>
+                        </div>
+                    </section>
+
+                    <!-- Dostupnosť -->
+                    <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                        <div class="border-b border-gray-100 px-6 py-3">
+                            <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Dostupnosť</h2>
+                        </div>
+                        <div class="px-6 py-5">
+                            <label class="flex cursor-pointer items-start gap-3">
+                                <input type="checkbox" v-model="getProduct.made_to_order"
+                                    class="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                <span>
+                                    <span class="block text-sm font-medium text-gray-700">
+                                        Tovar na zákazku — nesledovať sklad
+                                    </span>
+                                    <span class="block text-xs text-gray-500">
+                                        Produkt sa dá objednať vždy. Na karte sa namiesto „skladom“
+                                        alebo „vypredané“ zobrazí „na zákazku“ — bez ohľadu na množstvo pri variantoch.
+                                    </span>
+                                </span>
+                            </label>
                         </div>
                     </section>
 

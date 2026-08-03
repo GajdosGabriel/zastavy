@@ -12,6 +12,7 @@ import { formatDecimal, formatPriceWithoutVat } from "../../models/functions";
 import RequiredMark from "../forms/RequiredMark.vue";
 import VariantPicker from "./components/VariantPicker.vue";
 import { applySeo, setJsonLd, productJsonLd, breadcrumbJsonLd, organizationJsonLd } from "../../models/seo";
+import { sanitizeHtml, htmlToText } from "../../models/html";
 
 // store.product je reaktívny aj mutovateľný (Pinia proxy); getProduct getter cez storeToRefs.
 const productStore = useProducts();
@@ -34,6 +35,10 @@ const activePrice = computed(() => Number(selectedVariant.value?.active_price ??
 const basePrice = computed(() => Number(selectedVariant.value?.price ?? 0));
 const hasDiscount = computed(() => Number(selectedVariant.value?.sale_price ?? 0) > 0);
 const canBuy = computed(() => !!selectedVariant.value && selectedVariant.value.is_in_stock);
+const madeToOrder = computed(() => !!getProduct.value.made_to_order);
+
+// Popis chodí z administrácie ako HTML — pred v-html ho prečistíme.
+const safeDescription = computed(() => sanitizeHtml(getProduct.value.description));
 
 const orderTotal = computed(() => formatDecimal(quantity.value * activePrice.value));
 const minOrderTotal = computed(() => formatDecimal(minOrder.value * activePrice.value));
@@ -79,10 +84,12 @@ watch(
             : "";
 
         const description = [
-            product.description,
+            htmlToText(product.description),
             variantNames.length ? `Prevedenia: ${variantNames.slice(0, 6).join(", ")}.` : "",
             priceLabel ? `Cena ${priceLabel}.` : "",
-            product.is_in_stock ? "Skladom, expedujeme ihneď." : "",
+            product.made_to_order
+                ? "Vyrábame na zákazku."
+                : (product.is_in_stock ? "Skladom, expedujeme ihneď." : ""),
         ]
             .filter(Boolean)
             .join(" ");
@@ -157,7 +164,8 @@ onUnmounted(() => {
                         <section class="mt-6 rounded-md border border-gray-200 bg-white p-5 shadow-sm">
                             <h2 class="mb-3 text-xl font-semibold text-gray-900">Popis tovaru</h2>
                             <p class="leading-7 text-gray-600">
-                                {{ getProduct.description || 'Popis produktu pripravujeme.' }}
+                                <span v-if="!getProduct.description">Popis produktu pripravujeme.</span>
+                                <span v-else class="product-description" v-html="safeDescription" />
                             </p>
                         </section>
 
@@ -186,7 +194,11 @@ onUnmounted(() => {
                                                 {{ formatDecimal(variant.active_price) }} €
                                             </td>
                                             <td class="px-5 py-2 text-right">
-                                                <span class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                                                <span v-if="madeToOrder"
+                                                    class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                                                    na zákazku
+                                                </span>
+                                                <span v-else class="rounded-full px-2 py-0.5 text-xs font-semibold"
                                                     :class="variant.is_in_stock ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
                                                     {{ variant.is_in_stock ? 'skladom' : 'vypredané' }}
                                                 </span>
@@ -321,3 +333,13 @@ onUnmounted(() => {
         </template>
     </BaseLayout>
 </template>
+
+<style scoped>
+/* Popis chodí ako HTML z editora — Tailwind resetuje nadpisy aj zoznamy. */
+.product-description :deep(h2) { font-size: 1.125rem; font-weight: 600; margin: 0.9rem 0 0.4rem; }
+.product-description :deep(h3) { font-size: 1rem; font-weight: 600; margin: 0.7rem 0 0.3rem; }
+.product-description :deep(p) { margin: 0.5rem 0; }
+.product-description :deep(ul) { list-style: disc; padding-left: 1.4rem; margin: 0.5rem 0; }
+.product-description :deep(ol) { list-style: decimal; padding-left: 1.4rem; margin: 0.5rem 0; }
+.product-description :deep(a) { color: #1d4ed8; text-decoration: underline; }
+</style>

@@ -1,4 +1,5 @@
 import { URL_BASE, SITE_NAME } from '../constants';
+import { htmlToText } from './html';
 
 /**
  * Správa <head> pre SPA.
@@ -216,9 +217,11 @@ export const productJsonLd = (product, path) => {
         .filter((price) => Number.isFinite(price) && price > 0);
 
     const url = absoluteUrl(path);
-    const availability = product.is_in_stock
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/OutOfStock';
+    const availability = product.made_to_order
+        ? 'https://schema.org/MadeToOrder'
+        : (product.is_in_stock
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock');
 
     const images = (product.images ?? []).map((image) => image.path).filter(Boolean);
 
@@ -226,7 +229,7 @@ export const productJsonLd = (product, path) => {
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: product.name,
-        description: truncate(product.description || `${product.name} — ${DEFAULT_DESCRIPTION}`, 500),
+        description: truncate(htmlToText(product.description) || `${product.name} — ${DEFAULT_DESCRIPTION}`, 500),
         sku: product.code,
         url,
         image: images.length ? images : [absoluteUrl(product.thumb || DEFAULT_IMAGE)],
