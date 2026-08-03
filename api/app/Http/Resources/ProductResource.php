@@ -3,11 +3,14 @@
 namespace App\Http\Resources;
 
 use App\Enums\ModelStatus;
+use App\Http\Resources\Concerns\StaffMeta;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProductResource extends JsonResource
 {
+    use StaffMeta;
+
     /**
      * Transform the resource into an array.
      *
@@ -17,6 +20,7 @@ class ProductResource extends JsonResource
     public function toArray($request)
     {
         $user = $request->user();
+        $staff = $this->staffUser($request);
         $status = ModelStatus::fromProduct($this->resource);
 
         return [
@@ -53,36 +57,38 @@ class ProductResource extends JsonResource
             'images' => ImageResource::collection($this->images),
             'categories' => CategoryResource::collection($this->categories),
 
-            'endpoints' => [
+            // Prázdne polia pre verejnosť — admin UI číta `Object.keys(product.endpoints)`,
+            // takže kľúč musí v odpovedi zostať.
+            'endpoints' => $staff ? [
                 'index'     => route('products.index'),
                 'show'      => route('products.show', $this->id),
                 'update'    => route('products.update', $this->id),
                 'store'     => route('products.store'),
                 'destroy'   => route('products.destroy', $this->id),
                 'variants'  => route('products.variants.index', $this->id),
-            ],
-            'permissions' => [
+            ] : [],
+            'permissions' => $staff ? [
                 'view' => [
-                    'allowed' => $user?->can('view', $this->resource) ?? false,
+                    'allowed' => $staff->can('view', $this->resource),
                     'label' => __('actions.view'),
                 ],
                 'update' => [
-                    'allowed' => $user?->can('update', $this->resource) ?? false,
+                    'allowed' => $staff->can('update', $this->resource),
                     'label' => __('actions.update'),
                 ],
                 'delete' => [
-                    'allowed' => $user?->can('delete', $this->resource) ?? false,
+                    'allowed' => $staff->can('delete', $this->resource),
                     'label' => __('actions.delete'),
                 ],
                 'archive' => [
-                    'allowed' => $user?->can('archive', $this->resource) ?? false,
+                    'allowed' => $staff->can('archive', $this->resource),
                     'label' => __('actions.archive'),
                 ],
                 'restore' => [
-                    'allowed' => $user?->can('restore', $this->resource) ?? false,
+                    'allowed' => $staff->can('restore', $this->resource),
                     'label' => __('actions.restore'),
                 ],
-            ],
+            ] : [],
         ];
     }
 }

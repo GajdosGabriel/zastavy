@@ -3,13 +3,16 @@
 namespace App\Http\Resources;
 
 use App\Enums\ModelStatus;
+use App\Http\Resources\Concerns\StaffMeta;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProductVariantResource extends JsonResource
 {
+    use StaffMeta;
+
     public function toArray($request)
     {
-        $user = $request->user();
+        $staff = $this->staffUser($request);
 
         return [
             'id'          => $this->id,
@@ -33,23 +36,24 @@ class ProductVariantResource extends JsonResource
 
             'attribute_values' => AttributeValueResource::collection($this->whenLoaded('attributeValues')),
 
-            'endpoints' => [
+            // Varianty visia na verejnom detaile produktu — admin routes len personálu.
+            'endpoints' => $staff ? [
                 'index'   => route('products.variants.index', $this->product_id),
                 'show'    => route('products.variants.show', [$this->product_id, $this->id]),
                 'store'   => route('products.variants.store', $this->product_id),
                 'update'  => route('products.variants.update', [$this->product_id, $this->id]),
                 'destroy' => route('products.variants.destroy', [$this->product_id, $this->id]),
-            ],
-            'permissions' => [
+            ] : [],
+            'permissions' => $staff ? [
                 'update' => [
-                    'allowed' => $user?->can('update', $this->resource) ?? false,
+                    'allowed' => $staff->can('update', $this->resource),
                     'label'   => __('actions.update'),
                 ],
                 'delete' => [
-                    'allowed' => $user?->can('delete', $this->resource) ?? false,
+                    'allowed' => $staff->can('delete', $this->resource),
                     'label'   => __('actions.delete'),
                 ],
-            ],
+            ] : [],
         ];
     }
 }
