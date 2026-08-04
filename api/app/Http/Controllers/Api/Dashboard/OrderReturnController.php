@@ -33,7 +33,8 @@ class OrderReturnController extends Controller
 
         $validated = $request->validate([
             'reason'          => ['required', 'in:not_accepted,damaged,wrong_item,other'],
-            'note'            => ['nullable', 'string', 'max:1000'],
+            // Poznámka chodí ako HTML z editora — značky sa rátajú do dĺžky.
+            'note'            => ['nullable', 'string', 'max:3000'],
             'items'           => ['required', 'array', 'min:1'],
             'items.*.order_product_id' => ['required', 'integer', 'exists:order_products,id'],
             'items.*.quantity'         => ['required', 'integer', 'min:1'],
@@ -87,7 +88,7 @@ class OrderReturnController extends Controller
 
         $validated = $request->validate([
             'reason' => ['sometimes', 'in:not_accepted,damaged,wrong_item,other'],
-            'note'   => ['nullable', 'string', 'max:1000'],
+            'note'   => ['nullable', 'string', 'max:3000'],
             'items'  => ['sometimes', 'array', 'min:1'],
             'items.*.order_product_id' => ['required_with:items', 'integer', 'exists:order_products,id'],
             'items.*.quantity'         => ['required_with:items', 'integer', 'min:1'],

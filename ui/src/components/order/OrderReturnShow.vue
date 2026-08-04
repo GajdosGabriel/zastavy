@@ -5,6 +5,8 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import buttonLink from "../layout/page/ButtonLink.vue";
 import { storeToRefs } from "pinia";
 import { useReturns } from "../../store/StoreReturns";
+import HtmlEditor from "../forms/HtmlEditor.vue";
+import { sanitizeHtml } from "../../models/html";
 
 const returnsStore = useReturns();
 const { getCurrentReturn } = storeToRefs(returnsStore);
@@ -162,8 +164,7 @@ async function doDelete() {
                             </div>
                             <div>
                                 <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Poznámka</p>
-                                <textarea v-model="editNote" rows="2"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"></textarea>
+                                <HtmlEditor v-model="editNote" min-height="5rem" />
                             </div>
                         </div>
 
@@ -183,7 +184,7 @@ async function doDelete() {
                             </div>
                             <div v-if="ret.note" class="col-span-full">
                                 <p class="text-xs text-gray-400">Poznámka</p>
-                                <p class="text-gray-700">{{ ret.note }}</p>
+                                <div class="html-content text-gray-700" v-html="sanitizeHtml(ret.note)" />
                             </div>
                         </div>
                     </div>

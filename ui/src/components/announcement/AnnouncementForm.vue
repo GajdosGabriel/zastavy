@@ -6,6 +6,7 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import PageHeader from "../layout/page/pageHeader.vue";
 import ButtonSubmit from "../layout/page/ButtonSubmit.vue";
 import FormInput from "../forms/FormInput.vue";
+import HtmlEditor from "../forms/HtmlEditor.vue";
 import router from "../../router";
 import { useAnnouncements } from "../../store/StoreAnnouncements";
 
@@ -68,7 +69,7 @@ const buttonSubmit = { name: "Uložiť oznam", spinner: true };
 
                         <div class="md:col-span-2">
                             <label class="mb-1 block text-sm font-bold text-slate-700">Text</label>
-                            <textarea v-model="announcement.body" rows="3" class="form-control rounded border px-3 py-2"></textarea>
+                            <HtmlEditor v-model="announcement.body" placeholder="Text oznamu" min-height="6rem" />
                         </div>
 
                         <div>

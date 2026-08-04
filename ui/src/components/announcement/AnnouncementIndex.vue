@@ -7,6 +7,7 @@ import PanelDropdown from "../layout/PanelDropdown.vue";
 import { storeToRefs } from "pinia";
 import router from "../../router";
 import { useAnnouncements } from "../../store/StoreAnnouncements";
+import { htmlToText } from "../../models/html";
 
 const store = useAnnouncements();
 const { getAnnouncements } = storeToRefs(store);
@@ -59,7 +60,7 @@ const dropdownItems = (announcement) => [
                             <tr v-for="announcement in getAnnouncements" :key="announcement.id">
                                 <td class="tbody_td">
                                     <div class="font-semibold text-slate-800">{{ announcement.title }}</div>
-                                    <div class="text-slate-500">{{ announcement.body || "-" }}</div>
+                                    <div class="text-slate-500">{{ htmlToText(announcement.body) || "-" }}</div>
                                 </td>
                                 <td class="tbody_td">{{ announcement.placement }}</td>
                                 <td class="tbody_td">

@@ -2,6 +2,7 @@
 import { onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useAnnouncements } from "../../store/StoreAnnouncements";
+import { sanitizeHtml } from "../../models/html";
 
 const announcementsStore = useAnnouncements();
 const { getActiveBottomAnnouncements } = storeToRefs(announcementsStore);
@@ -22,7 +23,7 @@ onMounted(() => {
                 :class="announcement.style_class"
             >
                 <p>{{ announcement.title }}</p>
-                <p v-if="announcement.body" class="text-sm">{{ announcement.body }}</p>
+                <div v-if="announcement.body" class="html-content text-sm" v-html="sanitizeHtml(announcement.body)" />
             </div>
         </div>
     </section>

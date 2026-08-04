@@ -5,6 +5,8 @@ import { sanitizeHtml } from '../../models/html';
 const props = defineProps({
     modelValue: { type: String, default: '' },
     placeholder: { type: String, default: '' },
+    // Poznámky sú krátke, popis produktu dlhý — výšku si určí volajúci.
+    minHeight: { type: String, default: '10rem' },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -108,7 +110,8 @@ watch(() => props.modelValue, (value) => {
                 {{ placeholder }}
             </p>
             <div ref="editor" contenteditable="true" @input="onInput" @blur="onInput" @paste="onPaste"
-                class="html-editor min-h-[10rem] w-full px-3 py-2 text-sm leading-6 focus:outline-none" />
+                :style="{ minHeight: props.minHeight }"
+                class="html-editor w-full px-3 py-2 text-sm leading-6 focus:outline-none" />
         </div>
     </div>
 </template>

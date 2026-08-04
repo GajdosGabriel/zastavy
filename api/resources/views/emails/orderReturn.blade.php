@@ -70,7 +70,8 @@
         @if($orderReturn->note)
         <div class="info-box orange" style="margin-bottom:20px;">
             <strong style="display:block; margin-bottom:4px;">Poznámka</strong>
-            {{ $orderReturn->note }}
+            {{-- Poznámka sa zadáva v HTML editore — pred vypísaním ju prečistíme. --}}
+            {!! \App\Services\HtmlSanitizer::sanitize($orderReturn->note) !!}
         </div>
         @endif
 

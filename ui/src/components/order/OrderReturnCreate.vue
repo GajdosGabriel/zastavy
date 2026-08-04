@@ -6,6 +6,7 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import buttonLink from "../layout/page/ButtonLink.vue";
 import useOrders from "../../store/StoreOrders";
 import { useReturns } from "../../store/StoreReturns";
+import HtmlEditor from "../forms/HtmlEditor.vue";
 
 const ordersStore = useOrders();
 const { getOrder } = storeToRefs(ordersStore);
@@ -114,9 +115,8 @@ async function submit() {
                             </div>
                             <div>
                                 <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">Poznámka (nepovinné)</label>
-                                <textarea v-model="note" rows="2"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                                    placeholder="Napr. zákazník odmietol prevziať..."></textarea>
+                                <HtmlEditor v-model="note" min-height="5rem"
+                                    placeholder="Napr. zákazník odmietol prevziať..." />
                             </div>
                         </div>
                     </div>

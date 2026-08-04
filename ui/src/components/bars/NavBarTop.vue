@@ -2,6 +2,7 @@
 import { onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useAnnouncements } from "../../store/StoreAnnouncements";
+import { sanitizeHtml } from "../../models/html";
 
 const announcementsStore = useAnnouncements();
 const { getActiveTopAnnouncements } = storeToRefs(announcementsStore);
@@ -21,7 +22,7 @@ onMounted(() => {
     >
         <strong>
             <div>{{ announcement.title }}</div>
-            <div v-if="announcement.body">{{ announcement.body }}</div>
+            <div v-if="announcement.body" class="html-content" v-html="sanitizeHtml(announcement.body)" />
         </strong>
     </div>
 </template>
