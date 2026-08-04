@@ -7,6 +7,7 @@ import router from "../../router";
 import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 import RequiredMark from "../forms/RequiredMark.vue";
+import PasswordInput from "../forms/PasswordInput.vue";
 
 const { resetPassword } = useUser();
 const route = useRoute();
@@ -64,12 +65,10 @@ const onSubmit = async () => {
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">
                                     Nové heslo <RequiredMark />
                                 </label>
-                                <input
+                                <PasswordInput
                                     v-model="form.password"
-                                    type="password"
                                     required
                                     autocomplete="new-password"
-                                    class="block w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 />
                                 <p class="mt-1 text-xs text-slate-500">Minimálne 8 znakov.</p>
                             </div>
@@ -78,12 +77,10 @@ const onSubmit = async () => {
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">
                                     Potvrdiť heslo <RequiredMark />
                                 </label>
-                                <input
+                                <PasswordInput
                                     v-model="form.password_confirmation"
-                                    type="password"
                                     required
                                     autocomplete="new-password"
-                                    class="block w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
 

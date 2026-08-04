@@ -4,6 +4,7 @@ import { storeToRefs } from "pinia";
 import { useAttributes } from "../../store/StoreAttributes";
 import { useHome } from "../../store/StoreHome";
 import useQuery from "../../store/StoreQuery";
+import Chevron from "../icons/chevron.vue";
 
 const attributesStore = useAttributes();
 const { getFacets } = storeToRefs(attributesStore);
@@ -14,6 +15,7 @@ const { setQuery, removeQuery } = useQuery();
 
 // { rozmer: ['100x150', '100x70'] }
 const selected = reactive({});
+const open = ref(false);
 const inStock = ref(false);
 const priceFrom = ref("");
 const priceTo = ref("");
@@ -80,15 +82,19 @@ watch([selected, inStock], syncQuery, { deep: true });
 
 <template>
     <section v-if="getFacets.length" class="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="mb-3 flex items-center justify-between">
-            <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Filtre</h2>
+        <div class="flex items-center justify-between gap-2">
+            <button type="button" @click="open = !open" :aria-expanded="open"
+                class="flex flex-1 items-center gap-1 text-left focus:outline-none">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Filtre</h2>
+                <Chevron :icon="!open" class="text-slate-400" />
+            </button>
             <button v-if="activeCount" type="button" @click="reset"
                 class="text-xs text-slate-400 transition hover:text-red-600">
                 × zrušiť ({{ activeCount }})
             </button>
         </div>
 
-        <div class="space-y-4">
+        <div v-show="open" class="mt-3 space-y-4">
             <div v-for="facet in getFacets" :key="facet.code">
                 <p class="mb-1.5 text-sm font-semibold text-slate-700">{{ facet.name }}</p>
                 <div class="space-y-1">

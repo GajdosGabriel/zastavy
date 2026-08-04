@@ -3,6 +3,7 @@ import { reactive } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import { useUsers as useUser } from "../../store/StoreUsers";
 import RequiredMark from "../forms/RequiredMark.vue";
+import PasswordInput from "../forms/PasswordInput.vue";
 
 
 const { register } = useUser();
@@ -79,11 +80,9 @@ const onClickForm = () => {
                             <label for="password" class="mb-2 block text-sm font-semibold text-slate-700">
                                 Heslo <RequiredMark />
                             </label>
-                            <input
+                            <PasswordInput
                                 id="password"
                                 v-model="form.password"
-                                class="block w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                type="password"
                                 required
                                 autocomplete="new-password"
                             />

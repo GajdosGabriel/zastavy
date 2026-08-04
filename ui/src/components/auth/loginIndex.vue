@@ -4,6 +4,7 @@ import BaseLayout from "../layout/BaseLayout.vue";
 import { useUsers as useUser } from "../../store/StoreUsers";
 import router from "../../router";
 import RequiredMark from "../forms/RequiredMark.vue";
+import PasswordInput from "../forms/PasswordInput.vue";
 import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 
@@ -59,11 +60,9 @@ const onClickForm = async () => {
                                     Zabudnuté heslo?
                                 </router-link>
                             </div>
-                            <input
+                            <PasswordInput
                                 id="password"
                                 v-model="form.password"
-                                class="block w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                type="password"
                                 required
                                 autocomplete="current-password"
                             />

@@ -36,36 +36,6 @@ onMounted(() => {
                         <OrderStatistics class="mt-6" />
 
                         <div class="mt-6 grid gap-5 md:grid-cols-3">
-                              <article class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-                                    <p class="text-sm text-slate-500">Dnes</p>
-                                    <h2 class="mt-2 text-2xl font-semibold text-slate-900">
-                                          Nové objednávky
-                                    </h2>
-                                    <p class="mt-3 text-slate-600">
-                                          Demo panel pre počet nových objednávok a rýchly vstup do expedície.
-                                    </p>
-                              </article>
-
-                              <article class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-                                    <p class="text-sm text-slate-500">Sklad</p>
-                                    <h2 class="mt-2 text-2xl font-semibold text-slate-900">
-                                          Stav zásob
-                                    </h2>
-                                    <p class="mt-3 text-slate-600">
-                                          Demo panel pre produkty, ktoré treba doplniť alebo skontrolovať.
-                                    </p>
-                              </article>
-
-                              <article class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-                                    <p class="text-sm text-slate-500">Zákazníci</p>
-                                    <h2 class="mt-2 text-2xl font-semibold text-slate-900">
-                                          Aktivita
-                                    </h2>
-                                    <p class="mt-3 text-slate-600">
-                                          Demo panel pre posledné nákupy, kontakty a otvorené požiadavky.
-                                    </p>
-                              </article>
-
                               <router-link
                                     :to="{ name: 'announcements.index' }"
                                     class="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
