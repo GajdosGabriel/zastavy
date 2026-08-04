@@ -78,16 +78,34 @@ export const useAnnouncements = defineStore('announcements', {
             };
         },
 
+        // Číselníky pre formulár chodia v `meta` každej odpovede (index, show, store, update).
+        setFormOptions(meta: any): void {
+            this.statuses = meta?.statuses || this.statuses;
+            this.placements = meta?.placements || this.placements;
+            this.styleClasses = meta?.style_classes || this.styleClasses;
+        },
+
         async fetchAnnouncements(): Promise<void> {
             try {
                 const paginator = usePaginator();
                 const response = await axiosInstance.get(this.url);
                 this.announcements = response.data.data;
-                this.statuses = response.data.meta?.statuses || this.statuses;
-                this.placements = response.data.meta?.placements || this.placements;
-                this.styleClasses = response.data.meta?.style_classes || this.styleClasses;
+                this.setFormOptions(response.data.meta);
                 paginator.setPaginator(response.data.meta);
                 paginator.setLinks(response.data.links);
+            } catch (error) {
+                useErrors().setErrors(error);
+            }
+        },
+
+        async fetchAnnouncement(id: number | string): Promise<void> {
+            try {
+                const response = await axiosInstance.get(`${PAGE_ANNOUNCEMENT.URL}/${id}`);
+                this.announcement = {
+                    ...emptyAnnouncement(),
+                    ...response.data.data,
+                };
+                this.setFormOptions(response.data.meta);
             } catch (error) {
                 useErrors().setErrors(error);
             }
@@ -119,11 +137,7 @@ export const useAnnouncements = defineStore('announcements', {
                     : await axiosInstance.post(PAGE_ANNOUNCEMENT.URL, this.payload());
 
                 this.announcement = response.data.data;
-                this.statuses = response.data.meta?.statuses || this.statuses;
-                this.placements = response.data.meta?.placements || this.placements;
-                this.styleClasses = response.data.meta?.style_classes || this.styleClasses;
-                await this.fetchAnnouncements();
-                this.resetAnnouncement();
+                this.setFormOptions(response.data.meta);
 
                 return true;
             } catch (error) {
@@ -152,14 +166,6 @@ export const useAnnouncements = defineStore('announcements', {
             } catch (error) {
                 useErrors().setErrors(error);
             }
-        },
-
-        editAnnouncement(announcement: Announcement): void {
-            this.announcement = {
-                ...emptyAnnouncement(),
-                ...announcement,
-                status: announcement.status || emptyAnnouncement().status,
-            };
         },
 
         async destroyAnnouncement(announcement: Announcement): Promise<void> {

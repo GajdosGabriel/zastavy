@@ -12,6 +12,28 @@ const announcement = [
             superAdminOnly: true,
         },
     },
+    {
+        path: '/oznamy/create',
+        name: 'announcements.create',
+        components: {
+            default: () => import('../components/announcement/AnnouncementForm.vue'),
+        },
+        meta: {
+            title: 'Nový oznam',
+            superAdminOnly: true,
+        },
+    },
+    {
+        path: '/oznamy/:announcementId/edit',
+        name: 'announcements.edit',
+        components: {
+            default: () => import('../components/announcement/AnnouncementForm.vue'),
+        },
+        meta: {
+            title: 'Upraviť oznam',
+            superAdminOnly: true,
+        },
+    },
 ];
 
 export default announcement;
