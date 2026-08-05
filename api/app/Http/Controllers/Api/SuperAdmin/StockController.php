@@ -8,6 +8,7 @@ use App\Http\Resources\StockResource;
 use App\Models\ProductVariant;
 use App\Models\Stock;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -35,11 +36,33 @@ class StockController extends Controller
     {
         Gate::authorize('viewAny', Stock::class);
 
+        return response()->json(['data' => $this->summaryRows()]);
+    }
+
+    /**
+     * Hlavička detailu skladovej položky — stav aj pre variant bez jediného pohybu.
+     */
+    public function variantSummary(int $variantId)
+    {
+        Gate::authorize('viewAny', Stock::class);
+
+        $variant = ProductVariant::withTrashed()
+            ->with('product:id,name,unit_value')
+            ->findOrFail($variantId);
+
+        return response()->json([
+            'data' => $this->summaryRows($variantId)->first() ?? $this->summaryRow($variant, 0, 0),
+        ]);
+    }
+
+    private function summaryRows(?int $variantId = null): Collection
+    {
         // Príjmy — evidujú sa priamo na variante (skladovej položke).
         $totalIn = DB::table('stocks')
             ->whereNull('shipping_id')
             ->whereNotNull('product_variant_id')
             ->whereNull('deleted_at')
+            ->when($variantId, fn ($q) => $q->where('product_variant_id', $variantId))
             ->groupBy('product_variant_id')
             ->select('product_variant_id', DB::raw('SUM(quantity) as total'))
             ->pluck('total', 'product_variant_id');
@@ -50,6 +73,7 @@ class StockController extends Controller
             ->whereNotNull('stocks.shipping_id')
             ->whereNotNull('order_products.product_variant_id')
             ->whereNull('stocks.deleted_at')
+            ->when($variantId, fn ($q) => $q->where('order_products.product_variant_id', $variantId))
             ->groupBy('order_products.product_variant_id')
             ->select('order_products.product_variant_id', DB::raw('SUM(stocks.quantity) as total'))
             ->pluck('total', 'product_variant_id');
@@ -61,24 +85,26 @@ class StockController extends Controller
             ->with('product:id,name,unit_value')
             ->get();
 
-        $summary = $variants->map(function (ProductVariant $variant) use ($totalIn, $totalOut) {
-            $in  = (int) ($totalIn[$variant->id]  ?? 0);
-            $out = (int) ($totalOut[$variant->id] ?? 0);
+        return $variants->map(fn (ProductVariant $variant) => $this->summaryRow(
+            $variant,
+            (int) ($totalIn[$variant->id] ?? 0),
+            (int) ($totalOut[$variant->id] ?? 0),
+        ))->sortByDesc('total_out')->values();
+    }
 
-            return [
-                'product_id'         => $variant->product_id,
-                'product_variant_id' => $variant->id,
-                'code'               => $variant->code,
-                'name'               => $variant->product?->name,
-                'variant_name'       => $variant->name,
-                'unit_value'         => $variant->product?->unit_value,
-                'total_in'           => $in,
-                'total_out'          => $out,
-                'balance'            => $in - $out,
-            ];
-        })->sortByDesc('total_out')->values();
-
-        return response()->json(['data' => $summary]);
+    private function summaryRow(ProductVariant $variant, int $in, int $out): array
+    {
+        return [
+            'product_id'         => $variant->product_id,
+            'product_variant_id' => $variant->id,
+            'code'               => $variant->code,
+            'name'               => $variant->product?->name,
+            'variant_name'       => $variant->name,
+            'unit_value'         => $variant->product?->unit_value,
+            'total_in'           => $in,
+            'total_out'          => $out,
+            'balance'            => $in - $out,
+        ];
     }
 
     public function show(Stock $stock)

@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import { useStocks } from "../../store/StoreStocks";
 import { useUsers as useUser } from "../../store/StoreUsers";
 import useQuery from "../../store/StoreQuery";
@@ -13,10 +14,11 @@ import loadingStore from "../../store/StoreLoading";
 import { PAGE_STOCK } from "../../constants";
 
 const store = useStocks();
-const { getStocks, getSummary, getSelectedVariantId, getSelectedVariant } = storeToRefs(store);
-const { fetchStocks, fetchSummary, setPaginator, selectVariant } = store;
+const { getStocks, getSummary } = storeToRefs(store);
+const { fetchStocks, fetchSummary, setPaginator, resetUrl } = store;
 const { getUserCan } = storeToRefs(useUser());
 const { setQuery, removeQuery } = useQuery();
+const router = useRouter();
 
 const searchInput = ref("");
 
@@ -32,13 +34,16 @@ const onSearch = (val) => {
 };
 
 onMounted(() => {
+    // Návrat z detailu položky — zoznam sa vracia na všetky pohyby.
+    resetUrl();
     fetchSummary();
     fetchStocks();
 });
 
 const paginatorUrl = (url) => setPaginator(url);
 
-const onClickVariant = (variantId) => selectVariant(variantId);
+const onClickVariant = (variantId) =>
+    router.push({ name: 'stocks.show', params: { variantId } });
 
 const balanceClass = (balance) => {
     if (balance > 10) return 'text-green-700 font-bold';
@@ -62,7 +67,7 @@ const balanceClass = (balance) => {
                 <div class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                     <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
                         <h2 class="text-sm font-semibold text-gray-700">Stav skladu</h2>
-                        <p class="mt-0.5 text-xs text-gray-400">Kliknutím na produkt zobrazíte jeho pohyby</p>
+                        <p class="mt-0.5 text-xs text-gray-400">Kliknutím na produkt otvoríte jeho pohyby</p>
                     </div>
 
                     <div v-if="!getSummary.length" class="px-5 py-10 text-center text-sm text-gray-400">
@@ -84,11 +89,15 @@ const balanceClass = (balance) => {
                                     v-for="item in getSummary"
                                     :key="item.product_variant_id"
                                     class="cursor-pointer transition hover:bg-blue-50"
-                                    :class="getSelectedVariantId === item.product_variant_id ? 'bg-blue-50 ring-1 ring-inset ring-blue-300' : ''"
                                     @click="onClickVariant(item.product_variant_id)"
                                 >
                                     <td class="px-4 py-3">
-                                        <div class="font-semibold text-gray-900">{{ item.name }}</div>
+                                        <router-link
+                                            :to="{ name: 'stocks.show', params: { variantId: item.product_variant_id } }"
+                                            class="font-semibold text-gray-900 hover:text-blue-700 hover:underline"
+                                        >
+                                            {{ item.name }}
+                                        </router-link>
                                         <div v-if="item.variant_name" class="text-xs font-medium text-blue-700">
                                             {{ item.variant_name }}
                                         </div>
@@ -113,24 +122,8 @@ const balanceClass = (balance) => {
 
                 <!-- Pohyby -->
                 <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                    <div class="border-b border-gray-100 bg-gray-50 px-5 py-3 flex items-center justify-between">
-                        <div>
-                            <h2 class="text-sm font-semibold text-gray-700">
-                                Pohyby
-                                <span v-if="getSelectedVariant" class="ml-1 font-normal text-blue-600">
-                                    — {{ getSelectedVariant.name }}
-                                    <span v-if="getSelectedVariant.variant_name">({{ getSelectedVariant.variant_name }})</span>
-                                </span>
-                            </h2>
-                        </div>
-                        <button
-                            v-if="getSelectedVariantId"
-                            type="button"
-                            class="text-xs text-gray-400 hover:text-gray-700"
-                            @click="onClickVariant(getSelectedVariantId)"
-                        >
-                            × Zrušiť filter
-                        </button>
+                    <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
+                        <h2 class="text-sm font-semibold text-gray-700">Pohyby</h2>
                     </div>
 
                     <!-- Filter -->

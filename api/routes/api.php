@@ -92,7 +92,11 @@ Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::post('/product/{product}/image/reorder', [ProductImageController::class, 'reorder'])->name('product.image.reorder');
 
+    // Musí byť pred apiResource('stocks'), inak by "summary" pohltilo {stock}.
     Route::get('stocks/summary', [StockController::class, 'summary'])->name('stocks.summary');
+    Route::get('stocks/summary/{variantId}', [StockController::class, 'variantSummary'])
+        ->whereNumber('variantId')
+        ->name('stocks.summary.variant');
 
     // Musí byť pred apiResource('customers'), inak by "export" pohltilo {customer}.
     Route::get('customers/export/attributes', [CustomerExportController::class, 'attributes'])->name('customers.export.attributes');

@@ -23,6 +23,18 @@ const stock = [
             superAdminOnly: true,
         },
     },
+    {
+        // Číselné obmedzenie, aby /sklad/create nespadlo do detailu.
+        path: '/sklad/:variantId(\\d+)',
+        name: 'stocks.show',
+        components: {
+            default: () => import('../components/stock/StockShow.vue'),
+        },
+        meta: {
+            title: 'Sklad - pohyby položky',
+            superAdminOnly: true,
+        },
+    },
 ];
 
 export default stock;

@@ -27,6 +27,7 @@ interface StocksState {
     url: string;
     stocks: StockRow[];
     summary: StockSummaryRow[];
+    variantSummary: StockSummaryRow | null;
     selectedVariantId: number | null;
     create: StockCreateForm;
 }
@@ -43,6 +44,7 @@ export const useStocks = defineStore('stocks', {
         url: PAGE_STOCK.URL,
         stocks: [],
         summary: [],
+        variantSummary: null,
         selectedVariantId: null,
         create: emptyCreate(),
     }),
@@ -51,8 +53,7 @@ export const useStocks = defineStore('stocks', {
         getStocks: (s): StockRow[] => s.stocks,
         getSummary: (s): StockSummaryRow[] => s.summary,
         getSelectedVariantId: (s): number | null => s.selectedVariantId,
-        getSelectedVariant: (s): StockSummaryRow | null =>
-            s.summary.find((p) => p.product_variant_id === s.selectedVariantId) ?? null,
+        getVariantSummary: (s): StockSummaryRow | null => s.variantSummary,
     },
 
     actions: {
@@ -64,7 +65,9 @@ export const useStocks = defineStore('stocks', {
                     q.stringForUrl ? q.stringForUrl.slice(1) : '',
                     this.selectedVariantId ? `byVariant=${this.selectedVariantId}` : '',
                 ].filter(Boolean);
-                const qs = parts.length ? `?${parts.join('&')}` : '';
+                // this.url môže už niesť ?page=N z paginátora — filtre sa musia pripojiť cez &.
+                const separator = this.url.includes('?') ? '&' : '?';
+                const qs = parts.length ? separator + parts.join('&') : '';
                 const response = await axiosInstance.get(this.url + qs);
                 this.stocks = response.data.data;
                 paginator.setPaginator(response.data.meta);
@@ -83,9 +86,20 @@ export const useStocks = defineStore('stocks', {
             }
         },
 
-        selectVariant(variantId: number): void {
-            this.selectedVariantId = this.selectedVariantId === variantId ? null : variantId;
-            this.fetchStocks();
+        async fetchVariantSummary(variantId: number): Promise<void> {
+            try {
+                const response = await axiosInstance.get(`${PAGE_STOCK.URL}/summary/${variantId}`);
+                this.variantSummary = response.data.data;
+            } catch (e) {
+                this.variantSummary = null;
+                useErrors().setErrors(e);
+            }
+        },
+
+        // Prepne zoznam pohybov na jednu skladovú položku (detail /sklad/:id) alebo na všetky.
+        selectVariant(variantId: number | null): void {
+            this.selectedVariantId = variantId;
+            this.url = PAGE_STOCK.URL;
         },
 
         async storeStock(): Promise<void> {
@@ -102,7 +116,11 @@ export const useStocks = defineStore('stocks', {
             if (!window.confirm('Skutočne vymazať pohyb?')) return;
             await axiosInstance.delete(PAGE_STOCK.URL + '/' + id);
             this.fetchStocks();
-            this.fetchSummary();
+            if (this.selectedVariantId) {
+                this.fetchVariantSummary(this.selectedVariantId);
+            } else {
+                this.fetchSummary();
+            }
         },
 
         // Vlastná akcia (nezamieňať s paginátorovým setPaginator voľaným vo fetchStocks).
@@ -114,6 +132,7 @@ export const useStocks = defineStore('stocks', {
         resetUrl(): void {
             this.url = PAGE_STOCK.URL;
             this.selectedVariantId = null;
+            this.variantSummary = null;
         },
     },
 });
