@@ -1,6 +1,8 @@
 <script setup>
 import { reactive, ref, watch } from "vue";
+import { storeToRefs } from "pinia";
 import useQuery from "../../store/StoreQuery";
+import { useAdminUsers } from "../../store/StoreAdminUsers";
 
 const search = reactive({
     key: "bySearchInput=",
@@ -8,7 +10,9 @@ const search = reactive({
 });
 
 const role = ref("");
+const status = ref("");
 const { setQuery, removeQuery } = useQuery();
+const { getStatuses } = storeToRefs(useAdminUsers());
 
 watch(search, () => {
     setQuery(search);
@@ -16,6 +20,10 @@ watch(search, () => {
 
 watch(role, () => {
     role.value ? setQuery("role=" + role.value) : removeQuery("role=");
+});
+
+watch(status, () => {
+    status.value ? setQuery("status=" + status.value) : removeQuery("status=");
 });
 
 const clearInput = () => {
@@ -26,7 +34,7 @@ const clearInput = () => {
 
 <template>
     <div class="filter-panel">
-        <div class="grid gap-4 md:grid-cols-3">
+        <div class="grid gap-4 md:grid-cols-4">
             <div class="filter-field md:col-span-2">
                 <label class="filter-label" for="user-search">Hladanie pouzivatela</label>
                 <div class="filter-control">
@@ -51,7 +59,7 @@ const clearInput = () => {
 
             <div class="filter-field">
                 <label class="filter-label" for="user-role">Rola</label>
-                <select id="user-role" v-model="role" class="filter-input">
+                <select id="user-role" v-model="role" class="filter-select">
                     <option value="">Vsetky role</option>
                     <option value="super-admin">Super admin</option>
                     <option value="admin">Admin</option>
@@ -59,6 +67,16 @@ const clearInput = () => {
                     <option value="sales">Sales</option>
                     <option value="warehouse">Warehouse</option>
                     <option value="customer">Customer</option>
+                </select>
+            </div>
+
+            <div v-if="getStatuses.length" class="filter-field">
+                <label class="filter-label" for="user-status">Status</label>
+                <select id="user-status" v-model="status" class="filter-select">
+                    <option value="">Vsetky statusy</option>
+                    <option v-for="item in getStatuses" :key="item.value" :value="item.value">
+                        {{ item.label }}
+                    </option>
                 </select>
             </div>
         </div>

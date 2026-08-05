@@ -14,6 +14,7 @@ interface OrdersState {
     orders: any[];
     order: Record<string, any>;
     customer: Record<string, any>;
+    statuses: any[];
     statistics: {
         orders: Record<string, any>;
         products: any[];
@@ -33,6 +34,7 @@ export const useOrders = defineStore("orders", {
         orders: [],
         order: {},
         customer: {},
+        statuses: [],
         statistics: {
             orders: {},
             products: [],
@@ -44,6 +46,7 @@ export const useOrders = defineStore("orders", {
         getOrders: (state): any[] => state.orders,
         getOrder: (state): Record<string, any> => state.order,
         getOrderStatistics: (state) => state.statistics,
+        getStatuses: (state): any[] => state.statuses,
         isOrderFinished: (state): boolean => state.order.isFinished,
     },
 
@@ -63,6 +66,7 @@ export const useOrders = defineStore("orders", {
                 }
 
                 this.orders = response.data.data;
+                this.statuses = response.data.meta?.statuses || this.statuses;
                 setPaginator(response.data.meta);
                 setLinks(response.data.links);
             } catch (e) {

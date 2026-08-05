@@ -1,12 +1,14 @@
 <script setup>
-import { onUnmounted, reactive, watch } from "vue";
+import { onUnmounted, reactive, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import useOrders from "../../store/StoreOrders";
 import useQuery from "../../store/StoreQuery";
 import FilterOrderLabel from "./FilterOrderLabel.vue";
 import { isActive, isConfirmed, isDeleted, isNotificated, resetFilter } from "../../models/filterLabels";
 
-const { fetchOrders } = useOrders();
+const ordersStore = useOrders();
+const { fetchOrders } = ordersStore;
+const { getStatuses } = storeToRefs(ordersStore);
 const queryStore = useQuery();
 const { getQuery } = storeToRefs(queryStore);
 const { setQuery, removeQuery, resetQuery } = queryStore;
@@ -16,6 +18,8 @@ const input = reactive({
     customer: null,
     product: null,
 });
+
+const status = ref("");
 
 watch(getQuery, () => {
     fetchOrders();
@@ -39,9 +43,16 @@ const clearInputProduct = () => {
     removeQuery({ key: 'searchByProduct=' });
 };
 
+watch(status, () => {
+    status.value
+        ? setQuery({ key: 'status=', value: status.value })
+        : removeQuery({ key: 'status=' });
+});
+
 const onClearQuery = () => {
     input.customer = null;
     input.product = null;
+    status.value = "";
     resetQuery();
     labelList.forEach(item => item.active = false);
 };
@@ -55,13 +66,18 @@ const onClickLabel = (object) => {
 
     resetQuery();
     setQuery(object.key + object.value);
+
+    // Label resetuje celý query — status filter drž ďalej zapnutý.
+    if (status.value) {
+        setQuery({ key: 'status=', value: status.value });
+    }
 };
 </script>
 
 <template>
     <div class="filter-panel">
         <div class="filter-grid">
-            <div class="filter-grid-2">
+            <div class="grid gap-4 md:grid-cols-3">
                 <div class="filter-field">
                     <label class="filter-label" for="order-customer-search">Hľadanie zákazníka</label>
                     <div class="filter-control">
@@ -86,6 +102,16 @@ const onClickLabel = (object) => {
                             ×
                         </button>
                     </div>
+                </div>
+
+                <div v-if="getStatuses.length" class="filter-field">
+                    <label class="filter-label" for="order-status">Status</label>
+                    <select id="order-status" v-model="status" class="filter-select">
+                        <option value="">Všetky statusy</option>
+                        <option v-for="item in getStatuses" :key="item.value" :value="item.value">
+                            {{ item.label }}
+                        </option>
+                    </select>
                 </div>
             </div>
 

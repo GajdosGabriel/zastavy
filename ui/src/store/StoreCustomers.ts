@@ -63,6 +63,7 @@ export const useCustomers = defineStore("customers", {
                 );
 
                 this.customers = response.data.data;
+                this.statuses = response.data.meta?.statuses || this.statuses;
                 setPaginator(response.data.meta);
                 setLinks(response.data.links);
             } catch (error) {

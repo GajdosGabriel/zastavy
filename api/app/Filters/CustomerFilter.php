@@ -2,6 +2,7 @@
 
 namespace App\Filters;
 
+use App\Enums\ModelStatus;
 use App\Models\Order;
 use App\Models\Customer;
 use Illuminate\Http\Request;
@@ -10,7 +11,18 @@ use Illuminate\Database\Eloquent\Builder;
 class CustomerFilter extends Filters
 {
 
-    protected $filters = ['sortByOrders', 'bySearchInput', 'sortById', 'isMarked', 'withoutOrder'];
+    protected $filters = ['sortByOrders', 'bySearchInput', 'sortById', 'isMarked', 'withoutOrder', 'status'];
+
+    public function status($value)
+    {
+        $status = ModelStatus::tryFrom((string) $value);
+
+        if (! $status) {
+            return $this->builder;
+        }
+
+        return $this->builder->where('status', $status->value);
+    }
 
     public function bySearchInput($company)
     {

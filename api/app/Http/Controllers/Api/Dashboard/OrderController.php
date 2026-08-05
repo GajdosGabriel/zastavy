@@ -35,7 +35,12 @@ class OrderController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate();
 
-        return OrderIndexResource::collection($orders);
+        // Zoznam statusov ide v meta, aby ho filter v zozname vedel vyrenderovať.
+        return OrderIndexResource::collection($orders)->additional([
+            'meta' => [
+                'statuses' => array_map(fn (OrderStatus $status) => $status->toArray(), OrderStatus::cases()),
+            ],
+        ]);
     }
 
     public function statistics(OrderFilter $orderFilters, OrderStatisticsService $statistics)

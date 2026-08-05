@@ -66,10 +66,22 @@ class UserController extends Controller
             ->when($request->filled('role'), function ($query) use ($request) {
                 $query->role($request->string('role')->toString());
             })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $status = ModelStatus::tryFrom($request->string('status')->toString());
+
+                if ($status) {
+                    $query->withStatus($status);
+                }
+            })
             ->latest()
             ->paginate();
 
-        return UserIndexResource::collection($users);
+        // Zoznam statusov ide v meta, aby ho filter v zozname vedel vyrenderovať.
+        return UserIndexResource::collection($users)->additional([
+            'meta' => [
+                'statuses' => ModelStatus::allowedForUserAccount($request->user()),
+            ],
+        ]);
     }
 
     public function create()

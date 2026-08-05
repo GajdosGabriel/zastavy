@@ -20,7 +20,8 @@ class CustomerController extends Controller
 
         $customers = Customer::with('users')->filter($customerFilter)->latest()->paginate();
 
-        return CustomerResource::collection($customers);
+        // Zoznam statusov ide v meta, aby ho filter v zozname vedel vyrenderovať.
+        return CustomerResource::collection($customers)->additional($this->formOptions());
     }
 
     public function show(Customer $customer)
