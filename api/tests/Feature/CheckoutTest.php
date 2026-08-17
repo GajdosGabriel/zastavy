@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
 use App\Models\User;
+use App\Notifications\OrderCreated;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
@@ -245,6 +246,41 @@ class CheckoutTest extends TestCase
         ])->assertOk();
 
         $this->assertDatabaseHas('order_products', ['product_id' => $product->id]);
+    }
+
+    public function test_staff_can_suppress_customer_notification(): void
+    {
+        $product = $this->makeProduct();
+
+        Role::findOrCreate('super-admin', 'web');
+        $staff = User::factory()->create();
+        $staff->assignRole('super-admin');
+        Sanctum::actingAs($staff);
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1, 'active_price' => 25.50],
+            ],
+            'notify_customer' => false,
+        ])->assertOk();
+
+        Notification::assertNotSentTo(Customer::firstOrFail(), OrderCreated::class);
+    }
+
+    public function test_public_checkout_cannot_suppress_customer_notification(): void
+    {
+        $product = $this->makeProduct();
+
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1, 'active_price' => 25.50],
+            ],
+            'notify_customer' => false,
+        ])->assertOk();
+
+        Notification::assertSentTo(Customer::firstOrFail(), OrderCreated::class);
     }
 
     public function test_unknown_product_is_rejected(): void

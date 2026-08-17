@@ -148,11 +148,16 @@ export const useCheckouts = defineStore("checkouts", () => {
         carts.value = [];
     };
 
-    const storeCheckout = async (): Promise<string | boolean> => {
+    // notifyCustomer sa posiela iba pri objednávke zadanej internou obsluhou —
+    // verejný e-shop potvrdenie zákazníkovi vždy odosiela (server to aj vynucuje).
+    const storeCheckout = async (
+        { notifyCustomer = true }: { notifyCustomer?: boolean } = {}
+    ): Promise<string | boolean> => {
         const options = useCheckoutOptions();
         try {
             const response = await axiosInstance.post("/checkouts", {
                 customer: useCustomer().getCustomer,
+                notify_customer: notifyCustomer,
                 // Server si cenu aj tak berie z databázy — posielame len identitu a počet.
                 orderProducts: carts.value.map((item) => ({
                     id: item.product_id,

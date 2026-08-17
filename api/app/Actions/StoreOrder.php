@@ -176,7 +176,7 @@ class StoreOrder implements StoreOrderContract
 
             $notification = new OrderCreated($order);
 
-            if ($order->customer?->email) {
+            if ($order->customer?->email && $this->shouldNotifyCustomer()) {
                 $order->customer->notify($notification);
             }
 
@@ -185,6 +185,20 @@ class StoreOrder implements StoreOrderContract
             // Zlyhanie notifikácie nesmie zhodiť vytvorenie objednávky.
             report($e);
         }
+    }
+
+    /**
+     * Potlačiť potvrdzovací e-mail smie iba interná obsluha, ktorá objednávku
+     * zadáva za zákazníka. Verejný e-shop potvrdenie dostane vždy — request
+     * z prehliadača nesmie vedieť e-mail zákazníkovi „vypnúť“.
+     */
+    protected function shouldNotifyCustomer(): bool
+    {
+        if (! $this->isStaffRequest()) {
+            return true;
+        }
+
+        return $this->request->boolean('notify_customer', true);
     }
 
     protected function serialNumber(Order $order): void

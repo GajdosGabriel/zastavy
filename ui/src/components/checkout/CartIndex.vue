@@ -1,9 +1,10 @@
 <script setup>
 import BaseLayout from "../layout/BaseLayout.vue";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { storeToRefs } from "pinia";
 import useCheckouts from "../../store/StoreCheckouts";
 import useCustomers from "../../store/StoreCustomers";
+import { useUsers } from "../../store/StoreUsers";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
 import { formatDecimal } from "../../models/functions";
@@ -25,7 +26,12 @@ const customersStore = useCustomers();
 const { getCustomer } = storeToRefs(customersStore);
 const { setCustomer } = customersStore;
 const { getFieldErrors } = storeToRefs(useErrors());
+const { getUser } = storeToRefs(useUsers());
 const isSubmitting = ref(false);
+
+const isSuperAdmin = computed(() => Boolean(getUser.value?.roles?.includes("super-admin")));
+const notifyCustomer = ref(true);
+const showSubmitModal = ref(false);
 
 const parseStoredCustomer = () => {
       try {
@@ -60,9 +66,26 @@ const onClickForm = async () => {
             return alert("Objednávka je prázdna!");
       }
 
+      // Super-admin zadáva objednávku za zákazníka — nech si sám zvolí,
+      // či mu má odísť potvrdzovací e-mail.
+      if (isSuperAdmin.value) {
+            notifyCustomer.value = true;
+            showSubmitModal.value = true;
+            return;
+      }
+
+      await submitOrder(true);
+};
+
+const submitOrder = async (sendNotification = notifyCustomer.value) => {
+      if (isSubmitting.value) {
+            return;
+      }
+
       isSubmitting.value = true;
-      const result = await storeCheckout();
+      const result = await storeCheckout({ notifyCustomer: Boolean(sendNotification) });
       isSubmitting.value = false;
+      showSubmitModal.value = false;
 
       if (result) {
             const uuid = typeof result === 'string' ? result : null;
@@ -253,6 +276,36 @@ const onClickForm = async () => {
                 </div>
 
             </div>
+
+            <!-- Modal: odoslanie objednávky (len super-admin) -->
+            <Teleport to="body">
+                <div v-if="showSubmitModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+                    <div class="w-full max-w-sm rounded bg-white p-5 shadow-lg">
+                        <h3 class="mb-3 text-lg font-semibold text-gray-800">Odoslať objednávku</h3>
+                        <p class="mb-4 text-sm text-gray-600">
+                            Vytvoriť objednávku pre {{ getCustomer.company || getCustomer.name || 'zákazníka' }}?
+                        </p>
+                        <label class="mb-5 flex items-center gap-2 text-sm text-gray-700">
+                            <input type="checkbox" v-model="notifyCustomer" class="rounded" />
+                            Poslať zákazníkovi e-mail o objednávke
+                        </label>
+                        <div class="flex justify-end gap-2">
+                            <button type="button" @click="showSubmitModal = false"
+                                class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                                Zrušiť
+                            </button>
+                            <button type="button" @click="submitOrder()" :disabled="isSubmitting"
+                                class="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400">
+                                <svg v-if="isSubmitting" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
+                                Potvrdiť
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Teleport>
         </template>
     </BaseLayout>
 </template>
