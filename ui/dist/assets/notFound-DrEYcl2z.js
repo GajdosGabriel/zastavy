@@ -1,1 +1,0 @@
-import{_ as o}from"./BaseLayout-gBwffhc_.js";import{D as r,h as e,w as n,d as s,o as t}from"./index-CSYDMobj.js";const _=r({__name:"notFound",setup(i){return(d,a)=>(t(),e(o,null,{main:n(()=>[...a[0]||(a[0]=[s("div",{class:"p-3 order-first"},[s("div",{class:"md:grid grid-cols-2 gap-8"}," Stránka sa nenašla ")],-1)])]),_:1}))}});export{_ as default};
