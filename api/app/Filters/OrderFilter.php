@@ -8,7 +8,31 @@ use Illuminate\Database\Eloquent\Builder;
 class OrderFilter extends Filters
 {
 
-    protected $filters = ['isActive', 'bySearchInput', 'isOpened', 'isMarked', 'isDeleted', 'searchByProduct', 'isNotificated', 'status'];
+    protected $filters = ['isActive', 'bySearchInput', 'isOpened', 'isMarked', 'isDeleted', 'searchByProduct', 'isNotificated', 'status', 'shippedAt'];
+
+    /**
+     * Objednávky s expedíciou (dodacím listom) vytvorenou v danom období.
+     * Hodnoty: dnes | tyzden | mesiac
+     */
+    public function shippedAt($value)
+    {
+        $now = now();
+
+        $range = match ((string) $value) {
+            'dnes'   => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
+            'tyzden' => [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()],
+            'mesiac' => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()],
+            default  => null,
+        };
+
+        if (! $range) {
+            return $this->builder;
+        }
+
+        return $this->builder->whereHas('shippings', function ($query) use ($range) {
+            $query->whereBetween('created_at', $range);
+        });
+    }
 
     /**
      * Status objednávky je z časti vypočítaný (OrderStatus::fromOrder), preto sa

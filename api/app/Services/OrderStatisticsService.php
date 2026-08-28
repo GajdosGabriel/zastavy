@@ -49,6 +49,7 @@ class OrderStatisticsService
             ->count();
         $orderRows = $this->orderRows(clone $ordersQuery);
         $productRows = $this->productRows(clone $ordersQuery);
+        $shippedAt = $orderFilters->getFilters()['shippedAt'] ?? null;
 
         return [
             'orders' => $this->orderSummary($orderRows, $notificationMissingCount),
@@ -56,6 +57,7 @@ class OrderStatisticsService
             'undelivered_products' => $productRows
                 ->where('remaining_quantity', '>', 0)
                 ->values(),
+            'shipped' => $this->shippedSummary(clone $ordersQuery, $shippedAt),
         ];
     }
 
@@ -206,5 +208,88 @@ class OrderStatisticsService
                 'remaining_quantity' => (int) $product->remaining_quantity,
                 'total' => (float) $product->total,
             ]);
+    }
+
+    /**
+     * Hodnota tovaru expedovaného vo zvolenom období.
+     * Počíta sa z dodacích listov (shippings.created_at) a ich skladových pohybov,
+     * takže pri objednávke expedovanej vo viacerých dňoch započíta len daný deň.
+     */
+    private function shippedSummary(Builder $ordersQuery, ?string $shippedAt): ?array
+    {
+        if (! $shippedAt) {
+            return null;
+        }
+
+        $now = now();
+
+        $range = match ($shippedAt) {
+            'dnes'   => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
+            'tyzden' => [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()],
+            'mesiac' => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()],
+            default  => null,
+        };
+
+        if (! $range) {
+            return null;
+        }
+
+        $orderIds = (clone $ordersQuery)->select('orders.id')->pluck('id');
+
+        $base = [
+            'period_label' => match ($shippedAt) {
+                'dnes'   => 'Dnes',
+                'tyzden' => 'Tento týždeň',
+                'mesiac' => 'Tento mesiac',
+                default  => $shippedAt,
+            },
+            'total_value' => 0.0,
+            'total_quantity' => 0,
+            'order_count' => 0,
+            'products' => [],
+        ];
+
+        if ($orderIds->isEmpty()) {
+            return $base;
+        }
+
+        $products = DB::table('stocks')
+            ->join('shippings', 'shippings.id', '=', 'stocks.shipping_id')
+            ->join('order_products', 'order_products.id', '=', 'stocks.order_product_id')
+            ->leftJoin('products', 'products.id', '=', 'order_products.product_id')
+            ->whereNull('stocks.deleted_at')
+            ->whereNull('order_products.deleted_at')
+            ->whereNull('products.deleted_at')
+            ->whereIn('stocks.order_id', $orderIds)
+            ->whereBetween('shippings.created_at', $range)
+            ->select('order_products.product_id', 'products.name', 'products.unit_value')
+            ->selectRaw('SUM(stocks.quantity) as shipped_quantity')
+            ->selectRaw('SUM(stocks.quantity * COALESCE(order_products.price, 0)) as shipped_total')
+            ->selectRaw('COUNT(DISTINCT stocks.order_id) as order_count')
+            ->groupBy('order_products.product_id', 'products.name', 'products.unit_value')
+            ->orderByDesc('shipped_total')
+            ->orderBy('products.name')
+            ->get()
+            ->map(fn ($product) => [
+                'product_id' => $product->product_id,
+                'name' => $product->name ?? 'Neznámy tovar',
+                'unit_value' => $product->unit_value ?? 'ks',
+                'shipped_quantity' => (int) $product->shipped_quantity,
+                'order_count' => (int) $product->order_count,
+                'total' => (float) $product->shipped_total,
+            ]);
+
+        $base['products'] = $products->values()->all();
+        $base['total_value'] = round($products->sum('total'), 2);
+        $base['total_quantity'] = (int) $products->sum('shipped_quantity');
+
+        // Počet objednávok expedovaných v danom období (unikátne objednávky, nie riadky).
+        $base['order_count'] = DB::table('shippings')
+            ->whereIn('order_id', $orderIds)
+            ->whereBetween('created_at', $range)
+            ->distinct()
+            ->count('order_id');
+
+        return $base;
     }
 }

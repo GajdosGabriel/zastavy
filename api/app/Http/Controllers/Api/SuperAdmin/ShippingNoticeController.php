@@ -7,7 +7,6 @@ use App\Models\Shipping;
 use App\Notifications\OrderExpedition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Notification;
 
 class ShippingNoticeController extends Controller
 {
@@ -15,11 +14,27 @@ class ShippingNoticeController extends Controller
     {
         Gate::authorize('shippings.notices');
 
-        $shipping->notices()->create(['notice' => $request->input('notifyType')]);
+        $notifyType = $request->input('notifyType', 'email');
 
-        if ($request->notifyType == 'email') {
-            $shipping->loadMissing('order.user');
-            Notification::send(collect([$shipping->order->user])->filter()->all(), new OrderExpedition($shipping->order, $shipping));
+        $shipping->notices()->create(['notice' => $notifyType]);
+
+        if ($notifyType === 'email') {
+            $shipping->loadMissing([
+                'order.customer',
+                'order.user',
+                'order.shippingMethod',
+                'order.paymentMethod',
+                'order.orderProducts.product',
+                'order.orderProducts.stocks',
+            ]);
+
+            $notifiable = $shipping->order->customer ?? $shipping->order->user;
+
+            if ($notifiable?->email) {
+                $notifiable->notify(new OrderExpedition($shipping->order, $shipping));
+            }
         }
+
+        return response()->noContent();
     }
 }
