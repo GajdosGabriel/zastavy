@@ -74,12 +74,16 @@ class OrderFilter extends Filters
 
     public function isActive($value)
     {
+        $ordered = '(select coalesce(sum(op.quantity), 0) from order_products op where op.order_id = orders.id and op.deleted_at is null)';
+        $storno  = '(select coalesce(sum(op.storno), 0) from order_products op where op.order_id = orders.id and op.deleted_at is null)';
+
         return $this->builder
             ->whereDoesntHave('stocks')
             ->where(function ($query) {
                 $query->whereNull('status')
                     ->orWhere('status', '!=', OrderStatus::Cancelled->value);
-            });
+            })
+            ->whereRaw("{$ordered} > {$storno}");
     }
 
     public function isOpened($value)

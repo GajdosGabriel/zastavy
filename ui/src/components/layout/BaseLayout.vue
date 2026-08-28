@@ -12,7 +12,7 @@ import loadingStore from '../../store/StoreLoading';
 import GlobalErrorPanel from '../plugins/GlobalErrorPanel.vue';
 
 const route = useRoute();
-const showHeaderContactStrip = computed(() => route.name === 'public.index');
+const showHeaderContactStrip = computed(() => ['public.index', 'public.contactUs'].includes(route.name));
 
 </script>
 <template>
