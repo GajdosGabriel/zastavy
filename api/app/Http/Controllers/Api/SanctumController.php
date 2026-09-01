@@ -16,7 +16,9 @@ class SanctumController extends Controller
     public function login(Request $request)
     {
 
-        $user = User::where('email', $request->email)->first();
+        // Ten istý e-mail môže mať viac kontaktných záznamov (tá istá osoba
+        // objednáva za viac firiem). Prihlasuje sa najstarší — pôvodný účet.
+        $user = User::where('email', $request->email)->orderBy('id')->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([

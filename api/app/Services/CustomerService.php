@@ -66,14 +66,45 @@ class CustomerService
             return null;
         }
 
-        $user = User::withTrashed()->where('email', $email)->first();
-
-        if ($user) {
-            return $user;
-        }
-
         $username = $this->contactName($request) ?: $email;
         [$firstName, $lastName] = $this->nameParts($request, $username);
+        $phone = $request['phone'] ?? null;
+
+        // Kontaktná osoba sa hľadá iba v rámci firmy. E-mail nie je globálny
+        // identifikátor zákazníka — tá istá adresa môže patriť kontaktu inej
+        // firmy a recyklovaním cudzieho záznamu by objednávka skončila
+        // priradená človeku z inej organizácie. Ďalšia kontaktná osoba tej
+        // istej firmy tak dostane vlastný záznam v users.
+        $user = User::withTrashed()
+            ->where('customer_id', $customer->id)
+            ->where('email', $email)
+            ->orderBy('id')
+            ->first();
+
+        if ($user) {
+            // Kontakt objednáva znova po zmazaní — bez obnovenia by objednávka
+            // visela na soft-deleted používateľovi a v zoznamoch by chýbal.
+            if ($user->trashed()) {
+                $user->restore();
+            }
+
+            // Prepisujeme len tým, čo z formulára naozaj prišlo — prázdne pole
+            // nesmie vymazať už uložené meno či telefón.
+            $user->fill(array_filter([
+                'name' => $username,
+                'firstName' => $firstName,
+                'lastName' => $lastName,
+                'username' => $username,
+                'slug' => Str::slug($username),
+                'phone' => $phone,
+            ], fn ($value) => $value !== null && $value !== ''));
+
+            if ($user->isDirty()) {
+                $user->save();
+            }
+
+            return $user;
+        }
 
         return User::create([
             'customer_id' => $customer->id,
@@ -82,7 +113,7 @@ class CustomerService
             'lastName' => $lastName,
             'username' => $username,
             'slug' => Str::slug($username),
-            'phone' => $request['phone'] ?? null,
+            'phone' => $phone,
             'email' => $email,
             'password' => Hash::make(Str::random(32)),
         ]);
