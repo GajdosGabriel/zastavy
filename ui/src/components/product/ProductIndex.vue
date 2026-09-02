@@ -5,6 +5,7 @@ import { useProducts } from "../../store/StoreProducts";
 import { useUsers as useUser } from "../../store/StoreUsers";
 import paginationComponent from "../plugins/pagination.vue";
 import filterPanel from "./FilterPanel.vue";
+import clipboardPanel from "./components/clipboardPanel.vue";
 import tableRowProduct from "./components/tableRowProduct.vue";
 import PageHeader from '../layout/page/pageHeader.vue';
 import PageBottom from '../layout/page/pageBottom.vue';
@@ -76,7 +77,9 @@ const template = (product) => {
 
                         <PageHeader :item="template().page_header" />
 
-                        <filter-panel :quickMark="quickMark" :quickMarkSum="quickMarkSum()" />
+                        <filter-panel />
+
+                        <clipboard-panel v-if="quickMark.length" :items="quickMark" :sum="quickMarkSum()" />
 
                         <table class="min-w-full divide-y divide-gray-200">
                               <thead class="thead">

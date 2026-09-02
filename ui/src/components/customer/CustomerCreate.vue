@@ -1,17 +1,24 @@
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import BaseLayout from "../layout/BaseLayout.vue";
 import PageHeader from "../layout/page/pageHeader.vue";
 import useCustomers from "../../store/StoreCustomers";
 import router from "../../router";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
+import useUnsavedChanges from "../../models/useUnsavedChanges";
 
-const { storeCustomer, resetCustomer } = useCustomers();
+const customersStore = useCustomers();
+const { getCustomer } = storeToRefs(customersStore);
+const { storeCustomer, resetCustomer } = customersStore;
 
 resetCustomer();
 
+const { markAsSaved } = useUnsavedChanges(() => getCustomer.value);
+
 const onClickSaveCustomer = () => {
     storeCustomer();
+    markAsSaved();
     router.push({ name: "customers.index" });
 };
 

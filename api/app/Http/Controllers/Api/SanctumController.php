@@ -38,6 +38,14 @@ class SanctumController extends Controller
             ]);
         }
 
+        if (! $user->active) {
+            throw ValidationException::withMessages([
+                'email' => ['Váš účet je neaktívny. Kontaktujte administrátora.'],
+            ]);
+        }
+
+        $user->recordLogin($request->ip());
+
         return response()->json([
             'token' => $user->createToken('API Token')->plainTextToken
         ]);

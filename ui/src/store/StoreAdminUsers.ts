@@ -21,6 +21,7 @@ interface AdminUsersState {
     user: AdminUser;
     roles: any[];
     statuses: any[];
+    locales: any[];
     portalPermissions: any[];
     customers: any[];
 }
@@ -32,6 +33,7 @@ export const useAdminUsers = defineStore('adminUsers', {
         user: {},
         roles: [],
         statuses: [],
+        locales: [],
         portalPermissions: [],
         customers: [],
     }),
@@ -41,6 +43,7 @@ export const useAdminUsers = defineStore('adminUsers', {
         getUser: (s): AdminUser => s.user,
         getRoles: (s): any[] => s.roles,
         getStatuses: (s): any[] => s.statuses,
+        getLocales: (s): any[] => s.locales,
         getPortalPermissions: (s): any[] => s.portalPermissions,
         getCustomers: (s): any[] => s.customers,
         canManageRoles(): boolean {
@@ -77,6 +80,7 @@ export const useAdminUsers = defineStore('adminUsers', {
                 this.user = response.data.data;
                 this.roles = response.data.meta?.roles || [];
                 this.statuses = response.data.meta?.statuses || [];
+                this.locales = response.data.meta?.locales || [];
                 this.portalPermissions = response.data.meta?.portal_permissions || [];
             } catch (error) {
                 this.user = {};
@@ -89,6 +93,7 @@ export const useAdminUsers = defineStore('adminUsers', {
                 const payload: AdminUser = {
                     ...this.user,
                     status: this.user.status?.value || this.user.status,
+                    active: this.user.active !== false,
                 };
 
                 if (this.canManageRoles) {
@@ -108,6 +113,7 @@ export const useAdminUsers = defineStore('adminUsers', {
                 this.user = response.data.data;
                 this.roles = response.data.meta?.roles || this.roles;
                 this.statuses = response.data.meta?.statuses || this.statuses;
+                this.locales = response.data.meta?.locales || this.locales;
                 this.portalPermissions = response.data.meta?.portal_permissions || this.portalPermissions;
                 await this.fetchUsers();
 
@@ -124,9 +130,22 @@ export const useAdminUsers = defineStore('adminUsers', {
                 const response = await axiosInstance.get(`${PAGE_USER.URL}/create`);
                 this.roles = response.data.meta?.roles || [];
                 this.statuses = response.data.meta?.statuses || [];
+                this.locales = response.data.meta?.locales || [];
                 this.portalPermissions = response.data.meta?.portal_permissions || [];
                 this.customers = response.data.meta?.customers || [];
-                this.user = { roles: [], permissions: [] };
+                this.user = {
+                    roles: [],
+                    permissions: [],
+                    prefix: '',
+                    postfix: '',
+                    position: '',
+                    note: '',
+                    locale: this.locales[0]?.value || '',
+                    active: true,
+                    status: this.statuses.find((s: any) => s.value === 'active')?.value
+                        || this.statuses[0]?.value
+                        || 'active',
+                };
             } catch (error) {
                 useErrors().setErrors(error);
             }
@@ -136,12 +155,15 @@ export const useAdminUsers = defineStore('adminUsers', {
             try {
                 const payload: AdminUser = {
                     ...this.user,
-                    status: this.user.status?.value || this.user.status,
+                    active: this.user.active !== false,
                 };
 
+                // Status a role pri vytváraní smie posielať len super-admin; status ostatným určí API.
                 if (this.canManageRoles) {
+                    payload.status = this.user.status?.value || this.user.status;
                     payload.roles = this.user.roles || [];
                 } else {
+                    delete payload.status;
                     delete payload.roles;
                 }
 

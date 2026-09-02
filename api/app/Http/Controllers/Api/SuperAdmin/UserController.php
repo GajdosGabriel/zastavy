@@ -53,6 +53,7 @@ class UserController extends Controller
                 $query->where(function ($query) use ($search) {
                     $query->where('firstName', 'like', '%' . $search . '%')
                         ->orWhere('lastName', 'like', '%' . $search . '%')
+                        ->orWhere('position', 'like', '%' . $search . '%')
                         ->orWhere('username', 'like', '%' . $search . '%')
                         ->orWhere('email', 'like', '%' . $search . '%')
                         ->orWhere('phone', 'like', '%' . $search . '%')
@@ -72,6 +73,15 @@ class UserController extends Controller
                 if ($status) {
                     $query->withStatus($status);
                 }
+            })
+            ->when($request->filled('login'), function ($query) use ($request) {
+                match ($request->string('login')->toString()) {
+                    'never'    => $query->whereNull('last_login_at'),
+                    'logged'   => $query->whereNotNull('last_login_at'),
+                    'last30'   => $query->where('last_login_at', '>=', now()->subDays(30)),
+                    'over90'   => $query->where('last_login_at', '<', now()->subDays(90)),
+                    default    => $query,
+                };
             })
             ->latest()
             ->paginate();
@@ -104,12 +114,16 @@ class UserController extends Controller
 
         $isSuperAdmin = $request->user()->hasRole('super-admin');
 
-        $fullName = trim(($validated['firstName'] ?? '') . ' ' . ($validated['lastName'] ?? ''));
-        $validated['name']     = $fullName;
-        $validated['username'] = $fullName ?: $validated['email'];
+        $plainName = $this->plainName($validated);
+        $validated['name']     = $this->displayName($validated);
+        $validated['username'] = $plainName ?: $validated['email'];
         $validated['slug']     = Str::slug($validated['username']);
         $validated['uuid']     = (string) Str::uuid();
-        $validated['status']   = $isSuperAdmin ? ModelStatus::Active->value : ModelStatus::Draft->value;
+        // Status vie zvoliť len super-admin; ostatní vytvárajú účet na overenie emailom.
+        $validated['status']   = $isSuperAdmin
+            ? ($validated['status'] ?? ModelStatus::Active->value)
+            : ModelStatus::Draft->value;
+        $validated['active']   = $request->boolean('active', true);
 
         $password = Str::random(12);
         $validated['password'] = bcrypt($password);
@@ -130,9 +144,10 @@ class UserController extends Controller
             return $user;
         });
 
-        $verificationUrl = $isSuperAdmin
-            ? null
-            : route('users.verifyEmail', ['uuid' => $validated['uuid']]);
+        // Overovací link posielame vždy, keď účet ostáva v drafte.
+        $verificationUrl = $validated['status'] === ModelStatus::Draft->value
+            ? route('users.verifyEmail', ['uuid' => $validated['uuid']])
+            : null;
 
         $user->notify(new UserInvited($user, $password, $roles, $verificationUrl));
 
@@ -159,7 +174,7 @@ class UserController extends Controller
     {
         Gate::authorize('view', $user);
 
-        return (new UserIndexResource($user->load(['roles', 'customer'])->loadCount('orders')))
+        return (new UserIndexResource($user->load(['roles', 'customer', 'latestOrder', 'lastUsedToken'])->loadCount('orders')))
             ->additional($this->formOptions($user));
     }
 
@@ -173,8 +188,8 @@ class UserController extends Controller
         $permissions = $validated['permissions'] ?? null;
         unset($validated['roles'], $validated['permissions']);
 
-        $validated['name']     = trim(($validated['firstName'] ?? '') . ' ' . ($validated['lastName'] ?? ''));
-        $validated['username'] = $validated['username'] ?: $validated['name'];
+        $validated['name']     = $this->displayName($validated);
+        $validated['username'] = $validated['username'] ?: $this->plainName($validated);
         $validated['slug']     = Str::slug($validated['username']);
 
         DB::transaction(function () use ($user, $validated, $roles, $permissions, $request) {
@@ -193,6 +208,27 @@ class UserController extends Controller
 
         return (new UserIndexResource($user->refresh()->load(['roles', 'customer'])->loadCount('orders')))
             ->additional($this->formOptions($user));
+    }
+
+    /**
+     * Meno bez titulov — základ pre username a slug.
+     */
+    private function plainName(array $validated): string
+    {
+        return trim(($validated['firstName'] ?? '') . ' ' . ($validated['lastName'] ?? ''));
+    }
+
+    /**
+     * Zobrazované meno vrátane titulov: "Ing. Ján Novák, PhD."
+     */
+    private function displayName(array $validated): string
+    {
+        $prefix = trim((string) ($validated['prefix'] ?? ''));
+        $postfix = trim((string) ($validated['postfix'] ?? ''));
+
+        $name = trim($prefix . ' ' . $this->plainName($validated));
+
+        return $postfix !== '' ? $name . ', ' . $postfix : $name;
     }
 
     private function authorizeCustomerScope(User $authUser, ?int $customerId): void
@@ -241,7 +277,26 @@ class UserController extends Controller
                 ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
                 ->values(),
             'statuses' => ModelStatus::allowedForUserAccount($authUser),
+            'locales' => self::locales(),
         ];
+    }
+
+    /**
+     * Jazyky notifikácií — zoznam drží config, aby sedel s prekladmi v lang/.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    private static function locales(): array
+    {
+        $labels = ['sk' => 'Slovenčina', 'cs' => 'Čeština', 'en' => 'Angličtina'];
+
+        return collect(config('app.supported_locales', []))
+            ->map(fn (string $locale) => [
+                'value' => $locale,
+                'label' => $labels[$locale] ?? strtoupper($locale),
+            ])
+            ->values()
+            ->all();
     }
 
     private function formOptions(User $user): array
@@ -261,6 +316,7 @@ class UserController extends Controller
                         ->values()
                     : [],
                 'statuses' => ModelStatus::allowedForUserAccount($authUser),
+                'locales' => self::locales(),
             ],
         ];
     }

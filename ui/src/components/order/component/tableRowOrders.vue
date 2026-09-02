@@ -43,6 +43,9 @@ const canMarkReadyToShip = computed(() => props.order.permissions?.update?.allow
     && props.order.stock_expedition === 0
     && props.order.status?.value !== "ready_to_ship");
 
+// Vrátiť sa dá len tovar, ktorý už bol expedovaný
+const canCreateReturn = computed(() => Number(props.order.stock_expedition ?? 0) > 0);
+
 const dropdownItems = computed(() => {
     const fixed = (props.order.links || []).map(link => ({
         label: link.label,
@@ -59,7 +62,11 @@ const dropdownItems = computed(() => {
         ? [{ label: "Pripravené na odoslanie", onClick: markReadyToShip }]
         : [];
 
-    return [...fixed, ...readyToShipItem, ...permissionItems];
+    const returnItem = canCreateReturn.value
+        ? [{ label: "Vrátenie tovaru", to: { name: "orders.returns.create", params: { orderId: props.order.id } } }]
+        : [];
+
+    return [...fixed, ...readyToShipItem, ...returnItem, ...permissionItems];
 });
 </script>
 

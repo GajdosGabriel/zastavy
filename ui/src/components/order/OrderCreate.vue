@@ -14,6 +14,7 @@ import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import { storeToRefs } from "pinia";
+import useUnsavedChanges from "../../models/useUnsavedChanges";
 
 const customersStore = useCustomers();
 const { getCustomer } = storeToRefs(customersStore);
@@ -85,6 +86,15 @@ const shippingMethods = ref([]);
 const paymentMethods  = ref([]);
 const selectedShippingId = ref(null);
 const selectedPaymentId  = ref(null);
+
+const { setOriginalData, markAsSaved } = useUnsavedChanges(() => ({
+    customer: getCustomer.value,
+    orderProducts: orderProducts.value,
+    note: ordersStore.order?.note,
+    shipping_method_id: selectedShippingId.value,
+    payment_method_id: selectedPaymentId.value,
+    wants_coupon: wantsCoupon.value,
+}));
 
 const buttonBack = { name: "Späť", spinner: true, link: "/objednavky", icon: "arrow-left" };
 const requiredCustomerFields = ["company", "name", "email", "phone", "street", "postcode", "city"];
@@ -198,6 +208,7 @@ const confirmSave = async (sendNotification = notifyCustomer.value) => {
     showSaveModal.value = false;
 
     if (order?.id) {
+        markAsSaved();
         router.push({ name: "orders.show", params: { orderId: order.id } });
     }
 };
@@ -227,6 +238,9 @@ onMounted(async () => {
 
     const defPayment = paymentMethods.value.find(m => m.name?.toLowerCase().includes('faktúra') || m.name?.toLowerCase().includes('faktura'));
     if (defPayment) selectedPaymentId.value = defPayment.id;
+
+    // Predvyplnené údaje a prednastavená doprava/platba ešte nie sú zmena.
+    setOriginalData();
 });
 </script>
 

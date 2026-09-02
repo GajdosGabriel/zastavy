@@ -9,12 +9,16 @@ import { useAdminUsers } from "../../store/StoreAdminUsers";
 import useErrors from "../../store/StoreErrors";
 import RequiredMark from "../forms/RequiredMark.vue";
 import FormInput from "../forms/FormInput.vue";
+import SearchableSelect from "../forms/SearchableSelect.vue";
+import TitleDatalists from "../forms/TitleDatalists.vue";
+import useUnsavedChanges from "../../models/useUnsavedChanges";
 
 // store.user je reaktívny aj mutovateľný (Pinia proxy); gettery cez storeToRefs.
 const store = useAdminUsers();
 const {
     getRoles,
     getStatuses,
+    getLocales,
     getPortalPermissions,
     getCustomers,
     canManageRoles,
@@ -30,11 +34,17 @@ const fe = (field) => {
     return Array.isArray(e) ? e[0] : (e ?? '');
 };
 
-onMounted(fetchCreateOptions);
+const { setOriginalData, markAsSaved } = useUnsavedChanges(() => store.user);
+
+onMounted(async () => {
+    await fetchCreateOptions();
+    setOriginalData();
+});
 
 const saveUser = async () => {
     const saved = await storeUser();
     if (saved) {
+        markAsSaved();
         router.push({ name: "users.index" });
     }
 };
@@ -53,15 +63,42 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                 </div>
 
                 <form @submit.prevent="saveUser" class="rounded bg-white px-8 pt-6 pb-8 shadow-md">
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <label class="mb-2 block text-sm font-bold text-gray-700">Meno <RequiredMark /></label>
-                            <FormInput v-model="store.user.firstName" placeholder="Meno" required :error="fe('firstName')" field-key="firstName" />
-                        </div>
+                    <TitleDatalists />
 
-                        <div>
-                            <label class="mb-2 block text-sm font-bold text-gray-700">Priezvisko</label>
-                            <FormInput v-model="store.user.lastName" placeholder="Priezvisko" />
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <!-- Meno vrátane titulov pred a za menom -->
+                        <div class="grid grid-cols-2 gap-4 md:col-span-2 md:grid-cols-12">
+                            <div class="md:col-span-2">
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Titul pred</label>
+                                <FormInput
+                                    v-model="store.user.prefix"
+                                    placeholder="Ing."
+                                    list="title-prefix-options"
+                                    :error="fe('prefix')"
+                                    field-key="prefix"
+                                />
+                            </div>
+
+                            <div class="md:col-span-4">
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Meno <RequiredMark /></label>
+                                <FormInput v-model="store.user.firstName" placeholder="Meno" required :error="fe('firstName')" field-key="firstName" />
+                            </div>
+
+                            <div class="md:col-span-4">
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Priezvisko</label>
+                                <FormInput v-model="store.user.lastName" placeholder="Priezvisko" :error="fe('lastName')" field-key="lastName" />
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Titul za</label>
+                                <FormInput
+                                    v-model="store.user.postfix"
+                                    placeholder="PhD."
+                                    list="title-postfix-options"
+                                    :error="fe('postfix')"
+                                    field-key="postfix"
+                                />
+                            </div>
                         </div>
 
                         <div>
@@ -74,14 +111,67 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                             <FormInput v-model="store.user.phone" placeholder="Telefón" :error="fe('phone')" field-key="phone" />
                         </div>
 
-                        <div class="md:col-span-2">
-                            <label class="mb-2 block text-sm font-bold text-gray-700">Zákazník <RequiredMark /></label>
-                            <select v-model="store.user.customer_id" required class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                <option :value="undefined" disabled>— Vybrať zákazníka —</option>
-                                <option v-for="c in getCustomers" :key="c.value" :value="c.value">
-                                    {{ c.label }}
+                        <div>
+                            <label class="mb-2 block text-sm font-bold text-gray-700">Funkcia</label>
+                            <FormInput
+                                v-model="store.user.position"
+                                placeholder="napr. konateľ, referent nákupu"
+                                :error="fe('position')"
+                                field-key="position"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="mb-2 block text-sm font-bold text-gray-700">Jazyk komunikácie</label>
+                            <select
+                                v-model="store.user.locale"
+                                class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                            >
+                                <option v-for="locale in getLocales" :key="locale.value" :value="locale.value">
+                                    {{ locale.label }}
                                 </option>
                             </select>
+                            <p v-if="fe('locale')" class="mt-1 text-xs font-semibold text-red-600">{{ fe('locale') }}</p>
+                            <p v-else class="mt-1 text-xs text-gray-500">Jazyk e-mailov a notifikácií.</p>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="mb-2 block text-sm font-bold text-gray-700">Zákazník <RequiredMark /></label>
+                            <SearchableSelect
+                                v-model="store.user.customer_id"
+                                :options="getCustomers"
+                                placeholder="— Vybrať zákazníka —"
+                                search-placeholder="Hľadať zákazníka podľa názvu alebo mesta…"
+                                empty-text="Žiadny zákazník nezodpovedá hľadaniu"
+                                required
+                                :error="fe('customer_id')"
+                                field-key="customer_id"
+                            />
+                        </div>
+
+                        <!-- Status — len super-admin; ostatní vytvárajú účet ako draft na overenie emailom -->
+                        <div v-if="canManageRoles && getStatuses.length">
+                            <label class="mb-2 block text-sm font-bold text-gray-700">Status <RequiredMark /></label>
+                            <select
+                                v-model="store.user.status"
+                                required
+                                class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                            >
+                                <option v-for="status in getStatuses" :key="status.value" :value="status.value">
+                                    {{ status.label }}
+                                </option>
+                            </select>
+                            <p v-if="fe('status')" class="mt-1 text-xs font-semibold text-red-600">{{ fe('status') }}</p>
+                            <p v-else class="mt-1 text-xs text-gray-500">Draft = účet čaká na overenie emailu.</p>
+                        </div>
+
+                        <!-- Aktívny účet — samostatný vypínač prihlásenia -->
+                        <div>
+                            <label class="mb-2 block text-sm font-bold text-gray-700">Prístup</label>
+                            <label class="inline-flex w-full items-center gap-2 rounded border border-gray-300 px-3 py-2.5 text-sm">
+                                <input v-model="store.user.active" type="checkbox" class="rounded" />
+                                Aktívny účet (môže sa prihlásiť)
+                            </label>
                         </div>
 
                         <!-- Role — len super-admin -->
@@ -109,6 +199,18 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                                     </label>
                                 </div>
                             </div>
+                        </div>
+                        <!-- Interná poznámka — používateľ ju nikdy nevidí -->
+                        <div class="md:col-span-2">
+                            <label class="mb-2 block text-sm font-bold text-gray-700">Interná poznámka</label>
+                            <textarea
+                                v-model="store.user.note"
+                                rows="3"
+                                maxlength="2000"
+                                placeholder="Poznámka pre kolegov — používateľovi sa neposiela."
+                                class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                            ></textarea>
+                            <p v-if="fe('note')" class="mt-1 text-xs font-semibold text-red-600">{{ fe('note') }}</p>
                         </div>
                     </div>
 

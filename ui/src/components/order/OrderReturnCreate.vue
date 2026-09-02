@@ -7,6 +7,7 @@ import buttonLink from "../layout/page/ButtonLink.vue";
 import useOrders from "../../store/StoreOrders";
 import { useReturns } from "../../store/StoreReturns";
 import HtmlEditor from "../forms/HtmlEditor.vue";
+import useUnsavedChanges from "../../models/useUnsavedChanges";
 
 const ordersStore = useOrders();
 const { getOrder } = storeToRefs(ordersStore);
@@ -21,7 +22,15 @@ const note = ref('');
 const submitting = ref(false);
 const quantities = reactive({});
 
-const buttonBack = { name: 'Späť', link: `/objednavky/${orderId}/show`, icon: 'arrow-left' };
+// Späť tam, odkiaľ používateľ prišiel (expedícia, zoznam), inak na detail objednávky
+const buttonBack = computed(() => {
+    const previous = window.history.state?.back;
+    const link = typeof previous === 'string' && !previous.includes('/vratenie')
+        ? previous
+        : `/objednavky/${orderId}/show`;
+
+    return { name: 'Späť', link, icon: 'arrow-left' };
+});
 
 const REASONS = [
     { value: 'not_accepted', label: 'Neprevzatá zásielka' },
@@ -30,9 +39,16 @@ const REASONS = [
     { value: 'other',        label: 'Iný dôvod' },
 ];
 
+const { setOriginalData, markAsSaved } = useUnsavedChanges(() => ({
+    reason: reason.value,
+    note: note.value,
+    quantities: { ...quantities },
+}));
+
 onMounted(async () => {
     await fetchOrder(orderId);
     initQuantities();
+    setOriginalData();
 });
 
 const shippedItems = computed(() =>
@@ -73,6 +89,7 @@ async function submit() {
     submitting.value = false;
 
     if (result) {
+        markAsSaved();
         router.push({ name: 'orders.returns.show', params: { orderId, returnId: result.id } });
     }
 }

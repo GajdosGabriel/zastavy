@@ -39,18 +39,25 @@ const categoriesStore = useCategories();
 const { categories } = storeToRefs(categoriesStore);
 const { fetchCategories } = categoriesStore;
 const productId = computed(() => useRoute().params.productId);
-const { setOriginalData, markAsSaved, isFormChanged } = useUnsavedChanges(() => getProduct.value);
+
+let selectedImageFiles = ref([]);
+let imageUrls = ref([]);
+
+// Obrázky sa ukladajú vlastnými requestmi (poradie aj mazanie hneď), preto
+// do porovnania ide len produkt a súbory, ktoré ešte čakajú na nahratie.
+const formSnapshot = () => {
+    const { images, ...product } = getProduct.value ?? {};
+    return { product, newImages: selectedImageFiles.value.map((file) => file.name) };
+};
+const { setOriginalData, markAsSaved } = useUnsavedChanges(formSnapshot);
 
 onMounted(async () => {
     if (productId.value) {
         await fetchProduct(productId.value);
-        setOriginalData(getProduct.value);
+        setOriginalData();
     }
     fetchCategories();
 });
-
-let selectedImageFiles = ref([]);
-let imageUrls = ref([]);
 
 const handleImageSelected = (event) => {
     if (event.target.files.length === 0) {
@@ -75,8 +82,7 @@ const onSubmitForm = async () => {
         }
 
         await fetchProduct(productId.value);
-        setOriginalData(getProduct.value);
-        markAsSaved();
+        setOriginalData();
         return;
     } else {
         const product = await storeProduct();
@@ -85,8 +91,8 @@ const onSubmitForm = async () => {
         }
     }
 
-    router.push({ name: "products.index" });
     markAsSaved();
+    router.push({ name: "products.index" });
 };
 
 watch(selectedImageFiles, (files) => {
@@ -120,7 +126,12 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
             <div class="page-body col-span-12">
                 <PageHeader :item="{ title: pageTitle, buttonLink: buttonBack }" />
 
-                <form @submit.prevent="onSubmitForm" enctype="multipart/form-data" class="space-y-5 mb-6">
+                <form @submit.prevent="onSubmitForm" enctype="multipart/form-data" class="mb-6">
+
+                    <div class="grid items-start gap-5 lg:grid-cols-2">
+
+                    <!-- Ľavý stĺpec -->
+                    <div class="space-y-5">
 
                     <!-- Základné info -->
                     <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -161,7 +172,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Jednotky a DPH</h2>
                         </div>
                         <div class="px-6 py-5">
-                            <div class="grid gap-4 sm:grid-cols-3">
+                            <div class="grid gap-4 sm:grid-cols-2">
                                 <div>
                                     <label class="mb-1.5 block text-sm font-medium text-gray-700" for="unit_value">
                                         Jednotka <RequiredMark />
@@ -210,8 +221,10 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                         </div>
                     </section>
 
-                    <!-- Varianty: cena a sklad žijú tu, nie na produkte -->
-                    <VariantEditor :productId="productId" />
+                    </div><!-- /ľavý stĺpec -->
+
+                    <!-- Pravý stĺpec -->
+                    <div class="space-y-5">
 
                     <!-- Kategórie -->
                     <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -290,8 +303,17 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                         </div>
                     </section>
 
+                    </div><!-- /pravý stĺpec -->
+
+                    <!-- Varianty: cena a sklad žijú tu, nie na produkte -->
+                    <div class="lg:col-span-2">
+                        <VariantEditor :productId="productId" />
+                    </div>
+
+                    </div><!-- /grid -->
+
                     <!-- Akcie -->
-                    <div class="flex justify-between">
+                    <div class="mt-5 flex justify-between">
                         <buttonRouterLink :item="buttonBack" />
                         <buttonSubmitComponent :item="buttonSubmit" />
                     </div>

@@ -9,6 +9,7 @@ import FormInput from "../forms/FormInput.vue";
 import HtmlEditor from "../forms/HtmlEditor.vue";
 import router from "../../router";
 import { useAnnouncements } from "../../store/StoreAnnouncements";
+import useUnsavedChanges from "../../models/useUnsavedChanges";
 
 const store = useAnnouncements();
 const { announcement, getStatuses, getPlacements, getStyleClasses } = storeToRefs(store);
@@ -16,9 +17,12 @@ const { fetchAnnouncement, fetchAnnouncements, saveAnnouncement, resetAnnounceme
 
 const announcementId = computed(() => useRoute().params.announcementId);
 
+const { setOriginalData, markAsSaved } = useUnsavedChanges(() => announcement.value);
+
 onMounted(async () => {
     if (announcementId.value) {
         await fetchAnnouncement(announcementId.value);
+        setOriginalData();
         return;
     }
 
@@ -29,10 +33,13 @@ onMounted(async () => {
     if (!getPlacements.value.length) {
         await fetchAnnouncements();
     }
+
+    setOriginalData();
 });
 
 const onSubmitForm = async () => {
     if (await saveAnnouncement()) {
+        markAsSaved();
         router.push({ name: "announcements.index" });
     }
 };

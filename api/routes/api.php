@@ -94,6 +94,7 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
     // Musí byť pred apiResource('stocks'), inak by "summary" pohltilo {stock}.
     Route::get('stocks/summary', [StockController::class, 'summary'])->name('stocks.summary');
+    Route::get('stocks/variants', [StockController::class, 'variants'])->name('stocks.variants');
     Route::get('stocks/summary/{variantId}', [StockController::class, 'variantSummary'])
         ->whereNumber('variantId')
         ->name('stocks.summary.variant');

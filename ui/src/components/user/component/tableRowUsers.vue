@@ -5,7 +5,7 @@ import PanelDropdown from "../../layout/PanelDropdown.vue";
 const props = defineProps(["user"]);
 
 const fullName = (user) => {
-    return [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || "-";
+    return user.fullName || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || "-";
 };
 
 const dropdownItems = computed(() => [
@@ -41,6 +41,9 @@ const dropdownItems = computed(() => [
                 <router-link :to="{ name: 'users.show', params: { userId: user.id } }">
                     {{ fullName(user) }}
                 </router-link>
+            </div>
+            <div v-if="user.position" class="text-sm text-gray-500">
+                {{ user.position }}
             </div>
             <!-- <div v-if="user.firstName || user.lastName" class="text-sm text-gray-500">
                 {{ user.username || "-" }}
@@ -86,6 +89,28 @@ const dropdownItems = computed(() => [
                 {{ user.status.label }}
             </span>
             <span v-else class="text-gray-400">-</span>
+
+            <span
+                v-if="user.active === false"
+                class="ml-1 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-800"
+            >
+                Neaktívny
+            </span>
+        </td>
+
+        <td class="tbody_td">
+            <template v-if="user.last_login_at">
+                <div class="text-sm text-gray-900">{{ user.last_login_at }}</div>
+                <div class="text-xs text-gray-500">
+                    {{ user.last_login_human }}
+                    <span v-if="user.login_count">· {{ user.login_count }}×</span>
+                </div>
+            </template>
+            <span v-else
+                class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
+                title="Účet sa do portálu ešte nikdy neprihlásil">
+                Nikdy
+            </span>
         </td>
 
         <td class="tbody_td">

@@ -1,13 +1,13 @@
 <script setup>
-import { onMounted, onUnmounted, reactive, ref, watch, computed } from "vue";
+import { onUnmounted, reactive, ref, watch, computed } from "vue";
 import { storeToRefs } from "pinia";
 import useOrders from "../../store/StoreOrders";
 import useQuery from "../../store/StoreQuery";
-import FilterOrderLabel from "./FilterOrderLabel.vue";
+import FilterLabel from "../plugins/filterLabel.vue";
+import FilterSearch from "../plugins/filterSearch.vue";
 import { isActive, isConfirmed, isDeleted, isNotificated, resetFilter } from "../../models/filterLabels";
 
 const HISTORY_KEY = "orderFilterHistory";
-const MAX_HISTORY = 15;
 
 const ordersStore = useOrders();
 const { fetchOrders, fetchOrderStatistics } = ordersStore;
@@ -27,109 +27,28 @@ const searchType = ref('customer');
 const searchInput = ref('');
 const status = ref("");
 const shippedAt = ref("");
-const showHistory = ref(false);
-const historyItems = ref([]);
 
-let debounceTimer = null;
-let blurTimer = null;
-
-// ── History (localStorage, samostatná história pre zákazníka a produkt) ──
-const storageKey = computed(() => `${HISTORY_KEY}_${searchType.value}`);
-
-const loadHistory = () => {
-    try {
-        historyItems.value = JSON.parse(localStorage.getItem(storageKey.value)) || [];
-    } catch {
-        localStorage.removeItem(storageKey.value);
-        historyItems.value = [];
-    }
-};
-
-const saveHistory = () => {
-    localStorage.setItem(storageKey.value, JSON.stringify(historyItems.value));
-};
-
-const addToHistory = (term) => {
-    const value = term.trim();
-    if (!value) return;
-    historyItems.value = [value, ...historyItems.value.filter(item => item !== value)].slice(0, MAX_HISTORY);
-    saveHistory();
-};
-
-const removeFromHistory = (term) => {
-    historyItems.value = historyItems.value.filter(item => item !== term);
-    saveHistory();
-};
-
-const clearHistory = () => {
-    historyItems.value = [];
-    saveHistory();
-    showHistory.value = false;
-};
-
-const selectHistory = (term) => {
-    searchInput.value = term;
-    showHistory.value = false;
-    applySearch();
-};
+// Samostatná história pre zákazníka a produkt
+const historyKey = computed(() => `${HISTORY_KEY}_${searchType.value}`);
 
 // ── Vyhľadávanie ─────────────────────────────────────────────
 const activeSearchKey = computed(() =>
     searchType.value === 'customer' ? 'bySearchInput=' : 'searchByProduct='
 );
 
-const applySearch = () => {
+const applySearch = (term = null) => {
+    const search = (term ?? searchInput.value ?? '').trim();
+
     removeQuery({ key: 'bySearchInput=' });
     removeQuery({ key: 'searchByProduct=' });
 
-    if (searchInput.value && searchInput.value.trim()) {
-        setQuery({ key: activeSearchKey.value, value: searchInput.value.trim() });
-        addToHistory(searchInput.value.trim());
+    if (search) {
+        setQuery({ key: activeSearchKey.value, value: search });
     }
-};
-
-const onSearchInput = () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(applySearch, 400);
-};
-
-const onSearchEnter = () => {
-    clearTimeout(debounceTimer);
-    applySearch();
-};
-
-const clearSearchInput = () => {
-    searchInput.value = '';
-    removeQuery({ key: 'bySearchInput=' });
-    removeQuery({ key: 'searchByProduct=' });
 };
 
 const switchSearchType = () => {
-    removeQuery({ key: 'bySearchInput=' });
-    removeQuery({ key: 'searchByProduct=' });
-
-    if (searchInput.value && searchInput.value.trim()) {
-        setQuery({ key: activeSearchKey.value, value: searchInput.value.trim() });
-    }
-
-    loadHistory();
-    showHistory.value = false;
-};
-
-// ── História dropdown ────────────────────────────────────────
-const onInputFocus = () => {
-    loadHistory();
-    showHistory.value = true;
-};
-
-const onInputBlur = () => {
-    blurTimer = setTimeout(() => {
-        showHistory.value = false;
-    }, 200);
-};
-
-const cancelBlur = () => {
-    clearTimeout(blurTimer);
+    applySearch();
 };
 
 // ── Watchers ─────────────────────────────────────────────────
@@ -182,12 +101,8 @@ const onClearQuery = () => {
     labelList.forEach(item => item.active = false);
 };
 
-onMounted(loadHistory);
-
 onUnmounted(() => {
     resetQuery();
-    clearTimeout(debounceTimer);
-    clearTimeout(blurTimer);
 });
 </script>
 
@@ -195,7 +110,7 @@ onUnmounted(() => {
     <div class="filter-panel">
         <div class="filter-row">
             <!-- Radio: typ hľadania -->
-            <div class="filter-radio-group" @mousedown="cancelBlur">
+            <div class="filter-radio-group">
                 <label :class="['filter-radio-label', searchType === 'customer' && 'filter-radio-active']">
                     <input v-model="searchType" type="radio" value="customer" class="sr-only" @change="switchSearchType" />
                     Zákazník
@@ -207,55 +122,10 @@ onUnmounted(() => {
             </div>
 
             <!-- Jeden input + história -->
-            <div class="filter-search-wrapper" @mousedown="cancelBlur">
-                <div class="filter-control">
-                    <svg class="filter-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                    </svg>
-                    <input
-                        id="order-search"
-                        v-model="searchInput"
-                        type="text"
-                        class="filter-input"
-                        :placeholder="searchType === 'customer' ? 'Názov, IČO, mesto…' : 'Názov produktu…'"
-                        autocomplete="off"
-                        @input="onSearchInput"
-                        @keydown.enter="onSearchEnter"
-                        @focus="onInputFocus"
-                        @blur="onInputBlur"
-                    />
-                    <button v-if="searchInput" type="button" class="filter-clear" aria-label="Zrušiť hľadanie"
-                        @click="clearSearchInput">
-                        ×
-                    </button>
-                </div>
-
-                <!-- História hľadania -->
-                <div v-if="showHistory && historyItems.length" class="filter-history-dropdown">
-                    <div class="filter-history-header">
-                        <span class="filter-history-title">
-                            Nedávne hľadania ({{ searchType === 'customer' ? 'zákazník' : 'produkt' }})
-                        </span>
-                        <button type="button" class="filter-history-clearall" @click="clearHistory">
-                            Vymazať všetko
-                        </button>
-                    </div>
-                    <ul class="filter-history-list">
-                        <li v-for="item in historyItems" :key="item" class="filter-history-item" @mousedown="cancelBlur">
-                            <button type="button" class="filter-history-term" @click="selectHistory(item)">
-                                <svg class="filter-history-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0 1 1 0 002 0zm0 4a1 1 0 10-2 0 1 1 0 002 0zm0 4a1 1 0 10-2 0 1 1 0 002 0z" clip-rule="evenodd" />
-                                </svg>
-                                {{ item }}
-                            </button>
-                            <button type="button" class="filter-history-remove" :title="'Odstrániť ' + item"
-                                @click="removeFromHistory(item)">
-                                ×
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            <FilterSearch v-model="searchInput" :history-key="historyKey"
+                :history-title="`Nedávne hľadania (${searchType === 'customer' ? 'zákazník' : 'produkt'})`"
+                :placeholder="searchType === 'customer' ? 'Názov, IČO, mesto…' : 'Názov produktu…'"
+                @search="applySearch" />
 
             <!-- Status -->
             <div v-if="getStatuses.length" class="filter-field-compact">
@@ -280,9 +150,9 @@ onUnmounted(() => {
 
         <!-- Label filtre v jednom riadku -->
         <div class="filter-chips-row">
-            <FilterOrderLabel v-for="label in labelList" :key="label.key" :label="label"
+            <FilterLabel v-for="label in labelList" :key="label.key" :label="label"
                 @labelemit="onClickLabel" />
-            <FilterOrderLabel v-if="getQuery.length" :label="resetFilter" @labelemit="onClearQuery" />
+            <FilterLabel v-if="getQuery.length" :label="resetFilter" @labelemit="onClearQuery" />
         </div>
     </div>
 </template>

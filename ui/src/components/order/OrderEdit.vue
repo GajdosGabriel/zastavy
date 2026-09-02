@@ -18,6 +18,7 @@ import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
 import buttonLink from '../layout/page/ButtonLink.vue';
 import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
+import useUnsavedChanges from "../../models/useUnsavedChanges";
 
 const ordersStore = useOrders();
 const { getOrder, customer } = storeToRefs(ordersStore);
@@ -44,6 +45,14 @@ const isSubmitting    = ref(false);
 const note            = ref('');
 const wantsCoupon     = ref(false);
 
+const { setOriginalData, markAsSaved } = useUnsavedChanges(() => ({
+    shipping_method_id: selectedShippingId.value,
+    payment_method_id: selectedPaymentId.value,
+    note: note.value,
+    wants_coupon: wantsCoupon.value,
+    orderProducts: getOrderProducts.value,
+}));
+
 onMounted(async () => {
     await fetchOrder(orderId);
     fetchProducts();
@@ -69,6 +78,9 @@ onMounted(async () => {
         const def = paymentMethods.value.find(m => m.name?.toLowerCase().includes('faktúra') || m.name?.toLowerCase().includes('faktura'));
         if (def) selectedPaymentId.value = def.id;
     }
+
+    // Načítané dáta a prednastavená doprava/platba ešte nie sú zmena.
+    setOriginalData();
 });
 
 watch(getOrder, (order) => {
@@ -118,6 +130,7 @@ const submitUpdate = async (notify) => {
         });
         originalShippingId.value = selectedShippingId.value;
         originalPaymentId.value  = selectedPaymentId.value;
+        markAsSaved();
         router.push({ name: 'orders.index' });
     } catch (e) {
         setErrors(e);

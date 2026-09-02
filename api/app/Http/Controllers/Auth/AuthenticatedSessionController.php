@@ -19,6 +19,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $request->user()?->recordLogin($request->ip());
+
         return response()->noContent();
     }
 

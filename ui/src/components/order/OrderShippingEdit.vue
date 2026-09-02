@@ -12,6 +12,7 @@ import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
+import { formatDecimal } from "../../models/functions";
 import { storeToRefs } from "pinia";
 
 const ordersStore = useOrders();
@@ -63,7 +64,11 @@ const allProducts = computed(() => orderProducts.value.map((item) => ({
     required:       Number(item.shipping_required_quantity ?? Math.max(0, item.quantity - (item.storno ?? 0))),
     remaining:      Number(item.shipping_remaining_quantity ?? Math.max(0, item.quantity - (item.storno ?? 0) - Number(item.stockSum ?? 0))),
     maxStorno:      Math.max(0, item.quantity - Number(item.stockSum ?? 0)),
+    unitPrice:      Number(item.price ?? 0),
+    lineTotal:      Number(item.total ?? Number(item.price ?? 0) * Number(item.quantity ?? 0)),
 })));
+
+const productsTotal = computed(() => allProducts.value.reduce((sum, item) => sum + item.lineTotal, 0));
 
 // Only items with remaining > 0 can be added to a delivery note
 const shippableProducts = computed(() => allProducts.value
@@ -258,6 +263,7 @@ watch(allProducts, () => {
                         <thead class="thead">
                             <tr>
                                 <th class="thead_th text-left">Produkt</th>
+                                <th class="thead_th text-right">Cena s DPH</th>
                                 <th class="thead_th text-center">Objednané</th>
                                 <th class="thead_th text-center">Expedované</th>
                                 <th class="thead_th text-center">Ostáva</th>
@@ -286,6 +292,11 @@ watch(allProducts, () => {
                                             <div class="text-xs text-gray-500">{{ item.unit_value }}</div>
                                         </div>
                                     </div>
+                                </td>
+
+                                <td class="tbody_td text-right whitespace-nowrap">
+                                    <div class="font-semibold text-gray-900">{{ formatDecimal(item.unitPrice) }} €</div>
+                                    <div class="text-xs text-gray-500">spolu {{ formatDecimal(item.lineTotal) }} €</div>
                                 </td>
 
                                 <td class="tbody_td text-center">{{ item.quantity }}</td>
@@ -366,16 +377,25 @@ watch(allProducts, () => {
                             </tr>
 
                             <tr v-if="!allProducts.length">
-                                <td colspan="7" class="tbody_td py-8 text-center text-gray-500">
+                                <td colspan="8" class="tbody_td py-8 text-center text-gray-500">
                                     Táto objednávka nemá žiadne položky.
                                 </td>
                             </tr>
                         </tbody>
+                        <tfoot v-if="allProducts.length" class="bg-gray-100">
+                            <tr>
+                                <td class="tbody_td text-right font-semibold text-gray-700">Spolu s DPH</td>
+                                <td class="tbody_td text-right font-bold text-gray-900 whitespace-nowrap">
+                                    {{ formatDecimal(productsTotal) }} €
+                                </td>
+                                <td class="tbody_td" colspan="6"></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
 
-                <!-- Expedované dodacie listy -->
-                <div class="mb-5 overflow-x-auto border-2 border-gray-300 bg-white shadow">
+                <!-- Expedované dodacie listy — len ak už niečo bolo expedované -->
+                <div v-if="shippedRows.length" class="mb-5 overflow-x-auto border-2 border-gray-300 bg-white shadow">
                     <div class="border-b border-gray-200 px-4 py-3 text-sm font-semibold text-gray-900">
                         Už expedované dodacie listy k objednávke
                     </div>
@@ -406,18 +426,13 @@ watch(allProducts, () => {
                                     </span>
                                 </td>
                             </tr>
-                            <tr v-if="!shippedRows.length">
-                                <td colspan="5" class="tbody_td py-6 text-center text-gray-500">
-                                    K objednávke zatiaľ nie je vytvorený žiadny dodací list.
-                                </td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Vrátenia tovaru -->
-                <div class="mb-5 overflow-x-auto border-2 bg-white shadow"
-                    :class="getReturns.length ? 'border-orange-300' : 'border-gray-300'">
+                <!-- Vrátenia tovaru — ak existujú, alebo ak je čo vrátiť -->
+                <div v-if="getReturns.length || shippedQuantity > 0"
+                    class="mb-5 overflow-x-auto border-2 border-orange-300 bg-white shadow">
                     <div class="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
                         <span class="text-sm font-semibold text-gray-900">
                             Vrátenia tovaru
@@ -428,13 +443,13 @@ watch(allProducts, () => {
                         </span>
                         <router-link v-if="shippedQuantity > 0"
                             :to="{ name: 'orders.returns.create', params: { orderId } }"
-                            class="text-sm font-semibold text-red-600 hover:text-red-800">
-                            + Nové vrátenie
+                            class="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">
+                            + Vrátiť tovar
                         </router-link>
                     </div>
 
-                    <div v-if="!getReturns.length" class="px-4 py-5 text-center text-sm text-gray-400">
-                        K tejto objednávke zatiaľ nie je zaznamenané žiadne vrátenie.
+                    <div v-if="!getReturns.length" class="px-4 py-4 text-center text-sm text-gray-400">
+                        Žiadne vrátenia
                     </div>
 
                     <table v-else class="min-w-full divide-y divide-gray-200">

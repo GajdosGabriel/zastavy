@@ -1,143 +1,96 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useProducts } from "../../store/StoreProducts";
 import { useCategories } from "../../store/StoreCategories";
 import useQuery from "../../store/StoreQuery";
+import FilterSearch from "../plugins/filterSearch.vue";
+import FilterLabel from "../plugins/filterLabel.vue";
+import { resetFilter } from "../../models/filterLabels";
 
-const { fetchSearchInput, fetchProducts } = useProducts();
+const { fetchProducts } = useProducts();
 const categoriesStore = useCategories();
 const { categories } = storeToRefs(categoriesStore);
 const { fetchCategories } = categoriesStore;
 const queryStore = useQuery();
-const { getQueryStringUrl } = storeToRefs(queryStore);
-const { setQuery, removeQuery } = queryStore;
+const { getQuery } = storeToRefs(queryStore);
+const { setQuery, removeQuery, resetQuery } = queryStore;
 
-const onSearchInput = ref("");
-const onCategory = ref("");
-const props = defineProps(['quickMark', 'quickMarkSum']);
+const searchInput = ref("");
+const category = ref("");
 
-const isDeleted = ref({
-    name: 'Zmazané',
-    key: 'isDeleted=',
-    value: 'true',
-    boolean: false,
-});
-const isUnpublished = ref({
-    name: 'Nepublikované',
-    key: 'isUnpublished=',
-    value: 'true',
-    boolean: false,
-});
+const labelList = reactive([
+    { name: 'Nepublikované', key: 'isUnpublished=', value: 'true', active: false },
+    { name: 'Zmazané', key: 'isDeleted=', value: 'true', active: false },
+]);
 
-const onInputChangeIsDeleted = (query) => {
-    isDeleted.value.boolean ? setQuery(query) : removeQuery(query);
+// ── Vyhľadávanie ─────────────────────────────────────────────
+const applySearch = (term) => {
+    term
+        ? setQuery({ key: 'bySearchInput=', value: term })
+        : removeQuery({ key: 'bySearchInput=' });
 };
 
-const onInputChangeIsUnpublished = (query) => {
-    isUnpublished.value.boolean ? setQuery(query) : removeQuery(query);
+// ── Label filtre (dajú sa kombinovať) ────────────────────────
+const onClickLabel = (label) => {
+    label.active = !label.active;
+
+    label.active
+        ? setQuery({ key: label.key, value: label.value })
+        : removeQuery({ key: label.key });
 };
+
+// ── Reset všetkého ───────────────────────────────────────────
+const onClearQuery = () => {
+    searchInput.value = "";
+    category.value = "";
+    labelList.forEach(item => item.active = false);
+    resetQuery();
+};
+
+// ── Watchers ─────────────────────────────────────────────────
+watch(getQuery, () => {
+    fetchProducts();
+}, { deep: true });
+
+watch(category, () => {
+    category.value
+        ? setQuery({ key: 'byCategory=', value: category.value })
+        : removeQuery({ key: 'byCategory=' });
+});
 
 onMounted(() => {
     fetchCategories();
 });
 
-watch(getQueryStringUrl, () => {
-    fetchProducts();
+onUnmounted(() => {
+    resetQuery();
 });
-
-watch(onSearchInput, () => {
-    fetchSearchInput("bySearchInput=" + onSearchInput.value);
-});
-
-watch(onCategory, () => {
-    onCategory.value
-        ? fetchSearchInput("byCategory=" + onCategory.value)
-        : fetchSearchInput("");
-});
-
-const clearInput = () => {
-    onSearchInput.value = "";
-    removeQuery({ key: 'bySearchInput=' });
-};
-
-const searchInputText = (object) => {
-    removeQuery(object);
-
-    if (object.value) {
-        setQuery(object);
-    }
-};
 </script>
 
 <template>
     <div class="filter-panel">
-        <div class="grid gap-5 lg:grid-cols-3">
-            <div class="space-y-4 lg:col-span-1">
-                <div class="filter-field">
-                    <label class="filter-label" for="product-search">Hľadanie produktov</label>
-                    <div class="filter-control">
-                        <input id="product-search" type="text" v-model="onSearchInput" class="filter-input"
-                            placeholder="Názov, IČO alebo mesto"
-                            @input="searchInputText({ key: 'bySearchInput=', value: $event.target.value })" />
-                        <button v-if="onSearchInput" type="button" class="filter-clear" aria-label="Zrušiť hľadanie"
-                            @click="clearInput">
-                            ×
-                        </button>
-                    </div>
-                </div>
+        <div class="filter-row">
+            <!-- Hľadanie + história -->
+            <FilterSearch v-model="searchInput" history-key="productFilterHistory"
+                history-title="Nedávne hľadania (produkt)" placeholder="Názov, kód, EAN…"
+                @search="applySearch" />
 
-                <div class="flex flex-wrap gap-2">
-                    <label class="filter-check" for="onUnpublished">
-                        <input type="checkbox" id="onUnpublished" v-model="isUnpublished.boolean"
-                            @change="onInputChangeIsUnpublished(isUnpublished.key + isUnpublished.boolean)" />
-                        {{ isUnpublished.name }}
-                    </label>
-
-                    <label class="filter-check" for="isDeleted">
-                        <input type="checkbox" id="isDeleted" v-model="isDeleted.boolean"
-                            @change="onInputChangeIsDeleted(isDeleted.key + isDeleted.boolean)" />
-                        {{ isDeleted.name }}
-                    </label>
-                </div>
-
-                <div class="filter-field">
-                    <label class="filter-label" for="categories">Kategória</label>
-                    <select v-model="onCategory" id="categories" class="filter-select">
-                        <option value="">Všetky kategórie</option>
-                        <option v-for="category in categories" :key="category.id" :value="category.id">
-                            {{ category.name }}
-                        </option>
-                    </select>
-                </div>
+            <!-- Kategória -->
+            <div class="filter-field-compact">
+                <select id="product-category" v-model="category" class="filter-select-compact">
+                    <option value="">Všetky kategórie</option>
+                    <option v-for="item in categories" :key="item.id" :value="item.id">
+                        {{ item.name }}
+                    </option>
+                </select>
             </div>
+        </div>
 
-            <div class="overflow-hidden rounded-md border border-slate-300 bg-slate-50 lg:col-span-2">
-                <div class="grid grid-cols-3 gap-4 bg-slate-800 px-4 py-2 text-sm font-semibold text-white">
-                    <span>{{ quickMark.length ? 'Tovar' : 'Clipboard' }}</span>
-                    <span v-if="quickMark.length">Ks</span>
-                    <span v-if="quickMark.length" class="text-right">Hodnota</span>
-                </div>
-
-                <div v-if="quickMark.length" class="divide-y divide-slate-200 bg-white">
-                    <div class="grid grid-cols-3 gap-4 px-4 py-2 text-sm" v-for="product in quickMark" :key="product.id">
-                        <span class="font-semibold text-slate-900">{{ product.name }}</span>
-                        <span class="text-slate-700">{{ product.total_quantity ?? '—' }} ks</span>
-                        <span class="text-right font-medium text-slate-900">
-                            {{ Math.trunc(Number(product.price_from ?? 0) * Number(product.total_quantity ?? 0)) }},- €
-                        </span>
-                    </div>
-                </div>
-
-                <div v-else class="bg-white px-4 py-6 text-sm text-slate-500">
-                    Vybrané produkty sa zobrazia tu.
-                </div>
-
-                <div v-if="quickMark.length" class="flex justify-between border-t border-slate-300 bg-slate-100 px-4 py-2 text-sm">
-                    <span class="font-semibold text-slate-700">Sumár spolu:</span>
-                    <span class="font-semibold text-slate-900">{{ quickMarkSum }} €</span>
-                </div>
-            </div>
+        <!-- Label filtre v jednom riadku -->
+        <div class="filter-chips-row">
+            <FilterLabel v-for="label in labelList" :key="label.key" :label="label" @labelemit="onClickLabel" />
+            <FilterLabel v-if="getQuery.length" :label="resetFilter" @labelemit="onClearQuery" />
         </div>
     </div>
 </template>

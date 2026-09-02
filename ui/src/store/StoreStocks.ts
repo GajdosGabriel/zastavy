@@ -3,6 +3,7 @@ import axiosInstance from '../axiosInstance';
 import usePaginator from './StorePaginator';
 import useErrors from './StoreErrors';
 import useQuery from './StoreQuery';
+import { confirmDialog } from '../models/confirmDialog';
 import { PAGE_STOCK } from '../constants';
 
 export interface StockRow {
@@ -13,6 +14,25 @@ export interface StockRow {
 export interface StockSummaryRow {
     product_id: number;
     [key: string]: any;
+}
+
+export interface StockVariantOption {
+    id: number;
+    code: string;
+    label: string;
+    unit_value: string | null;
+    tracked_quantity: number | null;
+    balance: number;
+    [key: string]: any;
+}
+
+export interface StockSummaryMeta {
+    variants: number;
+    below_zero: number;
+    total_value: number;
+    total_in: number;
+    total_out: number;
+    total_writeoff: number;
 }
 
 interface StockCreateForm {
@@ -27,6 +47,8 @@ interface StocksState {
     url: string;
     stocks: StockRow[];
     summary: StockSummaryRow[];
+    summaryMeta: StockSummaryMeta | null;
+    variants: StockVariantOption[];
     variantSummary: StockSummaryRow | null;
     selectedVariantId: number | null;
     create: StockCreateForm;
@@ -44,6 +66,8 @@ export const useStocks = defineStore('stocks', {
         url: PAGE_STOCK.URL,
         stocks: [],
         summary: [],
+        summaryMeta: null,
+        variants: [],
         variantSummary: null,
         selectedVariantId: null,
         create: emptyCreate(),
@@ -52,6 +76,8 @@ export const useStocks = defineStore('stocks', {
     getters: {
         getStocks: (s): StockRow[] => s.stocks,
         getSummary: (s): StockSummaryRow[] => s.summary,
+        getSummaryMeta: (s): StockSummaryMeta | null => s.summaryMeta,
+        getVariants: (s): StockVariantOption[] => s.variants,
         getSelectedVariantId: (s): number | null => s.selectedVariantId,
         getVariantSummary: (s): StockSummaryRow | null => s.variantSummary,
     },
@@ -81,6 +107,18 @@ export const useStocks = defineStore('stocks', {
             try {
                 const response = await axiosInstance.get(PAGE_STOCK.URL + '/summary');
                 this.summary = response.data.data;
+                this.summaryMeta = response.data.meta ?? null;
+            } catch (e) {
+                useErrors().setErrors(e);
+            }
+        },
+
+        // Plochý zoznam všetkých variantov pre formulár príjmu — nestránkuje sa,
+        // inak by sa dala naskladniť len prvá stránka produktov.
+        async fetchVariants(): Promise<void> {
+            try {
+                const response = await axiosInstance.get(PAGE_STOCK.URL + '/variants');
+                this.variants = response.data.data;
             } catch (e) {
                 useErrors().setErrors(e);
             }
@@ -102,19 +140,36 @@ export const useStocks = defineStore('stocks', {
             this.url = PAGE_STOCK.URL;
         },
 
-        async storeStock(): Promise<void> {
+        // Vracia úspech — formulár nesmie odnavigovať preč, keď zápis zlyhal.
+        async storeStock(): Promise<boolean> {
             try {
+                useErrors().resetErrors();
                 await axiosInstance.post(PAGE_STOCK.URL, this.create);
                 this.create = emptyCreate();
                 await this.fetchSummary();
+                return true;
             } catch (e) {
                 useErrors().setErrors(e);
+                return false;
             }
         },
 
         async destroyStock(id: number): Promise<void> {
-            if (!window.confirm('Skutočne vymazať pohyb?')) return;
-            await axiosInstance.delete(PAGE_STOCK.URL + '/' + id);
+            const confirmed = await confirmDialog({
+                title: 'Vymazať pohyb?',
+                message: 'Pohyb sa odstráni a stav na sklade sa prepočíta.',
+                confirmLabel: 'Vymazať',
+            });
+
+            if (!confirmed) return;
+
+            try {
+                await axiosInstance.delete(PAGE_STOCK.URL + '/' + id);
+            } catch (e) {
+                useErrors().setErrors(e);
+                return;
+            }
+
             this.fetchStocks();
             if (this.selectedVariantId) {
                 this.fetchVariantSummary(this.selectedVariantId);

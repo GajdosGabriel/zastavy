@@ -1,9 +1,30 @@
 <script setup>
+import { ref } from "vue";
+
 defineProps({
     customer: { type: Object, default: () => ({}) },
     user:     { type: Object, default: null },
     order:    { type: Object, default: () => ({}) },
 });
+
+const copied = ref(null);
+
+const copyValue = async (key, value) => {
+    if (!value) return;
+    try {
+        await navigator.clipboard.writeText(String(value));
+    } catch (e) {
+        // Fallback pre prehliadače bez clipboard API (napr. http bez localhost)
+        const input = document.createElement("textarea");
+        input.value = String(value);
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+    }
+    copied.value = key;
+    setTimeout(() => { if (copied.value === key) copied.value = null; }, 1500);
+};
 </script>
 
 <template>
@@ -26,7 +47,20 @@ defineProps({
                     </div>
 
                     <div v-if="customer.ico || customer.dic || customer.ic_dic" class="border-t border-gray-100 pt-2 text-xs text-gray-500 space-y-0.5">
-                        <div v-if="customer.ico">IČO: <strong class="text-gray-700">{{ customer.ico }}</strong></div>
+                        <div v-if="customer.ico" class="flex items-center gap-1">
+                            <span>IČO: <strong class="text-gray-700">{{ customer.ico }}</strong></span>
+                            <button type="button" @click="copyValue('ico', customer.ico)"
+                                class="rounded p-0.5 text-gray-400 transition hover:bg-gray-100 hover:text-blue-600"
+                                :title="copied === 'ico' ? 'Skopírované' : 'Kopírovať IČO'">
+                                <svg v-if="copied === 'ico'" class="h-3.5 w-3.5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                                <svg v-else class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m0 0H5.625" />
+                                </svg>
+                            </button>
+                            <span v-if="copied === 'ico'" class="text-[10px] font-semibold text-green-600">Skopírované</span>
+                        </div>
                         <div v-if="customer.dic">DIČ: <strong class="text-gray-700">{{ customer.dic }}</strong></div>
                         <div v-if="customer.ic_dic">IČ DPH: <strong class="text-gray-700">{{ customer.ic_dic }}</strong></div>
                     </div>

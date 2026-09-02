@@ -68,6 +68,7 @@ const template = () => {
                                 <th class="thead_th">Objednávky</th>
                                 <th class="thead_th">Role</th>
                                 <th class="thead_th">Status</th>
+                                <th class="thead_th">Prihlásenie</th>
                                 <th class="thead_th">Vytvorený</th>
                                 <th class="thead_th"></th>
                             </tr>

@@ -25,7 +25,15 @@ const editReason = ref('');
 const editNote = ref('');
 const editQuantities = reactive({});
 
-const buttonBack = { name: 'Späť', link: `/objednavky/${orderId}/show`, icon: 'arrow-left' };
+// Späť tam, odkiaľ používateľ prišiel — nikdy nie späť na formulár vrátenia
+const buttonBack = computed(() => {
+    const previous = window.history.state?.back;
+    const link = typeof previous === 'string' && !previous.includes('/vratenie')
+        ? previous
+        : `/objednavky/${orderId}/show`;
+
+    return { name: 'Späť', link, icon: 'arrow-left' };
+});
 
 const REASONS = [
     { value: 'not_accepted', label: 'Neprevzatá zásielka' },

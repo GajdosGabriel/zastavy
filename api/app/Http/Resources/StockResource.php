@@ -14,9 +14,16 @@ class StockResource extends JsonResource
         $product = $this->product;
         $variant = $this->product_variant;
 
+        // Záporný príjem je odpis (rozbité, stratené, inventúrna korekcia).
+        $type = match (true) {
+            (bool) $this->shipping_id => 'outgoing',
+            $this->quantity < 0       => 'writeoff',
+            default                   => 'incoming',
+        };
+
         return [
             'id'                        => $this->id,
-            'type'                      => $this->shipping_id ? 'outgoing' : 'incoming',
+            'type'                      => $type,
             'shipping_id'               => $this->shipping_id,
             'order_id'                  => $this->order_id,
             'product_id'                => $this->product_id ?? $product?->id,
@@ -32,8 +39,12 @@ class StockResource extends JsonResource
             'name'                      => $product?->name,
             'code'                      => $variant?->code ?? $product?->code,
             'product_unit_value'        => $product?->unit_value,
-            'quantity'                  => $this->quantity,
+            // Tabuľka zobrazuje znamienko podľa typu — množstvo posielame kladné.
+            'quantity'                  => abs((int) $this->quantity),
             'price'                     => $this->price,
+            'total_price'               => $this->price !== null
+                ? round(abs((int) $this->quantity) * (float) $this->price, 2)
+                : null,
             'note'                      => $this->note,
             'status'                    => $this->statusData(),
             'endpoints' => [
