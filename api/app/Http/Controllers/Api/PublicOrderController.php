@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Dashboard\OrderAttachmentController;
+use App\Models\Attachment;
 use App\Models\Order;
 use App\Http\Controllers\Controller;
 
@@ -10,7 +12,7 @@ class PublicOrderController extends Controller
     public function show(string $uuid)
     {
         $order = Order::where('uuid', $uuid)
-            ->with(['customer', 'orderProducts.product', 'shippingMethod', 'paymentMethod'])
+            ->with(['customer', 'orderProducts.product', 'shippingMethod', 'paymentMethod', 'attachments'])
             ->firstOrFail();
 
         $subtotal = $order->orderProducts->sum('total');
@@ -51,6 +53,12 @@ class PublicOrderController extends Controller
                     'price'    => $op->price,
                     'total'    => $op->total,
                 ]),
+                'attachments' => $order->attachments->map(fn (Attachment $attachment) => [
+                    'id'       => $attachment->id,
+                    'name'     => $attachment->name,
+                    'size'     => $attachment->size,
+                    'download' => route('public-orders.attachments.show', [$order->uuid, $attachment->id]),
+                ]),
                 'subtotal'        => $subtotal,
                 'shipping_price'  => $shipping,
                 'payment_fee'     => $fee,
@@ -58,5 +66,13 @@ class PublicOrderController extends Controller
                 'grand_total'     => $subtotal + $shipping + $fee - $discount,
             ],
         ]);
+    }
+
+    /** Stiahnutie prílohy verejného detailu — autorizuje uuid objednávky. */
+    public function downloadAttachment(string $uuid, Attachment $attachment)
+    {
+        $order = Order::where('uuid', $uuid)->firstOrFail();
+
+        return OrderAttachmentController::download($order, $attachment);
     }
 }

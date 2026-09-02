@@ -30,3 +30,11 @@ export const formatPriceWithoutVat = (price, vat) => {
 
 
 
+
+// Veľkosť súboru pre výpis pri prílohách (KB/MB namiesto bajtov).
+export const formatFileSize = (bytes = 0) => {
+    const size = Number(bytes) || 0;
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(0)} kB`;
+    return `${(size / 1024 / 1024).toFixed(1)} MB`;
+};

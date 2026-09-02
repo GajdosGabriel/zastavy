@@ -53,6 +53,7 @@ class StoreOrder implements StoreOrderContract
         ]);
         $this->serialNumber($order);
         $this->storeOrderProducts($order, $items);
+        $this->storeAttachments($order, $user);
 
         if ($couponId) {
             Coupon::where('id', $couponId)->increment('used_count');
@@ -61,6 +62,24 @@ class StoreOrder implements StoreOrderContract
         $this->notifyOrderCreated($order);
 
         return $order;
+    }
+
+    /**
+     * Podklady priložené v košíku (logo, návrh vlajky, tabuľka rozmerov).
+     *
+     * Ukladajú sa až po vytvorení objednávky, aby cesta obsahovala jej ID.
+     * Beží vnútri transakcie checkoutu — ak objednávka spadne, DB záznamy
+     * príloh sa vrátia späť (na disku ostane len osamotený súbor).
+     */
+    protected function storeAttachments(Order $order, $user = null): void
+    {
+        $files = $this->request->file('attachments');
+
+        if (! $files) {
+            return;
+        }
+
+        (new StoreAttachments())->handle($order, $files, $user?->id);
     }
 
     /**

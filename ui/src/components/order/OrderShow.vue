@@ -6,9 +6,9 @@ import { useProducts } from "../../store/StoreProducts";
 import { useReturns } from "../../store/StoreReturns";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import productTableRow from "../orderProducts/productTableRow.vue";
-import { formatDecimal } from "../../models/functions";
+import { formatDecimal, formatFileSize } from "../../models/functions";
 import shippingButton from "./component/shippingButton.vue";
 import OrderCustomerCard from "./component/OrderCustomerCard.vue";
 import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
@@ -17,7 +17,7 @@ import buttonLink from '../layout/page/ButtonLink.vue';
 
 const ordersStore = useOrders();
 const { getOrder, customer } = storeToRefs(ordersStore);
-const { fetchOrder } = ordersStore;
+const { fetchOrder, downloadAttachment, uploadAttachments, deleteAttachment } = ordersStore;
 
 const orderProductsStore = useOrderProducts();
 const { getOrderProducts, getStatement } = storeToRefs(orderProductsStore);
@@ -51,6 +51,18 @@ const STATUS_LABELS = {
 const hasShippedItems = computed(() =>
     (getOrder.value?.orderProducts ?? []).some(item => Number(item.stockSum ?? 0) > 0)
 );
+
+const attachmentInput = ref(null);
+
+const onUploadAttachments = async (event) => {
+    await uploadAttachments(orderId, event.target.files);
+    event.target.value = "";
+};
+
+const onDeleteAttachment = (file) => {
+    if (!window.confirm(`Zmazať prílohu ${file.name}?`)) return;
+    deleteAttachment(orderId, file.id);
+};
 
 const buttonSubmit = { name: 'Uložiť', spinner: false }
 const buttonBack = { name: 'Späť', spinner: true, link: 'orders.index', icon: 'arrow-left' }
@@ -122,6 +134,48 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Prílohy zákazníka (podklady k výrobe) -->
+                <div class="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div class="flex items-center justify-between border-b border-gray-100 px-5 py-2.5">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                            Prílohy
+                            <span v-if="getOrder.attachments?.length" class="ml-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-gray-600">
+                                {{ getOrder.attachments.length }}
+                            </span>
+                        </span>
+                        <div>
+                            <input ref="attachmentInput" type="file" multiple class="hidden" @change="onUploadAttachments" />
+                            <button
+                                @click="attachmentInput?.click()"
+                                class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
+                                + Pridať prílohu
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="!getOrder.attachments?.length" class="px-5 py-5 text-center text-sm text-gray-400">
+                        Žiadne prílohy
+                    </div>
+
+                    <ul v-else class="divide-y divide-gray-50">
+                        <li v-for="file in getOrder.attachments" :key="file.id"
+                            class="flex items-center justify-between gap-3 px-5 py-3">
+                            <button type="button" @click="downloadAttachment(orderId, file)"
+                                class="truncate text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                                {{ file.name }}
+                            </button>
+                            <span class="flex shrink-0 items-center gap-3">
+                                <span class="text-xs text-gray-400">{{ formatFileSize(file.size) }}</span>
+                                <span class="text-xs text-gray-400">{{ file.created_at }}</span>
+                                <button type="button" @click="onDeleteAttachment(file)"
+                                    class="text-xs font-semibold text-red-500 hover:text-red-700">
+                                    Zmazať
+                                </button>
+                            </span>
+                        </li>
+                    </ul>
                 </div>
 
                 <!-- Vrátenia -->

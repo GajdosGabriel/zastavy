@@ -116,7 +116,7 @@ class ProductVariant extends Model
         $image = $this->image ?? $this->product?->images->first();
 
         if ($image) {
-            return Storage::disk('public')->url(preg_replace('#^public/#', '', $image->path));
+            return $image->url;
         }
 
         return asset('images/product-placeholder.svg');

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\Dashboard\OrderAttachmentController;
 use App\Http\Controllers\Api\Dashboard\OrderController;
 use App\Http\Controllers\Api\Dashboard\OrderMarkController;
 use App\Http\Controllers\Api\Dashboard\OrderProductController;
@@ -61,6 +62,12 @@ Route::apiResource('homes', HomeController::class);
 Route::apiResource('checkouts', CheckoutController::class)->middleware('throttle:30,1');
 
 Route::get('/public-orders/{uuid}', [PublicOrderController::class, 'show'])->name('public-orders.show');
+// Prílohy verejného detailu — prístup chráni len ťažko uhádnuteľné uuid objednávky,
+// rovnako ako samotný detail. Throttle proti hádaniu uuid.
+Route::get('/public-orders/{uuid}/attachments/{attachment}', [PublicOrderController::class, 'downloadAttachment'])
+    ->middleware('throttle:60,1')
+    ->whereNumber('attachment')
+    ->name('public-orders.attachments.show');
 
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/attribute-facets', [AttributeFacetController::class, 'index'])->name('attribute-facets.index');
@@ -80,6 +87,9 @@ Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function 
         'orders.marks' => OrderMarkController::class,
         'orders.orderProducts' => OrderProductController::class,
     ]);
+
+    Route::apiResource('orders.attachments', OrderAttachmentController::class)
+        ->only(['index', 'store', 'show', 'destroy']);
 
     Route::apiResource('orders.returns', OrderReturnController::class)
         ->parameters(['returns' => 'orderReturn']);

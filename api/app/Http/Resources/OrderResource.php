@@ -40,6 +40,7 @@ class OrderResource extends JsonResource
             'note'         => $this->note,
             'wants_coupon' => (bool) $this->wants_coupon,
             'orderProducts' => OrderProductResource::collection($this->orderProducts),
+            'attachments' => AttachmentResource::collection($this->whenLoaded('attachments')),
             'stock_expedition' => $this->stockExpedition,
             'product_order_sum' => $this->productOrderSum,
             'product_storno_sum' => $this->productStornoSum(),

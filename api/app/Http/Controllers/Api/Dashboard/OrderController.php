@@ -56,7 +56,7 @@ class OrderController extends Controller
     {
         Gate::authorize('view', $order);
 
-        return response(new OrderResource($order->load(['customer.users', 'user', 'shippingMethod', 'paymentMethod'])));
+        return response(new OrderResource($order->load(['customer.users', 'user', 'shippingMethod', 'paymentMethod', 'attachments'])));
     }
 
     public function update(Order $order, OrderRequest $request)

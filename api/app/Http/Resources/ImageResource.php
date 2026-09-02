@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ImageResource extends JsonResource
@@ -15,12 +14,10 @@ class ImageResource extends JsonResource
      */
     public function toArray($request)
     {
-        $path = preg_replace('#^public/#', '', $this->path);
-
         return [
             'id' => $this->id,
             'status' => $this->statusData(),
-            'path' => Storage::disk('public')->url($path),
+            'path' => $this->url,
         ];
     }
 }

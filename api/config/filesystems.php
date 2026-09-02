@@ -41,7 +41,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('FILESYSTEM_PUBLIC_URL', env('APP_URL').'/storage'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
@@ -53,6 +53,11 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
+            // AWS_ROOT oddeľuje prostredia v spoločnom buckete (dev/, prod/).
+            // Bez neho by si dev a produkcia navzájom prepisovali objekty —
+            // cesty sú odvodené od ID modelu (product/1/...), ktoré sa v oboch
+            // databázach opakujú. Prefix sa premieta aj do Storage::url().
+            'root' => env('AWS_ROOT', ''),
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),

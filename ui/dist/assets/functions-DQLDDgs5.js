@@ -1,0 +1,1 @@
+const u=(t=null)=>t==null?"0.00":Number(t).toFixed(2),o=(t=0)=>t===1?"kus":t>1&&t<9?"kusy":"kusov",s=(t,r)=>{let e=Math.round(Number(t)-Number(t)/100*Number(r));return u(e)},n=(t=0)=>{const r=Number(t)||0;return r<1024?`${r} B`:r<1048576?`${(r/1024).toFixed(0)} kB`:`${(r/1024/1024).toFixed(1)} MB`};export{o as a,s as b,n as c,u as f};

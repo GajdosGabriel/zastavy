@@ -127,9 +127,7 @@ class Product extends Model
     {
         $image = $this->images->first();
         if ($image) {
-            $path = preg_replace('#^public/#', '', $image->path);
-
-            return Storage::disk('public')->url($path);
+            return $image->url;
         }
 
         // Lokálny placeholder — bez závislosti na externej službe (výkon, súkromie, dostupnosť).

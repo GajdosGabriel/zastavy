@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import axiosInstance from '../../axiosInstance';
 import BaseLayout from '../layout/BaseLayout.vue';
-import { formatDecimal } from '../../models/functions';
+import { formatDecimal, formatFileSize } from '../../models/functions';
 
 const route = useRoute();
 const order = ref(null);
@@ -147,6 +147,19 @@ const hasPrice = (products) => products?.some(p => p.price);
                                 </tfoot>
                             </table>
                         </div>
+                    </div>
+
+                    <!-- Attachments -->
+                    <div v-if="order.attachments?.length" class="rounded-md border border-gray-200 bg-white shadow-sm">
+                        <div class="border-b border-gray-100 bg-gray-50 px-6 py-3">
+                            <h2 class="text-sm font-semibold text-gray-700">Prílohy</h2>
+                        </div>
+                        <ul class="divide-y divide-gray-50">
+                            <li v-for="file in order.attachments" :key="file.id" class="flex items-center justify-between gap-3 px-6 py-3">
+                                <a :href="file.download" class="truncate text-sm font-medium text-blue-700 hover:underline">{{ file.name }}</a>
+                                <span class="shrink-0 text-xs text-gray-400">{{ formatFileSize(file.size) }}</span>
+                            </li>
+                        </ul>
                     </div>
 
                     <!-- Note -->

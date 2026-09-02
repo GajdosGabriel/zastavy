@@ -110,6 +110,49 @@ export const useOrders = defineStore("orders", {
             }
         },
 
+        /**
+         * Prílohy sú za autentifikáciou, takže sa nedajú stiahnuť obyčajným
+         * odkazom — súbor si vypýtame ako blob s tokenom a uložíme cez odkaz.
+         */
+        async downloadAttachment(orderId: number | string, attachment: Record<string, any>): Promise<void> {
+            try {
+                const response = await axiosInstance.get(
+                    `${PAGE_ORDER.URL}/${orderId}/attachments/${attachment.id}`,
+                    { responseType: "blob" }
+                );
+
+                const url = URL.createObjectURL(response.data);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = attachment.name;
+                link.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                useErrors().setErrors(e);
+            }
+        },
+
+        async uploadAttachments(orderId: number | string, files: File[] | FileList): Promise<void> {
+            const form = new FormData();
+            Array.from(files ?? []).forEach((file) => form.append("attachments[]", file));
+
+            try {
+                await axiosInstance.post(`${PAGE_ORDER.URL}/${orderId}/attachments`, form);
+                await this.fetchOrder(orderId);
+            } catch (e) {
+                useErrors().setErrors(e);
+            }
+        },
+
+        async deleteAttachment(orderId: number | string, attachmentId: number): Promise<void> {
+            try {
+                await axiosInstance.delete(`${PAGE_ORDER.URL}/${orderId}/attachments/${attachmentId}`);
+                await this.fetchOrder(orderId);
+            } catch (e) {
+                useErrors().setErrors(e);
+            }
+        },
+
         async updateOrder(data: Record<string, any>): Promise<void> {
             try {
                 await axiosInstance.put(PAGE_ORDER.URL + "/" + data.id, data);

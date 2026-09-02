@@ -7,19 +7,21 @@ import useCustomers from "../../store/StoreCustomers";
 import { useUsers } from "../../store/StoreUsers";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
-import { formatDecimal } from "../../models/functions";
+import { formatDecimal, formatFileSize } from "../../models/functions";
 import { htmlToText } from "../../models/html";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import ShippingPaymentSelector from "../forms/ShippingPaymentSelector.vue";
 
 const checkoutsStore = useCheckouts();
-const { getCarts, getCheckout, note } = storeToRefs(checkoutsStore);
+const { getCarts, getCheckout, note, attachments } = storeToRefs(checkoutsStore);
 const {
       removeCart,
       storeCheckout,
       getlocalStorage,
       resetCarts,
       updateCartQuantity,
+      addAttachments,
+      removeAttachment,
 } = checkoutsStore;
 
 const customersStore = useCustomers();
@@ -40,6 +42,15 @@ const parseStoredCustomer = () => {
             localStorage.removeItem('customer');
             return {};
       }
+};
+
+const attachmentInput = ref(null);
+const attachmentErrors = ref([]);
+
+const onPickAttachments = (event) => {
+      attachmentErrors.value = addAttachments(event.target.files);
+      // Reset inputu, aby sa dal ten istý súbor po odobratí vybrať znova.
+      event.target.value = "";
 };
 
 const shortDescription = (product) => htmlToText(product.description).substring(0, 25);
@@ -222,6 +233,62 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                 <div class="mt-4">
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
                                     <input v-model="note" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />
+                                </div>
+
+                                <!-- Prílohy k objednávke (logo, návrh, podklady) -->
+                                <div class="mt-4">
+                                    <label class="mb-1.5 block text-sm font-semibold text-gray-700">Prílohy</label>
+                                    <p class="mb-2 text-xs text-gray-500">
+                                        Podklady k výrobe – logo, návrh, rozmery. Max. 5 súborov, každý do 10 MB
+                                        (pdf, jpg, png, svg, ai, eps, cdr, psd, zip, doc, xls).
+                                    </p>
+
+                                    <input
+                                        ref="attachmentInput"
+                                        type="file"
+                                        multiple
+                                        class="hidden"
+                                        accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.svg,.ai,.eps,.cdr,.psd,.zip,.rar,.doc,.docx,.xls,.xlsx"
+                                        @change="onPickAttachments"
+                                    />
+                                    <button
+                                        type="button"
+                                        @click="attachmentInput?.click()"
+                                        :disabled="attachments.length >= 5"
+                                        class="inline-flex items-center gap-2 rounded-lg border border-dashed border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-blue-400 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                                        </svg>
+                                        Pridať súbor
+                                    </button>
+
+                                    <ul v-if="attachments.length" class="mt-3 space-y-1.5">
+                                        <li
+                                            v-for="(file, index) in attachments"
+                                            :key="file.name + file.size"
+                                            class="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
+                                        >
+                                            <span class="truncate text-gray-700">{{ file.name }}</span>
+                                            <span class="flex shrink-0 items-center gap-2">
+                                                <span class="text-xs text-gray-400">{{ formatFileSize(file.size) }}</span>
+                                                <button
+                                                    type="button"
+                                                    @click="removeAttachment(index)"
+                                                    class="rounded p-1 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                                                    title="Odstrániť prílohu"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </span>
+                                        </li>
+                                    </ul>
+
+                                    <p v-for="error in attachmentErrors" :key="error" class="mt-1.5 text-xs text-red-600">
+                                        {{ error }}
+                                    </p>
                                 </div>
                             </div>
                         </div>

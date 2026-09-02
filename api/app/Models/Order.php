@@ -82,6 +82,12 @@ class Order extends Model
         return $this->morphOne(Mark::class, 'fileable');
     }
 
+    /** Podklady nahrané zákazníkom v košíku (logá, návrhy, objednávkové súbory). */
+    public function attachments()
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
+    }
+
     public function priceSum()
     {
         return $this->orderProducts->sum('total');

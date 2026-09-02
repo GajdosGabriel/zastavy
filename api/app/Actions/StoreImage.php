@@ -4,6 +4,7 @@ namespace App\Actions;
 
 
 use App\Contracts\StoreImageContract;
+use App\Support\Media;
 
 class StoreImage implements StoreImageContract
 {
@@ -22,17 +23,21 @@ class StoreImage implements StoreImageContract
     {
         if ($this->input) {
 
+            $disk = Media::disk();
+
             foreach ($this->input as $image) {
 
-                $path = $image->store('', 'public');
+                // Priečinok podľa produktu — na S3 sa tak dá objednávka/produkt
+                // zmazať jedným prefixom a objekty sa nemiešajú v koreni.
+                $path = $image->store('products/' . $this->product->id, $disk);
 
                 $this->product->images()->create([
                     'path' => $path,
+                    'disk' => $disk,
                     'name' => $this->product->slug,
-                    // 'thumb' => $this->folderPath() . 'thumb/' . basename($url),
                     'org_name' => $image->getClientOriginalName(),
-                    'size' => $image->getClientOriginalExtension(),
-                    'mime' => $image->extension()
+                    'size' => $image->getSize(),
+                    'mime' => $image->getClientMimeType(),
                 ]);
             }
         };

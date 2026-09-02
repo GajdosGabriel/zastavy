@@ -11,6 +11,10 @@ class CouponSettingsController extends Controller
 {
     private const FILE = 'coupon_settings.json';
 
+    // Interné nastavenie aplikácie ostáva lokálne — FILESYSTEM_DISK prepína
+    // úložisko používateľských súborov (media), nie tento konfiguračný súbor.
+    private const DISK = 'local';
+
     private const DEFAULTS = [
         'delay_days'           => 14,
         'valid_days'           => 30,
@@ -34,18 +38,18 @@ class CouponSettingsController extends Controller
             'min_order_floor'      => 'required|numeric|min:0',
         ]);
 
-        Storage::put(self::FILE, json_encode($data, JSON_PRETTY_PRINT));
+        Storage::disk(self::DISK)->put(self::FILE, json_encode($data, JSON_PRETTY_PRINT));
 
         return response()->json(['data' => $data]);
     }
 
     public static function read(): array
     {
-        if (! Storage::exists(self::FILE)) {
+        if (! Storage::disk(self::DISK)->exists(self::FILE)) {
             return self::DEFAULTS;
         }
 
-        $decoded = json_decode(Storage::get(self::FILE), true);
+        $decoded = json_decode(Storage::disk(self::DISK)->get(self::FILE), true);
 
         return is_array($decoded) ? array_merge(self::DEFAULTS, $decoded) : self::DEFAULTS;
     }

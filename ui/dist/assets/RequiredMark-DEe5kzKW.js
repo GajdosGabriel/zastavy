@@ -1,1 +1,0 @@
-import{_ as e,b as n,o}from"./index-C_jkLMSb.js";const t={},a={class:"text-red-600 text-sm align-top leading-none","aria-label":"povinné pole"};function r(s,c){return o(),n("span",a,"*")}const i=e(t,[["render",r]]);export{i as R};
