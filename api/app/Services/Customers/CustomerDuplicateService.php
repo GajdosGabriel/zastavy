@@ -90,6 +90,7 @@ class CustomerDuplicateService
             ->take($limit)
             ->map(function (Collection $group, string $key) {
                 $customers = Customer::query()
+                    ->with('primaryUser')
                     ->withCount('orders')
                     ->whereIn('id', $group->pluck('id'))
                     ->orderBy('id')
@@ -182,6 +183,12 @@ class CustomerDuplicateService
         $filled = [];
 
         foreach (CustomerDataRules::FIELDS as $field) {
+            // `name` nie je stĺpec na `customers` — kontaktné osoby sa pri
+            // zlúčení nedopĺňajú, ale presúvajú, a robí to krok s `users`.
+            if ($field === 'name') {
+                continue;
+            }
+
             if (! $rules->isBlank($attributes[$field] ?? null)) {
                 continue;
             }

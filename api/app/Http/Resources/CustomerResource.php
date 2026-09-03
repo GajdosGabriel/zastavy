@@ -49,7 +49,7 @@ class CustomerResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'name' => $contact?->username ?? $this->name,
+            'name' => $contact?->username,
             'company' => $this->company,
             'street' => $this->street,
             'city' => $this->city,

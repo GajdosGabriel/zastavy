@@ -65,10 +65,46 @@ class Customer extends Model
     }
 
 
-    public function setNameAttribute($value)
+    /**
+     * Meno kontaktnej osoby.
+     *
+     * Nie je to stĺpec — býval, a znamenal raz meno človeka, raz názov firmy.
+     * Jediné miesto, kde meno kontaktu žije, je `users.username`; tento
+     * accessor ho odtiaľ podáva, aby `$customer->name` čítalo ako predtým.
+     *
+     * Kto ho číta v zozname, nech si reláciu načíta dopredu (`with('primaryUser')`),
+     * inak je to dotaz na každý riadok.
+     */
+    public function getNameAttribute(): ?string
     {
-        $this->attributes['name'] =  $value;
-        $this->attributes['slug'] =  Str::slug($value, '-');
+        $contact = $this->primaryUser ?? $this->latestUser;
+
+        return $contact?->username;
+    }
+
+    /**
+     * Slug visel na mene; odkedy meno nie je stĺpec, drží ho názov firmy.
+     * `company` je povinné pri vytvorení aj pri úprave zákazníka, takže slug
+     * nikdy nezostane prázdny.
+     */
+    public function setCompanyAttribute($value)
+    {
+        $this->attributes['company'] = $value;
+
+        $slug = Str::slug((string) $value, '-');
+
+        if ($slug !== '') {
+            $this->attributes['slug'] = $slug;
+
+            return;
+        }
+
+        // Stĺpec je NOT NULL, takže prázdno tu skončí SQL chybou pri vložení.
+        // Existujúci slug prázdna firma neprepíše — len nový riadok dostane
+        // náhradu.
+        if (($this->attributes['slug'] ?? '') === '') {
+            $this->attributes['slug'] = 'zakaznik';
+        }
     }
 
     public function getOrdersCountAttribute()

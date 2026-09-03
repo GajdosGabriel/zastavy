@@ -51,8 +51,9 @@ class CustomerDataRules
     /**
      * Stĺpce, do ktorých sa dá zapísať NULL.
      *
-     * `name`, `postcode` a `city` sú v migrácii NOT NULL, takže oprava
-     * „prázdny reťazec → prázdna hodnota" by na nich skončila SQL chybou.
+     * `postcode` a `city` sú v migrácii NOT NULL, takže oprava „prázdny
+     * reťazec → prázdna hodnota" by na nich skončila SQL chybou. `name` je
+     * meno kontaktnej osoby a vyprázdniť ho je vždy strata údaja, nie oprava.
      * Nález sa aj tak vypíše, len bez tlačidla — také pole treba vyplniť,
      * nie vyprázdniť.
      */
@@ -146,7 +147,14 @@ class CustomerDataRules
      */
     public function raw(Customer $customer, string $field): ?string
     {
-        $value = $customer->getAttributes()[$field] ?? null;
+        $attributes = $customer->getAttributes();
+
+        // `name` nie je stĺpec — meno kontaktnej osoby drží `users.username` a
+        // model ho podáva accessorom. Pri kontrole rozpísaného formulára ho
+        // ale v poli atribútov nájdeme, lebo tam ho vložil CustomerCheckController.
+        $value = array_key_exists($field, $attributes)
+            ? $attributes[$field]
+            : $customer->getAttribute($field);
 
         return $value === null ? null : (string) $value;
     }

@@ -112,11 +112,19 @@ class OrderFilter extends Filters
             $query->where('serial_number', 'like', '%' . $company . '%')
                 ->orWhereHas('customer', function ($query) use ($company) {
                     $query->where('company', 'like', '%' . $company . '%')
-                        ->orWhere('name', 'like', '%' . $company . '%')
                         ->orWhere('city', 'like', '%' . $company . '%')
                         ->orWhere('ico', 'like', '%' . $company . '%')
                         ->orWhere('postcode', 'like', '%' . $company . '%')
-                        ->orWhere('email', 'like', '%' . $company . '%');
+                        ->orWhere('email', 'like', '%' . $company . '%')
+                        // Meno kontaktnej osoby bývalo v `customers.name`;
+                        // odkedy je len v `users`, treba sa preň zájsť tam.
+                        // Vetva nižšie hľadá používateľa, ktorý objednávku
+                        // podal — tá firmu bez prihlásenia nepokryje.
+                        ->orWhereHas('users', function ($query) use ($company) {
+                            $query->where('username', 'like', '%' . $company . '%')
+                                ->orWhere('firstName', 'like', '%' . $company . '%')
+                                ->orWhere('lastName', 'like', '%' . $company . '%');
+                        });
                 })
                 ->orWhereHas('user', function ($query) use ($company) {
                     $query->where('username', 'like', '%' . $company . '%')

@@ -37,6 +37,9 @@ temp/
 !**/storage/framework/views/.gitignore
 **/storage/logs/*
 !**/storage/logs/.gitignore
+# Zálohy, ktoré si robia migrácie pred zahodením stĺpca — sú v nich osobné
+# údaje zákazníkov a do repozitára nepatria.
+**/storage/app/backups/
 **/bootstrap/cache/*
 .phpunit.result.cache
 

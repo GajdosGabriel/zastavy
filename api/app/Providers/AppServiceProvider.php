@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Stock;
+use App\Models\User;
 use App\Observers\CustomerObserver;
 use App\Observers\OrderObserver;
 use App\Observers\StockObserver;
+use App\Observers\UserObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,5 +30,6 @@ class AppServiceProvider extends ServiceProvider
         Customer::observe(CustomerObserver::class);
         Order::observe(OrderObserver::class);
         Stock::observe(StockObserver::class);
+        User::observe(UserObserver::class);
     }
 }

@@ -35,6 +35,14 @@ class CustomerReviewService
      */
     private static bool $applying = false;
 
+    /**
+     * Opravené meno kontaktnej osoby, kým čaká na uloženie.
+     *
+     * Jediné pole posudku, ktoré nesedí na `customers` — write() ho preto
+     * neuloží do atribútov, ale odloží sem a persist() ho zapíše do `users`.
+     */
+    private ?string $pendingContactName = null;
+
     public function __construct(
         private readonly CustomerDataRules $rules,
         private readonly CompanyRegistry $registry,
@@ -49,7 +57,7 @@ class CustomerReviewService
      *
      * Volá sa zo `saved()`, teda pri každom uložení — musí byť lacná a tichá.
      */
-    public function schedule(Customer $customer): void
+    public function schedule(Customer $customer, bool $force = false): void
     {
         if (self::$applying || ! config('customer_review.enabled', true)) {
             return;
@@ -58,7 +66,11 @@ class CustomerReviewService
         // Lacná brzda pred akýmkoľvek dotazom. Uloženie kvôli statusu,
         // poznámke či prihláseniu sa kontroly netýka a import, ktorý prepíše
         // tisíc riadkov, by inak zaplatil dotaz navyše za každý z nich.
-        if (! $customer->wasRecentlyCreated && ! $customer->wasChanged(CustomerDataRules::FIELDS)) {
+        //
+        // `$force` je pre zmenu, ktorá sa na `customers` neprejaví: meno
+        // kontaktnej osoby leží v `users` a wasChanged() o ňom nevie
+        // (viď UserObserver).
+        if (! $force && ! $customer->wasRecentlyCreated && ! $customer->wasChanged(CustomerDataRules::FIELDS)) {
             return;
         }
 
@@ -502,17 +514,19 @@ class CustomerReviewService
      */
     private function write(Customer $customer, string $field, ?string $value): void
     {
+        // Meno kontaktnej osoby nie je stĺpec na `customers` — leží v
+        // `users.username`. Odloží sa a zapíše až v persist(), aby oprava
+        // mena a oprava firemných údajov skončili jedným uložením.
+        if ($field === 'name') {
+            $this->pendingContactName = $value;
+
+            return;
+        }
+
         $attributes = $customer->getAttributes();
         $attributes[$field] = $value;
 
         $customer->setRawAttributes($attributes);
-
-        // Slug visí na mene a mutátor sme práve obišli; bez toho by po oprave
-        // mena ostal slug starý.
-        if ($field === 'name' && $value !== null) {
-            $attributes['slug'] = \Illuminate\Support\Str::slug($value, '-');
-            $customer->setRawAttributes($attributes);
-        }
     }
 
     /** Uloží zákazníka tak, aby uloženie nenaplánovalo ďalšiu kontrolu. */
@@ -521,46 +535,39 @@ class CustomerReviewService
         self::$applying = true;
 
         try {
-            $nameChanged = $customer->isDirty('name');
-
             $customer->saveQuietly();
-
-            if ($nameChanged) {
-                $this->syncContactName($customer);
-            }
+            $this->writeContactName($customer);
         } finally {
             self::$applying = false;
+            $this->pendingContactName = null;
         }
     }
 
     /**
-     * Prepíše meno aj kontaktnej osobe.
+     * Zapíše opravené meno kontaktnej osobe.
      *
-     * Meno kontaktu je v tabuľke dvakrát — v `customers.name` a v
-     * `users.username` — a formulár aj CustomerResource ukazujú to druhé.
-     * Bez tohto kroku by oprava mena vyzerala, že nič nespravila: v stĺpci by
-     * bola nová hodnota, na obrazovke stará.
-     *
-     * Prepisuje sa len vtedy, keď obe strany doteraz držali to isté. Keď sa
-     * už rozišli, je to skutočný rozdiel dvoch údajov a nie je na kontrole,
-     * aby rozhodla, ktorý z nich je ten správny.
+     * Meno je jediné pole posudku, ktoré nesedí na `customers` — patrí
+     * používateľovi, ktorý za firmu objednáva. Zapisuje sa celé meno naraz
+     * (`username` aj rozpad na krstné/priezvisko), aby sa tvary nerozišli.
      */
-    private function syncContactName(Customer $customer): void
+    private function writeContactName(Customer $customer): void
     {
+        $after = trim((string) $this->pendingContactName);
+
+        if ($after === '') {
+            return;
+        }
+
         $contact = $customer->primaryUser ?? $customer->latestUser;
 
+        // Zákazník bez kontaktnej osoby nemá kam meno uložiť. Po migrácii,
+        // ktorá `customers.name` zrušila, taký v dátach nie je — vzniknúť môže
+        // len ako zákazník založený bez e-mailu, a tam nie je čo opravovať.
         if ($contact === null) {
             return;
         }
 
-        $before = (string) $customer->getOriginal('name');
-        $after = (string) $customer->getAttributes()['name'];
-
-        if ($after === '' || trim((string) $contact->username) !== trim($before)) {
-            return;
-        }
-
-        $parts = preg_split('/\s+/u', trim($after), 2) ?: [];
+        $parts = preg_split('/\s+/u', $after, 2) ?: [];
 
         $contact->forceFill([
             'name' => $after,
@@ -569,6 +576,10 @@ class CustomerReviewService
             'firstName' => $parts[0] ?? $after,
             'lastName' => $parts[1] ?? '',
         ])->saveQuietly();
+
+        // Accessor `name` číta z načítanej relácie — bez obnovenia by volajúci
+        // dostal ešte staré meno.
+        $customer->unsetRelation('primaryUser')->unsetRelation('latestUser');
     }
 
     private function registryData(Customer $customer): ?array

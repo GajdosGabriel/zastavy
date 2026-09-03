@@ -109,7 +109,7 @@ class CheckoutController extends Controller
 
         return [
             'id' => $customer->id,
-            'name' => $contact?->username ?? $customer->name,
+            'name' => $contact?->username,
             'company' => $customer->company,
             'street' => $customer->street,
             'city' => $customer->city,

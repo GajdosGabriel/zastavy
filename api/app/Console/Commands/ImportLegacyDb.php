@@ -92,12 +92,12 @@ class ImportLegacyDb extends Command
                 $chunk->map(fn($r) => [
                     'id'                => $r->id,
                     'status'            => 'active',
-                    'name'              => $r->name,
                     'company'           => $r->company,
                     'slug'              => $r->slug,
                     'phone'             => $r->phone,
                     'email'             => $r->email ?? null,
-                    'username'          => $r->username,
+                    // Meno kontaktnej osoby zo starej databázy nesie users —
+                    // zakladá ho importContacts() z legacy `username ?: name`.
                     'street'            => $r->street,
                     'postcode'          => $r->postcode,
                     'city'              => $r->city,

@@ -67,6 +67,9 @@ class CustomerExportController extends Controller
         // Súhrny počítame poddotazmi, nie cez relácie — vzťah orders() má
         // vlastné zoradenie a v agregáte by len zbytočne prekážalo.
         $customers = Customer::query()
+            // Meno kontaktnej osoby je v `users`; bez načítania dopredu by
+            // export spravil dotaz na každý riadok.
+            ->with('primaryUser')
             ->select('customers.*')
             ->selectSub(
                 Order::selectRaw('COUNT(*)')->whereColumn('orders.customer_id', 'customers.id'),

@@ -60,6 +60,19 @@ class CustomerService
 
     public function storeUser(Customer $customer, array $request): ?User
     {
+        $user = $this->writeContact($customer, $request);
+
+        // Meno zákazníka je accessor nad `users`. Pri zakladaní nového
+        // zákazníka stihne posudok (observer na uložení) prečítať `name` ešte
+        // predtým, než kontakt existuje, a relácia sa načíta prázdna. Bez
+        // tohto by volajúci dostal zákazníka bez mena, hoci kontakt už má.
+        $customer->unsetRelation('primaryUser')->unsetRelation('latestUser');
+
+        return $user;
+    }
+
+    private function writeContact(Customer $customer, array $request): ?User
+    {
         $email = $request['email'] ?? null;
 
         if (!$email) {
@@ -136,12 +149,13 @@ class CustomerService
     {
         $company = $request['company'] ?? null;
 
+        // Meno kontaktnej osoby tu zámerne nie je — patrí do `users` a zapisuje
+        // ho storeUser(). Na `customers` bývalo v dvoch stĺpcoch naraz
+        // (`name`, `username`) a formulár aj tak ukazoval hodnotu z `users`.
         return [
-            'name' => $company ?: ($request['name'] ?? 'Zákazník'),
             'company' => $company,
             'email' => $request['email'] ?? null,
             'phone' => $request['phone'] ?? null,
-            'username' => $request['username'] ?? $request['name'] ?? null,
             'street' => $request['street'] ?? null,
             'postcode' => $request['postcode'] ?? null,
             'city' => $request['city'] ?? null,
