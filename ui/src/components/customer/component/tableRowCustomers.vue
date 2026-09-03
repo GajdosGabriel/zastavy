@@ -12,6 +12,20 @@ const actionMap = {
     delete: { onClick: () => destroyCustomer(props.customer.endpoints.destroy) },
 };
 
+/**
+ * Odznak kvality údajov.
+ *
+ * Server posiela `review` len vtedy, keď je čo povedať — riadok v poriadku
+ * ani odbavený posudok odznak nemá. Bez toho by pri 1 900 zákazníkoch zoznam
+ * zošedivel od značiek, ktoré nič neznamenajú.
+ */
+const review = computed(() => props.customer.review || null);
+
+const reviewClass = computed(() => ({
+    error: "bg-red-100 text-red-700",
+    warning: "bg-amber-100 text-amber-700",
+}[review.value?.severity] || "bg-gray-100 text-gray-600"));
+
 const dropdownItems = computed(() => {
     if (!Object.keys(props.customer.endpoints).length) return [];
 
@@ -48,6 +62,15 @@ const dropdownItems = computed(() => {
                     }">
                         <div class="text-sm font-medium text-gray-900">
                             {{ customer.company.substring(0, 35) }}
+                            <router-link
+                                v-if="review"
+                                :to="{ name: 'customers.edit', params: { customerId: customer.id } }"
+                                class="ml-1 inline-block rounded px-1.5 py-0.5 align-middle text-[11px] font-semibold"
+                                :class="reviewClass"
+                                :title="review.summary || 'Kontrola údajov našla nezrovnalosti'"
+                            >
+                                {{ review.count }}×
+                            </router-link>
                             <div class="text-sm text-gray-500">
                                 {{ customer.name }}
                                 {{ customer.phone }}

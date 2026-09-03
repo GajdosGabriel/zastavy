@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    /*
+     * Post-kontrola údajov zákazníka (App\Services\OpenAI\ChatGPT). Bez kľúča
+     * beží kontrola ďalej, len bez AI vrstvy — pravidlá a register fungujú.
+     */
+    'openai' => [
+        'key' => env('OPENAI_API_KEY', ''),
+    ],
+
 ];

@@ -11,7 +11,27 @@ use Illuminate\Database\Eloquent\Builder;
 class CustomerFilter extends Filters
 {
 
-    protected $filters = ['sortByOrders', 'bySearchInput', 'sortById', 'isMarked', 'withoutOrder', 'status'];
+    protected $filters = ['sortByOrders', 'bySearchInput', 'sortById', 'isMarked', 'withoutOrder', 'status', 'review'];
+
+    /**
+     * Zákazníci, na ktorých post-kontrola niečo našla.
+     *
+     * `?review=open` — má neodbavené nálezy. Presne na túto adresu vedie
+     * odkaz zo súhrnu, ktorý chodí adminovi (CustomerReviewDigest).
+     * `?review=error` — len tie, kde je chyba, nie drobnosti.
+     */
+    public function review($value)
+    {
+        $query = $this->builder->whereHas('review', function ($query) use ($value) {
+            $query->open();
+
+            if ($value === 'error') {
+                $query->where('score', '<', 60);
+            }
+        });
+
+        return $query->orderBy('id', 'desc');
+    }
 
     public function status($value)
     {

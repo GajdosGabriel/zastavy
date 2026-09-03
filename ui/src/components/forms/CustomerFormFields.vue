@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onBeforeUnmount } from "vue";
 import { storeToRefs } from "pinia";
+import axiosInstance from "../../axiosInstance";
 import useCustomers from "../../store/StoreCustomers";
 import FormInput from "./FormInput.vue";
 import RequiredMark from "./RequiredMark.vue";
+import FieldHint from "./FieldHint.vue";
 
 const props = withDefaults(defineProps<{
     fieldErrors?: Record<string, string>;
@@ -62,6 +64,58 @@ watch(() => getCustomer.value?.ico, (val) => {
     if (cleaned !== String(val)) getCustomer.value.ico = cleaned;
 }, { flush: "sync" });
 
+/**
+ * Živá kontrola vyplnených údajov.
+ *
+ * Tie isté pravidlá, aké po uložení použije post-kontrola — len tu ich človek
+ * vidí, kým je pri formulári a údaje pozná. Doteraz sme chyby len zbierali:
+ * IČO v poli „Názov firmy" aj DIČ ako pomlčka prišli práve odtiaľto.
+ *
+ * Rada, nie prekážka: uloženie neblokuje (to robí validácia na serveri),
+ * len ukáže, čo je podozrivé, a ponúkne opravený tvar.
+ */
+const hints = ref<Record<string, { severity: string; message: string; suggested: string | null }[]>>({});
+const CHECKED_FIELDS = ["name", "company", "email", "phone", "street", "postcode", "city", "ico", "dic", "ic_dic"];
+
+let checkTimer: ReturnType<typeof setTimeout> | undefined;
+
+const runCheck = async () => {
+    const payload: Record<string, unknown> = {};
+    CHECKED_FIELDS.forEach((field) => {
+        payload[field] = getCustomer.value?.[field] ?? null;
+    });
+
+    try {
+        const response = await axiosInstance.post("/customer-check", payload);
+        hints.value = response.data.data || {};
+    } catch (e) {
+        // Kontrola je pomôcka. Keď endpoint neodpovie, formulár funguje ďalej
+        // a chybu nájde post-kontrola po uložení.
+        hints.value = {};
+    }
+};
+
+// Odklad, nech sa nevolá na každý stlačený kláves.
+watch(
+    () => CHECKED_FIELDS.map((field) => getCustomer.value?.[field]).join("|"),
+    () => {
+        clearTimeout(checkTimer);
+        checkTimer = setTimeout(runCheck, 600);
+    }
+);
+
+onBeforeUnmount(() => clearTimeout(checkTimer));
+
+const hintFor = (field: string) => hints.value[field]?.[0] ?? null;
+
+const applyHint = (field: string) => {
+    const hint = hintFor(field);
+
+    if (hint?.suggested) {
+        getCustomer.value[field] = hint.suggested;
+    }
+};
+
 const onClickIco = async () => {
     icoSearchMessage.value = "";
     if (icoSearchValidationError()) return;
@@ -114,54 +168,64 @@ const onClickIco = async () => {
                 Názov firmy <RequiredMark v-if="isRequired('company')" />
             </label>
             <FormInput v-model="getCustomer.company" :invalid="isMissing('company')" :error="fieldError('company')" placeholder="Názov firmy" field-key="customer.company" />
+            <FieldHint :hint="hintFor('company')" @apply="applyHint('company')" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Ulica a číslo <RequiredMark v-if="isRequired('street')" />
             </label>
             <FormInput v-model="getCustomer.street" :invalid="isMissing('street')" :error="fieldError('street')" placeholder="Ulica a číslo" field-key="customer.street" />
+            <FieldHint :hint="hintFor('street')" @apply="applyHint('street')" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 PSČ <RequiredMark v-if="isRequired('postcode')" />
             </label>
             <FormInput v-model="getCustomer.postcode" :invalid="isMissing('postcode')" :error="fieldError('postcode')" placeholder="PSČ" field-key="customer.postcode" />
+            <FieldHint :hint="hintFor('postcode')" @apply="applyHint('postcode')" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Mesto <RequiredMark v-if="isRequired('city')" />
             </label>
             <FormInput v-model="getCustomer.city" :invalid="isMissing('city')" :error="fieldError('city')" placeholder="Mesto" field-key="customer.city" />
+            <FieldHint :hint="hintFor('city')" @apply="applyHint('city')" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Kontaktné meno <RequiredMark v-if="isRequired('name')" />
             </label>
             <FormInput v-model="getCustomer.name" :invalid="isMissing('name')" :error="fieldError('name')" placeholder="Meno kontaktnej osoby" field-key="customer.name" />
+            <FieldHint :hint="hintFor('name')" @apply="applyHint('name')" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Email <RequiredMark v-if="isRequired('email')" />
             </label>
             <FormInput v-model="getCustomer.email" type="email" :invalid="isMissing('email') || !!fieldError('email')" :error="fieldError('email')" placeholder="Email" field-key="customer.email" />
+            <FieldHint :hint="hintFor('email')" @apply="applyHint('email')" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Telefón <RequiredMark v-if="isRequired('phone')" />
             </label>
             <FormInput v-model="getCustomer.phone" :invalid="isMissing('phone')" :error="fieldError('phone')" placeholder="Telefón" field-key="customer.phone" />
+            <FieldHint :hint="hintFor('phone')" @apply="applyHint('phone')" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">IČO</label>
             <FormInput v-model="getCustomer.ico" :invalid="!!icoValidationError()" :error="icoValidationError()" inputmode="numeric" pattern="[0-9]*" placeholder="IČO" @keyup.enter="onClickIco" />
+            <FieldHint :hint="hintFor('ico')" @apply="applyHint('ico')" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">DIČ</label>
             <FormInput v-model="getCustomer.dic" placeholder="DIČ" />
+            <FieldHint :hint="hintFor('dic')" @apply="applyHint('dic')" />
         </div>
         <div>
             <label class="mb-1.5 block text-sm font-semibold text-gray-700">IČ DPH</label>
             <FormInput v-model="getCustomer.ic_dic" placeholder="IČ DPH" />
+            <FieldHint :hint="hintFor('ic_dic')" @apply="applyHint('ic_dic')" />
         </div>
 
         <div v-if="withStatus && getCustomer.status" class="sm:col-span-2 lg:col-span-3">

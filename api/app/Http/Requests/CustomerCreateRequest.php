@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\CustomerTaxId;
 use App\Rules\IcoRule;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Http\Requests\CustomerUpdateRequest;
@@ -27,7 +28,11 @@ class CustomerCreateRequest extends CustomerUpdateRequest
     {
         return [
             'company'=>'required|min:2',
-            'ico' => new IcoRule(),
+            // IcoRule stráži jedinečnosť, CustomerTaxId správnosť — sú to dve
+            // rôzne otázky a obe treba položiť.
+            'ico' => ['nullable', new IcoRule(), new CustomerTaxId('ico')],
+            'dic' => ['nullable', new CustomerTaxId('dic')],
+            'ic_dic' => ['nullable', new CustomerTaxId('ic_dic')],
         ];
     }
 

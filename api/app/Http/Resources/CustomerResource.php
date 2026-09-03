@@ -8,6 +8,35 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class CustomerResource extends JsonResource
 {
     /**
+     * Zhrnutie posudku pre odznak v zozname.
+     *
+     * Vracia null, kým kontrola nedobehla alebo kým nemá čo povedať — odznak
+     * „všetko v poriadku" pri 1 900 riadkoch je len šum a zoznam by z neho
+     * zošedivel. Odbavený posudok tiež mlčí.
+     */
+    private function reviewSummary(): ?array
+    {
+        $review = $this->relationLoaded('review') ? $this->review : null;
+
+        if ($review === null || $review->reviewed_at === null || $review->resolved_at !== null) {
+            return null;
+        }
+
+        $issues = (array) ($review->issues ?? []);
+
+        if ($issues === []) {
+            return null;
+        }
+
+        return [
+            'score' => $review->score,
+            'severity' => $review->topSeverity(),
+            'count' => count($issues),
+            'summary' => $review->summary,
+        ];
+    }
+
+    /**
      * Transform the resource into an array.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -39,6 +68,10 @@ class CustomerResource extends JsonResource
                 'isActive' => isset($this->mark),
                 'endpoint'    => route('customers.marks.store', $this->id),
             ],
+
+            // Odznak kvality údajov v zozname. Zámerne len zhrnutie — celý
+            // posudok si vypýta detail cez customers.review.show.
+            'review' => $this->reviewSummary(),
 
             'endpoints' => [
                 'index'     =>  route('customers.index'),

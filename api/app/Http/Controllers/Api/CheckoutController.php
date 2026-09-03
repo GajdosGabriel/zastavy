@@ -7,9 +7,9 @@ use App\Models\Customer;
 use App\Actions\StoreCheckout;
 use App\Http\Requests\OrderRequest;
 use App\Http\Controllers\Controller;
+use App\Services\Companies\CompanyRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 
 
 class CheckoutController extends Controller
@@ -92,15 +92,7 @@ class CheckoutController extends Controller
 
     private function findCompanyByIco(string $ico): ?array
     {
-        $response = Http::acceptJson()
-            ->timeout(8)
-            ->get("https://api.orsf.sk/v1/companies/{$ico}");
-
-        if (!$response->successful()) {
-            return null;
-        }
-
-        return $this->orsfToCheckoutData($response->json(), $ico);
+        return app(CompanyRegistry::class)->find($ico);
     }
 
     private function findCustomerByIco(string $ico): ?Customer
@@ -150,91 +142,5 @@ class CheckoutController extends Controller
         }
 
         return $data;
-    }
-
-    private function orsfToCheckoutData(array $company, string $ico): array
-    {
-        $address = $this->firstFilled([
-            data_get($company, 'address'),
-            data_get($company, 'seat'),
-            data_get($company, 'sidlo'),
-            data_get($company, 'registeredAddress'),
-        ], []);
-
-        return [
-            'name' => '',
-            'company' => $this->firstFilled([
-                data_get($company, 'name'),
-                data_get($company, 'businessName'),
-                data_get($company, 'obchodneMeno'),
-                data_get($company, 'nazov'),
-            ]),
-            'street' => $this->formatStreet($company, is_array($address) ? $address : []),
-            'city' => $this->firstFilled([
-                data_get($address, 'city'),
-                data_get($address, 'municipality'),
-                data_get($address, 'obec'),
-                data_get($company, 'city'),
-                data_get($company, 'municipality'),
-                data_get($company, 'obec'),
-            ]),
-            'postcode' => $this->firstFilled([
-                data_get($address, 'postalCode'),
-                data_get($address, 'psc'),
-                data_get($company, 'postalCode'),
-                data_get($company, 'psc'),
-            ]),
-            'ico' => $this->firstFilled([
-                data_get($company, 'nationalId'),
-                data_get($company, 'ico'),
-                $ico,
-            ]),
-            'dic' => $this->firstFilled([
-                data_get($company, 'taxId'),
-                data_get($company, 'dic'),
-            ]),
-            'ic_dic' => $this->firstFilled([
-                data_get($company, 'vatId'),
-                data_get($company, 'icdph'),
-                data_get($company, 'ic_dph'),
-            ]),
-        ];
-    }
-
-    private function formatStreet(array $company, array $address): string
-    {
-        $street = $this->firstFilled([
-            data_get($address, 'street'),
-            data_get($address, 'streetName'),
-            data_get($address, 'ulica'),
-            data_get($company, 'street'),
-            data_get($company, 'ulica'),
-        ]);
-
-        $number = $this->firstFilled([
-            data_get($address, 'streetNumber'),
-            data_get($address, 'addressNumber'),
-            data_get($address, 'buildingNumber'),
-            trim(implode('/', array_filter([
-                data_get($address, 'registerNumber'),
-                data_get($address, 'orientationNumber'),
-            ]))),
-            data_get($address, 'cislo'),
-            data_get($company, 'streetNumber'),
-            data_get($company, 'cislo'),
-        ]);
-
-        return trim(implode(' ', array_filter([$street, $number])));
-    }
-
-    private function firstFilled(array $values, $default = ''): mixed
-    {
-        foreach ($values as $value) {
-            if ($value !== null && $value !== '') {
-                return $value;
-            }
-        }
-
-        return $default;
     }
 }

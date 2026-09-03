@@ -27,12 +27,42 @@ interface Customer {
     [key: string]: any;
 }
 
+/** Jedna výhrada z post-kontroly údajov (CustomerReviewResource). */
+interface ReviewIssue {
+    index: number;
+    field: string;
+    label: string;
+    severity: "error" | "warning" | "notice";
+    source: "rule" | "registry" | "ai";
+    message: string;
+    current: string | null;
+    suggested: string | null;
+    applicable: boolean;
+}
+
+interface CustomerReview {
+    id: number;
+    customer_id: number;
+    score: number | null;
+    summary: string | null;
+    severity: string | null;
+    issues: ReviewIssue[];
+    applied: { index: number; field: string; label: string; from: string | null; to: string | null; source: string; at: string }[];
+    reviewed_at: string | null;
+    resolved_at: string | null;
+    pending: boolean;
+    last_error: string | null;
+    endpoints: { show: string; run: string; apply: string; revert: string; resolve: string };
+}
+
 interface CustomersState {
     statement: { markSelected: boolean };
     url: string;
     customers: Customer[];
     customer: Customer;
     statuses: any[];
+    review: CustomerReview | null;
+    reviewLoading: boolean;
 }
 
 export const useCustomers = defineStore("customers", {
@@ -44,12 +74,16 @@ export const useCustomers = defineStore("customers", {
         customers: [],
         customer: {} as Customer,
         statuses: [],
+        review: null,
+        reviewLoading: false,
     }),
 
     getters: {
         getCustomers: (state): Customer[] => state.customers,
         getCustomer: (state): Customer => state.customer,
         getStatuses: (state): any[] => state.statuses,
+        getReview: (state): CustomerReview | null => state.review,
+        isReviewLoading: (state): boolean => state.reviewLoading,
     },
 
     actions: {
@@ -76,6 +110,123 @@ export const useCustomers = defineStore("customers", {
             const response = await axiosInstance.get(PAGE_CUSTOMER.URL + "/" + id);
             this.customer = response.data.data;
             this.statuses = response.data.meta?.statuses || [];
+        },
+
+        /**
+         * Posudok údajov zákazníka.
+         *
+         * Ťahá sa zvlášť od zákazníka a zámerne: formulár sa má otvoriť aj
+         * vtedy, keď kontrola ešte nedobehla alebo keď je vypnutá.
+         */
+        async fetchReview(customerId: number | string): Promise<void> {
+            this.reviewLoading = true;
+
+            try {
+                const response = await axiosInstance.get(
+                    PAGE_CUSTOMER.URL + "/" + customerId + "/review"
+                );
+                this.review = response.data.data ?? null;
+            } catch (e) {
+                this.review = null;
+            } finally {
+                this.reviewLoading = false;
+            }
+        },
+
+        /** Pustí kontrolu hneď — „pozri sa na tento riadok teraz". */
+        async runReview(customerId: number | string): Promise<string> {
+            this.reviewLoading = true;
+
+            try {
+                const response = await axiosInstance.post(
+                    PAGE_CUSTOMER.URL + "/" + customerId + "/review"
+                );
+                this.review = response.data.data ?? null;
+                await this.fetchCustomer(customerId);
+
+                return "";
+            } catch (e: any) {
+                return e.response?.data?.message || "Kontrolu sa nepodarilo spustiť.";
+            } finally {
+                this.reviewLoading = false;
+            }
+        },
+
+        /**
+         * Prijme vybrané návrhy.
+         *
+         * Posielajú sa iba poradové čísla výhrad, nie hodnoty — čo sa zapíše,
+         * rozhoduje server podľa toho, čo kontrola naozaj navrhla.
+         */
+        async applyReviewSuggestions(customerId: number | string, indexes: number[]): Promise<string> {
+            this.reviewLoading = true;
+
+            try {
+                const response = await axiosInstance.put(
+                    PAGE_CUSTOMER.URL + "/" + customerId + "/review",
+                    { issues: indexes }
+                );
+
+                this.review = response.data.data ?? null;
+
+                // Formulár drží rozpracované údaje zákazníka; po zápise musí
+                // ukázať to, čo je naozaj v databáze, inak by uloženie
+                // formulára opravu hneď prepísalo späť.
+                if (response.data.customer) {
+                    this.customer = { ...this.customer, ...response.data.customer };
+                }
+
+                return "";
+            } catch (e: any) {
+                return e.response?.data?.message || "Návrh sa nepodarilo použiť.";
+            } finally {
+                this.reviewLoading = false;
+            }
+        },
+
+        /**
+         * Vráti automatickú opravu späť.
+         *
+         * Server odmietne vrátenie, ak hodnotu medzitým zmenil človek — jeho
+         * zmena má prednosť pred pôvodnou hodnotou z auditu.
+         */
+        async revertReviewChanges(customerId: number | string, indexes: number[]): Promise<string> {
+            this.reviewLoading = true;
+
+            try {
+                const response = await axiosInstance.post(
+                    PAGE_CUSTOMER.URL + "/" + customerId + "/review/revert",
+                    { applied: indexes }
+                );
+
+                this.review = response.data.data ?? null;
+
+                if (response.data.customer) {
+                    this.customer = { ...this.customer, ...response.data.customer };
+                }
+
+                return "";
+            } catch (e: any) {
+                return e.response?.data?.message || "Zmenu sa nepodarilo vrátiť.";
+            } finally {
+                this.reviewLoading = false;
+            }
+        },
+
+        /** Odbaví posudok — „viem o tom, nechaj tak". */
+        async resolveReview(customerId: number | string): Promise<void> {
+            this.reviewLoading = true;
+
+            try {
+                const response = await axiosInstance.delete(
+                    PAGE_CUSTOMER.URL + "/" + customerId + "/review"
+                );
+                this.review = response.data.data ?? null;
+            } catch (e) {
+                useErrors().setErrors(e);
+            } finally {
+                this.reviewLoading = false;
+            }
         },
 
         async fetchCustomerOrders(customerId: number | string): Promise<void> {
@@ -187,6 +338,7 @@ export const useCustomers = defineStore("customers", {
 
         resetCustomer(): void {
             this.customer = {} as Customer;
+            this.review = null;
         },
     },
 });

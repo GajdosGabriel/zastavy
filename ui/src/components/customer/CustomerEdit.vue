@@ -9,16 +9,20 @@ import router from "../../router";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 import useUnsavedChanges from "../../models/useUnsavedChanges";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
+import CustomerReviewPanel from "./component/CustomerReviewPanel.vue";
 
 const customersStore = useCustomers();
 const { getCustomer } = storeToRefs(customersStore);
-const { updateCustomer, fetchCustomer } = customersStore;
+const { updateCustomer, fetchCustomer, fetchReview } = customersStore;
 const { setOriginalData, markAsSaved } = useUnsavedChanges(() => getCustomer.value);
 const { params: { customerId } } = useRoute();
 
 onMounted(async () => {
     await fetchCustomer(customerId);
     setOriginalData(getCustomer.value);
+    // Posudok sa doťahuje až po zákazníkovi a bez await v rade — formulár
+    // je použiteľný aj vtedy, keď kontrola ešte nedobehla.
+    fetchReview(customerId);
 });
 
 const saveCustomer = async () => {
@@ -42,6 +46,7 @@ const requiredFields = ["company", "street", "city", "postcode", "email", "name"
                         <h2 class="text-base font-semibold text-gray-800">Údaje zákazníka</h2>
                     </div>
                     <div class="px-6 py-5">
+                        <CustomerReviewPanel :customerId="customerId as string" />
                         <CustomerFormFields :requiredFields="requiredFields" :withStatus="true" />
                         <div class="mt-6 flex justify-end">
                             <buttonSubmitComponent :item="{ name: 'Uložiť zmeny', spinner: true }" />

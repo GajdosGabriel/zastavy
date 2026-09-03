@@ -18,7 +18,7 @@ class CustomerController extends Controller
     {
         Gate::authorize('viewAny', Customer::class);
 
-        $customers = Customer::with('users')->filter($customerFilter)->latest()->paginate();
+        $customers = Customer::with(['users', 'review'])->filter($customerFilter)->latest()->paginate();
 
         // Zoznam statusov ide v meta, aby ho filter v zozname vedel vyrenderovať.
         return CustomerResource::collection($customers)->additional($this->formOptions());
@@ -28,7 +28,7 @@ class CustomerController extends Controller
     {
         Gate::authorize('view', $customer);
 
-        return (new CustomerResource($customer->load('users')))
+        return (new CustomerResource($customer->load(['users', 'review'])))
             ->additional($this->formOptions());
     }
 
@@ -47,7 +47,7 @@ class CustomerController extends Controller
 
         (new CustomerService)->updateWithUser($customer, $request->except('orders'));
 
-        return (new CustomerResource($customer->refresh()->load('users')))
+        return (new CustomerResource($customer->refresh()->load(['users', 'review'])))
             ->additional($this->formOptions());
     }
 

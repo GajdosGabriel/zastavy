@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\CustomerCheckController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\Dashboard\OrderAttachmentController;
@@ -24,6 +25,8 @@ use App\Http\Controllers\Api\SuperAdmin\CustomerController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerExportController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerMarkController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerOrderController;
+use App\Http\Controllers\Api\SuperAdmin\CustomerDuplicateController;
+use App\Http\Controllers\Api\SuperAdmin\CustomerReviewController;
 use App\Http\Controllers\Api\SuperAdmin\PaymentMethodController as AdminPaymentMethodController;
 use App\Http\Controllers\Api\SuperAdmin\ProductController;
 use App\Http\Controllers\Api\SuperAdmin\ProductImageController;
@@ -60,6 +63,13 @@ Route::apiResource('homes', HomeController::class);
 
 // Verejný checkout a IČO lookup — throttle proti spamu objednávok a scrapingu kontaktov.
 Route::apiResource('checkouts', CheckoutController::class)->middleware('throttle:30,1');
+
+// Kontrola vyplnených údajov ešte pred odoslaním formulára. Tie isté pravidlá,
+// aké po uložení použije post-kontrola — len tu stihnú chybu zastaviť.
+// Nič nezapisuje a nič nečíta z databázy, iba posudzuje poslané hodnoty.
+Route::post('customer-check', CustomerCheckController::class)
+    ->middleware('throttle:60,1')
+    ->name('customer-check');
 
 Route::get('/public-orders/{uuid}', [PublicOrderController::class, 'show'])->name('public-orders.show');
 // Prílohy verejného detailu — prístup chráni len ťažko uhádnuteľné uuid objednávky,
@@ -112,6 +122,18 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     // Musí byť pred apiResource('customers'), inak by "export" pohltilo {customer}.
     Route::get('customers/export/attributes', [CustomerExportController::class, 'attributes'])->name('customers.export.attributes');
     Route::get('customers/export', [CustomerExportController::class, 'export'])->name('customers.export');
+
+    // Duplicity — musí byť pred apiResource('customers'), inak by "duplicates"
+    // pohltilo {customer}.
+    Route::get('customers/duplicates', [CustomerDuplicateController::class, 'index'])->name('customers.duplicates.index');
+    Route::post('customers/{customer}/merge', [CustomerDuplicateController::class, 'store'])->name('customers.duplicates.store');
+
+    // Post-kontrola údajov zákazníka (viď App\Services\Customers\CustomerReviewService).
+    Route::get('customers/{customer}/review', [CustomerReviewController::class, 'show'])->name('customers.review.show');
+    Route::post('customers/{customer}/review', [CustomerReviewController::class, 'store'])->name('customers.review.store');
+    Route::put('customers/{customer}/review', [CustomerReviewController::class, 'update'])->name('customers.review.update');
+    Route::post('customers/{customer}/review/revert', [CustomerReviewController::class, 'revert'])->name('customers.review.revert');
+    Route::delete('customers/{customer}/review', [CustomerReviewController::class, 'destroy'])->name('customers.review.destroy');
 
     Route::apiResources([
         'categories' => CategoryController::class,

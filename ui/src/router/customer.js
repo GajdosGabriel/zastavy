@@ -44,6 +44,17 @@ const customer = [
         },
     },
     {
+        path: '/zakaznici/duplicity',
+        name: 'customers.duplicates',
+        components: {
+            default: () => import('../components/customer/CustomerDuplicates.vue'),
+        },
+        meta: {
+            title: 'Duplicitni zakaznici',
+            superAdminOnly: true,
+        },
+    },
+    {
         path: '/zakaznici/create',
         name: 'customers.create',
         components: {

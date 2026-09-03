@@ -98,6 +98,15 @@ const buttonBottomLeft = { name: 'Späť', spinner: true, link: '/zakaznici', ic
             <div class="page-body col-span-12">
                 <PageHeader :item="template().page_header" />
 
+                <div class="mt-2 flex justify-end">
+                    <router-link
+                        :to="{ name: 'customers.duplicates' }"
+                        class="text-sm font-semibold text-blue-600 hover:underline"
+                    >
+                        Duplicitní zákazníci
+                    </router-link>
+                </div>
+
                 <filter-panel />
 
                 <table class="min-w-full divide-y divide-gray-200">

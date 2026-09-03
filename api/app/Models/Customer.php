@@ -58,6 +58,12 @@ class Customer extends Model
         return $this->morphOne(Mark::class, 'fileable');
     }
 
+    /** Posudok údajov z post-kontroly — jeden na zákazníka, prepisuje sa. */
+    public function review()
+    {
+        return $this->hasOne(CustomerReview::class);
+    }
+
 
     public function setNameAttribute($value)
     {
