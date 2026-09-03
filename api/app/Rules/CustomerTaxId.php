@@ -48,7 +48,7 @@ class CustomerTaxId implements ValidationRule
         $digits = preg_replace('/\D+/', '', $value) ?? '';
 
         if ($digits === '' || strlen($digits) > 8) {
-            $fail('IČO musí mať najviac 8 číslic.');
+            $fail(__('rules.ico.length'));
 
             return;
         }
@@ -57,7 +57,7 @@ class CustomerTaxId implements ValidationRule
         // a človek ich pri prepise vynechá. Kontrolná číslica sa počíta
         // až z osemmiestneho tvaru.
         if (! $rules->icoChecksumValid(str_pad($digits, 8, '0', STR_PAD_LEFT))) {
-            $fail('IČO nesedí na kontrolnú číslicu — skontrolujte, či nie je preklep.');
+            $fail(__('rules.ico.checksum'));
         }
     }
 
@@ -66,14 +66,14 @@ class CustomerTaxId implements ValidationRule
         $digits = preg_replace('/\D+/', '', $value) ?? '';
 
         if (strlen($digits) !== 10) {
-            $fail('DIČ musí mať 10 číslic.');
+            $fail(__('rules.dic.length'));
         }
     }
 
     private function validateIcDic(string $value, Closure $fail): void
     {
         if (preg_match('/^SK\d{10}$/i', preg_replace('/\s+/', '', $value) ?? '') !== 1) {
-            $fail('IČ DPH musí byť v tvare SK a 10 číslic.');
+            $fail(__('rules.ic_dic.shape'));
         }
     }
 }

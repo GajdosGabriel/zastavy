@@ -17,11 +17,17 @@ use App\Models\Customer;
  *   field      — stĺpec v `customers`
  *   severity   — error | warning | notice (poradie je aj poradím pri triedení)
  *   source     — rule | registry | ai (odkiaľ nález je, kvôli dôvere)
- *   message    — jedna veta pre človeka
+ *   key        — kľúč do prekladov (customer_review.issues.*)
+ *   params     — čo sa do vety doplní (`:value`, `:dic`…)
  *   current    — čo je v poli teraz
  *   suggested  — čo tam má byť, alebo null keď to vieme len oznámiť
  *   fix        — kľúč z `customer_review.autofix`, keď sa oprava smie spraviť
  *                sama; null pri všetkom, čo mení význam údaja
+ *
+ * Text vety tu zámerne nie je. Posudok vzniká v nočnom behu, kde žiadny
+ * používateľ nesedí, a ukladá sa do databázy — preložený pri zápise by
+ * zamrzol v jazyku, ktorý mal server práve nastavený. Preklad sa robí až
+ * pri čítaní (CustomerReviewResource, CustomerReviewDigest).
  */
 class CustomerDataRules
 {
@@ -197,14 +203,11 @@ class CustomerDataRules
         return [$this->issue(
             $field,
             'warning',
-            $trimmed === ''
-                ? ($nullable
-                    ? 'Pole je uložené ako prázdny reťazec, nie ako prázdna hodnota — filtre „nevyplnené" ho preto nenájdu.'
-                    : 'Pole je prázdne, hoci je povinné.')
-                : 'Namiesto prázdnej hodnoty je v poli zástupný znak „'.$trimmed.'", ktorý sa vytlačí na faktúru.',
+            $trimmed === '' ? ($nullable ? 'blank_string' : 'blank_required') : 'blank_placeholder',
             $value,
             null,
             $nullable ? 'blank_to_null' : null,
+            ['value' => $trimmed],
         )];
     }
 
@@ -225,7 +228,7 @@ class CustomerDataRules
         return [$this->issue(
             $field,
             'notice',
-            'Hodnota má medzery navyše alebo zalomenie riadku.',
+            'whitespace',
             $value,
             $clean,
             'trim',
@@ -243,11 +246,11 @@ class CustomerDataRules
         $digits = preg_replace('/\D+/', '', $ico) ?? '';
 
         if ($digits === '') {
-            return [$this->issue('ico', 'error', 'IČO neobsahuje ani jednu číslicu.', $ico)];
+            return [$this->issue('ico', 'error', 'ico_no_digits', $ico)];
         }
 
         if (strlen($digits) > 8) {
-            return [$this->issue('ico', 'error', 'IČO má viac než 8 číslic.', $ico)];
+            return [$this->issue('ico', 'error', 'ico_too_long', $ico)];
         }
 
         // Kratšie než 8 číslic nie je chyba v údaji: obce a staré subjekty majú
@@ -259,9 +262,7 @@ class CustomerDataRules
             return [$this->issue(
                 'ico',
                 $clean ? 'warning' : 'error',
-                $clean
-                    ? 'IČO nie je v tvare, v akom ho pozná register — 8 číslic bez medzier a lomítok.'
-                    : 'V poli IČO je okrem čísla aj text.',
+                $clean ? 'ico_format' : 'ico_with_text',
                 $ico,
                 str_pad($digits, 8, '0', STR_PAD_LEFT),
                 $clean ? 'ico_pad' : null,
@@ -272,7 +273,7 @@ class CustomerDataRules
             return [$this->issue(
                 'ico',
                 'error',
-                'IČO nesedí na kontrolnú číslicu — takmer isto je v ňom preklep a v registri neexistuje.',
+                'ico_checksum',
                 $ico,
             )];
         }
@@ -293,7 +294,7 @@ class CustomerDataRules
                 : [$this->issue(
                     'dic',
                     'warning',
-                    'Zákazník má IČO, ale nemá DIČ — na faktúre bude chýbať údaj, ktorý register pozná.',
+                    'dic_missing',
                     $dic,
                     null,
                     'registry_tax_ids',
@@ -311,9 +312,7 @@ class CustomerDataRules
             return [$this->issue(
                 'dic',
                 'warning',
-                $clean
-                    ? 'DIČ obsahuje medzery alebo predponu SK.'
-                    : 'V poli DIČ je okrem čísla aj text.',
+                $clean ? 'dic_format' : 'dic_with_text',
                 $dic,
                 $digits,
                 $clean ? 'trim' : null,
@@ -321,7 +320,7 @@ class CustomerDataRules
         }
 
         if (strlen($digits) !== 10) {
-            return [$this->issue('dic', 'error', 'DIČ nemá 10 číslic.', $dic)];
+            return [$this->issue('dic', 'error', 'dic_length', $dic)];
         }
 
         // Slovenské DIČ je deliteľné jedenástimi. V tabuľke to nesedí necelému
@@ -331,7 +330,7 @@ class CustomerDataRules
             return [$this->issue(
                 'dic',
                 'notice',
-                'DIČ nesedí na kontrolný súčet — pravdepodobne je v ňom preklep. Overte v registri.',
+                'dic_checksum',
                 $dic,
             )];
         }
@@ -354,7 +353,7 @@ class CustomerDataRules
             return [$this->issue(
                 'ic_dic',
                 'notice',
-                'IČ DPH má medzery alebo malé písmená.',
+                'ic_dic_format',
                 $icDic,
                 $normalized,
                 'trim',
@@ -362,7 +361,7 @@ class CustomerDataRules
         }
 
         if (! preg_match('/^SK\d{10}$/', $normalized)) {
-            return [$this->issue('ic_dic', 'error', 'IČ DPH nie je v tvare SK + 10 číslic.', $icDic)];
+            return [$this->issue('ic_dic', 'error', 'ic_dic_shape', $icDic)];
         }
 
         // IČ DPH slovenského platiteľa je vždy „SK" + jeho DIČ. Keď sa
@@ -371,9 +370,11 @@ class CustomerDataRules
             return [$this->issue(
                 'ic_dic',
                 'error',
-                'IČ DPH sa nezhoduje s DIČ — očakávané SK'.$dic.'.',
+                'ic_dic_mismatch',
                 $icDic,
                 'SK'.$dic,
+                null,
+                ['dic' => $dic],
             )];
         }
 
@@ -394,7 +395,7 @@ class CustomerDataRules
             return [$this->issue(
                 'phone',
                 'warning',
-                'Telefón sa nedá prečítať ako slovenské ani zahraničné číslo.',
+                'phone_unreadable',
                 $phone,
             )];
         }
@@ -406,7 +407,7 @@ class CustomerDataRules
         return [$this->issue(
             'phone',
             'notice',
-            'Telefón nie je v medzinárodnom tvare — pri exporte a hromadnej pošte sa taký zápis rozpadne.',
+            'phone_format',
             $phone,
             $normalized,
             'phone_format',
@@ -474,7 +475,7 @@ class CustomerDataRules
             return [$this->issue(
                 'email',
                 'notice',
-                'E-mail obsahuje veľké písmená — pri porovnávaní s existujúcim kontaktom z toho vznikajú duplicity.',
+                'email_case',
                 $email,
                 $lower,
                 'trim',
@@ -485,7 +486,7 @@ class CustomerDataRules
             return [$this->issue(
                 'email',
                 'error',
-                'E-mail nie je platná adresa — potvrdenie objednávky sa nedoručí.',
+                'email_invalid',
                 $email,
             )];
         }
@@ -516,16 +517,14 @@ class CustomerDataRules
             return [$this->issue(
                 'postcode',
                 $onlySeparators ? 'notice' : 'warning',
-                $onlySeparators
-                    ? 'PSČ nie je uložené ako 5 číslic bez medzier.'
-                    : 'V PSČ je zlepený aj iný údaj — skontrolujte, čo do poľa patrí.',
+                $onlySeparators ? 'postcode_format' : 'postcode_mixed',
                 $postcode,
                 str_pad($digits, 5, '0', STR_PAD_LEFT),
                 $onlySeparators ? 'postcode_format' : null,
             )];
         }
 
-        return [$this->issue('postcode', 'warning', 'PSČ nemá 5 číslic.', $postcode)];
+        return [$this->issue('postcode', 'warning', 'postcode_length', $postcode)];
     }
 
     private function checkCompany(Customer $customer): array
@@ -542,7 +541,7 @@ class CustomerDataRules
             return [$this->issue(
                 'company',
                 'error',
-                'V názve firmy je číslo, nie názov — vyzerá to na IČO zapísané do zlého poľa.',
+                'company_is_number',
                 $company,
             )];
         }
@@ -553,7 +552,7 @@ class CustomerDataRules
             return [$this->issue(
                 'company',
                 'warning',
-                'V názve firmy je aj adresa — na faktúre sa potom vytlačí dvakrát.',
+                'company_has_address',
                 $company,
             )];
         }
@@ -577,7 +576,7 @@ class CustomerDataRules
             return [$this->issue(
                 'street',
                 'notice',
-                'V ulici je iba číslo. Pri obci bez ulíc je to v poriadku, ale na obálke chýba názov.',
+                'street_number_only',
                 $street,
                 $city !== '' ? $city.' '.$street : null,
             )];
@@ -627,19 +626,25 @@ class CustomerDataRules
         return preg_match('/^[\d\s\/.-]+$/u', $value) === 1;
     }
 
+    /**
+     * @param  string  $key  kľúč pod `customer_review.issues.*`
+     * @param  array<string, string>  $params
+     */
     private function issue(
         string $field,
         string $severity,
-        string $message,
+        string $key,
         ?string $current = null,
         ?string $suggested = null,
         ?string $fix = null,
+        array $params = [],
     ): array {
         return [
             'field' => $field,
             'severity' => $severity,
             'source' => 'rule',
-            'message' => $message,
+            'key' => 'customer_review.issues.'.$key,
+            'params' => $params,
             'current' => $current,
             'suggested' => $suggested,
             'fix' => $fix,

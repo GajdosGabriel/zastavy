@@ -7,6 +7,13 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Posudok údajov zákazníka pre panel v administrácii.
  *
+ * Tu sa nález prekladá — až tu. V databáze leží ako kľúč a parametre, lebo
+ * vznikol v nočnom behu, kde žiadny používateľ nesedel; jazyk sa vyberá podľa
+ * toho, kto sa práve pýta (App\Http\Middleware\SetLocale).
+ *
+ * Výnimkou je nález od AI: model si vetu formuluje sám, kľúč k nej neexistuje
+ * a preložiť sa nedá. Taký nález nesie `message` a berie sa, ako je.
+ *
  * Výhrady si nesú svoj index v poli `issues` — presne ten sa vracia späť pri
  * prijatí návrhu. Prehliadač tak neposiela hodnoty, len „chcem toto", a zapíše
  * sa vždy to, čo kontrola naozaj navrhla.
@@ -18,13 +25,18 @@ class CustomerReviewResource extends JsonResource
         $issues = [];
 
         foreach ((array) ($this->issues ?? []) as $index => $issue) {
+            $severity = $issue['severity'] ?? 'notice';
+            $source = $issue['source'] ?? 'rule';
+
             $issues[] = [
                 'index' => $index,
                 'field' => $issue['field'] ?? null,
-                'label' => $this->label($issue['field'] ?? ''),
-                'severity' => $issue['severity'] ?? 'notice',
-                'source' => $issue['source'] ?? 'rule',
-                'message' => $issue['message'] ?? '',
+                'label' => $this->fieldLabel($issue['field'] ?? ''),
+                'severity' => $severity,
+                'severity_label' => __('customer_review.severities.'.$severity),
+                'source' => $source,
+                'source_label' => __('customer_review.sources.'.$source),
+                'message' => $this->message($issue),
                 'current' => $issue['current'] ?? null,
                 'suggested' => $issue['suggested'] ?? null,
                 'applicable' => ($issue['suggested'] ?? null) !== null && $issue['suggested'] !== '',
@@ -34,13 +46,16 @@ class CustomerReviewResource extends JsonResource
         $applied = [];
 
         foreach ((array) ($this->applied ?? []) as $index => $change) {
+            $source = $change['source'] ?? 'rule';
+
             $applied[] = [
                 'index' => $index,
                 'field' => $change['field'] ?? null,
-                'label' => $this->label($change['field'] ?? ''),
+                'label' => $this->fieldLabel($change['field'] ?? ''),
                 'from' => $change['from'] ?? null,
                 'to' => $change['to'] ?? null,
-                'source' => $change['source'] ?? 'rule',
+                'source' => $source,
+                'source_label' => __('customer_review.sources.'.$source),
                 'at' => $change['at'] ?? null,
             ];
         }
@@ -49,7 +64,7 @@ class CustomerReviewResource extends JsonResource
             'id' => $this->id,
             'customer_id' => $this->customer_id,
             'score' => $this->score,
-            'summary' => $this->summary,
+            'summary' => $this->resource->summaryText(),
             'severity' => $this->topSeverity(),
             'issues' => $issues,
             'applied' => $applied,
@@ -67,19 +82,25 @@ class CustomerReviewResource extends JsonResource
         ];
     }
 
-    private function label(string $field): string
+    /**
+     * Veta nálezu.
+     *
+     * `message` je fallback pre nálezy od AI a pre posudky zapísané ešte pred
+     * prechodom na kľúče — tie sa preložia až pri najbližšom prebehnutí.
+     */
+    private function message(array $issue): string
     {
-        return [
-            'name' => 'Kontaktná osoba',
-            'company' => 'Názov firmy',
-            'email' => 'E-mail',
-            'phone' => 'Telefón',
-            'street' => 'Ulica a číslo',
-            'postcode' => 'PSČ',
-            'city' => 'Mesto/obec',
-            'ico' => 'IČO',
-            'dic' => 'DIČ',
-            'ic_dic' => 'IČ DPH',
-        ][$field] ?? $field;
+        $key = $issue['key'] ?? null;
+
+        if ($key === null) {
+            return (string) ($issue['message'] ?? '');
+        }
+
+        return __($key, (array) ($issue['params'] ?? []));
+    }
+
+    private function fieldLabel(string $field): string
+    {
+        return $field === '' ? '' : __('customer_review.fields.'.$field);
     }
 }

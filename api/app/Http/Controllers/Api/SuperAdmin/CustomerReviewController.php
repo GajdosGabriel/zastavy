@@ -49,13 +49,15 @@ class CustomerReviewController extends Controller
         }
 
         if ($review === null) {
-            return response()->json(['message' => 'Kontrola je vypnutá konfiguráciou.'], 422);
+            return response()->json(['message' => __('customer_review.messages.disabled')], 422);
         }
 
         try {
             $this->service->run($review);
         } catch (\Throwable $e) {
-            return response()->json(['message' => 'Kontrolu sa nepodarilo dokončiť: '.$e->getMessage()], 502);
+            return response()->json([
+                'message' => __('customer_review.messages.run_failed', ['error' => $e->getMessage()]),
+            ], 502);
         }
 
         return new CustomerReviewResource($review->refresh());
@@ -80,7 +82,7 @@ class CustomerReviewController extends Controller
         $review = $this->service->reviewFor($customer);
 
         if ($review === null) {
-            return response()->json(['message' => 'Zákazník nemá posudok.'], 404);
+            return response()->json(['message' => __('customer_review.messages.no_review')], 404);
         }
 
         $changes = $this->service->applySuggestions($review, $validated['issues'], $request->user()?->id);
@@ -110,14 +112,14 @@ class CustomerReviewController extends Controller
         $review = $this->service->reviewFor($customer);
 
         if ($review === null) {
-            return response()->json(['message' => 'Zákazník nemá posudok.'], 404);
+            return response()->json(['message' => __('customer_review.messages.no_review')], 404);
         }
 
         $reverted = $this->service->revertApplied($review, $validated['applied'], $request->user()?->id);
 
         if ($reverted === []) {
             return response()->json([
-                'message' => 'Nebolo čo vrátiť — hodnotu medzitým zmenil niekto iný.',
+                'message' => __('customer_review.messages.nothing_reverted'),
             ], 422);
         }
 
@@ -136,7 +138,7 @@ class CustomerReviewController extends Controller
         $review = $this->service->reviewFor($customer);
 
         if ($review === null) {
-            return response()->json(['message' => 'Zákazník nemá posudok.'], 404);
+            return response()->json(['message' => __('customer_review.messages.no_review')], 404);
         }
 
         $this->service->resolve($review, $request->user()?->id);

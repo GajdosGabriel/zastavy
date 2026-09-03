@@ -69,15 +69,16 @@ class CustomerDuplicateController extends Controller
         $result = $this->service->merge($customer, $validated['merge']);
 
         if ($result['merged'] === []) {
-            return response()->json(['message' => 'Nie je čo zlúčiť.'], 422);
+            return response()->json([
+                'message' => __('customer_review.duplicates.nothing_to_merge'),
+            ], 422);
         }
 
         return response()->json([
-            'message' => sprintf(
-                'Zlúčené %d záznamov, presunutých objednávok %d.',
-                count($result['merged']),
-                $result['orders'],
-            ),
+            'message' => __('customer_review.duplicates.merged', [
+                'customers' => count($result['merged']),
+                'orders' => $result['orders'],
+            ]),
             'data' => $result,
         ]);
     }

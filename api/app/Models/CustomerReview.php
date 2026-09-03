@@ -70,6 +70,41 @@ class CustomerReview extends Model
         ));
     }
 
+    /**
+     * Veta o stave riadku.
+     *
+     * Prednosť má zhrnutie od modelu — je konkrétne („V názve obce je malé
+     * začiatočné písmeno."). Keď AI nebežala, poskladá sa počet nálezov, a to
+     * až tu: v databáze leží posudok bez textu, aby nezamrzol v jazyku
+     * nočného behu.
+     *
+     * Počty idú cez trans_choice, lebo v slovenčine je „1 chyba", „2 chyby"
+     * a „5 chýb" a spoločná veta so zástupným číslom by bola vždy zle.
+     */
+    public function summaryText(): string
+    {
+        if (filled($this->summary)) {
+            return (string) $this->summary;
+        }
+
+        $counts = array_count_values(array_column((array) ($this->issues ?? []), 'severity'));
+        $parts = [];
+
+        // Poradie od najzávažnejšieho; kategórie s nulou sa nevypisujú —
+        // „0 drobností" nie je informácia.
+        foreach (array_reverse(\App\Services\Customers\CustomerDataRules::SEVERITIES) as $severity) {
+            $count = $counts[$severity] ?? 0;
+
+            if ($count > 0) {
+                $parts[] = trans_choice('customer_review.summary.'.$severity, $count, ['count' => $count]);
+            }
+        }
+
+        return $parts === []
+            ? __('customer_review.summary.clean')
+            : __('customer_review.summary.found', ['list' => implode(', ', $parts)]);
+    }
+
     /** Najvyššia závažnosť v posudku — z toho sa farbí odznak v zozname. */
     public function topSeverity(): ?string
     {

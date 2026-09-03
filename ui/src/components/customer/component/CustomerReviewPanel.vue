@@ -39,18 +39,14 @@ const tone = computed(() => {
     return { ring: "border-blue-100", bg: "bg-blue-50", text: "text-blue-800", dot: "bg-blue-400" };
 });
 
-const severityLabel = (severity: string) =>
-    ({ error: "Chyba", warning: "Upozornenie", notice: "Drobnosť" }[severity] ?? severity);
-
+// Názvy polí, závažností a zdrojov posiela server preložené
+// (lang/*/customer_review.php) — tu sa rieši už len farba.
 const severityClass = (severity: string) =>
     ({
         error: "bg-red-100 text-red-700",
         warning: "bg-amber-100 text-amber-700",
         notice: "bg-gray-100 text-gray-600",
     }[severity] ?? "bg-gray-100 text-gray-600");
-
-const sourceLabel = (source: string) =>
-    ({ rule: "pravidlo", registry: "register", ai: "AI" }[source] ?? source);
 
 const toggle = (index: number) => {
     const at = selected.value.indexOf(index);
@@ -129,7 +125,7 @@ const onResolve = async () => {
                             <span class="text-gray-400 line-through">{{ change.from || "prázdne" }}</span>
                             <span class="mx-1">→</span>
                             <span class="font-medium text-green-700">{{ change.to || "prázdne" }}</span>
-                            <span class="ml-1 text-xs text-gray-400">({{ sourceLabel(change.source) }})</span>
+                            <span class="ml-1 text-xs text-gray-400">({{ change.source_label }})</span>
                         </span>
                         <button
                             type="button"
@@ -178,9 +174,9 @@ const onResolve = async () => {
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-semibold text-gray-800">{{ issue.label }}</span>
                                     <span class="rounded px-1.5 py-0.5 text-[11px] font-semibold" :class="severityClass(issue.severity)">
-                                        {{ severityLabel(issue.severity) }}
+                                        {{ issue.severity_label }}
                                     </span>
-                                    <span class="text-[11px] text-gray-400">{{ sourceLabel(issue.source) }}</span>
+                                    <span class="text-[11px] text-gray-400">{{ issue.source_label }}</span>
                                 </div>
 
                                 <p class="mt-0.5 text-sm text-gray-600">{{ issue.message }}</p>

@@ -207,7 +207,10 @@ class CustomerReviewService
         $review->forceFill([
             'fingerprint' => $this->rules->fingerprint($customer->refresh()),
             'score' => $this->score($issues, $aiScore),
-            'summary' => mb_substr($aiSummary ?? $this->summarize($issues), 0, 500),
+            // Len veta od modelu. Zhrnutie podľa počtu nálezov si dopočíta
+            // čítajúca strana vo svojom jazyku — uložiť ho tu by znamenalo
+            // zamraziť slovenčinu v databáze.
+            'summary' => $aiSummary === null ? null : mb_substr($aiSummary, 0, 500),
             'issues' => $issues,
             'applied' => $applied === [] ? null : $applied,
             'reviewed_at' => now(),
@@ -607,7 +610,7 @@ class CustomerReviewService
 
         $issues = [];
 
-        foreach (['dic' => 'DIČ', 'ic_dic' => 'IČ DPH'] as $field => $label) {
+        foreach (['dic', 'ic_dic'] as $field) {
             $current = trim((string) $this->rules->raw($customer, $field));
             $expected = trim((string) ($registry[$field] ?? ''));
 
@@ -619,7 +622,10 @@ class CustomerReviewService
                 'field' => $field,
                 'severity' => 'error',
                 'source' => 'registry',
-                'message' => $label.' sa nezhoduje s obchodným registrom — overte, či IČO patrí tomuto subjektu.',
+                // Názov poľa vo vete nie je — panel aj e-mail ho ukazujú
+                // vedľa hlásenia, tak by tam stál dvakrát.
+                'key' => 'customer_review.issues.registry_tax_mismatch',
+                'params' => [],
                 'current' => $current,
                 'suggested' => $expected,
                 'fix' => null,
@@ -634,7 +640,8 @@ class CustomerReviewService
                 'field' => 'company',
                 'severity' => 'notice',
                 'source' => 'registry',
-                'message' => 'Názov firmy sa líši od úradného znenia v registri.',
+                'key' => 'customer_review.issues.registry_company_differs',
+                'params' => [],
                 'current' => $company,
                 'suggested' => $official,
                 'fix' => null,
@@ -755,7 +762,10 @@ class CustomerReviewService
         $out = [];
 
         foreach ($issues as $issue) {
-            $key = ($issue['field'] ?? '').'|'.($issue['source'] ?? '').'|'.($issue['message'] ?? '');
+            // Nález od pravidiel a registra rozlišuje kľúč, nález od AI text —
+            // model si vetu formuluje sám a kľúč nemá.
+            $key = ($issue['field'] ?? '').'|'.($issue['source'] ?? '')
+                .'|'.($issue['key'] ?? $issue['message'] ?? '');
 
             if (isset($seen[$key])) {
                 continue;
@@ -790,19 +800,4 @@ class CustomerReviewService
         return $aiScore === null ? $rulesScore : min($rulesScore, $aiScore);
     }
 
-    private function summarize(array $issues): string
-    {
-        if ($issues === []) {
-            return 'Údaje sú v poriadku.';
-        }
-
-        $counts = array_count_values(array_column($issues, 'severity'));
-
-        return trim(sprintf(
-            'Nájdené: %d chýb, %d upozornení, %d drobností.',
-            $counts['error'] ?? 0,
-            $counts['warning'] ?? 0,
-            $counts['notice'] ?? 0,
-        ));
-    }
 }

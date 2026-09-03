@@ -61,7 +61,7 @@ class CustomerDuplicateService
 
             return [
                 'key' => 'ico:'.$ico,
-                'reason' => 'Rovnaké IČO '.$ico,
+                'reason' => __('customer_review.duplicates.reason_ico', ['ico' => $ico]),
                 'customers' => $customers,
             ];
         })->filter(fn (array $group) => $group['customers']->count() > 1)->values();
@@ -97,7 +97,7 @@ class CustomerDuplicateService
 
                 return [
                     'key' => 'name:'.$key,
-                    'reason' => 'Rovnaký názov a mesto, bez IČO',
+                    'reason' => __('customer_review.duplicates.reason_name'),
                     'customers' => $customers,
                 ];
             })
@@ -139,7 +139,10 @@ class CustomerDuplicateService
             // sa dá zlúčenie spätne prečítať priamo v tabuľke.
             foreach ($sources as $source) {
                 $source->forceFill([
-                    'note' => trim('Zlúčené do zákazníka #'.$keep->getKey().'. '.(string) $source->note),
+                    'note' => trim(
+                        __('customer_review.duplicates.merged_note', ['id' => $keep->getKey()])
+                        .' '.(string) $source->note
+                    ),
                     'status' => 'archived',
                 ])->saveQuietly();
 

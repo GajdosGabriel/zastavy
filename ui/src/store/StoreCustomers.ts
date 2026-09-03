@@ -33,7 +33,9 @@ interface ReviewIssue {
     field: string;
     label: string;
     severity: "error" | "warning" | "notice";
+    severity_label: string;
     source: "rule" | "registry" | "ai";
+    source_label: string;
     message: string;
     current: string | null;
     suggested: string | null;
@@ -47,7 +49,16 @@ interface CustomerReview {
     summary: string | null;
     severity: string | null;
     issues: ReviewIssue[];
-    applied: { index: number; field: string; label: string; from: string | null; to: string | null; source: string; at: string }[];
+    applied: {
+        index: number;
+        field: string;
+        label: string;
+        from: string | null;
+        to: string | null;
+        source: string;
+        source_label: string;
+        at: string;
+    }[];
     reviewed_at: string | null;
     resolved_at: string | null;
     pending: boolean;

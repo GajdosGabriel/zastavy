@@ -21,13 +21,18 @@ use Illuminate\Notifications\Notification;
  *               a vidieť pôvodnú hodnotu, keby to bolo zle.
  *   NA POZRETIE — čo sa opraviť nesmelo. Toto je otázka a odpovedá sa na ňu
  *               v detaile zákazníka, kde na návrhu čaká tlačidlo.
+ *
+ * Texty sú v `lang/*` a nálezy sa prekladajú tu, pri odosielaní — v databáze
+ * ležia ako kľúč a parametre. Beh príkazu nemá žiadny request, z ktorého by
+ * sa dal jazyk odvodiť, takže sa použije jazyk príjemcu, ak ho má nastavený
+ * (User implementuje HasLocalePreference a Laravel to rešpektuje sám).
  */
 class CustomerReviewDigest extends Notification implements ShouldQueue
 {
     use Queueable;
 
     /**
-     * @param  array<int, array{id: int, name: string, url: string, score: int|null, issues: array, applied: array}>  $records
+     * @param  array<int, array{id: int, name: string, score: int|null, issues: array, applied: array}>  $records
      * @param  int  $total  koľko zákazníkov beh dokopy posúdil
      */
     public function __construct(
@@ -48,59 +53,66 @@ class CustomerReviewDigest extends Notification implements ShouldQueue
         $max = (int) config('customer_review.digest.max_records', 15);
 
         $mail = (new MailMessage())
-            ->subject(sprintf(
-                'Kontrola zákazníkov — %d opravených, %d na pozretie',
-                count($fixed),
-                count($open),
-            ))
-            ->greeting('Dobrý deň,')
-            ->line(sprintf(
-                'Post-kontrola prešla %d zákazníkov. Nižšie je, čo z toho vyšlo.',
-                $this->total,
-            ));
+            ->subject(__('customer_review.mail.subject', [
+                'fixed' => count($fixed),
+                'open' => count($open),
+            ]))
+            ->greeting(__('customer_review.mail.greeting'))
+            ->line(__('customer_review.mail.intro', ['total' => $this->total]));
 
         if ($fixed !== []) {
-            $mail->line('**Automaticky opravené** (formát, prázdne hodnoty, doplnené daňové čísla z registra):');
+            $mail->line(__('customer_review.mail.fixed_heading'));
 
             foreach (array_slice($fixed, 0, $max) as $record) {
                 foreach ($record['applied'] as $change) {
-                    $mail->line(sprintf(
-                        '• %s — %s: „%s" → „%s"',
-                        $record['name'],
-                        $this->label($change['field'] ?? ''),
-                        $this->show($change['from'] ?? null),
-                        $this->show($change['to'] ?? null),
-                    ));
+                    $mail->line(__('customer_review.mail.fixed_line', [
+                        'customer' => $record['name'],
+                        'field' => $this->fieldLabel($change['field'] ?? ''),
+                        'from' => $this->show($change['from'] ?? null),
+                        'to' => $this->show($change['to'] ?? null),
+                    ]));
                 }
             }
 
-            if (count($fixed) > $max) {
-                $mail->line(sprintf('…a ďalších %d zákazníkov.', count($fixed) - $max));
-            }
+            $this->more($mail, count($fixed), $max);
         }
 
         if ($open !== []) {
-            $mail->line('**Na pozretie** — tieto zmeny by menili význam údaja, tak ich nechávame na vás:');
+            $mail->line(__('customer_review.mail.open_heading'));
 
             foreach (array_slice($open, 0, $max) as $record) {
                 $first = $record['issues'][0] ?? null;
 
-                $mail->line(sprintf(
-                    '• %s (skóre %s) — %s',
-                    $record['name'],
-                    $record['score'] ?? '?',
-                    $first === null ? '' : $first['message'],
-                ));
+                $mail->line(__('customer_review.mail.open_line', [
+                    'customer' => $record['name'],
+                    'score' => $record['score'] ?? '?',
+                    'message' => $first === null ? '' : $this->message($first),
+                ]));
             }
 
-            if (count($open) > $max) {
-                $mail->line(sprintf('…a ďalších %d zákazníkov.', count($open) - $max));
-            }
+            $this->more($mail, count($open), $max);
 
-            $mail->action('Otvoriť zoznam zákazníkov', $this->listUrl());
+            $mail->action(__('customer_review.mail.action'), $this->listUrl());
         }
 
-        return $mail->line('Opravy sa dajú vrátiť ručne — pôvodná hodnota je v tomto e-maile aj v detaile zákazníka.');
+        return $mail->line(__('customer_review.mail.outro'));
+    }
+
+    private function more(MailMessage $mail, int $count, int $max): void
+    {
+        if ($count > $max) {
+            $mail->line(__('customer_review.mail.more', ['count' => $count - $max]));
+        }
+    }
+
+    /** Nález od pravidiel a registra sa prekladá; nález od AI je hotová veta. */
+    private function message(array $issue): string
+    {
+        $key = $issue['key'] ?? null;
+
+        return $key === null
+            ? (string) ($issue['message'] ?? '')
+            : __($key, (array) ($issue['params'] ?? []));
     }
 
     private function listUrl(): string
@@ -108,26 +120,15 @@ class CustomerReviewDigest extends Notification implements ShouldQueue
         return rtrim((string) env('FRONTEND_URL', config('app.url')), '/').'/zakaznici?review=open';
     }
 
-    private function label(string $field): string
+    private function fieldLabel(string $field): string
     {
-        return [
-            'name' => 'Kontaktná osoba',
-            'company' => 'Názov firmy',
-            'email' => 'E-mail',
-            'phone' => 'Telefón',
-            'street' => 'Ulica',
-            'postcode' => 'PSČ',
-            'city' => 'Mesto',
-            'ico' => 'IČO',
-            'dic' => 'DIČ',
-            'ic_dic' => 'IČ DPH',
-        ][$field] ?? $field;
+        return $field === '' ? '' : __('customer_review.fields.'.$field);
     }
 
     private function show(?string $value): string
     {
         $value = trim((string) $value);
 
-        return $value === '' ? '(prázdne)' : $value;
+        return $value === '' ? __('customer_review.mail.empty') : $value;
     }
 }

@@ -39,8 +39,9 @@ class CustomerCreateRequest extends CustomerUpdateRequest
     public function messages()
     {
         return [
-            'company.required' => 'Firma musí obsahovať minimálne 2 znaky.',
-            'ico.max' => 'IČO nesmie mať viac ako 8 znakov',
+            'company.required' => __('rules.company.min'),
+            'company.min' => __('rules.company.min'),
+            'ico.max' => __('rules.ico.length'),
         ];
     }
 }

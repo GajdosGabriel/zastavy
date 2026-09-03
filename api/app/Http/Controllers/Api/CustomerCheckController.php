@@ -46,7 +46,9 @@ class CustomerCheckController extends Controller
             // podľa poľa — inak by ich musel triediť prehliadač.
             $issues[$issue['field']][] = [
                 'severity' => $issue['severity'],
-                'message' => $issue['message'],
+                // Pravidlá vracajú kľúč; veta vzniká až tu, v jazyku toho,
+                // kto formulár práve vypĺňa (viď SetLocale).
+                'message' => __($issue['key'], $issue['params']),
                 'suggested' => $issue['suggested'],
                 'fix' => $issue['fix'],
             ];

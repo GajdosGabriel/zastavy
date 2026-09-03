@@ -22,6 +22,13 @@ namespace App\Services\OpenAI;
  * Model NEOPRAVUJE — navrhuje. Návrh potvrdí človek v detaile zákazníka
  * jedným klikom. Tiché prepísanie fakturačného údaja podľa odhadu jazykového
  * modelu je presne to, čo si na faktúre nikto nevšimne včas.
+ *
+ * Prompt do `lang/` nepatrí a je tu natvrdo zámerne. Nie je to text pre
+ * používateľa, ale inštrukcia pre model, ktorý posudzuje slovenské názvy obcí
+ * a úradov — preložený by posudzoval niečo iné. Z toho plynie jediné
+ * obmedzenie celej kontroly: veta, ktorú model k nálezu napíše, je vždy
+ * slovenská, aj keď si posudok otvorí admin s anglickým rozhraním. Nálezy od
+ * pravidiel a registra sa prekladajú (nesú kľúč), tento jeden nie.
  */
 class PromptCustomerReview
 {

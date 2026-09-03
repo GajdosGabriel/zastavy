@@ -32,7 +32,7 @@ class CustomerResource extends JsonResource
             'score' => $review->score,
             'severity' => $review->topSeverity(),
             'count' => count($issues),
-            'summary' => $review->summary,
+            'summary' => $review->summaryText(),
         ];
     }
 
