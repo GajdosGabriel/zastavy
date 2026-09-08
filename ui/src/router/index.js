@@ -137,6 +137,18 @@ const routes = [
     },
 
     {
+        // Odkaz z potvrdzovacieho e-mailu; prístup stráži ?token=, nie prihlásenie.
+        path: '/objednavka/:uuid/adresa',
+        name: 'public.order.deliveryAddress',
+        components: {
+            default: () => import('../components/pages/PublicDeliveryAddressEdit.vue'),
+        },
+        meta: {
+            title: 'Zmena adresy doručenia'
+        }
+    },
+
+    {
         path: '/login',
         name: 'public.login.index',
         components: {

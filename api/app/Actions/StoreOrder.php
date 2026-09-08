@@ -9,6 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use App\Models\ShippingMethod;
 use App\Notifications\OrderCreated;
+use App\Services\Delivery\DeliveryAddressService;
 use Illuminate\Http\Request;
 use App\Contracts\StoreOrderContract;
 use App\Models\PaymentMethod;
@@ -37,7 +38,9 @@ class StoreOrder implements StoreOrderContract
         [$shippingMethodId, $shippingPrice, $paymentMethodId, $paymentFee, $couponId, $discountAmount] =
             $this->resolveCheckoutFields($cartTotal);
 
-        $order = $customer->orders()->create([
+        $delivery = $this->resolveDelivery($customer);
+
+        $order = $customer->orders()->create($delivery + [
             'user_id'            => $user?->id,
             'name'               => $contact['name'] ?? $user?->username ?? $customer->name,
             'email'              => $contact['email'] ?? $user?->email ?? $customer->email,
@@ -62,6 +65,36 @@ class StoreOrder implements StoreOrderContract
         $this->notifyOrderCreated($order);
 
         return $order;
+    }
+
+    /**
+     * Doručovacia adresa objednávky.
+     *
+     * Prázdne stĺpce znamenajú „doručiť na sídlo zákazníka" — tak ide väčšina
+     * objednávok a tak vyzerá aj celá história spred tejto funkcie.
+     *
+     * Zaškrtnuté „uložiť adresu" pridá riadok do adresára zákazníka; objednávka
+     * si aj tak nesie vlastný odtlačok, takže neskoršia úprava adresára ju
+     * neprepíše.
+     */
+    protected function resolveDelivery($customer): array
+    {
+        $service = app(DeliveryAddressService::class);
+
+        $snapshot = $service->resolve(
+            $customer,
+            $this->request->input('delivery'),
+            $this->request->input('customer_address_id') ? (int) $this->request->input('customer_address_id') : null,
+        );
+
+        $wantsSave = filter_var($this->request->input('delivery.save_address'), FILTER_VALIDATE_BOOLEAN);
+
+        if ($wantsSave && $snapshot['customer_address_id'] === null && filled($snapshot['delivery_street'])) {
+            $address = $service->remember($customer, $snapshot, $this->request->input('delivery.label'));
+            $snapshot['customer_address_id'] = $address?->id;
+        }
+
+        return $snapshot;
     }
 
     /**

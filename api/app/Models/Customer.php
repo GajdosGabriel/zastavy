@@ -43,6 +43,22 @@ class Customer extends Model
         return $this->hasMany(User::class);
     }
 
+    /**
+     * Adresár doručovacích adries — sídlo firmy medzi nimi nie je.
+     *
+     * Fakturačná adresa žije v stĺpcoch `street`/`postcode`/`city`; tu sú miesta,
+     * kam zákazník necháva tovar voziť (pobočka, sklad, kultúrny dom).
+     */
+    public function addresses()
+    {
+        return $this->hasMany(CustomerAddress::class)->orderByDesc('is_default')->orderBy('label');
+    }
+
+    public function defaultAddress()
+    {
+        return $this->hasOne(CustomerAddress::class)->where('is_default', true);
+    }
+
     public function primaryUser()
     {
         return $this->hasOne(User::class)->oldestOfMany();

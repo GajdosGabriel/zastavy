@@ -12,6 +12,8 @@
         .header p { margin: 6px 0 0; font-size: 14px; color: #aaa; }
         .body { padding: 32px; }
         .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin: 0 0 10px; }
+        .info-block { margin-bottom: 24px; }
+        .info-block p { margin: 4px 0; font-size: 14px; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
         th { text-align: left; font-size: 12px; text-transform: uppercase; color: #888; padding: 6px 0; border-bottom: 1px solid #e5e5e5; }
         td { padding: 9px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
@@ -72,6 +74,10 @@
                 Vaša objednávka bola dnes kompletne expedovaná a je na ceste k Vám.
             @endif
         </p>
+
+        {{-- Adresa, na ktorú balík naozaj ide — nech ju zákazník skontroluje,
+             kým je zásielka ešte na ceste. --}}
+        <x-email.delivery-address :order="$order" title="Zásielka ide na adresu" />
 
         @if($order->shippingMethod)
         <div class="shipping-line">

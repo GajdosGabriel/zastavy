@@ -13,6 +13,7 @@ use App\Http\Resources\OrderIndexResource;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\OrderStatisticResource;
 use App\Services\CustomerService;
+use App\Services\Delivery\DeliveryAddressService;
 use App\Services\OrderStatisticsService;
 use App\Actions\IssueCouponForOrder;
 use App\Actions\StoreOrder;
@@ -98,6 +99,8 @@ class OrderController extends Controller
             'shipping_method_id', 'payment_method_id', 'status', 'isOpened', 'note', 'wants_coupon',
         ]));
 
+        $this->updateDeliveryAddress($order, $request);
+
         $newStatus = $order->fresh()->status;
 
         if ($previousStatus !== OrderStatus::Archived && $newStatus === OrderStatus::Archived) {
@@ -113,9 +116,67 @@ class OrderController extends Controller
         return new OrderResource($order);
     }
 
+    /**
+     * Obsluha prepisuje adresu doručenia z detailu objednávky.
+     *
+     * Kľúč `delivery` musí v requeste chýbať, ak sa adresa nemá dotknúť —
+     * poslané prázdne pole znamená „doručiť na sídlo" a odtlačok sa zmaže.
+     * Zaškrtnuté `delivery.save_address` adresu zároveň pridá do adresára
+     * zákazníka na budúce objednávky.
+     */
+    private function updateDeliveryAddress(Order $order, OrderRequest $request): void
+    {
+        if (! $request->has('delivery') && ! $request->has('customer_address_id')) {
+            return;
+        }
+
+        $customer = $order->customer;
+
+        if (! $customer) {
+            return;
+        }
+
+        $service = app(DeliveryAddressService::class);
+
+        $snapshot = $service->resolve(
+            $customer,
+            $request->input('delivery'),
+            $request->input('customer_address_id') ? (int) $request->input('customer_address_id') : null,
+        );
+
+        if ($request->boolean('delivery.save_address') && $snapshot['customer_address_id'] === null && filled($snapshot['delivery_street'])) {
+            $snapshot['customer_address_id'] = $service
+                ->remember($customer, $snapshot, $request->input('delivery.label'))?->id;
+        }
+
+        $service->applyToOrder($order, $snapshot, $request->user()?->username ?: 'obsluha');
+    }
+
     private function detectChanges(Order $order, OrderRequest $request): array
     {
         $changes = [];
+
+        if ($request->has('delivery') || $request->has('customer_address_id')) {
+            $before = $order->deliverySnapshot();
+            $after = app(DeliveryAddressService::class)->resolve(
+                $order->customer,
+                $request->input('delivery'),
+                $request->input('customer_address_id') ? (int) $request->input('customer_address_id') : null,
+            );
+
+            $oldLine = $this->addressLine($before);
+            $newLine = $this->addressLine([
+                'company'  => $after['delivery_company'] ?: $order->customer?->company,
+                'name'     => $after['delivery_name'],
+                'street'   => $after['delivery_street'] ?: $order->customer?->street,
+                'postcode' => $after['delivery_postcode'] ?: $order->customer?->postcode,
+                'city'     => $after['delivery_city'] ?: $order->customer?->city,
+            ]);
+
+            if ($oldLine !== $newLine) {
+                $changes[] = ['label' => 'Adresa doručenia', 'old' => $oldLine ?: '—', 'new' => $newLine ?: '—'];
+            }
+        }
 
         if ($request->filled('shipping_method_id') && $request->shipping_method_id != $order->shipping_method_id) {
             $oldMethod = $order->shippingMethod?->name ?? '—';
@@ -146,6 +207,17 @@ class OrderController extends Controller
         }
 
         return $changes;
+    }
+
+    /** Adresa v jednom riadku — na porovnanie „pred / po" v e-maile o zmene. */
+    private function addressLine(array $address): string
+    {
+        return collect([
+            $address['company'] ?? null,
+            $address['name'] ?? null,
+            $address['street'] ?? null,
+            trim(($address['postcode'] ?? '').' '.($address['city'] ?? '')),
+        ])->filter()->implode(', ');
     }
 
     public function store(OrderRequest $request)

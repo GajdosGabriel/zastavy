@@ -9,6 +9,7 @@ import tableRowOrders from "../order/component/tableRowOrders.vue";
 import templateOrder from "../../models/templateOrder";
 import buttonRouterLink from "../layout/page/ButtonLink.vue";
 import PanelDropdown from "../layout/PanelDropdown.vue";
+import CustomerAddressPanel from "./component/CustomerAddressPanel.vue";
 
 const route = useRoute();
 const customersStore = useCustomers();
@@ -139,6 +140,14 @@ const dropdownItems = computed(() => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- Doručovacie adresy -->
+                <div class="mb-4">
+                    <CustomerAddressPanel
+                        :customerId="route.params.customerId"
+                        :canEdit="Boolean(getCustomer.permissions?.update?.allowed)"
+                    />
                 </div>
 
                 <!-- Objednávky -->

@@ -13,6 +13,8 @@ import { formatDecimal } from "../../models/functions";
 import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
+import DeliveryAddressFields from "../forms/DeliveryAddressFields.vue";
+import { emptyDeliveryAddress } from "../../store/StoreCheckouts";
 import { storeToRefs } from "pinia";
 import useUnsavedChanges from "../../models/useUnsavedChanges";
 
@@ -87,6 +89,32 @@ const paymentMethods  = ref([]);
 const selectedShippingId = ref(null);
 const selectedPaymentId  = ref(null);
 
+// Doručovacia adresa. Kým je prepínač vypnutý, tovar ide na sídlo zákazníka
+// a kľúč `delivery` sa do requestu vôbec nedostane.
+const delivery = ref(emptyDeliveryAddress());
+const deliverToOtherAddress = ref(false);
+const deliveryAddressId = ref(null);
+
+/** Adresár vybraného zákazníka — načíta sa až s ním, prázdny pri novom. */
+const savedAddresses = computed(() => getCustomer.value?.addresses ?? []);
+
+const applySavedAddress = (address) => {
+    deliveryAddressId.value = address?.id ?? null;
+
+    if (!address) return;
+
+    delivery.value = {
+        ...emptyDeliveryAddress(),
+        company: address.company ?? "",
+        name: address.name ?? "",
+        street: address.street ?? "",
+        postcode: address.postcode ?? "",
+        city: address.city ?? "",
+        phone: address.phone ?? "",
+        note: address.note ?? "",
+    };
+};
+
 const { setOriginalData, markAsSaved } = useUnsavedChanges(() => ({
     customer: getCustomer.value,
     orderProducts: orderProducts.value,
@@ -94,6 +122,7 @@ const { setOriginalData, markAsSaved } = useUnsavedChanges(() => ({
     shipping_method_id: selectedShippingId.value,
     payment_method_id: selectedPaymentId.value,
     wants_coupon: wantsCoupon.value,
+    delivery: deliverToOtherAddress.value ? delivery.value : null,
 }));
 
 const buttonBack = { name: "Späť", spinner: true, link: "/objednavky", icon: "arrow-left" };
@@ -202,6 +231,12 @@ const confirmSave = async (sendNotification = notifyCustomer.value) => {
         wants_coupon: wantsCoupon.value,
         shipping_method_id: selectedShippingId.value,
         payment_method_id:  selectedPaymentId.value,
+        ...(deliverToOtherAddress.value
+            ? {
+                  delivery: delivery.value,
+                  ...(deliveryAddressId.value ? { customer_address_id: deliveryAddressId.value } : {}),
+              }
+            : {}),
     });
 
     isSubmitting.value = false;
@@ -451,6 +486,17 @@ onMounted(async () => {
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Doručovacia adresa -->
+                        <DeliveryAddressFields
+                            :modelValue="delivery"
+                            v-model:enabled="deliverToOtherAddress"
+                            :fieldErrors="getFieldErrors"
+                            :billing="getCustomer"
+                            :savedAddresses="savedAddresses"
+                            allowSave
+                            @pick="applySavedAddress"
+                        />
                     </div>
 
                     <!-- Pravý stĺpec: zhrnutie + doprava + platba + odoslať -->

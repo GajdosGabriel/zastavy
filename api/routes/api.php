@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\CustomerCheckController;
+use App\Http\Controllers\Api\PublicDeliveryAddressController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\Dashboard\OrderAttachmentController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\Api\SuperAdmin\AttributeController;
 use App\Http\Controllers\Api\SuperAdmin\AttributeValueController;
 use App\Http\Controllers\Api\SuperAdmin\CategoryController;
 use App\Http\Controllers\Api\SuperAdmin\CouponController as AdminCouponController;
+use App\Http\Controllers\Api\SuperAdmin\CustomerAddressController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerExportController;
 use App\Http\Controllers\Api\SuperAdmin\CustomerMarkController;
@@ -72,6 +74,16 @@ Route::post('customer-check', CustomerCheckController::class)
     ->name('customer-check');
 
 Route::get('/public-orders/{uuid}', [PublicOrderController::class, 'show'])->name('public-orders.show');
+
+// Zmena adresy doručenia z odkazu v potvrdzovacom e-maile. Prístup stráži
+// `delivery_token`, nie uuid — viď PublicDeliveryAddressController.
+// Throttle proti hádaniu tokenu.
+Route::middleware('throttle:20,1')->group(function () {
+    Route::get('/public-orders/{uuid}/delivery-address', [PublicDeliveryAddressController::class, 'show'])
+        ->name('public-orders.delivery-address.show');
+    Route::put('/public-orders/{uuid}/delivery-address', [PublicDeliveryAddressController::class, 'update'])
+        ->name('public-orders.delivery-address.update');
+});
 // Prílohy verejného detailu — prístup chráni len ťažko uhádnuteľné uuid objednávky,
 // rovnako ako samotný detail. Throttle proti hádaniu uuid.
 Route::get('/public-orders/{uuid}/attachments/{attachment}', [PublicOrderController::class, 'downloadAttachment'])
@@ -134,6 +146,12 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::put('customers/{customer}/review', [CustomerReviewController::class, 'update'])->name('customers.review.update');
     Route::post('customers/{customer}/review/revert', [CustomerReviewController::class, 'revert'])->name('customers.review.revert');
     Route::delete('customers/{customer}/review', [CustomerReviewController::class, 'destroy'])->name('customers.review.destroy');
+
+    // Adresár doručovacích adries zákazníka. Verejný košík ho nečíta — cudzie
+    // adresy sa podľa IČO vydávať nesmú (GDPR), rovnako ako kontaktné údaje.
+    Route::apiResource('customers.addresses', CustomerAddressController::class)
+        ->parameters(['addresses' => 'address'])
+        ->only(['index', 'store', 'update', 'destroy']);
 
     Route::apiResources([
         'categories' => CategoryController::class,

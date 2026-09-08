@@ -122,5 +122,38 @@ const copyValue = async (key, value) => {
             </div>
         </div>
 
+        <!-- Adresa doručenia — vyzdvihnutá len keď sa líši od sídla, inak by
+             karta zopakovala tú istú adresu druhýkrát. -->
+        <div v-if="order.delivery?.is_custom"
+             class="rounded-lg border-2 border-indigo-200 bg-indigo-50 p-4 shadow-sm sm:col-span-2">
+            <div class="mb-2 flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wide text-indigo-500">Doručiť na inú adresu</span>
+                <span v-if="order.delivery_changed_at" class="text-xs text-indigo-400">
+                    zmenené {{ order.delivery_changed_at }}{{ order.delivery_changed_by ? ` — ${order.delivery_changed_by}` : '' }}
+                </span>
+            </div>
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="text-sm text-gray-800">
+                    <div v-if="order.delivery.company" class="font-bold">{{ order.delivery.company }}</div>
+                    <div v-if="order.delivery.name">{{ order.delivery.name }}</div>
+                    <div v-if="order.delivery.street">{{ order.delivery.street }}</div>
+                    <div>{{ [order.delivery.postcode, order.delivery.city].filter(Boolean).join(' ') }}</div>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <a v-if="order.delivery.phone" :href="`tel:${order.delivery.phone}`"
+                       class="font-medium text-blue-600 hover:text-blue-800">{{ order.delivery.phone }}</a>
+                    <div v-if="order.delivery.note" class="mt-1 text-xs text-gray-500">{{ order.delivery.note }}</div>
+                </div>
+                <button
+                    v-if="order.delivery.phone || order.delivery.street"
+                    type="button"
+                    @click="copyValue('delivery', [order.delivery.company, order.delivery.name, order.delivery.street, [order.delivery.postcode, order.delivery.city].filter(Boolean).join(' ')].filter(Boolean).join('\n'))"
+                    class="rounded border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
+                >
+                    {{ copied === 'delivery' ? 'Skopírované' : 'Kopírovať adresu' }}
+                </button>
+            </div>
+        </div>
+
     </div>
 </template>

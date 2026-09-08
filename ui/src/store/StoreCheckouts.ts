@@ -7,6 +7,20 @@ import useCheckoutOptions from "./StoreCheckoutOptions";
 
 const CART_STORAGE_KEY = "form";
 const CUSTOMER_STORAGE_KEY = "customer";
+const DELIVERY_STORAGE_KEY = "delivery";
+
+/** Prázdna doručovacia adresa — tvar, aký očakáva API aj DeliveryAddressFields. */
+export const emptyDeliveryAddress = () => ({
+    company: "",
+    name: "",
+    street: "",
+    postcode: "",
+    city: "",
+    phone: "",
+    note: "",
+    label: "",
+    save_address: false,
+});
 
 // Limity musia sedieť s config/media.php na API.
 export const ATTACHMENT_MAX_FILES = 5;
@@ -112,6 +126,12 @@ export const useCheckouts = defineStore("checkouts", () => {
     // Prílohy zámerne neputujú do localStorage — File objekty sa serializovať nedajú.
     const attachments = ref<File[]>([]);
 
+    // Doručovacia adresa. Kým je `deliverToOtherAddress` vypnuté, tovar ide na
+    // fakturačnú adresu a do requestu sa `delivery` vôbec nepridáva.
+    const delivery = ref<Record<string, any>>(emptyDeliveryAddress());
+    const deliverToOtherAddress = ref(false);
+    const deliveryAddressId = ref<number | null>(null);
+
     const getCarts = computed(() => carts.value);
 
     // Nahrádza pôvodný `grandCalculate` + module-level `watch` – počíta sa reaktívne.
@@ -172,6 +192,48 @@ export const useCheckouts = defineStore("checkouts", () => {
     const getlocalStorage = (): void => {
         const stored = readJsonStorage(CART_STORAGE_KEY, []);
         carts.value = Array.isArray(stored) ? stored.map(normalizeCartItem) : [];
+
+        // Rozpísaná doručovacia adresa prežije obnovenie stránky rovnako ako košík —
+        // vypisovať ju druhýkrát je to posledné, čo chce zákazník robiť.
+        const storedDelivery = readJsonStorage(DELIVERY_STORAGE_KEY, null);
+        if (storedDelivery && typeof storedDelivery === "object") {
+            delivery.value = { ...emptyDeliveryAddress(), ...(storedDelivery.address ?? {}) };
+            deliverToOtherAddress.value = Boolean(storedDelivery.enabled);
+            deliveryAddressId.value = storedDelivery.addressId ?? null;
+        }
+    };
+
+    const setlocalStorageDelivery = (): void => {
+        localStorage.setItem(DELIVERY_STORAGE_KEY, JSON.stringify({
+            enabled: deliverToOtherAddress.value,
+            address: delivery.value,
+            addressId: deliveryAddressId.value,
+        }));
+    };
+
+    /** Výber z adresára prepíše polia — a zapamätá si, odkiaľ adresa prišla. */
+    const applySavedAddress = (address: any | null): void => {
+        deliveryAddressId.value = address?.id ?? null;
+
+        if (!address) return;
+
+        delivery.value = {
+            ...emptyDeliveryAddress(),
+            company: address.company ?? "",
+            name: address.name ?? "",
+            street: address.street ?? "",
+            postcode: address.postcode ?? "",
+            city: address.city ?? "",
+            phone: address.phone ?? "",
+            note: address.note ?? "",
+        };
+    };
+
+    const resetDelivery = (): void => {
+        delivery.value = emptyDeliveryAddress();
+        deliverToOtherAddress.value = false;
+        deliveryAddressId.value = null;
+        localStorage.removeItem(DELIVERY_STORAGE_KEY);
     };
 
     const removeCart = (cart: any): void => {
@@ -241,6 +303,16 @@ export const useCheckouts = defineStore("checkouts", () => {
             wants_coupon: options.getWantsCoupon,
         };
 
+        // Kľúč `delivery` posielame len vtedy, keď zákazník naozaj chce inú
+        // adresu — server prázdny objekt síce zahodí, ale netreba ho pýtať.
+        if (deliverToOtherAddress.value) {
+            payload.delivery = delivery.value;
+
+            if (deliveryAddressId.value) {
+                payload.customer_address_id = deliveryAddressId.value;
+            }
+        }
+
         // S prílohami sa musí ísť cez multipart; bez nich ostáva JSON.
         let body: any = payload;
         if (attachments.value.length) {
@@ -256,6 +328,7 @@ export const useCheckouts = defineStore("checkouts", () => {
             carts.value = [];
             attachments.value = [];
             note.value = "";
+            resetDelivery();
             useCustomer().resetCustomer();
             options.reset();
             return response.data?.uuid ?? true;
@@ -272,11 +345,17 @@ export const useCheckouts = defineStore("checkouts", () => {
         () => setlocalStorageCustomer(),
         { deep: true }
     );
+    watch([delivery, deliverToOtherAddress, deliveryAddressId], () => setlocalStorageDelivery(), { deep: true });
 
     return {
         carts,
         note,
         attachments,
+        delivery,
+        deliverToOtherAddress,
+        deliveryAddressId,
+        applySavedAddress,
+        resetDelivery,
         addAttachments,
         removeAttachment,
         getCarts,

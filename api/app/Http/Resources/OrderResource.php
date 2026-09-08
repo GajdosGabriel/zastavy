@@ -34,6 +34,15 @@ class OrderResource extends JsonResource
             'created_at' => $this->created_at->format('d.m.Y H:i:s'),
             'created_at_human' => Carbon::parse($this->created_at)->diffForhumans(),
             'customer' => new CustomerResource($this->customer),
+
+            // Doručovacia adresa objednávky. `is_custom = false` znamená, že sa
+            // doručuje na sídlo zákazníka — hodnoty sú vtedy jeho.
+            'delivery' => $this->deliverySnapshot(),
+            'customer_address_id' => $this->customer_address_id,
+            'can_edit_delivery' => $this->canEditDelivery(),
+            'delivery_changed_at' => $this->delivery_changed_at?->format('d.m.Y H:i'),
+            'delivery_changed_by' => $this->delivery_changed_by,
+            'delivery_edit_url' => $this->deliveryEditUrl(),
             'user' => $this->user ? new UserResource($this->user) : null,
             'shippings' => ShippingResource::collection($this->shippings),
             'price_sum' => $this->priceSum(),

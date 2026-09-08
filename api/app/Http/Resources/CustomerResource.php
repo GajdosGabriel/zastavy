@@ -63,6 +63,11 @@ class CustomerResource extends JsonResource
             'status' => $this->statusData(),
             'primary_user' => $contact ? new UserResource($contact) : null,
             'users' => UserResource::collection($this->whenLoaded('users')),
+
+            // Doručovacie adresy — len tam, kde sa relácia načíta (detail
+            // zákazníka a nová objednávka), nie v zozname.
+            'addresses' => CustomerAddressResource::collection($this->whenLoaded('addresses')),
+            'addresses_endpoint' => route('customers.addresses.index', $this->id),
             'orders' => $this->ordersCount,
             'mark' =>  [
                 'isActive' => isset($this->mark),

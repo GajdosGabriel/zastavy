@@ -10,10 +10,11 @@ import router from "../../router";
 import { formatDecimal, formatFileSize } from "../../models/functions";
 import { htmlToText } from "../../models/html";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
+import DeliveryAddressFields from "../forms/DeliveryAddressFields.vue";
 import ShippingPaymentSelector from "../forms/ShippingPaymentSelector.vue";
 
 const checkoutsStore = useCheckouts();
-const { getCarts, getCheckout, note, attachments } = storeToRefs(checkoutsStore);
+const { getCarts, getCheckout, note, attachments, delivery, deliverToOtherAddress } = storeToRefs(checkoutsStore);
 const {
       removeCart,
       storeCheckout,
@@ -292,6 +293,14 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Doručovacia adresa -->
+                        <DeliveryAddressFields
+                            :modelValue="delivery"
+                            v-model:enabled="deliverToOtherAddress"
+                            :fieldErrors="getFieldErrors"
+                            :billing="getCustomer"
+                        />
                     </div>
 
                     <!-- Pravý stĺpec: doprava, platba, kupón, súhrn -->

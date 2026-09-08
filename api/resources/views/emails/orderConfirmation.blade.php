@@ -35,13 +35,15 @@
     <div class="body">
         <x-email.customer :customer="$order->customer" />
 
-        @if($order->customer->street || $order->customer->city)
-        <div class="info-block">
-            <p class="section-title">Doručovacia adresa</p>
-            @if($order->customer->street)
-                <p>{{ $order->customer->street }}</p>
-            @endif
-            <p>{{ $order->customer->postcode }} {{ $order->customer->city }}</p>
+        <x-email.delivery-address :order="$order" />
+
+        {{-- Adresu si zákazník vie opraviť sám, kým objednávka nejde do expedície.
+             Doteraz to znamenalo telefonát a ručný prepis. --}}
+        @if($order->canEditDelivery() && $order->deliveryEditUrl())
+        <div class="info-block" style="margin-top:-16px;">
+            <a href="{{ $order->deliveryEditUrl() }}" style="font-size:13px; color:#1e3a5f; text-decoration:underline;">
+                Doručiť inam? Zmeniť adresu doručenia
+            </a>
         </div>
         @endif
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Support\AddressFormatter;
 use App\Traits\HasModelStatus;
 use App\Traits\HasNotices;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,7 +22,12 @@ class Order extends Model
 
     protected $casts = [
         'status' => OrderStatus::class,
+        'delivery_token_expires_at' => 'datetime',
+        'delivery_changed_at' => 'datetime',
     ];
+
+    /** Dokedy platí odkaz „zmeniť adresu doručenia" z potvrdzovacieho e-mailu. */
+    public const DELIVERY_TOKEN_DAYS = 60;
 
     protected static function booted(): void
     {
@@ -29,12 +35,27 @@ class Order extends Model
             if (! $order->uuid) {
                 $order->uuid = (string) Str::uuid();
             }
+
+            if (! $order->delivery_token) {
+                $order->delivery_token = Str::random(64);
+                $order->delivery_token_expires_at = now()->addDays(self::DELIVERY_TOKEN_DAYS);
+            }
         });
     }
 
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * Riadok z adresára zákazníka, z ktorého adresa prišla.
+     *
+     * Len stopa pôvodu — čo sa naozaj doručuje, hovorí odtlačok v `delivery_*`.
+     */
+    public function customerAddress()
+    {
+        return $this->belongsTo(CustomerAddress::class);
     }
 
     public function shippingMethod()
@@ -86,6 +107,104 @@ class Order extends Model
     public function attachments()
     {
         return $this->morphMany(Attachment::class, 'attachable');
+    }
+
+    /**
+     * Má objednávka vlastnú doručovaciu adresu, inú než sídlo zákazníka?
+     *
+     * Prázdna ulica znamená „doručiť na fakturačnú adresu" — tak vyzerajú
+     * všetky objednávky spred tejto funkcie a väčšina objednávok vôbec.
+     */
+    public function hasCustomDelivery(): bool
+    {
+        return filled($this->delivery_street) && filled($this->delivery_city);
+    }
+
+    /**
+     * Adresa, na ktorú sa balík posiela — vlastná, inak fakturačná.
+     *
+     * Vracia vždy plný tvar, aby volajúci (e-mail, dodací list, verejný detail)
+     * nemusel riešiť, odkiaľ ktorý riadok pochádza.
+     */
+    public function deliverySnapshot(): array
+    {
+        $customer = $this->customer;
+
+        if (! $this->hasCustomDelivery()) {
+            return [
+                'is_custom' => false,
+                'company'   => $customer?->company,
+                'name'      => $this->name ?: $customer?->name,
+                'street'    => $customer?->street,
+                'postcode'  => AddressFormatter::formatPostcode($customer?->getRawOriginal('postcode')),
+                'city'      => $customer?->city,
+                'country'   => 'SK',
+                'phone'     => $this->phone ?: $customer?->phone,
+                'note'      => null,
+            ];
+        }
+
+        return [
+            'is_custom' => true,
+            'company'   => $this->delivery_company ?: $customer?->company,
+            'name'      => $this->delivery_name,
+            'street'    => $this->delivery_street,
+            'postcode'  => AddressFormatter::formatPostcode($this->delivery_postcode),
+            'city'      => $this->delivery_city,
+            'country'   => $this->delivery_country ?: 'SK',
+            'phone'     => $this->delivery_phone,
+            'note'      => $this->delivery_note,
+        ];
+    }
+
+    /**
+     * Kým sa adresa smie meniť.
+     *
+     * Po expedícii je neskoro — balík je na ceste a prepísaná adresa by v
+     * systéme klamala o tom, kam sa poslal. Stornovanej a archivovanej
+     * objednávky sa to netýka vôbec.
+     */
+    public function canEditDelivery(): bool
+    {
+        if ($this->trashed()) {
+            return false;
+        }
+
+        return in_array(OrderStatus::fromOrder($this), [
+            OrderStatus::Draft,
+            OrderStatus::Processing,
+            OrderStatus::ReadyToShip,
+        ], true);
+    }
+
+    /** Platí ešte odkaz z e-mailu? Tokenu vyprší platnosť skôr, než sa naň zabudne. */
+    public function hasValidDeliveryToken(?string $token): bool
+    {
+        if (blank($token) || blank($this->delivery_token)) {
+            return false;
+        }
+
+        if ($this->delivery_token_expires_at && $this->delivery_token_expires_at->isPast()) {
+            return false;
+        }
+
+        return hash_equals($this->delivery_token, $token);
+    }
+
+    /** Verejný detail objednávky — odkaz z e-mailu. */
+    public function publicUrl(): string
+    {
+        return rtrim(env('FRONTEND_URL', config('app.url')), '/')."/objednavka/{$this->uuid}";
+    }
+
+    /** Verejná zmena adresy doručenia — odkaz z e-mailu, chránený tokenom. */
+    public function deliveryEditUrl(): ?string
+    {
+        if (blank($this->delivery_token)) {
+            return null;
+        }
+
+        return $this->publicUrl().'/adresa?token='.$this->delivery_token;
     }
 
     public function priceSum()

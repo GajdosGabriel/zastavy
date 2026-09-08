@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import axiosInstance from '../../axiosInstance';
 import BaseLayout from '../layout/BaseLayout.vue';
@@ -9,6 +9,10 @@ const route = useRoute();
 const order = ref(null);
 const loading = ref(true);
 const notFound = ref(false);
+
+// Token z odkazu v e-maile. Bez neho sa detail dá čítať, ale adresa meniť nie —
+// preposlaný odkaz na objednávku nesmie dávať právo prepísať, kam sa pošle.
+const token = computed(() => route.query.token ?? null);
 
 onMounted(async () => {
     try {
@@ -75,11 +79,31 @@ const hasPrice = (products) => products?.some(p => p.price);
                                 <p v-if="order.customer.phone" class="text-sm text-gray-700">{{ order.customer.phone }}</p>
                             </div>
 
-                            <!-- Address -->
-                            <div v-if="order.customer.street || order.customer.city">
-                                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Doručovacia adresa</p>
-                                <p v-if="order.customer.street" class="text-sm text-gray-700">{{ order.customer.street }}</p>
-                                <p class="text-sm text-gray-700">{{ order.customer.postcode }} {{ order.customer.city }}</p>
+                            <!-- Adresa doručenia -->
+                            <div v-if="order.delivery">
+                                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Adresa doručenia</p>
+                                <p v-if="order.delivery.company" class="text-sm font-semibold text-gray-900">{{ order.delivery.company }}</p>
+                                <p v-if="order.delivery.name" class="text-sm text-gray-700">{{ order.delivery.name }}</p>
+                                <p v-if="order.delivery.street" class="text-sm text-gray-700">{{ order.delivery.street }}</p>
+                                <p class="text-sm text-gray-700">{{ order.delivery.postcode }} {{ order.delivery.city }}</p>
+                                <p v-if="order.delivery.phone" class="text-sm text-gray-500">Tel.: {{ order.delivery.phone }}</p>
+                                <p v-if="order.delivery.note" class="text-sm text-gray-500">{{ order.delivery.note }}</p>
+
+                                <!-- Fakturačná adresa len keď sa líši — inak je to ten istý údaj dvakrát. -->
+                                <template v-if="order.delivery.is_custom && (order.customer.street || order.customer.city)">
+                                    <p class="mb-1 mt-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Fakturačná adresa</p>
+                                    <p class="text-sm text-gray-500">
+                                        {{ [order.customer.street, [order.customer.postcode, order.customer.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') }}
+                                    </p>
+                                </template>
+
+                                <router-link
+                                    v-if="order.can_edit_delivery && token"
+                                    :to="{ name: 'public.order.deliveryAddress', params: { uuid: order.uuid }, query: { token } }"
+                                    class="mt-3 inline-block text-sm text-blue-700 hover:underline"
+                                >
+                                    Zmeniť adresu doručenia
+                                </router-link>
                             </div>
                         </div>
 

@@ -12,7 +12,7 @@ class PublicOrderController extends Controller
     public function show(string $uuid)
     {
         $order = Order::where('uuid', $uuid)
-            ->with(['customer', 'orderProducts.product', 'shippingMethod', 'paymentMethod', 'attachments'])
+            ->with(['customer', 'orderProducts.product', 'shippingMethod', 'paymentMethod', 'attachments', 'stocks'])
             ->firstOrFail();
 
         $subtotal = $order->orderProducts->sum('total');
@@ -38,6 +38,10 @@ class PublicOrderController extends Controller
                     'city'     => $order->customer->city,
                     'postcode' => $order->customer->postcode,
                 ],
+                // Kam sa tovar naozaj posiela. `is_custom` hovorí, či ide o inú
+                // adresu než sídlo — podľa toho sa vo výpise ukáže aj fakturačná.
+                'delivery' => $order->deliverySnapshot(),
+                'can_edit_delivery' => $order->canEditDelivery(),
                 'shipping_method' => $order->shippingMethod ? [
                     'name'  => $order->shippingMethod->name,
                     'price' => $shipping,

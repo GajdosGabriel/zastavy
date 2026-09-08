@@ -19,10 +19,13 @@ import buttonLink from '../layout/page/ButtonLink.vue';
 import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
 import useUnsavedChanges from "../../models/useUnsavedChanges";
+import DeliveryAddressFields from "../forms/DeliveryAddressFields.vue";
+import { emptyDeliveryAddress } from "../../store/StoreCheckouts";
 
 const ordersStore = useOrders();
 const { getOrder, customer } = storeToRefs(ordersStore);
 const { fetchOrder, updateOrder } = ordersStore;
+const { getFieldErrors } = storeToRefs(useErrors());
 const orderProductsStore = useOrderProducts();
 const { getOrderProducts, getStatement } = storeToRefs(orderProductsStore);
 const { addOrderProduct, saveNewOrderProduct, updateOrderProducts } = orderProductsStore;
@@ -45,13 +48,36 @@ const isSubmitting    = ref(false);
 const note            = ref('');
 const wantsCoupon     = ref(false);
 
+// Doručovacia adresa. Vypnutý prepínač znamená „doručiť na sídlo zákazníka" —
+// uloženie vtedy odtlačok adresy z objednávky odstráni.
+const delivery = ref(emptyDeliveryAddress());
+const deliverToOtherAddress = ref(false);
+const savedAddresses = ref([]);
+
 const { setOriginalData, markAsSaved } = useUnsavedChanges(() => ({
     shipping_method_id: selectedShippingId.value,
     payment_method_id: selectedPaymentId.value,
     note: note.value,
     wants_coupon: wantsCoupon.value,
     orderProducts: getOrderProducts.value,
+    delivery: deliverToOtherAddress.value ? delivery.value : null,
 }));
+
+/** Prepíše polia adresou vybranou z adresára zákazníka. */
+const applySavedAddress = (address) => {
+    if (!address) return;
+
+    delivery.value = {
+        ...emptyDeliveryAddress(),
+        company: address.company ?? '',
+        name: address.name ?? '',
+        street: address.street ?? '',
+        postcode: address.postcode ?? '',
+        city: address.city ?? '',
+        phone: address.phone ?? '',
+        note: address.note ?? '',
+    };
+};
 
 onMounted(async () => {
     await fetchOrder(orderId);
@@ -62,6 +88,33 @@ onMounted(async () => {
     originalPaymentId.value  = selectedPaymentId.value;
     note.value        = getOrder.value?.note ?? '';
     wantsCoupon.value = !!getOrder.value?.wants_coupon;
+
+    const orderDelivery = getOrder.value?.delivery;
+    deliverToOtherAddress.value = Boolean(orderDelivery?.is_custom);
+    if (orderDelivery?.is_custom) {
+        delivery.value = {
+            ...emptyDeliveryAddress(),
+            company: orderDelivery.company ?? '',
+            name: orderDelivery.name ?? '',
+            street: orderDelivery.street ?? '',
+            postcode: orderDelivery.postcode ?? '',
+            city: orderDelivery.city ?? '',
+            phone: orderDelivery.phone ?? '',
+            note: orderDelivery.note ?? '',
+        };
+    }
+
+    // Adresár zákazníka — aby obsluha nemusela adresu prepisovať ručne.
+    const addressesEndpoint = getOrder.value?.customer?.addresses_endpoint;
+    if (addressesEndpoint) {
+        try {
+            const response = await axiosInstance.get(addressesEndpoint);
+            savedAddresses.value = response.data?.data ?? [];
+        } catch {
+            // Adresár je pomôcka; bez neho sa adresa vypíše ručne.
+            savedAddresses.value = [];
+        }
+    }
 
     const [sm, pm] = await Promise.all([
         axiosInstance.get('/shipping-methods'),
@@ -127,6 +180,9 @@ const submitUpdate = async (notify) => {
             note:                note.value || null,
             wants_coupon:        wantsCoupon.value,
             has_product_changes: pendingNew.length > 0,
+            // Prázdny `delivery` server prečíta ako „doručiť na sídlo" a odtlačok
+            // adresy z objednávky odstráni — presne to znamená vypnutý prepínač.
+            delivery:            deliverToOtherAddress.value ? delivery.value : null,
         });
         originalShippingId.value = selectedShippingId.value;
         originalPaymentId.value  = selectedPaymentId.value;
@@ -206,6 +262,19 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                             </option>
                         </select>
                     </div>
+                </div>
+
+                <!-- Doručovacia adresa -->
+                <div class="mb-4">
+                    <DeliveryAddressFields
+                        :modelValue="delivery"
+                        v-model:enabled="deliverToOtherAddress"
+                        :fieldErrors="getFieldErrors"
+                        :billing="customer"
+                        :savedAddresses="savedAddresses"
+                        allowSave
+                        @pick="applySavedAddress"
+                    />
                 </div>
 
                 <!-- Záujem o kupón -->

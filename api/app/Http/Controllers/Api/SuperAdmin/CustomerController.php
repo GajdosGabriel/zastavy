@@ -28,7 +28,7 @@ class CustomerController extends Controller
     {
         Gate::authorize('view', $customer);
 
-        return (new CustomerResource($customer->load(['users', 'primaryUser', 'review'])))
+        return (new CustomerResource($customer->load(['users', 'primaryUser', 'review', 'addresses'])))
             ->additional($this->formOptions());
     }
 
