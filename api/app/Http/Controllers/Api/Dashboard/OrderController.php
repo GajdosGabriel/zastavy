@@ -66,6 +66,8 @@ class OrderController extends Controller
             Gate::authorize('storno', $order);
 
             DB::transaction(function () use ($order) {
+                $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+                Gate::authorize('storno', $order);
                 $order->forceFill(['status' => OrderStatus::Cancelled])->save();
 
                 foreach ($order->orderProducts as $product) {
@@ -95,6 +97,7 @@ class OrderController extends Controller
         $previousStatus = $order->status;
 
         DB::transaction(function () use ($order, $request) {
+            $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
             $changes = $request->safe()->only(['shipping_method_id', 'payment_method_id', 'status', 'isOpened', 'note', 'wants_coupon']);
             if (array_key_exists('shipping_method_id', $changes)) {
                 $method = ShippingMethod::where('active', true)->findOrFail($changes['shipping_method_id']);
@@ -245,8 +248,13 @@ class OrderController extends Controller
     {
         Gate::authorize('delete', $order);
 
-        $order->orderProducts()->delete();
-        $order->delete();
+        DB::transaction(function () use ($order) {
+            $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            Gate::authorize('delete', $order);
+            abort_if($order->stocks()->exists(), 422, 'Objednávku so skladovou históriou nemožno zmazať.');
+            $order->orderProducts()->delete();
+            $order->delete();
+        });
 
         return response(new OrderResource($order));
     }

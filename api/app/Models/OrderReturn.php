@@ -13,6 +13,7 @@ class OrderReturn extends Model
     protected $guarded = [];
 
     protected $casts = [
+        'restocked' => 'boolean',
         'processed_at' => 'datetime',
     ];
 

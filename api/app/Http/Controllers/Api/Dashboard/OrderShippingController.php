@@ -21,23 +21,19 @@ class OrderShippingController extends Controller
         Gate::authorize('ship', $order);
 
         $validated = $request->validate([
+            'idempotency_key' => ['sometimes', 'uuid'],
             'notify_customer' => ['sometimes', 'boolean'],
             'items' => ['sometimes', 'array'],
-            'items.*.order_product_id' => ['required_with:items', 'integer', 'exists:order_products,id'],
+            'items.*.order_product_id' => ['required_with:items', 'integer', 'distinct', 'exists:order_products,id'],
             'items.*.quantity' => ['required_with:items', 'integer', 'min:0'],
         ]);
 
         $notifyCustomer = $validated['notify_customer'] ?? true;
         $items = $validated['items'] ?? null;
 
-        $shipping = DB::transaction(function () use ($order, $items) {
-            $order->load('orderProducts.stocks');
-            $order->update(['isOpened' => 1]);
+        $shipping = (new ShippingService)->create($order, $items, $validated['idempotency_key'] ?? null);
 
-            return (new ShippingService)->create($order, $items);
-        });
-
-        if ($notifyCustomer && $shipping) {
+        if ($notifyCustomer && $shipping?->wasRecentlyCreated) {
             $shipping->notices()->create(['notice' => 'email']);
             $order->loadMissing(['customer', 'shippingMethod', 'paymentMethod', 'orderProducts.product', 'orderProducts.stocks']);
 

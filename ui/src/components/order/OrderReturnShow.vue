@@ -20,6 +20,8 @@ const confirming = ref(null);
 const submitting = ref(false);
 const showProcessModal = ref(false);
 const notifyCustomer = ref(true);
+const restock = ref(true);
+watch(showProcessModal, (open) => { if (open) restock.value = ret.value?.reason !== "damaged"; });
 
 const editReason = ref('');
 const editNote = ref('');
@@ -87,10 +89,11 @@ async function saveEdit() {
 }
 
 async function doProcess() {
+    if (submitting.value) return;
     submitting.value = true;
-    await processReturn(orderId, returnId, notifyCustomer.value);
+    const result = await processReturn(orderId, returnId, notifyCustomer.value, restock.value);
     submitting.value = false;
-    showProcessModal.value = false;
+    if (result) showProcessModal.value = false;
 }
 
 async function doCancel() {
@@ -115,6 +118,9 @@ async function doDelete() {
 
             <div v-else class="page-body col-span-12">
 
+                <p v-if="ret.status === 'processed' && ret.restocked !== null" class="mb-3 text-sm text-gray-600">
+                    {{ ret.restocked ? 'Tovar bol vrátený do dostupného skladu.' : 'Tovar nebol zaradený do dostupného skladu.' }}
+                </p>
                 <!-- Header -->
                 <div class="mb-4 flex items-center justify-between">
                     <div>
@@ -271,7 +277,7 @@ async function doDelete() {
                     <template v-else>
                         <button @click="showProcessModal = true"
                             class="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
-                            Vrátiť na sklad
+                            Spracovať vrátenie
                         </button>
                         <button @click="confirming = 'cancel'"
                             class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
@@ -291,17 +297,21 @@ async function doDelete() {
         </template>
     </BaseLayout>
 
-    <!-- Modal: Vrátiť na sklad -->
+    <!-- Modal: Spracovať vrátenie -->
     <Teleport to="body">
         <div v-if="showProcessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
             <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
-                <h3 class="mb-1 text-lg font-semibold text-gray-800">Vrátiť tovar na sklad?</h3>
+                <h3 class="mb-1 text-lg font-semibold text-gray-800">Spracovať vrátenie tovaru?</h3>
                 <p class="mb-1 text-sm text-gray-500">
-                    Tovar bude zaúčtovaný späť na sklad a objednávka bude čakať na ďalšiu expedíciu.
+                    Vrátené množstvo sa odpočíta z expedície. Do dostupného skladu pridajte iba predajné kusy.
                 </p>
                 <p v-if="ret" class="mb-4 text-sm font-medium text-amber-700">
                     Dôvod: {{ ret.reason_label }}
                 </p>
+                <label class="mb-3 flex items-center gap-2 text-sm text-gray-700">
+                    <input type="checkbox" v-model="restock" class="rounded" />
+                    Vrátiť predajný tovar do dostupného skladu
+                </label>
                 <label class="mb-5 flex cursor-pointer items-center gap-2 text-sm text-gray-700">
                     <input type="checkbox" v-model="notifyCustomer" class="rounded" />
                     Informovať zákazníka emailom o vrátení
@@ -313,7 +323,7 @@ async function doDelete() {
                     </button>
                     <button type="button" @click="doProcess" :disabled="submitting"
                         class="rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">
-                        {{ submitting ? '...' : 'Vrátiť na sklad' }}
+                        {{ submitting ? '...' : 'Spracovať vrátenie' }}
                     </button>
                 </div>
             </div>

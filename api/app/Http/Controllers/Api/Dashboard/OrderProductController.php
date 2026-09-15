@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderProductResource;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 
 class OrderProductController extends Controller
 {
@@ -31,16 +32,18 @@ class OrderProductController extends Controller
 
         $variant = ProductVariant::findOrFail($request->product_variant_id);
 
-        $orderProduct = $order->orderProducts()->create([
-            'product_id'         => $variant->product_id,
-            'product_variant_id' => $variant->id,
-            'variant_label'      => $variant->name,
-            'quantity'           => $request->quantity,
-            'price'              => $request->price,
-            'total'              => (float) $request->quantity * (float) $request->price,
-            'storno'             => 0,
-        ]);
-
+        $orderProduct = DB::transaction(function () use ($order, $variant, $request) {
+            $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            return $order->orderProducts()->create([
+                'product_id'         => $variant->product_id,
+                'product_variant_id' => $variant->id,
+                'variant_label'      => $variant->name,
+                'quantity'           => $request->quantity,
+                'price'              => $request->price,
+                'total'              => (float) $request->quantity * (float) $request->price,
+                'storno'             => 0,
+            ]);
+        });
         $orderProduct->load(['product', 'variant']);
 
         return new OrderProductResource($orderProduct);
@@ -58,8 +61,15 @@ class OrderProductController extends Controller
             'price' => ['sometimes', 'numeric', 'min:0'],
         ]);
         unset($data['product_id']);
-        $data['total'] = round((float) ($data['quantity'] ?? $item->quantity) * (float) ($data['price'] ?? $item->price), 2);
-        $item->update($data);
+        DB::transaction(function () use ($order, $orderProduct, $data) {
+            Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $item = $order->orderProducts()->findOrFail($orderProduct);
+            $quantity = (int) ($data['quantity'] ?? $item->quantity);
+            $storno = (int) ($data['storno'] ?? $item->storno);
+            abort_if($storno + $item->stockSum > $quantity, 422, 'Množstvo nesmie byť menšie než expedované a stornované kusy.');
+            $data['total'] = round($quantity * (float) ($data['price'] ?? $item->price), 2);
+            $item->update($data);
+        });
 
         return response()->noContent();
     }
@@ -70,7 +80,12 @@ class OrderProductController extends Controller
         abort_unless($orderProduct->order_id === $order->id, 404);
         Gate::authorize('delete', $orderProduct);
 
-        $orderProduct->delete();
+        DB::transaction(function () use ($order, $orderProduct) {
+            Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $item = $order->orderProducts()->findOrFail($orderProduct->id);
+            abort_if($item->stocks()->exists(), 422, 'Položku so skladovou históriou nemožno zmazať.');
+            $item->delete();
+        });
         return response()->noContent();
     }
 }

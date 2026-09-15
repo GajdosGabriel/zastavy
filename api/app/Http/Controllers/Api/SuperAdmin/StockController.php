@@ -144,6 +144,7 @@ class StockController extends Controller
     {
         $receipts = DB::table('stocks')
             ->whereNull('shipping_id')
+            ->whereNull('order_return_id')
             ->whereNotNull('product_variant_id')
             ->whereNull('deleted_at')
             ->when($variantId, fn ($q) => $q->where('product_variant_id', $variantId))
@@ -169,9 +170,23 @@ class StockController extends Controller
             ->select('order_products.product_variant_id', DB::raw('SUM(stocks.quantity) as total'))
             ->pluck('total', 'product_variant_id');
 
+        $returns = DB::table('stocks')
+            ->join('order_products', 'stocks.order_product_id', '=', 'order_products.id')
+            ->whereNotNull('stocks.order_return_id')->whereNull('stocks.deleted_at')
+            ->when($variantId, fn ($q) => $q->where('order_products.product_variant_id', $variantId))
+            ->groupBy('order_products.product_variant_id')
+            ->select('order_products.product_variant_id', DB::raw('SUM(COALESCE(stocks.inventory_delta, stocks.quantity)) as total'))
+            ->pluck('total', 'product_variant_id');
+        $incoming = $receipts->map(fn ($row) => (int) $row->total_in);
+        $writeoffs = $receipts->map(fn ($row) => (int) $row->total_writeoff);
+        foreach ($returns as $id => $delta) {
+            $incoming[$id] = ($incoming[$id] ?? 0) + max(0, (int) $delta);
+            $writeoffs[$id] = ($writeoffs[$id] ?? 0) + max(0, -(int) $delta);
+        }
+
         return [
-            'in'       => $receipts->map(fn ($row) => (int) $row->total_in),
-            'writeoff' => $receipts->map(fn ($row) => (int) $row->total_writeoff),
+            'in'       => $incoming,
+            'writeoff' => $writeoffs,
             'out'      => $out,
             'price'    => $receipts->map(fn ($row) => $row->priced_quantity > 0
                 ? round($row->priced_value / $row->priced_quantity, 4)
@@ -226,7 +241,7 @@ class StockController extends Controller
         // bez určenia, ktorej skladovej položky sa týka.
         $data['product_id'] = ProductVariant::whereKey($data['product_variant_id'])->value('product_id');
 
-        $stock = Stock::create($data);
+        $stock = DB::transaction(fn () => Stock::create($data));
 
         return response(new StockResource($stock->load(['productDirect', 'variant'])), 201);
     }
@@ -243,7 +258,12 @@ class StockController extends Controller
             'note'     => 'sometimes|nullable|string|max:255',
         ]);
 
-        $stock->update($data);
+        DB::transaction(function () use ($stock, $data) {
+            $stock = Stock::whereKey($stock->id)->lockForUpdate()->firstOrFail();
+            abort_if($stock->order_id || $stock->shipping_id || $stock->order_return_id, 422, 'Pohyb objednávky upravte cez expedíciu alebo vratku.');
+            $stock->update($data);
+        });
+        $stock->refresh();
 
         return new StockResource($stock);
     }
@@ -252,7 +272,11 @@ class StockController extends Controller
     {
         Gate::authorize('delete', $stock);
 
-        $stock->delete();
+        DB::transaction(function () use ($stock) {
+            $stock = Stock::whereKey($stock->id)->lockForUpdate()->firstOrFail();
+            abort_if($stock->order_id || $stock->shipping_id || $stock->order_return_id, 422, 'Pohyb objednávky nemožno zmazať zo skladu.');
+            $stock->delete();
+        });
 
         return response()->noContent();
     }

@@ -11,6 +11,7 @@ const isIncoming = computed(() => props.item.type === 'incoming');
 const isWriteoff = computed(() => props.item.type === 'writeoff');
 
 const badge = computed(() => {
+    if (props.item.type === 'return') return { label: 'Vrátenie', class: 'bg-purple-100 text-purple-700' };
     if (isIncoming.value) return { label: 'Príjem', class: 'bg-green-100 text-green-700' };
     if (isWriteoff.value) return { label: 'Odpis', class: 'bg-red-100 text-red-700' };
     return { label: 'Expedícia', class: 'bg-blue-100 text-blue-700' };
@@ -58,7 +59,7 @@ const dropdownItems = computed(() => {
         </td>
         <td class="px-4 py-3 text-right whitespace-nowrap">
             <span class="text-sm font-bold" :class="quantityClass">
-                {{ isIncoming ? '+' : '−' }}{{ item.quantity }}
+                {{ item.inventory_delta > 0 ? '+' : '' }}{{ item.inventory_delta }}
             </span>
             <span class="ml-1 text-xs text-gray-400">{{ item.product_unit_value }}</span>
         </td>

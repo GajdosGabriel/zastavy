@@ -134,7 +134,7 @@ Prvé produktové investície by som smeroval do opakovaných objednávok, ponú
 
 1. **HOTOVO — Bezpečné hranice (14. 9. 2026):** verejný checkout a zákaznícke dáta, expedičné oprávnenia, blokovanie tokenov a neverejný sortiment. Implementácia aj regresné API testy pre anonymného zákazníka, firemný kontakt a jednotlivé interné roly sú dokončené. Overenie: 85 testov, 347 assertions a frontend build prešli. Zmeny sú v projekte, zatiaľ bez nasadenia.
 2. **HOTOVO — Spoľahlivá objednávka (15. 9. 2026):** historické odtlačky, správni príjemcovia správ, validácia dopravy/variantov, ochrana opakovaného odoslania a číselný rad.
-3. **Spoľahlivý sklad:** jednotné transakčné pravidlá, atómové pohyby, rezervácie podľa obchodných pravidiel a súbežné testy na MySQL.
+3. **HOTOVO — Spoľahlivý sklad (15. 9. 2026):** atómové pohyby, spoločné zámky objednávok, kontrola zásoby pri expedícii, opravené vratky a súbežné testy na MySQL. Podľa zvoleného obchodného pravidla sú objednávky nad sklad povolené a rezervácie sa nevytvárajú.
 4. **Udržateľnosť:** CI, oprava starých testov, typová kontrola, SQL dotazy, dokumentácia a prevádzkové alarmy. Rozvíjať priebežne s opravami.
 5. **Rozvoj predaja:** dokončenie navigácie katalógu, opakovanie objednávok, ponuky, schvaľovanie grafiky a termíny výroby.
 
@@ -191,3 +191,46 @@ php artisan queue:restart
 ```
 
 Prvý beh `freeze-history` iba vypíše počet objednávok bez odtlačku. Až `--apply` uloží rekonštruované údaje. Vykonajte ho pred obnovením úprav profilov a katalógu. Pred produkciou overte migráciu a súbežné vytváranie aj na testovacej MySQL databáze. Rollback migrácie odstráni odtlačky a evidenciu odoslaní; po obnovení objednávok vyžaduje plán obnovy dát.
+
+
+## Realizácia bodu 3 — spoľahlivý sklad (15. 9. 2026)
+
+### Dohodnuté obchodné pravidlo
+
+Objednávka môže presiahnuť zásobu a nevytvára rezerváciu. Bežný tovar so sledovaným skladom sa expeduje iba do aktuálne dostupného množstva. Kontrola beží v transakcii pod zámkom variantu; viac riadkov s tou istou variantou čerpá jednu spoločnú zásobu. Nedostatok vracia 422 a vráti späť celú expedíciu. Obsluha môže poslať menšiu čiastočnú expedíciu. Zákazkový tovar (`made_to_order`) a variant s `quantity = null` sa expedujú bez tejto podmienky. Nesledovaná zásoba zostáva `null`.
+
+Verejný detail umožňuje objednať aj variant bez zásoby a označuje ho „na objednávku“ s potvrdením termínu dodania. Informácia o skutočnej skladovej dostupnosti zostáva samostatná.
+
+### Implementácia
+
+- Pohyb skladu používa atómový SQL prírastok. Pri príjme sa variant uzamkne ešte pred vložením pohybu, aby súbeh nevytvoril deadlock pri zámkoch cudzieho kľúča. Skladové API zapisuje pohyb aj zásobu v jednej transakcii.
+- Expedícia, storno, úprava a zmazanie položiek, zmazanie objednávky a zmeny vratiek používajú spoločný zámok objednávky. Varianty sa pri viacpoložkovej expedícii a vratke zamykajú podľa ID. Služba expedície znovu načíta aktuálne položky a skladové pohyby.
+- Expedícia podporuje `idempotency_key`; rovnaký kľúč a obsah vráti pôvodnú expedíciu, iný obsah s tým istým kľúčom dostane 409. Frontend blokuje súbežné kliknutia a pri chybe uchováva kľúč v stave otvorenej aplikácie. Starší klient môže kľúč vynechať; potom je chránený celkový zostatok objednávky, ale opakovaný čiastočný odber sa považuje za ďalšiu operáciu.
+- Nová vratka oddeľuje zníženie expedovaného množstva od fyzického účinku na sklad (`inventory_delta`). Predajný vrátený kus zásobu zvýši; poškodený ju automaticky nezvýši. Obsluha zvolí zaradenie do dostupného skladu v potvrdení. Rozhodnutie sa uloží a zobrazí na vratke. Poškodený tovar nemá samostatnú skladovú lokáciu; jeho vyradenie z dostupnej zásoby je evidované vratkou.
+- Spracovanie vratky opätovne overuje aktuálne expedované množstvo. Prekrývajúce sa čakajúce vratky nemôžu vrátiť viac kusov, než bolo expedovaných. Opakovanie spracovanej vratky nepridá ďalší pohyb ani ďalšiu notifikáciu; zmena uloženého rozhodnutia o zaradení do skladu vracia 409.
+- Expedovanú položku nemožno znížiť pod expedované a stornované množstvo. Položky a objednávky so skladovou históriou nemožno zmazať. Pohyby objednávok nemožno ručne upravovať alebo mazať cez všeobecné skladové API.
+- Prehľad pohybov rozlišuje vratku a zobrazuje skutočný fyzický účinok vrátane nuly. Súhrn započítava predajné vratky do príjmov.
+
+### Nasadenie a historické údaje
+
+Nasadiť backend a frontend spolu; pred spustením nového backendu vykonať v `api`:
+
+```sh
+php artisan migrate
+php artisan stocks:audit-returns
+php artisan queue:restart
+```
+
+Migrácia `2026_09_15_120000_add_stock_inventory_delta` pridá fyzický účinok vratky, rozhodnutie o zaradení do skladu a jedinečný kľúč expedície. Zásobu variantu rozšíri na podpísané BIGINT, aby zachovala existujúce nezáporné údaje aj umožnila záporný stav zákazkovej výroby a inventúrnych odpisov. Bežné expedície záporný stav nevytvárajú.
+
+Historické vratky a fyzické zásoby sa automaticky neopravujú. `stocks:audit-returns` iba vypíše staré aktívne vratkové pohyby bez explicitného fyzického účinku. Ich pôvodné záporné účinky zostávajú zachované. Pred nasadením kontroly expedície porovnajte dotknuté varianty so skutočnou inventúrou a už vykonanými opravami; potrebné rozdiely zaevidujte inventúrnym pohybom. Automatické pripočítanie by mohlo zdvojiť skoršiu ručnú opravu.
+
+Rollback odstráni nové údaje a ochranu kľúčov. Po vzniku nových vratiek vyžaduje plán obnovy dát; odstránenie `inventory_delta` by stratilo význam fyzických účinkov. Pri záporných zásobách sa rollback migrácie zastaví.
+
+### Overenie
+
+Samostatná lokálna databáza `zastavy_stock_test_20260915` bola vytvorená iba na testy. Súbehové testy spúšťajú dva samostatné PHP procesy za spoločnou štartovacou bariérou; overujú príjmy, opakovanú čiastočnú expedíciu, dve objednávky čerpajúce rovnaký sklad, expedíciu so stornom a dvojité spracovanie vratky. Test sa na SQLite preskočí; databáza musí mať v názve `_test` a test obnovuje jej schému.
+
+Vývojová ani produkčná databáza sa nemenila. Nasadenie sa nevykonalo. Platobná brána zostala mimo rozsahu.
+
+Výsledok overenia bodu 3: **124 backendových testov / 551 assertions na MySQL prešlo**, vrátane 18 nových regresných a súbehových scenárov. Prešli 4 existujúce frontendové testy a priamy produkčný Vite build (273 modulov). Sieťové generovanie sitemap a prehliadačový end-to-end test neboli spustené.

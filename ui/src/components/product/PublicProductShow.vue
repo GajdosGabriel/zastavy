@@ -34,7 +34,7 @@ const minOrder = computed(() => Number(selectedVariant.value?.min_order ?? 1));
 const activePrice = computed(() => Number(selectedVariant.value?.active_price ?? 0));
 const basePrice = computed(() => Number(selectedVariant.value?.price ?? 0));
 const hasDiscount = computed(() => Number(selectedVariant.value?.sale_price ?? 0) > 0);
-const canBuy = computed(() => !!selectedVariant.value && selectedVariant.value.is_in_stock);
+const canBuy = computed(() => !!selectedVariant.value);
 const madeToOrder = computed(() => !!getProduct.value.made_to_order);
 
 // Popis chodí z administrácie ako HTML — pred v-html ho prečistíme.
@@ -200,7 +200,7 @@ onUnmounted(() => {
                                                 </span>
                                                 <span v-else class="rounded-full px-2 py-0.5 text-xs font-semibold"
                                                     :class="variant.is_in_stock ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
-                                                    {{ variant.is_in_stock ? 'skladom' : 'vypredané' }}
+                                                    {{ variant.is_in_stock ? 'skladom' : 'na objednávku' }}
                                                 </span>
                                             </td>
                                         </tr>

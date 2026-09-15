@@ -67,10 +67,11 @@ export const useReturns = defineStore('returns', {
             }
         },
 
-        async processReturn(orderId: number | string, returnId: number | string, notifyCustomer = false): Promise<OrderReturn | undefined> {
+        async processReturn(orderId: number | string, returnId: number | string, notifyCustomer = false, restock?: boolean): Promise<OrderReturn | undefined> {
             try {
                 const response = await axiosInstance.post(`/orders/${orderId}/returns/${returnId}/process`, {
                     notify_customer: notifyCustomer,
+                    restock,
                 });
                 const updated = response.data.data;
                 this.currentReturn = updated;

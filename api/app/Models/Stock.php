@@ -35,7 +35,7 @@ class Stock extends Model
 
     public function orderProduct()
     {
-        return $this->belongsTo(OrderProduct::class);
+        return $this->belongsTo(OrderProduct::class)->withTrashed();
     }
 
     public function productDirect()

@@ -28,6 +28,7 @@ const onlyProblems = ref(false);
 // Typ pohybu — filtre sa navzájom vylučujú, klik na aktívny ho zruší.
 const typeLabels = reactive([
     { name: 'Príjem', key: 'byType=', value: 'incoming', active: false },
+    { name: 'Vrátenie', key: 'byType=', value: 'return', active: false },
     { name: 'Odpis', key: 'byType=', value: 'writeoff', active: false },
     { name: 'Expedícia', key: 'byType=', value: 'outgoing', active: false },
 ]);

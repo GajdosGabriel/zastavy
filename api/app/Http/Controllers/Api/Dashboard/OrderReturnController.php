@@ -36,18 +36,13 @@ class OrderReturnController extends Controller
             // Poznámka chodí ako HTML z editora — značky sa rátajú do dĺžky.
             'note'            => ['nullable', 'string', 'max:3000'],
             'items'           => ['required', 'array', 'min:1'],
-            'items.*.order_product_id' => ['required', 'integer', 'exists:order_products,id'],
+            'items.*.order_product_id' => ['required', 'integer', 'distinct', 'exists:order_products,id'],
             'items.*.quantity'         => ['required', 'integer', 'min:1'],
         ]);
 
-        // Validate items belong to this order and quantity doesn't exceed shipped
-        foreach ($validated['items'] as $item) {
-            $op = $order->orderProducts()->with('stocks')->find($item['order_product_id']);
-            abort_if(! $op, 422, 'Položka nepatrí k tejto objednávke.');
-            abort_if($item['quantity'] > $op->stockSum, 422, "Množstvo na vrátenie ({$item['quantity']}) prekračuje expedované množstvo ({$op->stockSum}) pre {$op->product->name}.");
-        }
-
         $orderReturn = DB::transaction(function () use ($order, $validated, $request) {
+            $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $this->validateItems($order, $validated['items']);
             $return = $order->orderReturns()->create([
                 'reason'     => $validated['reason'],
                 'note'       => $validated['note'] ?? null,
@@ -75,7 +70,7 @@ class OrderReturnController extends Controller
         Gate::authorize('view', $order);
         abort_if($orderReturn->order_id !== $order->id, 404);
 
-        $orderReturn->load(['items.orderProduct.product', 'createdBy', 'processedBy']);
+        $orderReturn->refresh()->load(['items.orderProduct.product', 'createdBy', 'processedBy']);
 
         return new OrderReturnResource($orderReturn);
     }
@@ -90,22 +85,21 @@ class OrderReturnController extends Controller
             'reason' => ['sometimes', 'in:not_accepted,damaged,wrong_item,other'],
             'note'   => ['nullable', 'string', 'max:3000'],
             'items'  => ['sometimes', 'array', 'min:1'],
-            'items.*.order_product_id' => ['required_with:items', 'integer', 'exists:order_products,id'],
+            'items.*.order_product_id' => ['required_with:items', 'integer', 'distinct', 'exists:order_products,id'],
             'items.*.quantity'         => ['required_with:items', 'integer', 'min:1'],
         ]);
 
         DB::transaction(function () use ($order, $orderReturn, $validated) {
+            Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $orderReturn = OrderReturn::whereKey($orderReturn->id)->lockForUpdate()->firstOrFail();
+            abort_unless($orderReturn->isPending(), 422, 'Vrátenie už nie je v stave čaká.');
             $orderReturn->update([
                 'reason' => $validated['reason'] ?? $orderReturn->reason,
                 'note'   => array_key_exists('note', $validated) ? $validated['note'] : $orderReturn->note,
             ]);
 
             if (isset($validated['items'])) {
-                foreach ($validated['items'] as $item) {
-                    $op = $order->orderProducts()->with('stocks')->find($item['order_product_id']);
-                    abort_if(! $op, 422, 'Položka nepatrí k tejto objednávke.');
-                    abort_if($item['quantity'] > $op->stockSum, 422, "Množstvo prekračuje expedované množstvo pre {$op->product->name}.");
-                }
+                $this->validateItems($order, $validated['items']);
 
                 $orderReturn->items()->delete();
                 foreach ($validated['items'] as $item) {
@@ -114,7 +108,7 @@ class OrderReturnController extends Controller
             }
         });
 
-        $orderReturn->load(['items.orderProduct.product', 'createdBy', 'processedBy']);
+        $orderReturn->refresh()->load(['items.orderProduct.product', 'createdBy', 'processedBy']);
 
         return new OrderReturnResource($orderReturn);
     }
@@ -125,7 +119,12 @@ class OrderReturnController extends Controller
         abort_if($orderReturn->order_id !== $order->id, 404);
         abort_if(! $orderReturn->isPending(), 422, 'Nie je možné zmazať spracované vrátenie.');
 
-        $orderReturn->delete();
+        DB::transaction(function () use ($order, $orderReturn) {
+            Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $return = OrderReturn::whereKey($orderReturn->id)->lockForUpdate()->firstOrFail();
+            abort_unless($return->isPending(), 422, 'Nie je možné zmazať spracované vrátenie.');
+            $return->delete();
+        });
 
         return response()->noContent();
     }
@@ -134,10 +133,21 @@ class OrderReturnController extends Controller
     {
         Gate::authorize('manageReturns', $order);
         abort_if($orderReturn->order_id !== $order->id, 404);
-        abort_if(! $orderReturn->isPending(), 422, 'Vrátenie je už spracované alebo zrušené.');
 
-        DB::transaction(function () use ($order, $orderReturn, $request) {
+        $request->validate(['restock' => ['sometimes', 'boolean']]);
+        $processed = DB::transaction(function () use ($order, $orderReturn, $request) {
+            Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $orderReturn->refresh();
+            if ($orderReturn->status === 'processed') {
+                abort_if($request->has('restock') && $orderReturn->restocked !== $request->boolean('restock'), 409, 'Vrátenie už bolo spracované s iným zaradením do skladu.');
+                return false;
+            }
+            abort_unless($orderReturn->isPending(), 422, 'Vrátenie je už spracované alebo zrušené.');
             $orderReturn->load('items.orderProduct.stocks');
+            $this->validateItems($order, $orderReturn->items->toArray());
+            $restock = $request->boolean('restock', $orderReturn->reason !== 'damaged');
+            \App\Models\ProductVariant::withTrashed()->whereIn('id', $orderReturn->items->pluck('orderProduct.product_variant_id')->filter())
+                ->orderBy('id')->lockForUpdate()->get();
 
             foreach ($orderReturn->items as $returnItem) {
                 Stock::create([
@@ -146,6 +156,7 @@ class OrderReturnController extends Controller
                     'order_return_id'  => $orderReturn->id,
                     'shipping_id'      => null,
                     'quantity'         => -$returnItem->quantity,
+                    'inventory_delta'  => $restock ? $returnItem->quantity : 0,
                 ]);
             }
 
@@ -153,14 +164,16 @@ class OrderReturnController extends Controller
                 'status'       => 'processed',
                 'processed_by' => $request->user()->id,
                 'processed_at' => now(),
+                'restocked' => $restock,
             ]);
+            return true;
         });
 
         $order->refresh()->load(['customer.users', 'user', 'shippings.notices', 'orderProducts.stocks', 'orderReturns.items.orderProduct.product']);
 
-        $orderReturn->load(['items.orderProduct.product', 'createdBy', 'processedBy']);
+        $orderReturn->refresh()->load(['items.orderProduct.product', 'createdBy', 'processedBy']);
 
-        if ($request->boolean('notify_customer')) {
+        if ($processed && $request->boolean('notify_customer')) {
             $customer = $order->customer;
             if ($order->routeNotificationForMail()) {
                 $order->notifyCustomer(new OrderReturnProcessed($order, $orderReturn));
@@ -178,10 +191,24 @@ class OrderReturnController extends Controller
         abort_if($orderReturn->order_id !== $order->id, 404);
         abort_if(! $orderReturn->isPending(), 422, 'Vrátenie je už spracované alebo zrušené.');
 
-        $orderReturn->update(['status' => 'cancelled']);
+        DB::transaction(function () use ($order, $orderReturn) {
+            Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $orderReturn->refresh();
+            abort_unless($orderReturn->isPending(), 422, 'Vrátenie už nie je v stave čaká.');
+            $orderReturn->update(['status' => 'cancelled']);
+        });
 
-        $orderReturn->load(['items.orderProduct.product', 'createdBy', 'processedBy']);
+        $orderReturn->refresh()->load(['items.orderProduct.product', 'createdBy', 'processedBy']);
 
         return new OrderReturnResource($orderReturn);
+    }
+
+    private function validateItems(Order $order, array $items): void
+    {
+        foreach (collect($items)->groupBy('order_product_id') as $id => $rows) {
+            $item = $order->orderProducts()->find($id);
+            abort_unless($item, 422, 'Položka nepatrí k objednávke.');
+            abort_if($rows->sum('quantity') > $item->stocks()->sum('quantity'), 422, 'Množstvo prekračuje aktuálne expedované množstvo.');
+        }
     }
 }

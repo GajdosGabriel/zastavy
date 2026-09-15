@@ -16,6 +16,7 @@ class StockResource extends JsonResource
 
         // Záporný príjem je odpis (rozbité, stratené, inventúrna korekcia).
         $type = match (true) {
+            (bool) $this->order_return_id => 'return',
             (bool) $this->shipping_id => 'outgoing',
             $this->quantity < 0       => 'writeoff',
             default                   => 'incoming',
@@ -24,6 +25,7 @@ class StockResource extends JsonResource
         return [
             'id'                        => $this->id,
             'type'                      => $type,
+            'inventory_delta' => $this->inventory_delta !== null ? (int) $this->inventory_delta : ($this->shipping_id ? -(int) $this->quantity : (int) $this->quantity),
             'shipping_id'               => $this->shipping_id,
             'order_id'                  => $this->order_id,
             'product_id'                => $this->product_id ?? $product?->id,
@@ -52,7 +54,7 @@ class StockResource extends JsonResource
             ],
             'permissions' => [
                 'delete' => [
-                    'allowed' => $user?->can('delete', $this->resource) ?? false,
+                    'allowed' => !$this->order_id && !$this->shipping_id && !$this->order_return_id && ($user?->can('delete', $this->resource) ?? false),
                     'label'   => __('actions.delete'),
                 ],
             ],

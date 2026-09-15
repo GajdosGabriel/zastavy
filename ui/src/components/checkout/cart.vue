@@ -56,7 +56,7 @@ const productRoute = computed(() => ({
             </router-link>
             <span v-if="!item.is_in_stock"
                 class="absolute right-3 top-3 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
-                vypredané
+                na objednávku
             </span>
         </div>
 

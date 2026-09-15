@@ -57,8 +57,9 @@ class StockFilter extends Filters
     public function byType($type)
     {
         return match ($type) {
-            'incoming' => $this->builder->whereNull('shipping_id')->where('quantity', '>', 0),
-            'writeoff' => $this->builder->whereNull('shipping_id')->where('quantity', '<', 0),
+            'incoming' => $this->builder->whereNull('shipping_id')->whereNull('order_return_id')->where('quantity', '>', 0),
+            'writeoff' => $this->builder->whereNull('shipping_id')->whereNull('order_return_id')->where('quantity', '<', 0),
+            'return' => $this->builder->whereNotNull('order_return_id'),
             'outgoing' => $this->builder->whereNotNull('shipping_id'),
             default    => $this->builder,
         };

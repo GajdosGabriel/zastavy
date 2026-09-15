@@ -18,6 +18,15 @@ use App\Models\Stock;
  */
 class StockObserver
 {
+    public function creating(Stock $stock): void
+    {
+        // Zámok pred INSERTom: FK inak získa zdieľaný zámok variantu a dva
+        // súbežné príjmy sa pri následnom UPDATE môžu vzájomne zablokovať.
+        if ($id = $this->variantId($stock)) {
+            ProductVariant::withTrashed()->whereKey($id)->lockForUpdate()->first();
+        }
+    }
+
     public function created(Stock $stock): void
     {
         $this->apply($stock, $this->delta($stock));
@@ -30,15 +39,13 @@ class StockObserver
             return;
         }
 
-        if (! $stock->wasChanged('quantity')) {
+        if (! $stock->wasChanged(['quantity', 'inventory_delta'])) {
             return;
         }
-
-        $before = (int) $stock->getOriginal('quantity');
-        $after  = (int) $stock->quantity;
-        $sign   = $stock->shipping_id ? -1 : 1;
-
-        $this->apply($stock, ($after - $before) * $sign);
+        $before = $stock->getOriginal('inventory_delta') !== null
+            ? (int) $stock->getOriginal('inventory_delta')
+            : (int) $stock->getOriginal('quantity') * ($stock->shipping_id ? -1 : 1);
+        $this->apply($stock, $this->delta($stock) - $before);
     }
 
     public function deleted(Stock $stock): void
@@ -59,7 +66,7 @@ class StockObserver
     {
         $quantity = (int) $stock->quantity;
 
-        return $stock->shipping_id ? -$quantity : $quantity;
+        return $stock->inventory_delta !== null ? (int) $stock->inventory_delta : ($stock->shipping_id ? -$quantity : $quantity);
     }
 
     private function apply(Stock $stock, int $delta): void
@@ -74,14 +81,9 @@ class StockObserver
             return;
         }
 
-        $variant = ProductVariant::find($variantId);
-
-        // null = sklad sa pri tomto variante nesleduje, nesmieme ho "zapnúť".
-        if (! $variant || $variant->quantity === null) {
-            return;
-        }
-
-        $variant->forceFill(['quantity' => (int) $variant->quantity + $delta])->saveQuietly();
+        // Jediný SQL UPDATE: súbežné pohyby si nemôžu prepísať stav.
+        ProductVariant::withTrashed()->whereKey($variantId)
+            ->whereNotNull('quantity')->increment('quantity', $delta);
     }
 
     /**

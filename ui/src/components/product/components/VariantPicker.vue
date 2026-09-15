@@ -123,13 +123,13 @@ const labelFor = (attributeId) => {
         <p v-if="selectedVariant" class="text-xs text-gray-500">
             Kód: <span class="font-mono">{{ selectedVariant.code }}</span>
             <span v-if="!selectedVariant.is_in_stock" class="ml-2 font-semibold text-red-600">
-                — momentálne vypredané
+                — na objednávku, termín dodania potvrdíme
             </span>
         </p>
     </div>
 
     <!-- Produkt bez rozlíšenia: jediná skladová položka, nie je čo vyberať -->
     <p v-else-if="selectedVariant && !selectedVariant.is_in_stock" class="text-sm font-semibold text-red-600">
-        Momentálne vypredané
+        Na objednávku — termín dodania potvrdíme
     </p>
 </template>
