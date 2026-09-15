@@ -77,7 +77,7 @@ class DeliveryAddressTest extends TestCase
     {
         $product = $this->makeProduct();
 
-        $this->postJson('/api/checkouts', array_merge([
+        $this->postCheckout(array_merge([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 2],
@@ -135,7 +135,7 @@ class DeliveryAddressTest extends TestCase
     {
         $product = $this->makeProduct();
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [['id' => $product->id, 'input_order' => 1]],
             'delivery' => ['city' => 'Nitra'],
@@ -192,7 +192,7 @@ class DeliveryAddressTest extends TestCase
 
         // Druhá objednávka na tú istú adresu adresár nezduplikuje.
         $product = $this->makeProduct('VSR-200', 12.00);
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload() + ['id' => $customer->id],
             'orderProducts' => [['id' => $product->id, 'input_order' => 1]],
             'delivery' => $this->deliveryPayload(['save_address' => true]),
@@ -226,7 +226,7 @@ class DeliveryAddressTest extends TestCase
         $this->assertNotNull($order->delivery_changed_at);
         $this->assertSame('zákazník (odkaz z e-mailu)', $order->delivery_changed_by);
 
-        Notification::assertSentTo($order->customer, OrderDeliveryAddressChanged::class);
+        Notification::assertSentTo($order, OrderDeliveryAddressChanged::class);
     }
 
     /**
@@ -320,7 +320,7 @@ class DeliveryAddressTest extends TestCase
 
         $product = $this->makeProduct();
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload() + ['id' => $customer->id],
             'orderProducts' => [['id' => $product->id, 'input_order' => 1]],
             'customer_address_id' => $address->id,
@@ -376,7 +376,7 @@ class DeliveryAddressTest extends TestCase
             'city' => 'Bratislava',
         ]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [['id' => $this->makeProduct()->id, 'input_order' => 1]],
             'customer_address_id' => $foreign->id,

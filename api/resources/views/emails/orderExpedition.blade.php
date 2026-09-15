@@ -39,9 +39,9 @@
     // Items sent in THIS shipment
     $sentItems = $shipping
         ? $shipping->stocks->map(fn($s) => [
-            'name'     => $s->orderProduct?->product?->name ?? '—',
+            'name'     => $s->orderProduct?->product_details?->name ?? '—',
             'quantity' => $s->quantity,
-            'unit'     => $s->orderProduct?->unit_value ?? 'ks',
+            'unit'     => $s->orderProduct?->product_details?->unit_value ?? 'ks',
           ])
         : collect();
 
@@ -49,9 +49,9 @@
     $remainingItems = $order->orderProducts->map(function ($item) {
         $remaining = max(0, $item->quantity - ($item->storno ?? 0) - $item->stockSum);
         return $remaining > 0 ? [
-            'name'      => $item->product?->name ?? '—',
+            'name'      => $item->product_details?->name ?? '—',
             'remaining' => $remaining,
-            'unit'      => $item->unit_value ?? 'ks',
+            'unit'      => $item->product_details->unit_value ?? 'ks',
         ] : null;
     })->filter()->values();
 @endphp
@@ -64,10 +64,10 @@
     </div>
 
     <div class="body">
-        <x-email.customer :customer="$order->customer" />
+        <x-email.customer :customer="$order->billing" />
 
         <p style="font-size:15px; margin: 0 0 24px; line-height:1.6;">
-            Dobrý deň, <strong>{{ $order->customer->company ?: $order->customer->name }}</strong>,<br>
+            Dobrý deň, <strong>{{ $order->billing->company ?: $order->billing->name }}</strong>,<br>
             @if($isPartial)
                 dnes sme Vám odoslali časť Vašej objednávky. Zostatok Vám pošleme hneď, ako bude tovar dostupný.
             @else
@@ -79,9 +79,9 @@
              kým je zásielka ešte na ceste. --}}
         <x-email.delivery-address :order="$order" title="Zásielka ide na adresu" />
 
-        @if($order->shippingMethod)
+        @if($order->shipping_label)
         <div class="shipping-line">
-            Spôsob doručenia: <strong>{{ $order->shippingMethod->name }}</strong>
+            Spôsob doručenia: <strong>{{ $order->shipping_label }}</strong>
         </div>
         @endif
 
@@ -119,8 +119,8 @@
             <tbody>
                 @foreach($order->orderProducts as $item)
                 <tr>
-                    <td>{{ $item->product?->name ?? '—' }}</td>
-                    <td style="text-align:right">{{ $item->quantity }} {{ $item->unit_value ?? 'ks' }}</td>
+                    <td>{{ $item->product_details?->name ?? '—' }}</td>
+                    <td style="text-align:right">{{ $item->quantity }} {{ $item->product_details->unit_value ?? 'ks' }}</td>
                 </tr>
                 @endforeach
             </tbody>

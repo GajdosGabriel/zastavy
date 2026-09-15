@@ -28,7 +28,7 @@ class OrderUpdated extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-            ->subject('Zmena objednávky | ' . $this->order->customer->company)
+            ->subject('Zmena objednávky | ' . $this->order->billing->company)
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderUpdated', [
                 'order'   => $this->order,

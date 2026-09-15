@@ -33,9 +33,9 @@ class OrderIndexResource extends JsonResource
             'created_at_human' => Carbon::parse($this->created_at)->diffForhumans(),
             'customer' => [
                 'id' => $this->customer?->id,
-                'name' => $this->customer?->name,
-                'company' => $this->customer?->company,
-                'city' => $this->customer?->city,
+                'name' => $this->billing?->name,
+                'company' => $this->billing?->company,
+                'city' => $this->billing?->city,
             ],
             'shippings' => ShippingResource::collection($this->shippings),
             'price_sum' => $this->orderProducts->sum(fn ($p) => ($p->price ?? 0) * ($p->quantity ?? 0)),

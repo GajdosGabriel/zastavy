@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\DB;
  *
  * Importované historické objednávky majú staré formáty (napr. "001/2022"),
  * ktoré navyše nie sú unikátne. Poradie sa odvodzuje z created_at (pri
- * rovnakom čase z id), takže výsledok je zhodný s tým, čo generuje
- * StoreOrder::serialNumber() pri vytvorení novej objednávky.
+ * rovnakom čase z id). Po zavedení chráneného číselného radu je dostupný
+ * iba náhľad; existujúce čísla sa hromadne nemenia.
  */
 class RenumberOrders extends Command
 {
@@ -24,6 +24,10 @@ class RenumberOrders extends Command
     public function handle(): int
     {
         $dryRun = (bool) $this->option('dry-run');
+        if (! $dryRun && \Illuminate\Support\Facades\Schema::hasTable('order_sequences')) {
+            $this->error('Historické čísla sú chránené číselným radom. Použite --dry-run; prípadnú opravu vykonajte individuálne.');
+            return self::FAILURE;
+        }
 
         // withTrashed: soft-deleted objednávky musia ostať v poradí, inak by sa
         // ich číslo pridelilo druhýkrát novej objednávke.

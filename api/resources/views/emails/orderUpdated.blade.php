@@ -37,7 +37,7 @@
     </div>
 
     <div class="body">
-        <x-email.customer :customer="$order->customer" />
+        <x-email.customer :customer="$order->billing" />
 
         @if(!empty($changes))
         <div class="info-block">
@@ -71,12 +71,12 @@
                 @foreach($order->orderProducts as $item)
                 <tr>
                     <td>
-                        {{ $item->product->name ?? '—' }}
+                        {{ $item->product_details->name ?? '—' }}
                         @if($item->variant_name)
                             <br><span style="color:#64748b;font-size:12px">{{ $item->variant_name }}</span>
                         @endif
                     </td>
-                    <td style="text-align:right">{{ $item->quantity }} ks</td>
+                    <td style="text-align:right">{{ $item->quantity }} {{ $item->product_details->unit_value }}</td>
                     @if($order->orderProducts->first()?->price)
                         <td style="text-align:right">{{ number_format($item->price, 2, ',', ' ') }} €</td>
                         <td style="text-align:right">{{ number_format($item->total, 2, ',', ' ') }} €</td>

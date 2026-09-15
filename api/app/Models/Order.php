@@ -21,6 +21,7 @@ class Order extends Model
     protected $appends = ['productOrderSum'];
 
     protected $casts = [
+        'billing_snapshot' => 'array',
         'status' => OrderStatus::class,
         'delivery_token_expires_at' => 'datetime',
         'delivery_changed_at' => 'datetime',
@@ -32,6 +33,10 @@ class Order extends Model
     protected static function booted(): void
     {
         static::creating(function (Order $order) {
+            $order->billing_snapshot ??= $order->billingSnapshot();
+            $order->snapshot_source ??= 'captured';
+            $order->shipping_method_name ??= $order->shippingMethod?->name;
+            $order->payment_method_name ??= $order->paymentMethod?->name;
             if (! $order->uuid) {
                 $order->uuid = (string) Str::uuid();
             }
@@ -43,9 +48,55 @@ class Order extends Model
         });
     }
 
+    public function billingSnapshot(): array
+    {
+        if ($this->billing_snapshot !== null) return $this->billing_snapshot;
+        $customer = $this->customer;
+        return [
+            'name' => $this->name ?: $customer?->name,
+            'company' => $customer?->company,
+            'email' => $this->email ?: $customer?->email,
+            'phone' => $this->phone ?: $customer?->phone,
+            'street' => $customer?->street,
+            'postcode' => $customer?->postcode,
+            'city' => $customer?->city,
+            'country' => 'SK',
+            'ico' => $customer?->ico,
+            'dic' => $customer?->dic,
+            'ic_dic' => $customer?->ic_dic,
+        ];
+    }
+
+    public function getShippingLabelAttribute(): ?string
+    {
+        return $this->shipping_method_name ?? $this->shippingMethod?->name;
+    }
+
+    public function getPaymentLabelAttribute(): ?string
+    {
+        return $this->payment_method_name ?? $this->paymentMethod?->name;
+    }
+
+    public function getBillingAttribute(): object
+    {
+        return (object) $this->billingSnapshot();
+    }
+
+    public function routeNotificationForMail($notification = null): ?string
+    {
+        return $this->billingSnapshot()['email'] ?? null;
+    }
+
+    public function notifyCustomer(\Illuminate\Notifications\Notification $notification): void
+    {
+        if (! $this->routeNotificationForMail()) return;
+        if (method_exists($notification, 'afterCommit')) $notification->afterCommit();
+        $this->notify($notification);
+    }
+
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
     }
 
     /**
@@ -128,7 +179,7 @@ class Order extends Model
      */
     public function deliverySnapshot(): array
     {
-        $customer = $this->customer;
+        $customer = $this->billing;
 
         if (! $this->hasCustomDelivery()) {
             return [
@@ -136,7 +187,7 @@ class Order extends Model
                 'company'   => $customer?->company,
                 'name'      => $this->name ?: $customer?->name,
                 'street'    => $customer?->street,
-                'postcode'  => AddressFormatter::formatPostcode($customer?->getRawOriginal('postcode')),
+                'postcode'  => AddressFormatter::formatPostcode($customer?->postcode),
                 'city'      => $customer?->city,
                 'country'   => 'SK',
                 'phone'     => $this->phone ?: $customer?->phone,

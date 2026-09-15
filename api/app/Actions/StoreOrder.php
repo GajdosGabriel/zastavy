@@ -21,9 +21,9 @@ use Illuminate\Validation\ValidationException;
 class StoreOrder implements StoreOrderContract
 {
 
-    function __construct(Request $request)
+    public function __construct(private Request $request)
     {
-        $this->request = $request;
+
     }
 
 
@@ -54,7 +54,7 @@ class StoreOrder implements StoreOrderContract
             'note'               => $this->request->input('note') ?: null,
             'wants_coupon'       => (bool) $this->request->input('wants_coupon', false),
         ]);
-        $this->serialNumber($order);
+        $order->update(['serial_number' => app(\App\Services\OrderNumberService::class)->next($order->created_at->format('Y-m'))]);
         $this->storeOrderProducts($order, $items);
         $this->storeAttachments($order, $user);
 
@@ -137,12 +137,12 @@ class StoreOrder implements StoreOrderContract
             ->get()
             ->keyBy('id');
 
-        return $requested->map(function ($item) use ($variants, $fallbackVariants, $isStaff) {
+        return $requested->map(function ($item, $index) use ($variants, $fallbackVariants, $isStaff) {
             $variant = isset($item['variant_id'])
                 ? $variants->get($item['variant_id'])
                 : $fallbackVariants->get($item['id'] ?? null)?->defaultVariant;
 
-            if (! $variant) {
+            if (! $variant || (int) $variant->product_id !== (int) $item['id']) {
                 throw ValidationException::withMessages([
                     'orderProducts' => ['Niektorá z položiek v košíku už nie je dostupná.'],
                 ]);
@@ -158,8 +158,16 @@ class StoreOrder implements StoreOrderContract
 
             // Minimálne odberné množstvo sa vynucuje na serveri, nielen v UI.
             $minOrder = max(1, (int) ($variant->min_order ?? 1));
+            if ((int) $item['input_order'] < $minOrder) {
+                throw ValidationException::withMessages(["orderProducts.$index.input_order" => ["Minimálne objednávané množstvo je $minOrder."]]);
+            }
 
             return [
+                'product_snapshot' => [
+                    'name' => $variant->product->name, 'code' => $variant->product->code,
+                    'unit_value' => $variant->product->unit_value ?? 'ks', 'vat' => $variant->product->vat,
+                    'variant_name' => $variant->name, 'variant_code' => $variant->code,
+                ],
                 'product_id'         => $variant->product_id,
                 'product_variant_id' => $variant->id,
                 'variant_label'      => $variant->name,
@@ -183,13 +191,15 @@ class StoreOrder implements StoreOrderContract
 
         $shippingPrice = 0.0;
         if ($shippingMethodId) {
-            $method = ShippingMethod::find($shippingMethodId);
+            $method = ShippingMethod::where('active', true)->lockForUpdate()->find($shippingMethodId);
+            if (! $method) throw ValidationException::withMessages(['shipping_method_id' => ['Vyberte dostupný spôsob dopravy.']]);
             $shippingPrice = $method ? $method->resolvePrice($cartTotal) : 0.0;
         }
 
         $paymentFee = 0.0;
         if ($paymentMethodId) {
-            $method = PaymentMethod::find($paymentMethodId);
+            $method = PaymentMethod::where('active', true)->lockForUpdate()->find($paymentMethodId);
+            if (! $method) throw ValidationException::withMessages(['payment_method_id' => ['Vyberte dostupný spôsob úhrady.']]);
             $paymentFee = $method ? (float) $method->fee : 0.0;
         }
 
@@ -228,8 +238,9 @@ class StoreOrder implements StoreOrderContract
 
             $notification = new OrderCreated($order);
 
-            if ($order->customer?->email && $this->shouldNotifyCustomer()) {
-                $order->customer->notify($notification);
+            $notification->afterCommit();
+            if ($this->shouldNotifyCustomer()) {
+                $order->notifyCustomer($notification);
             }
 
             Notification::send(User::role('super-admin')->get(), $notification);
@@ -253,21 +264,4 @@ class StoreOrder implements StoreOrderContract
         return $this->request->boolean('notify_customer', true);
     }
 
-    protected function serialNumber(Order $order): void
-    {
-        $year  = $order->created_at->format('Y');
-        $month = $order->created_at->format('m');
-
-        // withTrashed: soft-deleted objednávky musia ostať v poradí,
-        // inak sa po zmazaní pridelí už existujúce sériové číslo.
-        $position = Order::withTrashed()
-            ->whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->where('id', '<=', $order->id)
-            ->count();
-
-        $order->update([
-            'serial_number' => "{$year}-{$month}-" . str_pad($position, 4, '0', STR_PAD_LEFT),
-        ]);
-    }
 }

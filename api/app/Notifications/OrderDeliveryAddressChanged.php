@@ -33,7 +33,7 @@ class OrderDeliveryAddressChanged extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-            ->subject('Zmena adresy doručenia | '.($this->order->serial_number ?: $this->order->customer?->company))
+            ->subject('Zmena adresy doručenia | '.($this->order->serial_number ?: $this->order->billing?->company))
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderDeliveryAddressChanged', [
                 'order' => $this->order,

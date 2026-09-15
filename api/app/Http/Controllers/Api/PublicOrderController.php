@@ -26,32 +26,22 @@ class PublicOrderController extends Controller
                 'serial_number' => $order->serial_number,
                 'created_at'    => $order->created_at,
                 'note'          => $order->note,
-                'customer' => [
-                    'name'     => $order->customer->name,
-                    'company'  => $order->customer->company,
-                    'ico'      => $order->customer->ico,
-                    'dic'      => $order->customer->dic,
-                    'ic_dic'   => $order->customer->ic_dic,
-                    'email'    => $order->customer->email,
-                    'phone'    => $order->customer->phone,
-                    'street'   => $order->customer->street,
-                    'city'     => $order->customer->city,
-                    'postcode' => $order->customer->postcode,
-                ],
+                'customer' => $order->billingSnapshot(),
+                'snapshot_source' => $order->snapshot_source ?? 'legacy',
                 // Kam sa tovar naozaj posiela. `is_custom` hovorí, či ide o inú
                 // adresu než sídlo — podľa toho sa vo výpise ukáže aj fakturačná.
                 'delivery' => $order->deliverySnapshot(),
                 'can_edit_delivery' => $order->canEditDelivery(),
-                'shipping_method' => $order->shippingMethod ? [
-                    'name'  => $order->shippingMethod->name,
+                'shipping_method' => ($order->shipping_method_name || $order->shippingMethod) ? [
+                    'name'  => $order->shipping_method_name ?? $order->shippingMethod?->name,
                     'price' => $shipping,
                 ] : null,
-                'payment_method' => $order->paymentMethod ? [
-                    'name' => $order->paymentMethod->name,
+                'payment_method' => ($order->payment_method_name || $order->paymentMethod) ? [
+                    'name' => $order->payment_method_name ?? $order->paymentMethod?->name,
                     'fee'  => $fee,
                 ] : null,
                 'order_products' => $order->orderProducts->map(fn($op) => [
-                    'name'     => $op->product->name ?? '—',
+                    'name'     => $op->product_details->name ?? '—',
                     'variant'  => $op->variant_name,
                     'quantity' => $op->quantity,
                     'price'    => $op->price,

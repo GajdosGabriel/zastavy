@@ -5,6 +5,7 @@ import useErrors from "./StoreErrors";
 import useCustomer from "./StoreCustomers";
 import useCheckoutOptions from "./StoreCheckoutOptions";
 import useUsers from "./StoreUsers";
+import { prepareOrderSubmission, finishOrderSubmission } from "../models/orderSubmission";
 
 const CART_STORAGE_KEY = "form";
 const CUSTOMER_STORAGE_KEY = "customer";
@@ -123,6 +124,7 @@ const readJsonStorage = (key: string, fallback: any) => {
 // (perzistencia košíka/zákazníka do localStorage) – v options-store by to nešlo.
 export const useCheckouts = defineStore("checkouts", () => {
     const carts = ref<any[]>([]);
+    let submitting = false;
     const note = ref("");
     // Prílohy zámerne neputujú do localStorage — File objekty sa serializovať nedajú.
     const attachments = ref<File[]>([]);
@@ -287,8 +289,12 @@ export const useCheckouts = defineStore("checkouts", () => {
     const storeCheckout = async (
         { notifyCustomer = true }: { notifyCustomer?: boolean } = {}
     ): Promise<string | boolean> => {
+        if (submitting) return false;
+        submitting = true;
+        const scope = 'checkout:' + (useUsers().getUser?.id ?? 'guest');
+        try {
         const options = useCheckoutOptions();
-        const payload: Record<string, any> = {
+        let payload: Record<string, any> = {
             customer: useCustomer().getCustomer,
             notify_customer: notifyCustomer,
             // Server si cenu aj tak berie z databázy — posielame len identitu a počet.
@@ -321,6 +327,8 @@ export const useCheckouts = defineStore("checkouts", () => {
             }
         }
 
+        payload = await prepareOrderSubmission(payload, attachments.value, scope);
+
         // S prílohami sa musí ísť cez multipart; bez nich ostáva JSON.
         let body: any = payload;
         if (attachments.value.length) {
@@ -332,6 +340,7 @@ export const useCheckouts = defineStore("checkouts", () => {
 
         try {
             const response = await axiosInstance.post("/checkouts", body);
+            finishOrderSubmission(scope);
             localStorage.removeItem(CUSTOMER_STORAGE_KEY);
             carts.value = [];
             attachments.value = [];
@@ -343,6 +352,12 @@ export const useCheckouts = defineStore("checkouts", () => {
         } catch (e) {
             useErrors().setErrors(e);
             return false;
+        }
+        } catch (e) {
+            useErrors().setErrors(e);
+            return false;
+        } finally {
+            submitting = false;
         }
     };
 

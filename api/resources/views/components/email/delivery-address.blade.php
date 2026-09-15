@@ -1,7 +1,7 @@
 @props(['order', 'title' => 'Adresa doručenia'])
 @php
     $delivery = $order->deliverySnapshot();
-    $customer = $order->customer;
+    $customer = $order->billing;
 @endphp
 
 <div class="info-block">

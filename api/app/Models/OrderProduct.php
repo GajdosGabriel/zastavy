@@ -16,8 +16,33 @@ class OrderProduct extends Model
     protected $guarded = [];
 
     protected $casts = [
+        'product_snapshot' => 'array',
         'status' => ModelStatus::class,
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (OrderProduct $item) {
+            $item->product_snapshot ??= $item->productSnapshot();
+        });
+    }
+
+    public function productSnapshot(): array
+    {
+        return $this->product_snapshot ?? [
+            'name' => $this->product?->name ?? '—',
+            'code' => $this->product?->code,
+            'unit_value' => $this->product?->unit_value ?? 'ks',
+            'vat' => $this->product?->vat,
+            'variant_name' => $this->variant_label ?? $this->variant?->name,
+            'variant_code' => $this->variant?->code,
+        ];
+    }
+
+    public function getProductDetailsAttribute(): object
+    {
+        return (object) $this->productSnapshot();
+    }
 
     public function order()
     {
@@ -26,12 +51,12 @@ class OrderProduct extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     public function variant()
     {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id')->withTrashed();
     }
 
     /**
@@ -40,7 +65,7 @@ class OrderProduct extends Model
      */
     public function getVariantNameAttribute(): ?string
     {
-        return $this->variant_label ?: $this->variant?->name;
+        return $this->product_snapshot !== null ? ($this->product_snapshot['variant_name'] ?? null) : ($this->variant_label ?: $this->variant?->name);
     }
 
     public function stocks()

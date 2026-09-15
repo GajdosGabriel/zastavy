@@ -25,6 +25,7 @@ class StoreOrderProduct implements StoreOrderProductContract
         foreach ($this->items as $value) {
 
             $this->order->orderProducts()->create([
+                'product_snapshot' => $value['product_snapshot'] ?? null,
                 'product_id' => $value['product_id'],
                 'product_variant_id' => $value['product_variant_id'] ?? null,
                 'variant_label' => $value['variant_label'] ?? null,

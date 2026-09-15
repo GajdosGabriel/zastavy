@@ -78,11 +78,9 @@ class CheckoutController extends Controller
             ?->hasAnyRole(['super-admin', 'admin', 'manager', 'sales', 'warehouse']);
     }
 
-    public function store(OrderRequest $request)
+    public function store(\App\Http\Requests\CreateOrderRequest $request)
     {
-        $order = DB::transaction(function () use ($request) {
-            return (new StoreCheckout($request))->getOrder();
-        });
+        $order = app(\App\Services\CreateOrderService::class)->handle($request);
 
         return response()->json([
             'uuid'          => $order->uuid,

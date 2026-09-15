@@ -32,7 +32,7 @@
     </div>
 
     <div class="body">
-        <x-email.customer :customer="$order->customer" />
+        <x-email.customer :customer="$order->billing" />
 
         <p style="font-size:15px; margin:0 0 20px; line-height:1.6;">
             Adresu doručenia objednávky sme upravili

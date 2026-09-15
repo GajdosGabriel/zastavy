@@ -54,10 +54,10 @@
     </div>
 
     <div class="body">
-        <x-email.customer :customer="$order->customer" />
+        <x-email.customer :customer="$order->billing" />
 
         <p style="font-size:15px; margin: 0 0 20px; line-height:1.6;">
-            Dobrý deň, <strong>{{ $order->customer->company ?: $order->customer->name }}</strong>,<br>
+            Dobrý deň, <strong>{{ $order->billing->company ?: $order->billing->name }}</strong>,<br>
             {{ $msg['body'] }}
         </p>
 
@@ -86,9 +86,9 @@
             <tbody>
                 @foreach($orderReturn->items as $item)
                 <tr>
-                    <td>{{ $item->orderProduct?->product?->name ?? '—' }}</td>
+                    <td>{{ $item->orderProduct?->product_details?->name ?? '—' }}</td>
                     <td style="text-align:right">
-                        {{ $item->quantity }} {{ $item->orderProduct?->product?->unit_value ?? 'ks' }}
+                        {{ $item->quantity }} {{ $item->orderProduct?->product_details?->unit_value ?? 'ks' }}
                     </td>
                 </tr>
                 @endforeach

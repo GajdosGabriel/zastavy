@@ -27,7 +27,7 @@ class DeliveryAddressService
      * Vracia vždy všetky kľúče, aj keď sú null — pri úprave objednávky sa tým
      * adresa dá aj odobrať, nielen prepísať.
      */
-    public function resolve(Customer $customer, ?array $payload, ?int $addressId = null): array
+    public function resolve(Customer $customer, ?array $payload, ?int $addressId = null, ?array $billing = null): array
     {
         $address = $addressId ? $this->addressOf($customer, $addressId) : null;
 
@@ -41,13 +41,13 @@ class DeliveryAddressService
             return $this->emptySnapshot();
         }
 
-        // Adresa zhodná so sídlom nie je „iná adresa" — nech objednávka nenesie
-        // odtlačok, ktorý sa zajtra rozíde s opravenými údajmi zákazníka.
+        // Adresa zhodná s fakturačným odtlačkom nepotrebuje samostatné polia.
+        // Pri úprave porovnávame pôvodnú adresu objednávky, nie aktuálny profil.
         // Iný príjemca na tej istej adrese („k rukám p. Novák", iná pobočka
         // pod vlastným menom) odtlačok naopak potrebuje, inak by sa stratil.
         $sameRecipient = blank($normalized['company']) && blank($normalized['name']) && blank($normalized['note']);
 
-        if ($sameRecipient && $this->matchesBilling($normalized, $customer)) {
+        if ($sameRecipient && $this->matchesBilling($normalized, $customer, $billing)) {
             return $this->emptySnapshot();
         }
 
@@ -140,12 +140,12 @@ class DeliveryAddressService
         return $order;
     }
 
-    private function matchesBilling(array $normalized, Customer $customer): bool
+    private function matchesBilling(array $normalized, Customer $customer, ?array $snapshot = null): bool
     {
         $billing = AddressFormatter::fingerprint(
-            $customer->street,
-            AddressFormatter::normalizePostcode($customer->getRawOriginal('postcode')),
-            $customer->city,
+            $snapshot['street'] ?? $customer->street,
+            AddressFormatter::normalizePostcode($snapshot['postcode'] ?? $customer->getRawOriginal('postcode')),
+            $snapshot['city'] ?? $customer->city,
         );
 
         $delivery = AddressFormatter::fingerprint(

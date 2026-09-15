@@ -82,8 +82,7 @@ class OrderController extends Controller
 
             if ($request->boolean('notify_customer', false)) {
                 $order->loadMissing(['customer', 'orderProducts.product', 'orderProducts.stocks']);
-                $notifiable = $order->customer ?? $order->user;
-                $notifiable?->notify(new OrderCancelled($order));
+                $order->notifyCustomer(new OrderCancelled($order));
             }
 
             return new OrderResource($order->refresh()->load(['customer.users', 'user']));
@@ -95,13 +94,24 @@ class OrderController extends Controller
 
         $previousStatus = $order->status;
 
-        $order->update($request->only([
-            'shipping_method_id', 'payment_method_id', 'status', 'isOpened', 'note', 'wants_coupon',
-        ]));
+        DB::transaction(function () use ($order, $request) {
+            $changes = $request->safe()->only(['shipping_method_id', 'payment_method_id', 'status', 'isOpened', 'note', 'wants_coupon']);
+            if (array_key_exists('shipping_method_id', $changes)) {
+                $method = ShippingMethod::where('active', true)->findOrFail($changes['shipping_method_id']);
+                $changes['shipping_price'] = $method->resolvePrice($order->priceSum());
+                $changes['shipping_method_name'] = $method->name;
+            }
+            if (array_key_exists('payment_method_id', $changes)) {
+                $method = $changes['payment_method_id'] ? PaymentMethod::where('active', true)->findOrFail($changes['payment_method_id']) : null;
+                $changes['payment_fee'] = $method?->fee ?? 0;
+                $changes['payment_method_name'] = $method?->name;
+            }
+            $this->updateDeliveryAddress($order, $request);
+            $order->update($changes);
+        });
 
-        $this->updateDeliveryAddress($order, $request);
-
-        $newStatus = $order->fresh()->status;
+        $order->refresh();
+        $newStatus = $order->status;
 
         if ($previousStatus !== OrderStatus::Archived && $newStatus === OrderStatus::Archived) {
             $order->loadMissing(['customer', 'orderProducts']);
@@ -109,8 +119,7 @@ class OrderController extends Controller
         }
 
         if ($request->boolean('notify_customer') && !empty($changes)) {
-            $notifiable = $order->user ?? $order->customer;
-            $notifiable?->notify(new OrderUpdated($order->refresh()->load('orderProducts.product', 'customer'), $changes));
+            $order->notifyCustomer(new OrderUpdated($order->refresh()->load('orderProducts.product', 'customer'), $changes));
         }
 
         return new OrderResource($order);
@@ -130,6 +139,7 @@ class OrderController extends Controller
             return;
         }
 
+        abort_unless($order->canEditDelivery(), 409, 'Doručenie vybavenej objednávky už nemožno meniť.');
         $customer = $order->customer;
 
         if (! $customer) {
@@ -142,6 +152,7 @@ class OrderController extends Controller
             $customer,
             $request->input('delivery'),
             $request->input('customer_address_id') ? (int) $request->input('customer_address_id') : null,
+            $order->billingSnapshot(),
         );
 
         if ($request->boolean('delivery.save_address') && $snapshot['customer_address_id'] === null && filled($snapshot['delivery_street'])) {
@@ -162,6 +173,7 @@ class OrderController extends Controller
                 $order->customer,
                 $request->input('delivery'),
                 $request->input('customer_address_id') ? (int) $request->input('customer_address_id') : null,
+            $order->billingSnapshot(),
             );
 
             $oldLine = $this->addressLine($before);
@@ -220,16 +232,11 @@ class OrderController extends Controller
         ])->filter()->implode(', ');
     }
 
-    public function store(OrderRequest $request)
+    public function store(\App\Http\Requests\CreateOrderRequest $request)
     {
         Gate::authorize('create', Order::class);
 
-        [$order] = DB::transaction(function () use ($request) {
-            [$customer, $user] = (new CustomerService)->handleCheckout($request->input('customer'), $request->user());
-            $order = (new StoreOrder($request))->handle($customer, $user);
-
-            return [$order->load(['customer.users', 'user', 'orderProducts'])];
-        });
+        $order = app(\App\Services\CreateOrderService::class)->handle($request);
 
         return new OrderResource($order->refresh()->load(['customer.users', 'user', 'orderProducts']));
     }

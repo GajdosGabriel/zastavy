@@ -74,7 +74,7 @@ class CheckoutTest extends TestCase
     {
         $product = $this->makeProduct(25.50);
 
-        $response = $this->postJson('/api/checkouts', [
+        $response = $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 2, 'active_price' => 0.01],
@@ -96,7 +96,7 @@ class CheckoutTest extends TestCase
         $product = $this->makeProduct(25.50);
         $this->variant($product)->update(['sale_price' => 19.99]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 1, 'active_price' => 25.50],
@@ -121,7 +121,7 @@ class CheckoutTest extends TestCase
             'valid_to' => now()->subDay(),
         ]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 1, 'active_price' => 25.50],
@@ -143,7 +143,7 @@ class CheckoutTest extends TestCase
             'active' => true,
         ]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 // Klient posiela falošnú cenu 1 € — zľava sa musí rátať zo 100 €.
@@ -170,7 +170,7 @@ class CheckoutTest extends TestCase
             'used_count' => 1,
         ]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 1, 'active_price' => 50.00],
@@ -181,29 +181,26 @@ class CheckoutTest extends TestCase
         $this->assertSame(0, Order::count());
     }
 
-    public function test_quantity_below_min_order_is_bumped_to_min_order(): void
+    public function test_quantity_below_min_order_is_rejected(): void
     {
         $product = $this->makeProduct(10.00);
         $this->variant($product)->update(['min_order' => 5]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 2, 'active_price' => 10.00],
             ],
-        ])->assertOk();
+        ])->assertUnprocessable()->assertJsonValidationErrors('orderProducts.0.input_order');
 
-        $this->assertDatabaseHas('order_products', [
-            'product_id' => $product->id,
-            'quantity' => 5,
-        ]);
+        $this->assertDatabaseCount('orders', 0);
     }
 
     public function test_absurd_quantity_is_rejected(): void
     {
         $product = $this->makeProduct();
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 999999999, 'active_price' => 25.50],
@@ -218,7 +215,7 @@ class CheckoutTest extends TestCase
         $product = $this->makeProduct();
         $product->update(['published' => 0]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 1, 'active_price' => 25.50],
@@ -238,7 +235,7 @@ class CheckoutTest extends TestCase
         $staff->assignRole('super-admin');
         Sanctum::actingAs($staff);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 1, 'active_price' => 25.50],
@@ -257,7 +254,7 @@ class CheckoutTest extends TestCase
         $staff->assignRole('super-admin');
         Sanctum::actingAs($staff);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 1, 'active_price' => 25.50],
@@ -265,14 +262,14 @@ class CheckoutTest extends TestCase
             'notify_customer' => false,
         ])->assertOk();
 
-        Notification::assertNotSentTo(Customer::firstOrFail(), OrderCreated::class);
+        Notification::assertNotSentTo(Order::firstOrFail(), OrderCreated::class);
     }
 
     public function test_public_checkout_cannot_suppress_customer_notification(): void
     {
         $product = $this->makeProduct();
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 1, 'active_price' => 25.50],
@@ -280,12 +277,12 @@ class CheckoutTest extends TestCase
             'notify_customer' => false,
         ])->assertOk();
 
-        Notification::assertSentTo(Customer::firstOrFail(), OrderCreated::class);
+        Notification::assertSentTo(Order::firstOrFail(), OrderCreated::class);
     }
 
     public function test_unknown_product_is_rejected(): void
     {
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => 99999, 'input_order' => 1, 'active_price' => 5],
@@ -376,7 +373,7 @@ class CheckoutTest extends TestCase
             'active' => true,
         ]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 1, 'active_price' => 30.00],
@@ -399,7 +396,7 @@ class CheckoutTest extends TestCase
             'active' => true,
         ]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 1, 'active_price' => 100.00],
@@ -424,7 +421,7 @@ class CheckoutTest extends TestCase
             'code' => 'ZLAVA10', 'type' => 'percent', 'value' => 10, 'active' => true,
         ]);
 
-        $response = $this->postJson('/api/checkouts', [
+        $response = $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 2, 'active_price' => 100.00],
@@ -455,13 +452,13 @@ class CheckoutTest extends TestCase
             ],
         ];
 
-        $this->postJson('/api/checkouts', $payload)->assertOk();
+        $this->postCheckout($payload)->assertOk();
         $first = Order::latest('id')->first();
 
         // Zmazanie objednávky nesmie spôsobiť recykláciu sériového čísla.
         $first->delete();
 
-        $this->postJson('/api/checkouts', $payload)->assertOk();
+        $this->postCheckout($payload)->assertOk();
         $second = Order::latest('id')->first();
 
         $this->assertNotEquals($first->serial_number, $second->serial_number);
@@ -479,7 +476,7 @@ class CheckoutTest extends TestCase
             'published' => 1,
         ]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'variant_id' => $bigger->id, 'input_order' => 1],
@@ -506,7 +503,7 @@ class CheckoutTest extends TestCase
             'published' => 0,
         ]);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'variant_id' => $hidden->id, 'input_order' => 1],
@@ -520,7 +517,7 @@ class CheckoutTest extends TestCase
     {
         $product = $this->makeProduct(25.50);
 
-        $this->postJson('/api/checkouts', [
+        $this->postCheckout([
             'customer' => $this->customerPayload(),
             'orderProducts' => [
                 ['id' => $product->id, 'input_order' => 1],

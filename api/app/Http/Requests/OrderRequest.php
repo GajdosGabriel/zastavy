@@ -24,40 +24,16 @@ class OrderRequest extends FormRequest
      */
     public function rules()
     {
-        if ($this->isMethod('post') || $this->has('customer')) {
-            return [
-                'customer' => ['required', 'array'],
-                'customer.id' => $this->user('sanctum')?->isStaff()
-                    ? ['nullable', 'integer', 'exists:customers,id'] : ['prohibited'],
-                'customer.company' => ['required', 'string', 'min:2'],
-                'customer.name' => ['required', 'string'],
-                'customer.email' => ['required', 'email'],
-                'customer.phone' => ['required', 'string'],
-                'customer.street' => ['required', 'string'],
-                'customer.postcode' => ['required'],
-                'customer.city' => ['required', 'string'],
-                'customer.ico' => ['nullable'],
-                'customer.dic' => ['nullable'],
-                'customer.ic_dic' => ['nullable'],
-                ...self::deliveryRules(),
-                'customer_address_id' => $this->user('sanctum')?->isStaff()
-                    ? ['nullable', 'integer'] : ['prohibited'],
-                'orderProducts' => ['required', 'array', 'min:1'],
-                'orderProducts.*.id' => ['required', 'integer', 'exists:products,id'],
-                'orderProducts.*.input_order' => ['required', 'integer', 'min:1', 'max:100000'],
-                'note'         => ['nullable', 'string', 'max:1000'],
-                'wants_coupon' => ['boolean'],
-                'notify_customer'     => ['sometimes', 'boolean'],
-                'shipping_method_id'  => ['nullable', 'exists:shipping_methods,id'],
-                'payment_method_id'   => ['nullable', 'exists:payment_methods,id'],
-                'coupon_code'         => ['nullable', 'string', 'max:50'],
-                'attachments'         => ['nullable', 'array', 'max:' . config('media.attachments.max_files')],
-                'attachments.*'       => self::attachmentRules(),
-            ];
-        }
-
         return [
             'note' => ['nullable', 'string', 'max:1000'],
+            'shipping_method_id' => ['sometimes', 'required', 'integer', \Illuminate\Validation\Rule::exists('shipping_methods', 'id')->where('active', true)->whereNull('deleted_at')],
+            'payment_method_id' => ['sometimes', 'nullable', 'integer', \Illuminate\Validation\Rule::exists('payment_methods', 'id')->where('active', true)->whereNull('deleted_at')],
+            'status' => ['sometimes', \Illuminate\Validation\Rule::enum(\App\Enums\OrderStatus::class)],
+            'isOpened' => ['sometimes', 'boolean'],
+            'wants_coupon' => ['sometimes', 'boolean'],
+            'notify_customer' => ['sometimes', 'boolean'],
+            'makeStorned' => ['sometimes', 'boolean'],
+            'has_product_changes' => ['sometimes', 'boolean'],
             ...self::deliveryRules(),
         ];
     }

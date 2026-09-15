@@ -14,8 +14,8 @@ class OrderReturnItemResource extends JsonResource
             'id'               => $this->id,
             'order_product_id' => $this->order_product_id,
             'quantity'         => $this->quantity,
-            'product_name'     => $this->when($op, fn() => $op->product->name ?? '—'),
-            'product_unit'     => $this->when($op, fn() => $op->product->unit_value ?? 'ks'),
+            'product_name'     => $this->when($op, fn() => $op->product_details->name ?? '—'),
+            'product_unit'     => $this->when($op, fn() => $op->product_details->unit_value ?? 'ks'),
             'ordered_quantity' => $this->when($op, fn() => $op->quantity),
             'shipped_quantity' => $this->when($op, fn() => $op->stockSum),
         ];

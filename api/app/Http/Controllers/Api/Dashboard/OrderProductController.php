@@ -50,13 +50,16 @@ class OrderProductController extends Controller
     {
         Gate::authorize('manageItems', $order);
 
-        $data = $request->only(['product_id', 'quantity', 'storno', 'price']);
-
-        if (isset($data['quantity']) && isset($data['price'])) {
-            $data['total'] = (float) $data['quantity'] * (float) $data['price'];
-        }
-
-        $order->orderProducts()->findOrFail($orderProduct)->update($data);
+        $item = $order->orderProducts()->findOrFail($orderProduct);
+        $data = $request->validate([
+            'product_id' => ['sometimes', 'integer', \Illuminate\Validation\Rule::in([$item->product_id])],
+            'quantity' => ['sometimes', 'integer', 'min:1', 'max:100000'],
+            'storno' => ['sometimes', 'integer', 'min:0'],
+            'price' => ['sometimes', 'numeric', 'min:0'],
+        ]);
+        unset($data['product_id']);
+        $data['total'] = round((float) ($data['quantity'] ?? $item->quantity) * (float) ($data['price'] ?? $item->price), 2);
+        $item->update($data);
 
         return response()->noContent();
     }

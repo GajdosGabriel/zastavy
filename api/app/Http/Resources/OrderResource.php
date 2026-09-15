@@ -23,8 +23,8 @@ class OrderResource extends JsonResource
 
         return [
             'id'                => $this->id,
-            'shipping_method'   => $this->shippingMethod ? ['id' => $this->shippingMethod->id, 'name' => $this->shippingMethod->name] : null,
-            'payment_method'    => $this->paymentMethod  ? ['id' => $this->paymentMethod->id,  'name' => $this->paymentMethod->name]  : null,
+            'shipping_method'   => ($this->shipping_method_name || $this->shippingMethod) ? ['id' => $this->shipping_method_id, 'name' => $this->shipping_method_name ?? $this->shippingMethod?->name] : null,
+            'payment_method'    => ($this->payment_method_name || $this->paymentMethod) ? ['id' => $this->payment_method_id,  'name' => $this->payment_method_name ?? $this->paymentMethod?->name]  : null,
             'uuid' => $this->uuid,
             'isOpened' => $this->isOpened,
             'serial_number' => $this->serial_number,
@@ -33,7 +33,8 @@ class OrderResource extends JsonResource
             'phone' => $this->phone,
             'created_at' => $this->created_at->format('d.m.Y H:i:s'),
             'created_at_human' => Carbon::parse($this->created_at)->diffForhumans(),
-            'customer' => new CustomerResource($this->customer),
+            'customer' => array_replace((new CustomerResource($this->customer))->resolve($request), $this->billingSnapshot()),
+            'snapshot_source' => $this->snapshot_source ?? 'legacy',
 
             // Doručovacia adresa objednávky. `is_custom = false` znamená, že sa
             // doručuje na sídlo zákazníka — hodnoty sú vtedy jeho.

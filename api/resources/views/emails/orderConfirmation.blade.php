@@ -33,7 +33,7 @@
     </div>
 
     <div class="body">
-        <x-email.customer :customer="$order->customer" />
+        <x-email.customer :customer="$order->billing" />
 
         <x-email.delivery-address :order="$order" />
 
@@ -49,9 +49,9 @@
 
         @if($order->shippingMethod || $order->paymentMethod)
         <div class="meta-line">
-            @if($order->shippingMethod)Doprava: <span>{{ $order->shippingMethod->name }}</span>@endif
+            @if($order->shipping_label)Doprava: <span>{{ $order->shipping_label }}</span>@endif
             @if($order->shippingMethod && $order->paymentMethod) &nbsp;·&nbsp; @endif
-            @if($order->paymentMethod)Platba: <span>{{ $order->paymentMethod->name }}</span>@endif
+            @if($order->payment_label)Platba: <span>{{ $order->payment_label }}</span>@endif
         </div>
         @endif
 
@@ -71,12 +71,12 @@
                 @foreach($order->orderProducts as $item)
                 <tr>
                     <td>
-                        {{ $item->product->name ?? '—' }}
+                        {{ $item->product_details->name ?? '—' }}
                         @if($item->variant_name)
                             <br><span style="color:#64748b;font-size:12px">{{ $item->variant_name }}</span>
                         @endif
                     </td>
-                    <td style="text-align:right">{{ $item->quantity }} ks</td>
+                    <td style="text-align:right">{{ $item->quantity }} {{ $item->product_details->unit_value }}</td>
                     @if($order->orderProducts->first()?->price)
                         <td style="text-align:right">{{ number_format($item->price, 2, ',', ' ') }} €</td>
                         <td style="text-align:right">{{ number_format($item->total, 2, ',', ' ') }} €</td>
@@ -93,18 +93,18 @@
                 @endphp
                 @if($shipping > 0)
                 <tr>
-                    <td colspan="3" style="color:#666;">Poštovné{{ $order->shippingMethod ? ' ('.$order->shippingMethod->name.')' : '' }}</td>
+                    <td colspan="3" style="color:#666;">Poštovné{{ $order->shipping_label ? ' ('.$order->shipping_label.')' : '' }}</td>
                     <td style="text-align:right;color:#666;">{{ number_format($shipping, 2, ',', ' ') }} €</td>
                 </tr>
-                @elseif($order->shippingMethod)
+                @elseif($order->shipping_label)
                 <tr>
-                    <td colspan="3" style="color:#666;">Poštovné ({{ $order->shippingMethod->name }})</td>
+                    <td colspan="3" style="color:#666;">Poštovné ({{ $order->shipping_label }})</td>
                     <td style="text-align:right;color:#28a745;">Zdarma</td>
                 </tr>
                 @endif
                 @if($fee > 0)
                 <tr>
-                    <td colspan="3" style="color:#666;">{{ $order->paymentMethod?->name ?? 'Poplatok za platbu' }}</td>
+                    <td colspan="3" style="color:#666;">{{ $order->payment_label ?? 'Poplatok za platbu' }}</td>
                     <td style="text-align:right;color:#666;">{{ number_format($fee, 2, ',', ' ') }} €</td>
                 </tr>
                 @endif

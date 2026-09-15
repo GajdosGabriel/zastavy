@@ -162,8 +162,8 @@ class OrderReturnController extends Controller
 
         if ($request->boolean('notify_customer')) {
             $customer = $order->customer;
-            if ($customer?->email) {
-                $customer->notify(new OrderReturnProcessed($order, $orderReturn));
+            if ($order->routeNotificationForMail()) {
+                $order->notifyCustomer(new OrderReturnProcessed($order, $orderReturn));
             }
         }
 

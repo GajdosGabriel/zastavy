@@ -28,11 +28,7 @@ class ShippingNoticeController extends Controller
                 'order.orderProducts.stocks',
             ]);
 
-            $notifiable = $shipping->order->customer ?? $shipping->order->user;
-
-            if ($notifiable?->email) {
-                $notifiable->notify(new OrderExpedition($shipping->order, $shipping));
-            }
+            $shipping->order->notifyCustomer(new OrderExpedition($shipping->order, $shipping));
         }
 
         return response()->noContent();

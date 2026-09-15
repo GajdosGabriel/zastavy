@@ -54,7 +54,7 @@ class SecurityBoundariesTest extends TestCase
             $actor = User::factory()->create(['customer_id' => $customer->id]);
             Sanctum::actingAs($actor);
         }
-        $this->postJson('/api/checkouts', $this->payload($this->product()))->assertOk();
+        $this->postCheckout($this->payload($this->product()))->assertOk();
         $order = Order::firstOrFail();
         $this->assertNotEquals($customer->id, $order->customer_id);
         $this->assertSame($before, $customer->fresh()->getAttributes());
@@ -76,14 +76,14 @@ class SecurityBoundariesTest extends TestCase
         $payload = $this->payload($this->product());
         $payload['customer']['id'] = $customer->id;
         $payload['customer_address_id'] = 1;
-        $this->postJson('/api/checkouts', $payload)->assertUnprocessable()
+        $this->postCheckout($payload)->assertUnprocessable()
             ->assertJsonValidationErrors(['customer.id', 'customer_address_id']);
         $this->assertDatabaseCount('orders', 0);
     }
 
     public function test_missing_customer_is_validation_error(): void
     {
-        $this->postJson('/api/checkouts', [])->assertUnprocessable()->assertJsonValidationErrors('customer');
+        $this->postCheckout([])->assertUnprocessable()->assertJsonValidationErrors('customer');
     }
 
     public function test_staff_can_select_existing_customer(): void
@@ -94,7 +94,7 @@ class SecurityBoundariesTest extends TestCase
         Sanctum::actingAs($user);
         $payload = $this->payload($this->product());
         $payload['customer']['id'] = $customer->id;
-        $this->postJson('/api/checkouts', $payload)->assertOk();
+        $this->postCheckout($payload)->assertOk();
         $this->assertEquals($customer->id, Order::firstOrFail()->customer_id);
     }
 

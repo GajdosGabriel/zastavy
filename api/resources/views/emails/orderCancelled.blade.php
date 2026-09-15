@@ -33,10 +33,10 @@
     </div>
 
     <div class="body">
-        <x-email.customer :customer="$order->customer" />
+        <x-email.customer :customer="$order->billing" />
 
         <p style="font-size:15px; margin: 0 0 20px; line-height:1.6;">
-            Dobrý deň, <strong>{{ $order->customer->company ?: $order->customer->name }}</strong>,<br>
+            Dobrý deň, <strong>{{ $order->billing->company ?: $order->billing->name }}</strong>,<br>
             Vaša objednávka č. <strong>{{ $order->serial_number }}</strong> bola stornovaná.
             @if($shippedItems->count())
                 Časť objednávky, ktorá už bola expedovaná, Vám zostáva — kontaktujte nás v prípade otázok.
@@ -58,12 +58,12 @@
                 @foreach($cancelledItems as $item)
                 <tr>
                     <td>
-                        {{ $item->product->name ?? '—' }}
+                        {{ $item->product_details->name ?? '—' }}
                         @if($item->variant_name)
                             <br><span style="color:#64748b;font-size:12px">{{ $item->variant_name }}</span>
                         @endif
                     </td>
-                    <td style="text-align:right">{{ $item->storno }} {{ $item->product->unit_value ?? 'ks' }}</td>
+                    <td style="text-align:right">{{ $item->storno }} {{ $item->product_details->unit_value ?? 'ks' }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -76,7 +76,7 @@
             Nasledujúce položky boli pred stornom odoslané a sú na ceste k Vám alebo už doručené:
             <ul style="margin:8px 0 0; padding-left:18px;">
                 @foreach($shippedItems as $item)
-                <li style="margin-bottom:4px;">{{ $item->product->name ?? '—' }}@if($item->variant_name) ({{ $item->variant_name }})@endif — {{ $item->stockSum }} {{ $item->product->unit_value ?? 'ks' }}</li>
+                <li style="margin-bottom:4px;">{{ $item->product_details->name ?? '—' }}@if($item->variant_name) ({{ $item->variant_name }})@endif — {{ $item->stockSum }} {{ $item->product_details->unit_value ?? 'ks' }}</li>
                 @endforeach
             </ul>
         </div>

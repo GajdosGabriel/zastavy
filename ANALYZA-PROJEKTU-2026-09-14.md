@@ -133,7 +133,7 @@ Prvé produktové investície by som smeroval do opakovaných objednávok, ponú
 ## Odporúčané poradie realizácie
 
 1. **HOTOVO — Bezpečné hranice (14. 9. 2026):** verejný checkout a zákaznícke dáta, expedičné oprávnenia, blokovanie tokenov a neverejný sortiment. Implementácia aj regresné API testy pre anonymného zákazníka, firemný kontakt a jednotlivé interné roly sú dokončené. Overenie: 85 testov, 347 assertions a frontend build prešli. Zmeny sú v projekte, zatiaľ bez nasadenia.
-2. **Spoľahlivá objednávka:** historické odtlačky, správni príjemcovia správ, validácia dopravy/variantov, ochrana opakovaného odoslania a číselný rad.
+2. **HOTOVO — Spoľahlivá objednávka (15. 9. 2026):** historické odtlačky, správni príjemcovia správ, validácia dopravy/variantov, ochrana opakovaného odoslania a číselný rad.
 3. **Spoľahlivý sklad:** jednotné transakčné pravidlá, atómové pohyby, rezervácie podľa obchodných pravidiel a súbežné testy na MySQL.
 4. **Udržateľnosť:** CI, oprava starých testov, typová kontrola, SQL dotazy, dokumentácia a prevádzkové alarmy. Rozvíjať priebežne s opravami.
 5. **Rozvoj predaja:** dokončenie navigácie katalógu, opakovanie objednávok, ponuky, schvaľovanie grafiky a termíny výroby.
@@ -164,3 +164,30 @@ Bod 1 je implementovaný v pracovnom strome projektu:
 - Frontend používa príslušné oprávnenia pre expedičné a vratkové ovládanie a verejný košík neposiela interné ID prevzaté zo starého uloženého formulára.
 
 Overenie: 85 backendových testov / 347 assertions prešlo na izolovanej SQLite databáze v pamäti; 25 nových scenárov pokrýva bezpečnostné hranice. Testovací harness dopĺňa SQLite ekvivalent MySQL funkcie greatest. Opravený bol zastaraný test zákazníckej služby a testy výberu uložených adries teraz používajú autorizovanú obsluhu. Frontend Vite build a PHP syntax prešli. Lokálnu MySQL testovaciu databázu nebolo možné vytvoriť, preto beh na MySQL nie je overený. Produkčná ani vývojová databáza sa nemenila; nasadenie sa nevykonalo. Zmena nevyžaduje novú migráciu.
+
+
+## HOTOVO — realizácia bodu 2 (15. 9. 2026)
+
+- Nové objednávky uchovávajú odtlačky fakturačných a kontaktných údajov, produktov, variantov a názvov dopravy/platby. API a e-maily používajú uloženú históriu. Doručenie na fakturačnú adresu vychádza z pôvodnej adresy objednávky.
+- Zákaznícke oznámenia smerujú na kontakt objednávky, vrátane úprav, storna, expedície, vratky, adresy a kupónu. Fronta čaká na commit transakcie.
+- Samostatná validácia vytvorenia vyžaduje aktívnu dopravu a overuje väzbu variantu k produktu. Množstvo pod minimom vracia chybu namiesto tichého zvýšenia. Úprava dopravy aktualizuje poplatok aj uložený názov.
+- Verejný aj interný formulár používajú UUID kľúč odoslania. Rovnaký obsah a kľúč vrátia pôvodnú objednávku bez ďalších príloh či správ. Zmenený obsah alebo používateľ s rovnakým kľúčom dostane 409. Frontend uchováva kľúč pre opakovanie po strate odpovede a blokuje súbežné kliknutia.
+- Mesačný číselný rad používa databázový zámok a unikátny index. Inicializácia zohľadňuje aj odstránené objednávky. Po migrácii je hromadné prečíslovanie zakázané; náhľad zostáva dostupný.
+- Príkaz `orders:freeze-history` doplní chýbajúce odtlačky z dostupných údajov a označí objednávky ako `reconstructed`. Existujúce odtlačky neprepisuje. Nedokáže obnoviť pôvodné údaje zmenené pred implementáciou.
+
+Overenie: 106 backendových testov / 454 assertions prešlo na izolovanej SQLite databáze, vrátane 21 nových scenárov spoľahlivosti. Prešli 4 frontendové testy a priamy produkčný Vite build do dočasného adresára. Generovanie sitemap, prehliadačový end-to-end test ani súbehový test na MySQL neboli vykonané. Zmeny sú v projekte; nasadenie ani úpravy vývojovej či produkčnej databázy sa nevykonali. Platobná brána nebola predmetom zmien.
+
+### Nasadenie bodu 2
+
+Backend a frontend nasaďte spoločne v údržbovom okne: vytváracie API teraz vyžaduje `idempotency_key` a `shipping_method_id`. Pred migráciou zabezpečte zálohu databázy. Migrácia `2026_09_15_100000_add_order_reliability` pred zmenou schémy kontroluje duplicitné čísla vrátane odstránených objednávok; pri duplicite sa zastaví. Duplicity treba individuálne preveriť a opraviť, nie automaticky prečíslovať celú históriu.
+
+V adresári `api` vykonajte:
+
+```sh
+php artisan migrate
+php artisan orders:freeze-history
+php artisan orders:freeze-history --apply
+php artisan queue:restart
+```
+
+Prvý beh `freeze-history` iba vypíše počet objednávok bez odtlačku. Až `--apply` uloží rekonštruované údaje. Vykonajte ho pred obnovením úprav profilov a katalógu. Pred produkciou overte migráciu a súbežné vytváranie aj na testovacej MySQL databáze. Rollback migrácie odstráni odtlačky a evidenciu odoslaní; po obnovení objednávok vyžaduje plán obnovy dát.

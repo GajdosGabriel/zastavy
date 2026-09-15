@@ -16,7 +16,7 @@ class IssueCouponForOrder
             return null;
         }
 
-        $email = $order->email ?? $order->customer?->email;
+        $email = $order->routeNotificationForMail();
 
         if (! $email) {
             return null;
@@ -46,9 +46,7 @@ class IssueCouponForOrder
             'email'           => $email,
             'source_order_id' => $order->id,
         ]);
-
-        $notifiable = $order->customer ?? $order->user;
-        $notifiable?->notify(new CouponIssued($coupon, $order));
+        $order->notifyCustomer(new CouponIssued($coupon, $order));
 
         return $coupon;
     }

@@ -56,6 +56,7 @@ class PublicDeliveryAddressController extends Controller
             // Adresár patrí zákazníkovi, nie držiteľovi odkazu — verejný
             // formulár preto vypisuje adresu, nevyberá z uložených.
             null,
+            $order->billingSnapshot(),
         );
 
         $before = $order->deliverySnapshot();
@@ -93,7 +94,7 @@ class PublicDeliveryAddressController extends Controller
 
     private function payload(Order $order): array
     {
-        $customer = $order->customer;
+        $customer = $order->billing;
 
         return [
             'uuid'          => $order->uuid,
@@ -124,8 +125,8 @@ class PublicDeliveryAddressController extends Controller
 
             Notification::send(User::role('super-admin')->get(), $notification);
 
-            if ($order->customer?->email) {
-                $order->customer->notify($notification);
+            if ($order->routeNotificationForMail()) {
+                $order->notifyCustomer($notification);
             }
         } catch (\Throwable $e) {
             // Zmena adresy je uložená; zlyhaný e-mail ju nesmie vrátiť späť.

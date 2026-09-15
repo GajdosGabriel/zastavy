@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import axiosInstance from "../axiosInstance";
 import useUsers from "./StoreUsers";
+import { prepareOrderSubmission, finishOrderSubmission } from "../models/orderSubmission";
 import useOrderProducts from "./StoreOrderProducts";
 import usePaginator from "./StorePaginator";
 import useErrors from "./StoreErrors";
@@ -23,6 +24,7 @@ interface OrdersState {
 }
 
 let ordersRequestId = 0;
+let creatingOrder = false;
 
 export const useOrders = defineStore("orders", {
     state: (): OrdersState => ({
@@ -101,7 +103,7 @@ export const useOrders = defineStore("orders", {
                 useErrors().setErrors(e);
             }
             // When order was opened
-            if (this.order.isOpened === 0) {
+            if (this.order.isOpened === 0 && this.order.permissions?.update?.allowed) {
                 await this.updateOrder({
                     id: id,
                     isOpened: 1,
@@ -163,9 +165,14 @@ export const useOrders = defineStore("orders", {
         },
 
         async storeOrder(payload: Record<string, any>): Promise<any> {
+            if (creatingOrder) return null;
+            creatingOrder = true;
+            const scope = 'dashboard:' + (useUsers().getUser?.id ?? 'guest');
             try {
+                payload = await prepareOrderSubmission(payload, [], scope);
                 const response = await axiosInstance.post(PAGE_ORDER.URL, payload);
                 const order = response.data.data;
+                finishOrderSubmission(scope);
 
                 if (order) {
                     this.orders.unshift(order);
@@ -177,6 +184,8 @@ export const useOrders = defineStore("orders", {
             } catch (e) {
                 useErrors().setErrors(e);
                 return null;
+            } finally {
+                creatingOrder = false;
             }
         },
 
