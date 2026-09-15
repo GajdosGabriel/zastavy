@@ -70,6 +70,7 @@ class OrderIndexResource extends JsonResource
                 'destroy' => route('orders.destroy', $this->id),
             ],
             'permissions' => [
+                'ship' => ['allowed' => $user?->can('ship', $this->resource) ?? false],
                 'view' => [
                     'allowed' => $user?->can('view', $this->resource) ?? false,
                     'label' => __('actions.view'),

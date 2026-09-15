@@ -16,11 +16,23 @@ class CustomerService
         return Customer::create($this->customerData($request));
     }
 
-    public function handleCheckout($request): array
+    public function handleCheckout($request, ?User $actor = null): array
     {
         $request = $this->normalizeRequest($request);
+        // Anonymný nákup nesmie meniť existujúcu firmu ani jej členstvá.
+        if (! $actor?->isStaff()) {
+            $customer = Customer::create($this->customerData($request));
+            $contact = $this->storeUser($customer, $request);
+
+            return [$customer, $actor ?? $contact];
+        }
+
         $customer = $this->findCustomer($request);
         $customerData = $this->customerData($request);
+
+        if ($customer && ! $actor->can('update', $customer)) {
+            return [$customer, null];
+        }
 
         if ($customer) {
             $updateData = $customerData;

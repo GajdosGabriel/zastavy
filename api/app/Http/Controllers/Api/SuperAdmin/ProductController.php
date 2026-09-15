@@ -25,6 +25,10 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
+        $staff = request()->user('sanctum');
+        if (! $product->published) {
+            abort_unless($staff?->isStaff() && $staff->can('view', $product), 404);
+        }
         return response(new ProductResource($product->load([
             'images',
             'categories',

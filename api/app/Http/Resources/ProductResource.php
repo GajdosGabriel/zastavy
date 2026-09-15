@@ -21,6 +21,15 @@ class ProductResource extends JsonResource
     {
         $user = $request->user();
         $staff = $this->staffUser($request);
+        if ($staff && ! $staff->can('view', $this->resource)) {
+            $staff = null;
+        }
+        abort_if(! $staff && ! $this->published, 404);
+        if (! $staff) {
+            $this->resource->setRelation('variants', $this->resource->variants->where('published', true)->values());
+            $default = $this->resource->defaultVariant;
+            $this->resource->setRelation('defaultVariant', $default?->published ? $default : null);
+        }
         $status = ModelStatus::fromProduct($this->resource);
 
         // Dostupnosť variantu závisí od príznaku na produkte. Reláciu doplníme

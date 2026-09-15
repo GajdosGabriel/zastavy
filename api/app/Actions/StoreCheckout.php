@@ -24,7 +24,7 @@ class StoreCheckout implements StoreCheckoutContract
     public function getCustomer(): void
     {
         $customerService = new CustomerService();
-        [$customer, $user] = $customerService->handleCheckout($this->request->customer);
+        [$customer, $user] = $customerService->handleCheckout($this->request->input('customer'), $this->request->user('sanctum'));
         $this->createOrder($customer, $user);
     }
 

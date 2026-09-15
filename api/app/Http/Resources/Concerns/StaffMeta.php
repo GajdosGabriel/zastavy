@@ -18,7 +18,7 @@ trait StaffMeta
     {
         $user = $request->user('sanctum') ?? $request->user();
 
-        return $user?->hasAnyRole(['super-admin', 'admin', 'manager', 'sales', 'warehouse'])
+        return $user?->isStaff()
             ? $user
             : null;
     }

@@ -21,7 +21,7 @@ class OrderProductController extends Controller
 
     public function store(Order $order, Request $request)
     {
-        Gate::authorize('update', $order);
+        Gate::authorize('manageItems', $order);
 
         $request->validate([
             'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
@@ -48,7 +48,7 @@ class OrderProductController extends Controller
 
     public function update(Order $order, $orderProduct, Request $request)
     {
-        Gate::authorize('update', $order);
+        Gate::authorize('manageItems', $order);
 
         $data = $request->only(['product_id', 'quantity', 'storno', 'price']);
 
@@ -56,13 +56,15 @@ class OrderProductController extends Controller
             $data['total'] = (float) $data['quantity'] * (float) $data['price'];
         }
 
-        OrderProduct::firstOrCreate(['id' => $orderProduct])->update($data);
+        $order->orderProducts()->findOrFail($orderProduct)->update($data);
 
         return response()->noContent();
     }
 
     public function destroy(Order $order, OrderProduct $orderProduct)
     {
+        Gate::authorize('manageItems', $order);
+        abort_unless($orderProduct->order_id === $order->id, 404);
         Gate::authorize('delete', $orderProduct);
 
         $orderProduct->delete();

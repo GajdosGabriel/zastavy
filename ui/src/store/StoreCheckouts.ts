@@ -4,6 +4,7 @@ import axiosInstance from "../axiosInstance";
 import useErrors from "./StoreErrors";
 import useCustomer from "./StoreCustomers";
 import useCheckoutOptions from "./StoreCheckoutOptions";
+import useUsers from "./StoreUsers";
 
 const CART_STORAGE_KEY = "form";
 const CUSTOMER_STORAGE_KEY = "customer";
@@ -303,12 +304,19 @@ export const useCheckouts = defineStore("checkouts", () => {
             wants_coupon: options.getWantsCoupon,
         };
 
+        const staff = useUsers().getUser?.roles?.some((role: string) =>
+            ['super-admin', 'admin', 'manager', 'sales', 'warehouse'].includes(role));
+        if (!staff) {
+            payload.customer = { ...payload.customer };
+            delete payload.customer.id;
+        }
+
         // Kľúč `delivery` posielame len vtedy, keď zákazník naozaj chce inú
         // adresu — server prázdny objekt síce zahodí, ale netreba ho pýtať.
         if (deliverToOtherAddress.value) {
             payload.delivery = delivery.value;
 
-            if (deliveryAddressId.value) {
+            if (staff && deliveryAddressId.value) {
                 payload.customer_address_id = deliveryAddressId.value;
             }
         }

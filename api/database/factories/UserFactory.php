@@ -29,6 +29,8 @@ class UserFactory extends Factory
         $name = trim($firstName.' '.$lastName);
 
         return [
+            'active' => true,
+            'status' => 'active',
             'name' => $name,
             'uuid' => (string) Str::uuid(),
             'firstName' => $firstName,

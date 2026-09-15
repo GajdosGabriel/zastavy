@@ -100,6 +100,11 @@ class User extends Authenticatable implements HasLocalePreference
             && ! in_array($this->status, [ModelStatus::Blocked, ModelStatus::Cancelled, ModelStatus::Archived], true);
     }
 
+    public function isStaff(): bool
+    {
+        return $this->isActive() && $this->hasAnyRole(['super-admin', 'admin', 'manager', 'sales', 'warehouse']);
+    }
+
     /**
      * Jazyk notifikácií — Laravel ho použije pri posielaní mailov.
      */

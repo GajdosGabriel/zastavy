@@ -74,6 +74,9 @@ class OrderResource extends JsonResource
                 'destroy' => route('orders.destroy', $this->id),
             ],
             'permissions' => [
+                'ship' => ['allowed' => $user?->can('ship', $this->resource) ?? false],
+                'manageReturns' => ['allowed' => $user?->can('manageReturns', $this->resource) ?? false],
+                'manageItems' => ['allowed' => $user?->can('manageItems', $this->resource) ?? false],
                 'view' => [
                     'allowed' => $user?->can('view', $this->resource) ?? false,
                     'label' => __('actions.view'),

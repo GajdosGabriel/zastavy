@@ -29,8 +29,23 @@ class OrderPolicy
 
     public function update(User $user, Order $order): bool
     {
-        return ($user->can('orders.update') || $this->portalCan($user, 'orders.update'))
+        return $user->isStaff() && $user->can('orders.update')
             && $this->ownsOrder($user, $order);
+    }
+
+    public function ship(User $user, Order $order): bool
+    {
+        return $user->isStaff() && $user->can('shippings.manage') && $this->ownsOrder($user, $order);
+    }
+
+    public function manageReturns(User $user, Order $order): bool
+    {
+        return $this->ship($user, $order);
+    }
+
+    public function manageItems(User $user, Order $order): bool
+    {
+        return $user->isStaff() && $user->can('orderProducts.manage') && $this->ownsOrder($user, $order);
     }
 
     public function storno(User $user, Order $order): bool

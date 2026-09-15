@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Models\User;
+use Laravel\Sanctum\Sanctum;
 use App\Models\CustomerAddress;
 use App\Models\Order;
 use App\Models\Product;
@@ -173,6 +175,9 @@ class DeliveryAddressTest extends TestCase
 
     public function test_save_address_adds_it_to_customer_address_book_once(): void
     {
+        $staff = User::factory()->create();
+        $staff->assignRole('super-admin');
+        Sanctum::actingAs($staff);
         $this->placeOrder([
             'delivery' => $this->deliveryPayload(['save_address' => true, 'label' => 'Škola']),
         ]);
@@ -293,8 +298,11 @@ class DeliveryAddressTest extends TestCase
         $this->assertSame('Nitra', $order->delivery_city);
     }
 
-    public function test_customer_can_pick_saved_address_by_id(): void
+    public function test_staff_can_pick_saved_address_by_id(): void
     {
+        $staff = User::factory()->create();
+        $staff->assignRole('super-admin');
+        Sanctum::actingAs($staff);
         $customer = Customer::create([
             'company' => 'Obec Testovce',
             'slug' => 'obec-testovce',
@@ -368,9 +376,11 @@ class DeliveryAddressTest extends TestCase
             'city' => 'Bratislava',
         ]);
 
-        $order = $this->placeOrder(['customer_address_id' => $foreign->id]);
-
-        $this->assertNull($order->customer_address_id);
-        $this->assertFalse($order->hasCustomDelivery());
+        $this->postJson('/api/checkouts', [
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [['id' => $this->makeProduct()->id, 'input_order' => 1]],
+            'customer_address_id' => $foreign->id,
+        ])->assertUnprocessable()->assertJsonValidationErrors('customer_address_id');
+        $this->assertDatabaseCount('orders', 0);
     }
 }

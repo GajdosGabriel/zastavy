@@ -148,7 +148,7 @@ async function doDelete() {
                 <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
                     <div class="border-b border-gray-100 px-5 py-2.5 flex items-center justify-between">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Detail</span>
-                        <button v-if="ret.status === 'pending' && !editing"
+                        <button v-if="ret.can_manage && ret.status === 'pending' && !editing"
                             @click="startEdit"
                             class="text-xs font-semibold text-blue-600 hover:text-blue-800">Upraviť</button>
                     </div>
@@ -247,7 +247,7 @@ async function doDelete() {
                 </div>
 
                 <!-- Akcie -->
-                <div v-if="ret.status === 'pending' && !editing" class="flex flex-wrap items-center gap-3">
+                <div v-if="ret.can_manage && ret.status === 'pending' && !editing" class="flex flex-wrap items-center gap-3">
                     <template v-if="confirming === 'cancel'">
                         <div class="flex items-center gap-2 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-sm text-gray-700">
                             <span class="font-semibold">Zrušiť vrátenie?</span>

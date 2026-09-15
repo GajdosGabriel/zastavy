@@ -5,20 +5,19 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\User;
 use App\Services\CustomerService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class CustomerServiceTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
-    public function test_checkout_reuses_existing_user_email_without_creating_or_updating_user(): void
+    public function test_checkout_does_not_reuse_contact_of_another_company(): void
     {
         $email = 'codex-existing-user@example.test';
         $userCount = User::count();
 
         $existingCustomer = Customer::create([
-            'name' => 'Existing Company',
             'company' => 'Existing Company',
             'email' => $email,
             'phone' => '0900000000',
@@ -43,8 +42,8 @@ class CustomerServiceTest extends TestCase
             'ico' => '12345678',
         ]);
 
-        $this->assertSame($existingUser->id, $user->id);
-        $this->assertSame($userCount + 1, User::count());
+        $this->assertNotSame($existingUser->id, $user->id);
+        $this->assertSame($userCount + 2, User::count());
         $this->assertSame('New Company', $customer->company);
 
         $existingUser->refresh();

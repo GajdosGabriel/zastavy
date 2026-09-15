@@ -57,7 +57,7 @@ const shippingPercentage = computed(() => Number(props.order.shipping_percentage
         </span>
 
         <!-- Tlačidlo Expedovať -->
-        <router-link v-if="showShippingAction && !order.isFinished && !order.isStorned"
+        <router-link v-if="showShippingAction && order.permissions?.ship?.allowed && !order.isFinished && !order.isStorned"
             :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }"
             class="inline-flex min-w-24 items-center justify-center rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-blue-700">
             Expedovať

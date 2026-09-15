@@ -29,7 +29,7 @@ class OrderReturnController extends Controller
 
     public function store(Order $order, Request $request)
     {
-        Gate::authorize('update', $order);
+        Gate::authorize('manageReturns', $order);
 
         $validated = $request->validate([
             'reason'          => ['required', 'in:not_accepted,damaged,wrong_item,other'],
@@ -82,7 +82,7 @@ class OrderReturnController extends Controller
 
     public function update(Order $order, OrderReturn $orderReturn, Request $request)
     {
-        Gate::authorize('update', $order);
+        Gate::authorize('manageReturns', $order);
         abort_if($orderReturn->order_id !== $order->id, 404);
         abort_if(! $orderReturn->isPending(), 422, 'Vrátenie nie je možné upraviť — nie je v stave "čaká".');
 
@@ -121,7 +121,7 @@ class OrderReturnController extends Controller
 
     public function destroy(Order $order, OrderReturn $orderReturn)
     {
-        Gate::authorize('update', $order);
+        Gate::authorize('manageReturns', $order);
         abort_if($orderReturn->order_id !== $order->id, 404);
         abort_if(! $orderReturn->isPending(), 422, 'Nie je možné zmazať spracované vrátenie.');
 
@@ -132,7 +132,7 @@ class OrderReturnController extends Controller
 
     public function process(Order $order, OrderReturn $orderReturn, Request $request)
     {
-        Gate::authorize('update', $order);
+        Gate::authorize('manageReturns', $order);
         abort_if($orderReturn->order_id !== $order->id, 404);
         abort_if(! $orderReturn->isPending(), 422, 'Vrátenie je už spracované alebo zrušené.');
 
@@ -174,7 +174,7 @@ class OrderReturnController extends Controller
 
     public function cancel(Order $order, OrderReturn $orderReturn)
     {
-        Gate::authorize('update', $order);
+        Gate::authorize('manageReturns', $order);
         abort_if($orderReturn->order_id !== $order->id, 404);
         abort_if(! $orderReturn->isPending(), 422, 'Vrátenie je už spracované alebo zrušené.');
 

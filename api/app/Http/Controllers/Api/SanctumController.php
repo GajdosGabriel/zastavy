@@ -38,7 +38,7 @@ class SanctumController extends Controller
             ]);
         }
 
-        if (! $user->active) {
+        if (! $user->isActive()) {
             throw ValidationException::withMessages([
                 'email' => ['Váš účet je neaktívny. Kontaktujte administrátora.'],
             ]);

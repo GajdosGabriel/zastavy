@@ -19,6 +19,10 @@ class UserObserver
 {
     public function saved(User $user): void
     {
+        if ($user->wasChanged(['active', 'status']) && ! $user->isActive()) {
+            $user->tokens()->delete();
+        }
+
         if (! $user->wasRecentlyCreated && ! $user->wasChanged(['username', 'firstName', 'lastName'])) {
             return;
         }

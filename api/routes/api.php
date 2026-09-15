@@ -61,7 +61,7 @@ Route::get('/user', function (Request $request) {
     return new UserResource($request->user('sanctum'));
 });
 
-Route::apiResource('homes', HomeController::class);
+Route::apiResource('homes', HomeController::class)->only(['index', 'show'])->parameters(['homes' => 'product']);
 
 // Verejný checkout a IČO lookup — throttle proti spamu objednávok a scrapingu kontaktov.
 Route::apiResource('checkouts', CheckoutController::class)->middleware('throttle:30,1');

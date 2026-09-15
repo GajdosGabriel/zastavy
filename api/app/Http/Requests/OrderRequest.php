@@ -24,9 +24,11 @@ class OrderRequest extends FormRequest
      */
     public function rules()
     {
-        if ($this->has('customer')) {
+        if ($this->isMethod('post') || $this->has('customer')) {
             return [
                 'customer' => ['required', 'array'],
+                'customer.id' => $this->user('sanctum')?->isStaff()
+                    ? ['nullable', 'integer', 'exists:customers,id'] : ['prohibited'],
                 'customer.company' => ['required', 'string', 'min:2'],
                 'customer.name' => ['required', 'string'],
                 'customer.email' => ['required', 'email'],
@@ -38,6 +40,8 @@ class OrderRequest extends FormRequest
                 'customer.dic' => ['nullable'],
                 'customer.ic_dic' => ['nullable'],
                 ...self::deliveryRules(),
+                'customer_address_id' => $this->user('sanctum')?->isStaff()
+                    ? ['nullable', 'integer'] : ['prohibited'],
                 'orderProducts' => ['required', 'array', 'min:1'],
                 'orderProducts.*.id' => ['required', 'integer', 'exists:products,id'],
                 'orderProducts.*.input_order' => ['required', 'integer', 'min:1', 'max:100000'],

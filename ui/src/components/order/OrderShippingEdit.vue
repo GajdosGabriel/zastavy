@@ -45,7 +45,7 @@ const requiredQuantity = computed(() => Number(getOrder.value?.shipping_required
 const statusLabel = computed(() => getOrder.value?.shipping_status_label ?? (getOrder.value?.isFinished ? "Vybavená" : "Nevybavená"));
 
 const markingReady = ref(false);
-const canMarkReadyToShip = computed(() => !getOrder.value?.isStorned
+const canMarkReadyToShip = computed(() => getOrder.value?.permissions?.update?.allowed && !getOrder.value?.isStorned
     && Number(getOrder.value?.stock_expedition ?? 0) === 0
     && getOrder.value?.status?.value !== "ready_to_ship");
 
@@ -78,7 +78,7 @@ const selectedQuantity = computed(() => Object.values(shippingItems.value)
     .reduce((sum, q) => sum + Number(q || 0), 0));
 
 const remainingAfterShipping = computed(() => Math.max(0, remainingQuantity.value - selectedQuantity.value));
-const canConfirmShipping = computed(() => selectedQuantity.value > 0 && !getOrder.value?.isFinished);
+const canConfirmShipping = computed(() => getOrder.value?.permissions?.ship?.allowed && selectedQuantity.value > 0 && !getOrder.value?.isFinished);
 
 const shippedRows = computed(() => (getOrder.value?.shippings ?? []).flatMap((shipping) => {
     const stocks = shipping.stocks?.length ? shipping.stocks : [];
@@ -441,7 +441,7 @@ watch(allProducts, () => {
                                 {{ getReturns.length }}
                             </span>
                         </span>
-                        <router-link v-if="shippedQuantity > 0"
+                        <router-link v-if="shippedQuantity > 0 && getOrder.permissions?.manageReturns?.allowed"
                             :to="{ name: 'orders.returns.create', params: { orderId } }"
                             class="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">
                             + Vrátiť tovar

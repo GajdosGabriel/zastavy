@@ -11,6 +11,7 @@ class OrderReturnResource extends JsonResource
         return [
             'id'              => $this->id,
             'order_id'        => $this->order_id,
+            'can_manage' => $request->user()?->can('manageReturns', $this->order) ?? false,
             'status'          => $this->status,
             'reason'          => $this->reason,
             'reason_label'    => $this->reason_label,

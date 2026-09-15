@@ -225,7 +225,7 @@ class OrderController extends Controller
         Gate::authorize('create', Order::class);
 
         [$order] = DB::transaction(function () use ($request) {
-            [$customer, $user] = (new CustomerService)->handleCheckout($request->input('customer'));
+            [$customer, $user] = (new CustomerService)->handleCheckout($request->input('customer'), $request->user());
             $order = (new StoreOrder($request))->handle($customer, $user);
 
             return [$order->load(['customer.users', 'user', 'orderProducts'])];

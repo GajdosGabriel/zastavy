@@ -18,7 +18,7 @@ class OrderShippingController extends Controller
 {
     public function store(Order $order, Request $request)
     {
-        Gate::authorize('update', $order);
+        Gate::authorize('ship', $order);
 
         $validated = $request->validate([
             'notify_customer' => ['sometimes', 'boolean'],

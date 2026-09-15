@@ -187,7 +187,7 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                                 {{ getReturns.length }}
                             </span>
                         </span>
-                        <button v-if="hasShippedItems"
+                        <button v-if="hasShippedItems && getOrder.permissions?.manageReturns?.allowed"
                             @click="router.push({ name: 'orders.returns.create', params: { orderId } })"
                             class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">
                             + Vrátiť tovar
