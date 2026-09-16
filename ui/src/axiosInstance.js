@@ -1,4 +1,5 @@
 import axios from "axios";
+import { installRequestActivity } from './models/httpActivity';
 import loadingStore from "./store/StoreLoading";
 import { URL_BASE_API } from "./constants";
 
@@ -19,7 +20,6 @@ if (token) {
 
 // Middleware na automatické pridanie tokenu do každého requestu
 axiosInstance.interceptors.request.use((config) => {
-    loadingStore.isLoading = true; // Nastavíme loading na true
     const storedToken = localStorage.getItem('authToken');
     if (storedToken) {
         config.headers.Authorization = `Bearer ${storedToken}`;
@@ -36,20 +36,9 @@ axiosInstance.interceptors.request.use((config) => {
 
     return config;
 }, (error) => {
-    loadingStore.isLoading = false;
     return Promise.reject(error);
 });
 
-// Middleware na response – nastavíme isLoading na false
-axiosInstance.interceptors.response.use(
-    (response) => {
-        loadingStore.isLoading = false;
-        return response;
-    },
-    (error) => {
-        loadingStore.isLoading = false;
-        return Promise.reject(error);
-    }
-);
+installRequestActivity(axiosInstance, loadingStore);
 
 export default axiosInstance;

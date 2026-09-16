@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import { useUsers as useUser } from "../../store/StoreUsers";
 import useCheckouts from "../../store/StoreCheckouts";
-import useCustomer from "../../store/StoreCustomers.ts";
+import useCustomer from "../../store/StoreCustomers";
 import { useProducts as useProduct } from "../../store/StoreProducts";
 import { useStocks as useStock } from "../../store/StoreStocks";
 import { useAnnouncements as useAnnouncement } from "../../store/StoreAnnouncements";
@@ -12,7 +12,7 @@ import useNavigation from "../../store/StoreNavigation";
 import mainNavigationDropdown from "./navigationMainDropdown.vue";
 import NavKosikLink from "../checkout/NavKosikLink.vue";
 import badge from "../plugins/badge.vue";
-import { APP_NAME, Page } from "../../constants.ts";
+import { APP_NAME, Page } from "../../constants";
 import useOrder from "../../store/StoreOrders";
 
 const mobileMenuOpen = ref(false);

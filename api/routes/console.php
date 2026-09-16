@@ -21,3 +21,15 @@ Artisan::command('inspire', function () {
 Schedule::command('app:customer-reviews-run --time-budget=25')
     ->everyFiveMinutes()
     ->withoutOverlapping();
+
+
+if (config('operations.enabled')) {
+    Schedule::call(function () {
+        \Illuminate\Support\Facades\Cache::put('ops:scheduler-heartbeat', now()->timestamp, now()->addDay());
+        // Najviac jeden probe za 5 minút; funguje aj pri viacerých scheduleroch.
+        if (\Illuminate\Support\Facades\Cache::add('ops:probe-dispatched', true, 290)) {
+            \App\Jobs\QueueHeartbeat::dispatch();
+        }
+    })->name('operations-heartbeats')->everyFiveMinutes()->withoutOverlapping();
+    Schedule::command('ops:check')->everyFiveMinutes()->withoutOverlapping();
+}

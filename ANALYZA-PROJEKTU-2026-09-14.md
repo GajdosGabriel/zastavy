@@ -135,7 +135,7 @@ Prvé produktové investície by som smeroval do opakovaných objednávok, ponú
 1. **HOTOVO — Bezpečné hranice (14. 9. 2026):** verejný checkout a zákaznícke dáta, expedičné oprávnenia, blokovanie tokenov a neverejný sortiment. Implementácia aj regresné API testy pre anonymného zákazníka, firemný kontakt a jednotlivé interné roly sú dokončené. Overenie: 85 testov, 347 assertions a frontend build prešli. Zmeny sú v projekte, zatiaľ bez nasadenia.
 2. **HOTOVO — Spoľahlivá objednávka (15. 9. 2026):** historické odtlačky, správni príjemcovia správ, validácia dopravy/variantov, ochrana opakovaného odoslania a číselný rad.
 3. **HOTOVO — Spoľahlivý sklad (15. 9. 2026):** atómové pohyby, spoločné zámky objednávok, kontrola zásoby pri expedícii, opravené vratky a súbežné testy na MySQL. Podľa zvoleného obchodného pravidla sú objednávky nad sklad povolené a rezervácie sa nevytvárajú.
-4. **Udržateľnosť:** CI, oprava starých testov, typová kontrola, SQL dotazy, dokumentácia a prevádzkové alarmy. Rozvíjať priebežne s opravami.
+4. **HOTOVO — implementácia udržateľnosti (16. 9. 2026):** CI, typová kontrola, ochrana testovacej databázy, stabilný počet SQL dotazov katalógu, prevádzkové kontroly a dokumentácia. Aktivácia monitora a doručovanie alarmov na hostingu zostávajú krokom nasadenia.
 5. **Rozvoj predaja:** dokončenie navigácie katalógu, opakovanie objednávok, ponuky, schvaľovanie grafiky a termíny výroby.
 
 Presný časový odhad závisí najmä od toho, či už treba zachovať produkčnú históriu a aké majú byť oprávnenia firemných kontaktov. Bez týchto rozhodnutí by odhad v dňoch pôsobil presnejšie, než umožňujú podklady.
@@ -234,3 +234,25 @@ Samostatná lokálna databáza `zastavy_stock_test_20260915` bola vytvorená iba
 Vývojová ani produkčná databáza sa nemenila. Nasadenie sa nevykonalo. Platobná brána zostala mimo rozsahu.
 
 Výsledok overenia bodu 3: **124 backendových testov / 551 assertions na MySQL prešlo**, vrátane 18 nových regresných a súbehových scenárov. Prešli 4 existujúce frontendové testy a priamy produkčný Vite build (273 modulov). Sieťové generovanie sitemap a prehliadačový end-to-end test neboli spustené.
+
+
+## HOTOVO — realizácia bodu 4 (16. 9. 2026)
+
+- `.github/workflows/ci.yml` spúšťa backendové testy vrátane súbehu na izolovanom MySQL 8.4, kontrolu PHP syntaxe a Composer manifestu. Frontendový job vykoná `npm ci`, `vue-tsc`, testy a build bez volania produkčného API. Workflow beží pri pushi, PR a manuálnom spustení; má časové limity a iba právo čítať repozitár.
+- TypeScript je zapnutý v strict režime pre existujúci TypeScript a komponenty s `lang="ts"`. Opravené sú typy PSČ/IČO/DIČ, parametrov routingu, oprávnení a formulárového množstva. Legacy JavaScript zostáva `checkJs=false`; nejde o plošnú migráciu všetkých komponentov.
+- Starý `CustomerServiceTest` už bol opravený v bode 1; aktuálna sada prechádza. Spoločný testovací základ teraz pred `RefreshDatabase` odmietne produkčné prostredie alebo DB bez samostatného segmentu `test` v názve. Povolený SQLite beh je iba `:memory:`. Práva testovacieho DB účtu musia byť naďalej obmedzené na testovaciu DB.
+- Katalóg hromadne načítava kategórie a obrázky variantov aj predvolených variantov. Regresný test porovnáva počet SQL dotazov pri jednom a šiestich produktoch; počet zostáva rovnaký a neprekročí 10. Doplnené eager loading je aj v administratívnom zozname a oboch detailoch.
+- Globálne načítavanie počíta súbežné HTTP transporty. Katalóg prijíma iba najnovšiu odpoveď pre zoznam/detail; oneskorený výsledok ani chyba starého filtra neprepíšu nový stav. Štyri nové frontendové testy overujú prekrývajúce sa požiadavky, chybu, zrušenie a poradie odpovedí.
+- Pridaná migrácia `2026_09_16_100000_create_failed_jobs_table`: projekt mal nakonfigurované databázové ukladanie zlyhaných úloh, ale bez zodpovedajúcej tabuľky. Nová tabuľka má aj index času zlyhania.
+- `ops:check --json` kontroluje DB, cache, heartbeat plánovača a workera, backlog a nedávne zlyhané úlohy. Vracia exit kód 0/1 a pri probléme loguje `operations.unhealthy`. `OPS_MONITOR_ENABLED=true` zapne päťminútové heartbeat signály a lokálnu kontrolu. Predvolene je monitor vypnutý, kým sa nenasadí scheduler a worker so spoločnou trvalou cache. Testy overujú aj reálne spracovanie heartbeat úlohy databázovým workerom.
+- Nahradené šablónové README a doplnené `docs/OPERATIONS.md`: nasadenie, Supervisor worker, cron, prahy monitorovania, reakcie na alarm, zálohy, skúška obnovy a rollback. Externý monitor musí zachytiť výpadok schedulera/celého servera a doručiť upozornenie. Doručovanie alarmov sa v tomto kroku nenastavovalo.
+- Nové SQL exporty a `dist` sú ignorované Gitom; už sledovaný historický SQL export nebol otvorený, vymazaný ani odstránený z histórie.
+
+### Overenie bodu 4
+
+- **131 backendových testov / 572 assertions prešlo** na novej izolovanej DB `zastavy_maintenance_test_20260916`, PHP 8.3.31, lokálny server **MariaDB 10.4.32 cez MySQL ovládač**. Tento beh zahŕňa päť viacprocesových testov skladu. Skoršie označenie lokálneho servera ako MySQL znamenalo MySQL pripojenie; konkrétna verzia servera bola overená teraz.
+- **8 frontendových testov**, `npm run typecheck` a `npm run build:ci` prešli; build má 275 modulov. Lokálny Node je 26, CI je pripravené na Node 22.
+- Prešiel `composer validate --strict --no-check-publish`, PHP syntax zmenených súborov, parse workflow YAML a `git diff --check`.
+- Negatívny beh s názvom DB bez segmentu `test` skončil na ochrane prostredia ešte pred testovacím setupom.
+- Workflow ešte nebol spustený na GitHube; beh na čistom MySQL 8.4/Node 22 potvrdí až CI. Sieťové generovanie sitemap a prehliadačový end-to-end test neboli spustené.
+- Vývojová a produkčná DB sa nemenili. Zmeny nie sú nasadené. Pred aktiváciou prevádzkových kontrol nasadiť migráciu, obnoviť konfiguráciu a worker, zapnúť monitor a pripojiť nezávislé doručovanie alarmov podľa `docs/OPERATIONS.md`.

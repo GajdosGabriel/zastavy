@@ -16,7 +16,7 @@ class ProductController extends Controller
     {
         Gate::authorize('viewAny', Product::class);
 
-        $products = Product::with(['variants', 'defaultVariant'])
+        $products = Product::with(['variants.image', 'defaultVariant.image', 'images', 'categories'])
             ->filter($productFilter)
             ->paginate();
 
@@ -33,7 +33,8 @@ class ProductController extends Controller
             'images',
             'categories',
             'variants.attributeValues.attribute',
-            'defaultVariant',
+            'variants.image',
+            'defaultVariant.image',
             'attributesTaxonomy.values',
         ])));
     }

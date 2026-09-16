@@ -78,7 +78,6 @@ const template = () => {
         page_bottom: {
             buttonBottomLeft: { name: 'Späť', spinner: true, link: '/zakaznici', icon: 'arrow-left' }
         },
-        buttonLink: customersStore.buttonLink,
     }
 }
 

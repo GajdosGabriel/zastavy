@@ -28,7 +28,7 @@ export interface ProductVariant {
     sale_price: number | string | null;
     discount: number | string | null;
     active_price?: number | string;
-    quantity: number | null;
+    quantity: number | string | null;
     weight: number | string | null;
     min_order: number;
     is_default: boolean;

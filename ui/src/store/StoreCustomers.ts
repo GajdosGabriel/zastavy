@@ -13,17 +13,18 @@ interface Customer {
     name: string;
     company: string;
     street: string;
-    postcode: number;
+    postcode: string;
     city: string;
     email: string;
     phone: string;
-    ico: number;
-    dic: number;
+    ico: string;
+    dic: string;
     ic_dic: string;
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
     status: any;
+    permissions?: Record<string, { allowed: boolean; label: string }>;
     [key: string]: any;
 }
 

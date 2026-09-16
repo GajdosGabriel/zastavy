@@ -15,7 +15,8 @@ const customersStore = useCustomers();
 const { getCustomer } = storeToRefs(customersStore);
 const { updateCustomer, fetchCustomer, fetchReview } = customersStore;
 const { setOriginalData, markAsSaved } = useUnsavedChanges(() => getCustomer.value);
-const { params: { customerId } } = useRoute();
+const route = useRoute();
+const customerId = String(route.params.customerId);
 
 onMounted(async () => {
     await fetchCustomer(customerId);

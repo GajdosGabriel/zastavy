@@ -20,7 +20,7 @@ const { getOrders } = storeToRefs(useOrders());
 onMounted(() => { document.title = "Detail zákazníka"; });
 
 watch(
-    () => route.params.customerId,
+    () => String(route.params.customerId),
     (customerId) => {
         fetchCustomer(customerId);
         fetchCustomerOrders(customerId);
@@ -31,7 +31,7 @@ watch(
 const buttonBack = { name: 'Späť', link: '/zakaznici', icon: 'arrow-left' };
 const buttonNew  = { name: 'Nový', link: '/zakaznici/create', icon: 'plus' };
 
-const actionMap = {
+const actionMap: Record<string, { to?: import("vue-router").RouteLocationRaw; onClick?: () => Promise<void> }> = {
     update: { to: { name: 'customers.edit', params: { customerId: route.params.customerId } } },
     delete: { onClick: () => destroyCustomer(getCustomer.value.endpoints?.destroy) },
 };
@@ -145,7 +145,7 @@ const dropdownItems = computed(() => {
                 <!-- Doručovacie adresy -->
                 <div class="mb-4">
                     <CustomerAddressPanel
-                        :customerId="route.params.customerId"
+                        :customerId="String(route.params.customerId)"
                         :canEdit="Boolean(getCustomer.permissions?.update?.allowed)"
                     />
                 </div>

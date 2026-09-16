@@ -12,7 +12,7 @@ class HomeController extends Controller
     public function index(ProductFilter $productFilter)
     {
         $products = Product::wherePublished(1)
-            ->with(['variants', 'defaultVariant', 'images'])
+            ->with(['variants.image', 'defaultVariant.image', 'images', 'categories'])
             ->filter($productFilter)
             ->paginate();
 
@@ -27,8 +27,10 @@ class HomeController extends Controller
         }
         return response(new ProductResource($product->load([
             'images',
+            'categories',
             'variants.attributeValues.attribute',
-            'defaultVariant',
+            'variants.image',
+            'defaultVariant.image',
             'attributesTaxonomy.values',
         ])));
     }

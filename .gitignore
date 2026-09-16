@@ -5,6 +5,7 @@ vendor/
 
 # Frontend build output
 build/
+dist/
 .vite/
 
 # Environment and local configuration
@@ -48,3 +49,7 @@ temp/
 Thumbs.db
 .idea/
 .vscode/
+
+# Nové databázové exporty patria do riadených záloh, nie do Gitu.
+*.sql
+*.sql.gz

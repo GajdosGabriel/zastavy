@@ -5,11 +5,14 @@ import useErrors from './StoreErrors';
 import usePaginator from './StorePaginator';
 import useQuery from './StoreQuery';
 import type { Product } from "./StoreProducts";
+import { createLatestRequest } from '../models/latestRequest';
 import { PAGE_HOME } from "../constants";
 
 export type HomeProduct = Product;
 
 interface HomeState {
+    listRequests: ReturnType<typeof createLatestRequest>;
+    detailRequests: ReturnType<typeof createLatestRequest>;
     searchUrl: string;
     url: string;
     products: HomeProduct[];
@@ -18,6 +21,8 @@ interface HomeState {
 
 export const useHome = defineStore('home', {
     state: (): HomeState => ({
+        listRequests: createLatestRequest(),
+        detailRequests: createLatestRequest(),
         searchUrl: "",
         url: PAGE_HOME.URL,
         products: [],
@@ -31,26 +36,28 @@ export const useHome = defineStore('home', {
 
     actions: {
         async fetchProducts(): Promise<void> {
-            try {
-                const q = useQuery();
-                const paginator = usePaginator();
-                const response = await axiosInstance.get(this.url + q.stringForUrl);
-                this.products = await response.data.data;
-                paginator.setPaginator(response.data.meta);
-                paginator.setLinks(response.data.links);
-            } catch (e) {
-                useErrors().setErrors(e);
-            }
+            const q = useQuery();
+            const paginator = usePaginator();
+            await this.listRequests.run(
+                () => axiosInstance.get(this.url + q.stringForUrl),
+                (response: { data: any }) => {
+                    this.products = response.data.data;
+                    paginator.setPaginator(response.data.meta);
+                    paginator.setLinks(response.data.links);
+                },
+                (error: unknown) => useErrors().setErrors(error),
+            );
         },
 
         async fetchProduct(id: number): Promise<void> {
-            try {
-                const response = await axiosInstance.get(PAGE_HOME.URL + '/' + id);
-                this.product = await response.data;
-                useImages().setImages(response.data.images);
-            } catch (e) {
-                useErrors().setErrors(e);
-            }
+            await this.detailRequests.run(
+                () => axiosInstance.get(PAGE_HOME.URL + '/' + id),
+                (response: { data: any }) => {
+                    this.product = response.data;
+                    useImages().setImages(response.data.images);
+                },
+                (error: unknown) => useErrors().setErrors(error),
+            );
         },
 
         // Vlastná akcia (nezamieňať s paginátorovým setPaginator voľaným vo fetchProducts).
