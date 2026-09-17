@@ -1,5 +1,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # API povoľuje origin https://zastavy-vlajky.sk. Zjednoť hostiteľa
+    # ešte pred obsluhou súborov, inak sa na www nenačíta katalóg (CORS).
+    RewriteCond %{HTTP_HOST} ^www\.zastavy-vlajky\.sk(?::[0-9]+)?$ [NC]
+    RewriteRule ^ https://zastavy-vlajky.sk%{REQUEST_URI} [R=301,L,NE]
+
     RewriteBase /
 
     # Ak je to existujúci súbor alebo adresár, obsluž ho priamo
