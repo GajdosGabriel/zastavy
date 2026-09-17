@@ -42,6 +42,7 @@ temp/
 # údaje zákazníkov a do repozitára nepatria.
 **/storage/app/backups/
 **/bootstrap/cache/*
+!**/bootstrap/cache/.gitignore
 .phpunit.result.cache
 
 # OS and editor metadata
