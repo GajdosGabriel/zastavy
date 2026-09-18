@@ -139,7 +139,7 @@ const salesCards = computed(() => {
 // ── Zoznamy ──────────────────────────────────────────────────
 const waiting = computed(() => data.value?.waiting || []);
 const missingProducts = computed(() => data.value?.missing_products || []);
-const topProducts = computed(() => data.value?.top_products || []);
+const topProducts = computed<any[]>(() => data.value?.top_products || []);
 const missingMax = computed(() => Math.max(1, ...missingProducts.value.map((item: any) => item.remaining_quantity)));
 const topMax = computed(() => Math.max(1, ...topProducts.value.map((item: any) => item.value)));
 
