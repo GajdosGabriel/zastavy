@@ -33,7 +33,7 @@ class UserInvited extends Notification implements ShouldQueue
                 'user'              => $this->invitedUser,
                 'temporaryPassword' => $this->temporaryPassword,
                 'roles'             => $this->roles,
-                'loginUrl'          => env('FRONTEND_URL', config('app.url')) . '/login',
+                'loginUrl'          => config('app.frontend_url') . '/login',
                 'verificationUrl'   => $this->verificationUrl,
             ]);
     }

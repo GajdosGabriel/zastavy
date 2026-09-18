@@ -33,7 +33,7 @@ class StoreOrder implements StoreOrderContract
 
         // Ceny sa berú z databázy, nie z requestu — klientom poslané ceny sa ignorujú.
         $items = $this->resolveItems();
-        $cartTotal = $items->sum(fn ($item) => $item['price'] * $item['quantity']);
+        $cartTotal = round($items->sum(fn ($item) => $item['price'] * $item['quantity']), 2);
 
         [$shippingMethodId, $shippingPrice, $paymentMethodId, $paymentFee, $couponId, $discountAmount] =
             $this->resolveCheckoutFields($cartTotal);

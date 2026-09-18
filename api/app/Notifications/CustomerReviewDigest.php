@@ -117,7 +117,7 @@ class CustomerReviewDigest extends Notification implements ShouldQueue
 
     private function listUrl(): string
     {
-        return rtrim((string) env('FRONTEND_URL', config('app.url')), '/').'/zakaznici?review=open';
+        return rtrim(config('app.frontend_url'), '/').'/zakaznici?review=open';
     }
 
     private function fieldLabel(string $field): string

@@ -209,6 +209,25 @@ class Order extends Model
     }
 
     /**
+     * Ide balík na fakturačnú adresu? Aj ručne zadaná adresa doručenia môže
+     * byť tá istá — vtedy ju v e-maile netreba ukazovať dvakrát.
+     */
+    public function deliveryMatchesBilling(): bool
+    {
+        if (! $this->hasCustomDelivery()) {
+            return true;
+        }
+
+        $customer = $this->billing;
+        $norm = fn ($v) => mb_strtolower(preg_replace('/\s+/', '', (string) $v));
+
+        return $customer
+            && $norm($this->delivery_street) === $norm($customer->street)
+            && $norm($this->delivery_postcode) === $norm($customer->postcode)
+            && $norm($this->delivery_city) === $norm($customer->city);
+    }
+
+    /**
      * Kým sa adresa smie meniť.
      *
      * Po expedícii je neskoro — balík je na ceste a prepísaná adresa by v
@@ -245,7 +264,7 @@ class Order extends Model
     /** Verejný detail objednávky — odkaz z e-mailu. */
     public function publicUrl(): string
     {
-        return rtrim(env('FRONTEND_URL', config('app.url')), '/')."/objednavka/{$this->uuid}";
+        return rtrim(config('app.frontend_url'), '/')."/objednavka/{$this->uuid}";
     }
 
     /** Verejná zmena adresy doručenia — odkaz z e-mailu, chránený tokenom. */
@@ -260,7 +279,7 @@ class Order extends Model
 
     public function priceSum()
     {
-        return $this->orderProducts->sum('total');
+        return round($this->orderProducts->sum('total'), 2);
     }
 
     public function getProductOrderSumAttribute()

@@ -159,7 +159,7 @@ class UserController extends Controller
         $user = User::where('uuid', $uuid)->firstOrFail();
 
         if ($user->status !== ModelStatus::Draft) {
-            return redirect(env('FRONTEND_URL', config('app.url')) . '/login?verified=already');
+            return redirect(config('app.frontend_url') . '/login?verified=already');
         }
 
         $user->update([
@@ -167,7 +167,7 @@ class UserController extends Controller
             'email_verified_at' => now(),
         ]);
 
-        return redirect(env('FRONTEND_URL', config('app.url')) . '/login?verified=1');
+        return redirect(config('app.frontend_url') . '/login?verified=1');
     }
 
     public function show(User $user)

@@ -15,7 +15,7 @@ class PublicOrderController extends Controller
             ->with(['customer', 'orderProducts.product', 'shippingMethod', 'paymentMethod', 'attachments', 'stocks'])
             ->firstOrFail();
 
-        $subtotal = $order->orderProducts->sum('total');
+        $subtotal = round($order->orderProducts->sum('total'), 2);
         $shipping = (float) ($order->shipping_price ?? 0);
         $fee      = (float) ($order->payment_fee ?? 0);
         $discount = (float) ($order->discount_amount ?? 0);
@@ -57,7 +57,7 @@ class PublicOrderController extends Controller
                 'shipping_price'  => $shipping,
                 'payment_fee'     => $fee,
                 'discount_amount' => $discount,
-                'grand_total'     => $subtotal + $shipping + $fee - $discount,
+                'grand_total'     => round($subtotal + $shipping + $fee - $discount, 2),
             ],
         ]);
     }

@@ -5,6 +5,7 @@ import iconStar from "../../../components/icons/star.vue";
 import noticeLabel from "./noticeLabel.vue";
 import shippingButton from "./shippingButton.vue";
 import useOrders from "../../../store/StoreOrders";
+import { formatDecimal } from "../../../models/functions";
 
 const props = defineProps(["order"]);
 
@@ -110,7 +111,7 @@ const dropdownItems = computed(() => {
         </td>
 
         <td class="tbody_td whitespace-nowrap text-right font-bold">
-            {{ order.price_sum }} €
+            {{ formatDecimal(order.price_sum) }} €
         </td>
 
         <td class="tbody_td min-w-36">

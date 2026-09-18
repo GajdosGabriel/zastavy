@@ -54,6 +54,11 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Adresa verejného webu (Vue SPA). Odkazy v e-mailoch musia ísť sem, nie na
+    // APP_URL — API beží pod /web/api. Číta sa cez config(), lebo env() mimo
+    // config súborov po `php artisan config:cache` vracia null.
+    'frontend_url' => rtrim((string) env('FRONTEND_URL', 'https://zastavy-vlajky.sk'), '/'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

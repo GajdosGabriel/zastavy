@@ -19,7 +19,7 @@ class ResetPassword extends Notification implements ShouldQueue
 
     public function toMail(mixed $notifiable): \Illuminate\Notifications\Messages\MailMessage
     {
-        $url = rtrim(env('FRONTEND_URL', config('app.url')), '/') . '/reset-password'
+        $url = rtrim(config('app.frontend_url'), '/') . '/reset-password'
             . '?token=' . urlencode($this->token)
             . '&email=' . urlencode($notifiable->getEmailForPasswordReset());
 

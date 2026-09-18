@@ -1,4 +1,5 @@
 <script setup>
+import { formatDecimal } from "../../../models/functions";
 const props = defineProps({
     items: { type: Array, default: () => [] },
     sum: { type: [Number, String], default: 0 },
@@ -25,7 +26,7 @@ const props = defineProps({
 
         <div class="flex justify-between border-t border-slate-300 bg-slate-100 px-4 py-2 text-sm">
             <span class="font-semibold text-slate-700">Sumár spolu:</span>
-            <span class="font-semibold text-slate-900">{{ props.sum }} €</span>
+            <span class="font-semibold text-slate-900">{{ formatDecimal(props.sum) }} €</span>
         </div>
     </div>
 </template>

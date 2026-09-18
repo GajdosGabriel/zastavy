@@ -28,7 +28,7 @@ class IssueCouponForOrder
         }
 
         $settings   = CouponSettingsController::read();
-        $orderTotal = $order->orderProducts->sum('total');
+        $orderTotal = round($order->orderProducts->sum('total'), 2);
         $minOrder   = $this->calculateMinOrder($orderTotal, $settings);
         $validFrom  = Carbon::today()->addDays((int) $settings['delay_days']);
         $validTo    = $validFrom->copy()->addDays((int) $settings['valid_days']);

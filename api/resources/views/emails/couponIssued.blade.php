@@ -65,7 +65,7 @@
         </div>
 
         <div style="text-align:center;">
-            <a href="{{ env('FRONTEND_URL', config('app.url')) }}" class="btn">
+            <a href="{{ config('app.frontend_url') }}" class="btn">
                 Nakupovať teraz
             </a>
         </div>

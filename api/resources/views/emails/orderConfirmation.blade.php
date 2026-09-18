@@ -33,18 +33,29 @@
     </div>
 
     <div class="body">
-        <x-email.customer :customer="$order->billing" />
+        <x-email.customer :customer="$order->billing" :order="$order" />
 
-        <x-email.delivery-address :order="$order" />
+        @unless($order->deliveryMatchesBilling())
+            <x-email.delivery-address :order="$order" />
+        @endunless
 
         {{-- Adresu si zákazník vie opraviť sám, kým objednávka nejde do expedície.
              Doteraz to znamenalo telefonát a ručný prepis. --}}
         @if($order->canEditDelivery() && $order->deliveryEditUrl())
-        <div class="info-block" style="margin-top:-16px;">
-            <a href="{{ $order->deliveryEditUrl() }}" style="font-size:13px; color:#1e3a5f; text-decoration:underline;">
-                Doručiť inam? Zmeniť adresu doručenia
-            </a>
-        </div>
+        <table role="presentation" style="margin:-12px 0 28px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:5px;">
+            <tr>
+                <td style="padding:14px 18px; border-bottom:none; font-size:13px; color:#1e3a5f;">
+                    <strong style="display:block; font-size:14px; margin-bottom:3px;">Doručiť inam?</strong>
+                    Adresu doručenia si môžete zmeniť sami, kým objednávku neodošleme.
+                </td>
+                <td style="padding:14px 18px 14px 0; border-bottom:none; text-align:right; white-space:nowrap; vertical-align:middle;">
+                    <a href="{{ $order->deliveryEditUrl() }}"
+                       style="display:inline-block; background:#fff; color:#1e3a5f; border:1px solid #1e3a5f; text-decoration:none; padding:8px 16px; border-radius:5px; font-size:13px; font-weight:600;">
+                        Zmeniť adresu
+                    </a>
+                </td>
+            </tr>
+        </table>
         @endif
 
         @if($order->shippingMethod || $order->paymentMethod)
@@ -89,7 +100,7 @@
                     $shipping  = (float) ($order->shipping_price ?? 0);
                     $fee       = (float) ($order->payment_fee ?? 0);
                     $discount  = (float) ($order->discount_amount ?? 0);
-                    $grandTotal = $subtotal + $shipping + $fee - $discount;
+                    $grandTotal = round($subtotal + $shipping + $fee - $discount, 2);
                 @endphp
                 @if($shipping > 0)
                 <tr>
@@ -140,7 +151,8 @@
         @endif
 
         <div class="info-block" style="margin-top:24px; text-align:center;">
-            <a href="{{ env('FRONTEND_URL', config('app.url')) }}/objednavka/{{ $order->uuid }}"
+            {{-- S tokenom sa na detaile ukáže aj odkaz na zmenu adresy. --}}
+            <a href="{{ $order->publicUrl() }}{{ $order->delivery_token ? '?token='.$order->delivery_token : '' }}"
                style="display:inline-block; background:#1e3a5f; color:#fff; text-decoration:none; padding:12px 28px; border-radius:5px; font-size:14px; font-weight:600;">
                 Zobraziť objednávku online
             </a>
