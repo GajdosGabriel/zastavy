@@ -137,6 +137,15 @@ class OrderReliabilityTest extends TestCase
         $this->assertDatabaseCount('orders', 0);
     }
 
+    public function test_delivery_is_optional_when_no_method_is_active(): void
+    {
+        $payload = $this->payload();
+        unset($payload['shipping_method_id']);
+        ShippingMethod::query()->update(['active' => false]);
+        $this->postJson('/api/checkouts', $payload)->assertSuccessful();
+        $this->assertNull(\App\Models\Order::first()->shipping_method_id);
+    }
+
     public function test_variant_must_belong_to_selected_product(): void
     {
         $payload = $this->payload();

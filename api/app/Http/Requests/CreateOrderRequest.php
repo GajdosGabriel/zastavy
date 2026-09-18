@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ShippingMethod;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -36,7 +37,9 @@ class CreateOrderRequest extends OrderRequest
             'note' => ['nullable', 'string', 'max:1000'],
             'wants_coupon' => ['boolean'],
             'notify_customer' => ['sometimes', 'boolean'],
-            'shipping_method_id' => ['required', 'integer', Rule::exists('shipping_methods', 'id')->where('active', true)->whereNull('deleted_at')],
+            // Povinná len ak je v admine aspoň jedna aktívna doprava, inak by sa
+            // objednávka nedala odoslať vôbec.
+            'shipping_method_id' => [ShippingMethod::where('active', true)->exists() ? 'required' : 'nullable', 'integer', Rule::exists('shipping_methods', 'id')->where('active', true)->whereNull('deleted_at')],
             'payment_method_id' => ['nullable', 'integer', Rule::exists('payment_methods', 'id')->where('active', true)->whereNull('deleted_at')],
             'coupon_code' => ['nullable', 'string', 'max:50'],
             'attachments' => ['nullable', 'array', 'max:'.config('media.attachments.max_files')],
