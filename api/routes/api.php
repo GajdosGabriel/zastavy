@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\PublicDeliveryAddressController;
 use App\Http\Controllers\Api\PublicImageController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\Dashboard\DashboardController;
 use App\Http\Controllers\Api\Dashboard\OrderAttachmentController;
 use App\Http\Controllers\Api\Dashboard\OrderController;
 use App\Http\Controllers\Api\Dashboard\OrderMarkController;
@@ -106,6 +107,7 @@ Route::post('/coupons/validate', [CouponController::class, 'validate'])
     ->name('coupons.validate');
 
 Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/orders/statistics', [OrderController::class, 'statistics'])->name('orders.statistics');
 
     Route::apiResources([

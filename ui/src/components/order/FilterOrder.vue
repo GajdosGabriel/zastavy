@@ -1,5 +1,6 @@
 <script setup>
 import { onUnmounted, reactive, ref, watch, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import useOrders from "../../store/StoreOrders";
 import useQuery from "../../store/StoreQuery";
@@ -50,6 +51,55 @@ const applySearch = (term = null) => {
 const switchSearchType = () => {
     applySearch();
 };
+
+// ── Predvolený filter z URL (napr. preklik z dashboardu) ─────
+// Musí prebehnúť pred registráciou watcherov — zoznam si ho načíta
+// v OrderIndex onMounted, takže nevznikne dvojitý request.
+const route = useRoute();
+const router = useRouter();
+
+const applyRouteQuery = () => {
+    const { filter, status: routeStatus, shippedAt: routeShippedAt, product, customer, marked } = route.query;
+
+    if (![filter, routeStatus, routeShippedAt, product, customer, marked].some(Boolean)) {
+        return;
+    }
+
+    resetQuery();
+    labelList.forEach((item) => item.active = false);
+
+    const label = labelList.find((item) => item.key === `${filter}=`);
+    if (label) {
+        label.active = true;
+        setQuery(label.key + label.value);
+    }
+
+    if (routeStatus) {
+        status.value = String(routeStatus);
+        setQuery({ key: 'status=', value: status.value });
+    }
+
+    if (routeShippedAt) {
+        shippedAt.value = String(routeShippedAt);
+        setQuery({ key: 'shippedAt=', value: shippedAt.value });
+    }
+
+    if (product || customer) {
+        searchType.value = product ? 'product' : 'customer';
+        searchInput.value = String(product || customer);
+        setQuery({ key: activeSearchKey.value, value: searchInput.value });
+    }
+
+    ordersStore.statement.markSelected = Boolean(marked);
+    if (marked) {
+        setQuery("isMarked=true");
+    }
+
+    // URL vyčistíme, aby po zmene filtra neostal v adrese zastaraný stav.
+    router.replace({ query: {} });
+};
+
+applyRouteQuery();
 
 // ── Watchers ─────────────────────────────────────────────────
 watch(getQuery, () => {
@@ -103,6 +153,7 @@ const onClearQuery = () => {
 
 onUnmounted(() => {
     resetQuery();
+    ordersStore.statement.markSelected = false;
 });
 </script>
 
