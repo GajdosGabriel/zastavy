@@ -32,7 +32,7 @@ const readEnvFile = (file) => {
 
 const env = { ...readEnvFile('.env.production'), ...process.env };
 const SITE_URL = (env.VITE_URL_BASE || 'https://zastavy-vlajky.sk').replace(/\/$/, '');
-const API_URL = (env.VITE_URL_BASE_API || 'https://api.zastavy-vlajky.sk/api').replace(/\/$/, '');
+const API_URL = (env.VITE_URL_BASE_API || 'https://zastavy-vlajky.sk/web/api').replace(/\/$/, '');
 
 const STATIC_ROUTES = [
     { path: '/', changefreq: 'daily', priority: '1.0' },
