@@ -6,6 +6,8 @@ vendor/
 # Frontend build output
 build/
 dist/
+# Build frontendu sa na server nasadzuje cez git pull — ui/dist musí byť v repozitári.
+!ui/dist/
 .vite/
 
 # Environment and local configuration
