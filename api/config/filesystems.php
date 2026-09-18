@@ -80,6 +80,9 @@ return [
 
     'links' => [
         public_path('storage') => storage_path('app/public'),
+        // API beží na https://zastavy-vlajky.sk/web (front controller v ui/dist/web),
+        // preto musí byť storage dostupné aj tam. Vytvorí sa cez `php artisan storage:link`.
+        env('FRONTEND_STORAGE_LINK', base_path('../ui/dist/web/storage')) => storage_path('app/public'),
     ],
 
 ];

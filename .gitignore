@@ -8,6 +8,8 @@ build/
 dist/
 # Build frontendu sa na server nasadzuje cez git pull — ui/dist musí byť v repozitári.
 !ui/dist/
+# Symlink na api/storage/app/public — na serveri ho vytvára `php artisan storage:link`.
+ui/dist/web/storage
 .vite/
 
 # Environment and local configuration
