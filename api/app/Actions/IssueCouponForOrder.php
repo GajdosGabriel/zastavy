@@ -16,6 +16,11 @@ class IssueCouponForOrder
             return null;
         }
 
+        // Objednávka so zľavou nový kupón nezakladá; zrušená/stornovaná tiež nie
+        if ($order->coupon_id || $order->isStorned()) {
+            return null;
+        }
+
         $email = $order->routeNotificationForMail();
 
         if (! $email) {

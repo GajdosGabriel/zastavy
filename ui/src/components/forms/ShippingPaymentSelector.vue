@@ -156,7 +156,8 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                     <span class="text-sm font-medium text-gray-800">Získaj kupón</span>
                 </label>
                 <p v-if="getCouponMode === 'get'" class="px-1 text-xs text-gray-400">
-                    Kupón bude zaslaný pre ďalší nákup.
+                    Po odoslaní objednávky Vám e-mailom pošleme zľavový kupón na ďalší nákup.
+                    Nedá sa kombinovať s uplatnením iného kupónu.
                 </p>
 
                 <label :class="[

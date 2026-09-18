@@ -98,8 +98,22 @@ const copyValue = async (key, value) => {
             <div class="mb-3 flex items-center gap-2">
                 <span class="text-xl font-bold text-gray-900">{{ order.serial_number }}</span>
                 <span v-if="order.wants_coupon"
-                    class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white"
-                    title="Zákazník požaduje zľavový kupón">K</span>
+                    :class="['inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white',
+                        order.issued_coupon ? 'bg-green-600' : 'bg-red-600']"
+                    :title="order.issued_coupon ? 'Zľavový kupón bol vydaný' : 'Zákazník požaduje zľavový kupón'">K</span>
+            </div>
+
+            <!-- Stav kupónu „Získaj kupón“ -->
+            <div v-if="order.wants_coupon" class="mb-3 text-xs">
+                <template v-if="order.issued_coupon">
+                    <span class="text-gray-500">Kupón vydaný {{ order.issued_coupon.created_at }}:</span>
+                    <span class="ml-1 font-mono font-semibold text-green-700">{{ order.issued_coupon.code }}</span>
+                    <span class="ml-1 text-gray-500">
+                        · platí {{ order.issued_coupon.valid_from }} – {{ order.issued_coupon.valid_to }}
+                        · {{ order.issued_coupon.used_count > 0 ? 'použitý' : 'nepoužitý' }}
+                    </span>
+                </template>
+                <span v-else class="text-red-600">Kupón čaká na vydanie – odošle sa e-mailom po úplnej expedícii.</span>
             </div>
 
             <div class="space-y-1 text-sm text-gray-600">

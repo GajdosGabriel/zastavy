@@ -68,6 +68,18 @@ class OrderProduct extends Model
         return $this->product_snapshot !== null ? ($this->product_snapshot['variant_name'] ?? null) : ($this->variant_label ?: $this->variant?->name);
     }
 
+    /**
+     * Trvalá URL obrázka pre e-mail (podpísané S3 URL by po hodine exspirovali).
+     * Bez obrázka vracia null — SVG placeholder väčšina e-mailových klientov
+     * (Gmail, Outlook) nezobrazí.
+     */
+    public function getEmailImageUrlAttribute(): ?string
+    {
+        $image = $this->variant?->image ?? $this->product?->images->first();
+
+        return $image ? route('images.show', $image) : null;
+    }
+
     public function stocks()
     {
         return $this->hasMany(Stock::class);

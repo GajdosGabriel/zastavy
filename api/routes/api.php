@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\CustomerCheckController;
 use App\Http\Controllers\Api\PublicDeliveryAddressController;
+use App\Http\Controllers\Api\PublicImageController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\Dashboard\OrderAttachmentController;
@@ -92,6 +93,10 @@ Route::get('/public-orders/{uuid}/attachments/{attachment}', [PublicOrderControl
     ->name('public-orders.attachments.show');
 
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+// Stabilná adresa obrázka produktu pre e-maily — viď PublicImageController.
+Route::get('/images/{image}', [PublicImageController::class, 'show'])
+    ->whereNumber('image')
+    ->name('images.show');
 Route::get('/attribute-facets', [AttributeFacetController::class, 'index'])->name('attribute-facets.index');
 Route::get('/announcements/active', [AnnouncementController::class, 'active'])->name('announcements.active');
 Route::get('/shipping-methods', [ShippingMethodController::class, 'index'])->name('shipping-methods.index');

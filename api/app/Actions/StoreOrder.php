@@ -52,7 +52,8 @@ class StoreOrder implements StoreOrderContract
             'coupon_id'          => $couponId,
             'discount_amount'    => $discountAmount,
             'note'               => $this->request->input('note') ?: null,
-            'wants_coupon'       => (bool) $this->request->input('wants_coupon', false),
+            // Uplatnenie kupónu a žiadosť o nový sa vylučujú
+            'wants_coupon'       => $couponId ? false : (bool) $this->request->input('wants_coupon', false),
         ]);
         $order->update(['serial_number' => app(\App\Services\OrderNumberService::class)->next($order->created_at->format('Y-m'))]);
         $this->storeOrderProducts($order, $items);

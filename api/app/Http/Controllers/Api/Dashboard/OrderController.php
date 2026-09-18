@@ -109,6 +109,9 @@ class OrderController extends Controller
                 $changes['payment_fee'] = $method?->fee ?? 0;
                 $changes['payment_method_name'] = $method?->name;
             }
+            if (array_key_exists('wants_coupon', $changes) && $order->coupon_id) {
+                $changes['wants_coupon'] = false;
+            }
             $this->updateDeliveryAddress($order, $request);
             $order->update($changes);
         });
@@ -209,7 +212,7 @@ class OrderController extends Controller
             $changes[] = ['label' => 'Poznámka', 'old' => $order->note ?? '—', 'new' => $request->note ?? '—'];
         }
 
-        if ($request->has('wants_coupon') && $request->boolean('wants_coupon') !== (bool) $order->wants_coupon) {
+        if ($request->has('wants_coupon') && ! $order->coupon_id && $request->boolean('wants_coupon') !== (bool) $order->wants_coupon) {
             $changes[] = [
                 'label' => 'Zľavový kupón',
                 'old'   => $order->wants_coupon ? 'Áno' : 'Nie',

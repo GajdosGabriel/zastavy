@@ -99,6 +99,12 @@ class Order extends Model
         return $this->belongsTo(Customer::class)->withTrashed();
     }
 
+    /** Kupón vydaný zákazníkovi za túto objednávku („Získaj kupón“). */
+    public function issuedCoupon()
+    {
+        return $this->hasOne(Coupon::class, 'source_order_id')->withTrashed();
+    }
+
     /**
      * Riadok z adresára zákazníka, z ktorého adresa prišla.
      *

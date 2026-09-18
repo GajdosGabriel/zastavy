@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Actions\IssueCouponForOrder;
+use App\Enums\OrderStatus;
 use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\Order;
@@ -529,5 +531,68 @@ class CheckoutTest extends TestCase
             'product_variant_id' => $this->variant($product)->id,
             'price'              => 25.50,
         ]);
+    }
+
+    public function test_applied_coupon_cancels_request_for_new_coupon(): void
+    {
+        $product = $this->makeProduct(100.00);
+        Coupon::create(['code' => 'ZLAVA10', 'type' => 'percent', 'value' => 10, 'active' => true]);
+
+        $this->postCheckout([
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1],
+            ],
+            'coupon_code' => 'ZLAVA10',
+            'wants_coupon' => true,
+        ])->assertOk();
+
+        $order = Order::first();
+        $this->assertNotNull($order->coupon_id);
+        $this->assertFalse((bool) $order->wants_coupon);
+    }
+
+    public function test_coupon_is_issued_once_for_order_that_wants_it(): void
+    {
+        $product = $this->makeProduct(100.00);
+
+        $this->postCheckout([
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1],
+            ],
+            'wants_coupon' => true,
+        ])->assertOk();
+
+        $order = Order::first()->load(['customer', 'orderProducts']);
+
+        $coupon = (new IssueCouponForOrder)->handle($order);
+        $this->assertNotNull($coupon);
+        $this->assertSame($order->id, $coupon->source_order_id);
+        // max(50, 1,5 × 100) = 150 → zaokrúhlené na desiatky
+        $this->assertEquals(150, (float) $coupon->min_order_price);
+
+        $this->assertNull((new IssueCouponForOrder)->handle($order));
+        $this->assertSame(1, Coupon::where('source_order_id', $order->id)->count());
+        $this->assertSame($coupon->code, $order->fresh()->issuedCoupon->code);
+    }
+
+    public function test_cancelled_order_does_not_get_coupon(): void
+    {
+        $product = $this->makeProduct(100.00);
+
+        $this->postCheckout([
+            'customer' => $this->customerPayload(),
+            'orderProducts' => [
+                ['id' => $product->id, 'input_order' => 1],
+            ],
+            'wants_coupon' => true,
+        ])->assertOk();
+
+        $order = Order::first();
+        $order->forceFill(['status' => OrderStatus::Cancelled])->save();
+
+        $this->assertNull((new IssueCouponForOrder)->handle($order->load(['customer', 'orderProducts'])));
+        $this->assertSame(0, Coupon::count());
     }
 }

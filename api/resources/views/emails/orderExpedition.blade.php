@@ -119,7 +119,7 @@
             <tbody>
                 @foreach($order->orderProducts as $item)
                 <tr>
-                    <td>{{ $item->product_details?->name ?? '—' }}</td>
+                    <td><x-email.order-item :item="$item" /></td>
                     <td style="text-align:right">{{ $item->quantity }} {{ $item->product_details->unit_value ?? 'ks' }}</td>
                 </tr>
                 @endforeach

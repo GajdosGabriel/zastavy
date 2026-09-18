@@ -57,12 +57,7 @@
             <tbody>
                 @foreach($cancelledItems as $item)
                 <tr>
-                    <td>
-                        {{ $item->product_details->name ?? '—' }}
-                        @if($item->variant_name)
-                            <br><span style="color:#64748b;font-size:12px">{{ $item->variant_name }}</span>
-                        @endif
-                    </td>
+                    <td><x-email.order-item :item="$item" /></td>
                     <td style="text-align:right">{{ $item->storno }} {{ $item->product_details->unit_value ?? 'ks' }}</td>
                 </tr>
                 @endforeach
