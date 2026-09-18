@@ -13,7 +13,7 @@ return new class extends Migration
 
         if (! DB::table('shipping_methods')->exists()) {
             DB::table('shipping_methods')->insert([
-                ['name' => 'Kuriér', 'price' => 5.00, 'free_from_price' => 100.00, 'active' => true, 'sort_order' => 1, 'created_at' => $now, 'updated_at' => $now],
+                ['name' => 'Slovenská pošta', 'price' => 5.00, 'free_from_price' => 100.00, 'active' => true, 'sort_order' => 1, 'created_at' => $now, 'updated_at' => $now],
                 ['name' => 'Osobný odber', 'price' => 0.00, 'free_from_price' => null, 'active' => true, 'sort_order' => 2, 'created_at' => $now, 'updated_at' => $now],
             ]);
         }
