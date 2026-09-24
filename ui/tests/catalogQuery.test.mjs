@@ -1,0 +1,3 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {catalogQuery,changeCatalogQuery} from '../src/models/catalogQuery.js';
+test('shared URLs preserve supported filters and discard admin or malformed input',()=>{assert.deepEqual(catalogQuery({bySearchInput:'Vlajka',byCategory:'2',page:'3',isDeleted:'1',priceFrom:'-1',inStock:'1',priceTo:['20']}),{bySearchInput:'Vlajka',byCategory:'2',page:'3',inStock:'1'});});
+test('changing filters resets page and paging retains filters',()=>{assert.deepEqual(changeCatalogQuery({page:'4',bySearchInput:'Flag'},{byCategory:'2'}),{bySearchInput:'Flag',byCategory:'2'});assert.deepEqual(changeCatalogQuery({byCategory:'2'},{page:'3'}),{byCategory:'2',page:'3'});});

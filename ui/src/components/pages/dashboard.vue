@@ -172,6 +172,7 @@ const adminLinks = computed(() => [
 <template>
       <BaseLayout>
             <template #main>
+<router-link v-if="canCreateOrder && getUser.roles?.some(role => ['super-admin','admin','manager','sales'].includes(role))" to="/predaj" class="col-span-12 rounded bg-blue-50 text-blue-800 p-4 font-semibold">Ponuky a plán výroby →</router-link>
                   <section class="col-span-12 space-y-6 px-4 pb-10 sm:px-7">
 
                         <!-- Hlavička -->

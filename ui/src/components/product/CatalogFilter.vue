@@ -1,133 +1,35 @@
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from "vue";
-import { storeToRefs } from "pinia";
-import { useAttributes } from "../../store/StoreAttributes";
-import { useHome } from "../../store/StoreHome";
-import useQuery from "../../store/StoreQuery";
-import Chevron from "../icons/chevron.vue";
-
-const attributesStore = useAttributes();
-const { getFacets } = storeToRefs(attributesStore);
-const { fetchFacets } = attributesStore;
-
-const { applyFilters } = useHome();
-const { setQuery, removeQuery } = useQuery();
-
-// { rozmer: ['100x150', '100x70'] }
-const selected = reactive({});
-const open = ref(false);
-const inStock = ref(false);
-const priceFrom = ref("");
-const priceTo = ref("");
-
-onMounted(() => fetchFacets());
-
-const isChecked = (code, valueCode) => (selected[code] ?? []).includes(valueCode);
-
-const toggle = (code, valueCode) => {
-    const current = selected[code] ?? [];
-    selected[code] = current.includes(valueCode)
-        ? current.filter((v) => v !== valueCode)
-        : [...current, valueCode];
-
-    if (!selected[code].length) {
-        delete selected[code];
-    }
-};
-
-const activeCount = computed(() =>
-    Object.values(selected).reduce((sum, values) => sum + values.length, 0)
-    + (inStock.value ? 1 : 0)
-    + (priceFrom.value ? 1 : 0)
-    + (priceTo.value ? 1 : 0)
-);
-
-/**
- * Formát `rozmer:100x150|100x70,material:polyester` — v rámci vlastnosti OR,
- * medzi vlastnosťami AND.
- */
-const facetQuery = computed(() =>
-    Object.entries(selected)
-        .filter(([, values]) => values.length)
-        .map(([code, values]) => `${code}:${values.join("|")}`)
-        .join(",")
-);
-
-const syncQuery = () => {
-    const apply = (key, value) => {
-        if (value === "" || value === null || value === false) {
-            removeQuery({ key });
-        } else {
-            setQuery({ key, value });
-        }
-    };
-
-    apply("byAttribute=", facetQuery.value);
-    apply("inStock=", inStock.value ? "1" : "");
-    apply("priceFrom=", priceFrom.value);
-    apply("priceTo=", priceTo.value);
-
-    applyFilters();
-};
-
-const reset = () => {
-    Object.keys(selected).forEach((key) => delete selected[key]);
-    inStock.value = false;
-    priceFrom.value = "";
-    priceTo.value = "";
-};
-
-watch([selected, inStock], syncQuery, { deep: true });
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useAttributes } from '../../store/StoreAttributes';
+import axios from '../../axiosInstance';
+import useErrors from '../../store/StoreErrors';
+import { catalogQuery, changeCatalogQuery } from '../../models/catalogQuery';
+const route=useRoute(), router=useRouter(), attributes=useAttributes();
+const categories=ref([]), search=ref(''), from=ref(''), to=ref('');
+const query=computed(()=>catalogQuery(route.query));
+watch(query,q=>{search.value=q.bySearchInput??'';from.value=q.priceFrom??'';to.value=q.priceTo??'';},{immediate:true});
+onMounted(async()=>{attributes.fetchFacets();try{categories.value=(await axios.get('/catalog-categories')).data;}catch(e){useErrors().setErrors(e);}});
+const change=patch=>router.push({query:changeCatalogQuery(route.query,patch)});
+const selected=computed(()=>Object.fromEntries((query.value.byAttribute??'').split(',').filter(Boolean).map(group=>{const [key,value='']=group.split(':');return [key,value.split('|')];})));
+function toggle(code,value){const next={...selected.value};const values=next[code]??[];next[code]=values.includes(value)?values.filter(v=>v!==value):[...values,value];change({byAttribute:Object.entries(next).filter(([,v])=>v.length).map(([k,v])=>k+':'+v.join('|')).join(',')});}
 </script>
-
 <template>
-    <section v-if="getFacets.length" class="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex items-center justify-between gap-2">
-            <button type="button" @click="open = !open" :aria-expanded="open"
-                class="flex flex-1 items-center gap-1 text-left focus:outline-none">
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Filtre</h2>
-                <Chevron :icon="!open" class="text-slate-400" />
-            </button>
-            <button v-if="activeCount" type="button" @click="reset"
-                class="text-xs text-slate-400 transition hover:text-red-600">
-                × zrušiť ({{ activeCount }})
-            </button>
-        </div>
+<details class="rounded-md border border-slate-200 bg-white p-4 space-y-4">
+ <summary class="font-semibold cursor-pointer">Nájsť tovar</summary>
+ <form @submit.prevent="change({bySearchInput:search})" class="space-y-2">
+  <label for="catalog-search" class="text-sm">Názov alebo kód</label><input id="catalog-search" v-model="search" type="search" maxlength="200" class="w-full rounded border p-2" />
+  <button class="rounded bg-blue-700 text-white px-3 py-2">Hľadať</button>
+ </form>
+ <label class="block text-sm">Kategória<select :value="query.byCategory??''" @change="change({byCategory:$event.target.value})" class="block w-full rounded border p-2"><option value="">Všetky kategórie</option><option v-for="c in categories" :key="c.id" :value="c.id">{{c.name}}</option></select></label>
+ <details open><summary class="font-semibold cursor-pointer">Filtre</summary>
+  <fieldset v-for="facet in attributes.getFacets" :key="facet.code" class="mt-3"><legend class="font-medium">{{facet.name}}</legend>
+   <label v-for="value in facet.values" :key="value.id" class="flex gap-2 text-sm py-1"><input type="checkbox" :checked="(selected[facet.code]??[]).includes(value.code)" @change="toggle(facet.code,value.code)" />{{value.value}}</label>
+  </fieldset>
+  <label class="flex gap-2 my-4"><input type="checkbox" :checked="query.inStock==='1'" @change="change({inStock:$event.target.checked?'1':''})" />Len skladom</label>
+  <form @submit.prevent="change({priceFrom:from,priceTo:to})" class="space-y-2"><p>Cena s DPH</p><div class="flex gap-2"><input v-model="from" aria-label="Cena od" placeholder="Od" type="number" min="0" step="0.01" class="w-1/2 rounded border p-2"/><input v-model="to" aria-label="Cena do" placeholder="Do" type="number" min="0" step="0.01" class="w-1/2 rounded border p-2"/></div><button class="text-blue-700">Použiť cenu</button></form>
+ </details>
+ <button v-if="Object.keys(query).length" @click="router.push({query:{}})" class="text-red-700">Zrušiť filtre</button>
 
-        <div v-show="open" class="mt-3 space-y-4">
-            <div v-for="facet in getFacets" :key="facet.code">
-                <p class="mb-1.5 text-sm font-semibold text-slate-700">{{ facet.name }}</p>
-                <div class="space-y-1">
-                    <label v-for="value in facet.values" :key="value.id"
-                        class="flex cursor-pointer items-center justify-between gap-2 rounded px-1.5 py-1 text-sm transition hover:bg-slate-50">
-                        <span class="flex items-center gap-2 text-slate-700">
-                            <input type="checkbox" class="accent-blue-600"
-                                :checked="isChecked(facet.code, value.code)"
-                                @change="toggle(facet.code, value.code)" />
-                            {{ value.value }}
-                        </span>
-                        <span class="text-xs text-slate-400">{{ value.count }}</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="border-t border-slate-100 pt-3">
-                <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                    <input type="checkbox" v-model="inStock" class="accent-blue-600" />
-                    Len skladom
-                </label>
-            </div>
-
-            <div class="border-t border-slate-100 pt-3">
-                <p class="mb-1.5 text-sm font-semibold text-slate-700">Cena s DPH</p>
-                <div class="flex items-center gap-2">
-                    <input v-model="priceFrom" type="number" min="0" placeholder="od" @change="syncQuery"
-                        class="w-full rounded border border-slate-300 px-2 py-1 text-sm" />
-                    <span class="text-slate-400">–</span>
-                    <input v-model="priceTo" type="number" min="0" placeholder="do" @change="syncQuery"
-                        class="w-full rounded border border-slate-300 px-2 py-1 text-sm" />
-                </div>
-            </div>
-        </div>
-    </section>
+</details>
 </template>

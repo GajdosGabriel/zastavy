@@ -4,9 +4,9 @@ import gabrielImage from "../../assets/images/gabriel.jpg";
 </script>
 
 <template>
-    <section class="bg-slate-200 px-3">
+    <section class="mb-6 bg-slate-200 px-3">
         <div class="container mx-auto border-x border-b border-slate-300 bg-white shadow-sm">
-            <div class="grid items-center gap-3 px-3 py-3 md:grid-cols-12 md:px-6">
+            <div class="grid items-center gap-6 px-3 py-6 md:grid-cols-12 md:px-6">
                 <div class="md:col-span-8">
                     <img
                         :src="headerImage"

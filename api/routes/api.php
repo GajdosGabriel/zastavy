@@ -196,3 +196,32 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
         Route::put('coupon-settings', [CouponSettingsController::class, 'update'])->name('admin.coupon-settings.update');
     });
 });
+
+
+// Rozvoj predaja: verejné odkazy vyžadujú samostatný token v hlavičke.
+Route::get('catalog-categories', function () {
+ return \App\Models\Category::whereHas('products', fn($q)=>$q->where('published',true))->orderBy('name')->get(['id','name','slug']);
+});
+Route::middleware('throttle:30,1,sales-public:')->group(function(){
+ Route::get('public-orders/{uuid}/reorder',[\App\Http\Controllers\Api\ReorderController::class,'publicShow']);
+ Route::post('quote-requests',[\App\Http\Controllers\Api\SalesQuoteController::class,'store'])->middleware('throttle:5,1,quote-requests:');
+ Route::get('public-quotes/{uuid}',[\App\Http\Controllers\Api\SalesQuoteController::class,'publicShow']);
+ Route::post('public-quotes/{uuid}/accept',[\App\Http\Controllers\Api\SalesQuoteController::class,'accept']);
+ Route::get('public-quotes/{uuid}/files/{attachment}',[\App\Http\Controllers\Api\SalesQuoteController::class,'file']);
+ Route::get('public-artworks/{uuid}',[\App\Http\Controllers\Api\ProductionController::class,'publicShow']);
+ Route::post('public-artworks/{uuid}/decision',[\App\Http\Controllers\Api\ProductionController::class,'decision']);
+ Route::get('public-artworks/{uuid}/files/{version}',[\App\Http\Controllers\Api\ProductionController::class,'file']);
+});
+Route::middleware(['auth:sanctum',DashboardMiddleware::class])->group(function(){
+ Route::get('orders/{order}/reorder',[\App\Http\Controllers\Api\ReorderController::class,'show']);
+ Route::get('sales-quotes',[\App\Http\Controllers\Api\SalesQuoteController::class,'index']);
+ Route::get('sales-quotes/{quote}',[\App\Http\Controllers\Api\SalesQuoteController::class,'show']);
+ Route::post('sales-quotes/{quote}/offer',[\App\Http\Controllers\Api\SalesQuoteController::class,'offer']);
+ Route::post('sales-quotes/{quote}/share',[\App\Http\Controllers\Api\SalesQuoteController::class,'share']);
+ Route::post('sales-quotes/{quote}/withdraw',[\App\Http\Controllers\Api\SalesQuoteController::class,'withdraw']);
+ Route::get('production',[\App\Http\Controllers\Api\ProductionController::class,'index']);
+ Route::get('orders/{order}/production',[\App\Http\Controllers\Api\ProductionController::class,'show']);
+ Route::put('orders/{order}/production',[\App\Http\Controllers\Api\ProductionController::class,'update']);
+ Route::post('orders/{order}/artworks',[\App\Http\Controllers\Api\ProductionController::class,'upload']);
+ Route::post('orders/{order}/artworks/share',[\App\Http\Controllers\Api\ProductionController::class,'share']);
+});

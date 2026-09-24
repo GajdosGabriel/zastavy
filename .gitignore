@@ -58,3 +58,6 @@ Thumbs.db
 # Nové databázové exporty patria do riadených záloh, nie do Gitu.
 *.sql
 *.sql.gz
+
+# Súkromné zákaznícke prílohy a grafické podklady sú runtime dáta.
+**/storage/app/private/

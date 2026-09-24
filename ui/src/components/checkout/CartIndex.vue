@@ -112,6 +112,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
 <template>
     <BaseLayout>
         <template #main>
+
             <div class="page-body col-span-12">
 
                 <!-- Hlavička -->

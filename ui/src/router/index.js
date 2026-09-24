@@ -15,6 +15,12 @@ import { applyRouteSeo, DEFAULT_TITLE, DEFAULT_DESCRIPTION } from '../models/seo
 
 
 const routes = [
+    {path:'/dopyt',name:'sales.request',component:()=>import('../components/sales/QuoteRequest.vue'),meta:{title:'Cenová ponuka'}},
+    {path:'/ponuka/:uuid',name:'sales.quote.public',component:()=>import('../components/sales/QuoteView.vue'),meta:{title:'Cenová ponuka'}},
+    {path:'/predaj',name:'sales.index',component:()=>import('../components/sales/SalesDashboard.vue'),meta:{title:'Ponuky a výroba'}},
+    {path:'/predaj/ponuky/:id',name:'sales.quote',component:()=>import('../components/sales/QuoteView.vue'),meta:{title:'Nacenenie ponuky'}},
+    {path:'/vyroba/:orderId',name:'production.show',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Plán výroby'}},
+    {path:'/grafika/:uuid',name:'artwork.public',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Schválenie grafiky'}},
     ...product,
     ...order,
     ...customer,

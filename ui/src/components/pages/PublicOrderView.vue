@@ -1,4 +1,5 @@
 <script setup>
+import ReorderButton from '../sales/ReorderButton.vue';
 import { computed, ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import axiosInstance from '../../axiosInstance';
@@ -51,6 +52,7 @@ const hasPrice = (products) => products?.some(p => p.price);
                 <!-- Order detail -->
                 <div v-else class="mx-auto max-w-3xl space-y-6">
 
+<ReorderButton :endpoint="'/public-orders/'+order.uuid+'/reorder'" />
                     <!-- Header -->
                     <div class="rounded-md border border-gray-200 bg-white shadow-sm">
                         <div class="border-b border-gray-100 bg-gray-50 px-6 py-5">

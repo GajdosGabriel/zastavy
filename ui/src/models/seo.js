@@ -152,7 +152,7 @@ export const applyRouteSeo = (route) => {
     applySeo({
         title: route.meta?.title,
         description: route.meta?.description,
-        path: route.fullPath?.split('?')[0] ?? route.path,
+        path: route.fullPath?.split(/[?#]/)[0] ?? route.path,
         noindex: !(route.meta?.indexable ?? INDEXABLE_ROUTES.has(route.name)),
     });
 };

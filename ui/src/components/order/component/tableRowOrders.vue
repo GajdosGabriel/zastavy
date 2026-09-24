@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from "vue";
 import PanelDropdown from "../../layout/PanelDropdown.vue";
+import TruncatedText from "../../layout/TruncatedText.vue";
 import iconStar from "../../../components/icons/star.vue";
 import noticeLabel from "./noticeLabel.vue";
 import shippingButton from "./shippingButton.vue";
@@ -95,13 +96,13 @@ const dropdownItems = computed(() => {
         <td class="tbody_td min-w-64 relative cursor-pointer hover:text-blue-800">
             <router-link :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }">
                 <div v-if="order.customer.company" class="font-bold">
-                    {{ order.customer.company.substring(0, 30) }}
+                    <TruncatedText :text="order.customer.company" />
                 </div>
                 <div v-else class="font-semibold">
-                    {{ order.customer.name }}
+                    <TruncatedText :text="order.customer.name" />
                 </div>
                 <div class="font-semibold text-gray-600">
-                    {{ order.customer.city }}
+                    <TruncatedText :text="order.customer.city" />
                     <span v-if="order.note"
                         class="absolute right-2 rounded bg-amber-500 px-2 text-xs text-white">
                         Poznámka

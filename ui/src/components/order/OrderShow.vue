@@ -1,4 +1,5 @@
 <script setup>
+import ReorderButton from '../sales/ReorderButton.vue';
 import BaseLayout from "../layout/BaseLayout.vue";
 import useOrders from "../../store/StoreOrders";
 import useOrderProducts from "../../store/StoreOrderProducts";
@@ -82,6 +83,8 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
 
             <div class="page-body col-span-12">
 
+<ReorderButton :endpoint="'/orders/'+orderId+'/reorder'" />
+<router-link v-if="getOrder.permissions?.update?.allowed" :to="'/vyroba/'+orderId" class="text-blue-700 underline">Grafika a plán výroby</router-link>
                 <div class="mb-4">
                     <OrderCustomerCard :customer="customer" :user="getOrder.user" :order="getOrder" />
                 </div>

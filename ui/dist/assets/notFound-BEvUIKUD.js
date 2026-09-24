@@ -1,0 +1,1 @@
+import{_ as o}from"./BaseLayout-B3ni7XZD.js";import{G as r,c as e,w as n,a as s,o as t}from"./index-DdnAAYAo.js";const p=r({__name:"notFound",setup(i){return(c,a)=>(t(),e(o,null,{main:n(()=>[...a[0]||(a[0]=[s("div",{class:"p-3 order-first"},[s("div",{class:"md:grid grid-cols-2 gap-8"}," Stránka sa nenašla ")],-1)])]),_:1}))}});export{p as default};

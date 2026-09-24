@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import PanelDropdown from "../../layout/PanelDropdown.vue";
+import TruncatedText from "../../layout/TruncatedText.vue";
 
 const props = defineProps(["user"]);
 
@@ -39,11 +40,11 @@ const dropdownItems = computed(() => [
         <td class="tbody_td">
             <div class="text-sm font-medium text-gray-900">
                 <router-link :to="{ name: 'users.show', params: { userId: user.id } }">
-                    {{ fullName(user) }}
+                    <TruncatedText :text="fullName(user)" />
                 </router-link>
             </div>
             <div v-if="user.position" class="text-sm text-gray-500">
-                {{ user.position }}
+                <TruncatedText :text="user.position" />
             </div>
             <!-- <div v-if="user.firstName || user.lastName" class="text-sm text-gray-500">
                 {{ user.username || "-" }}
@@ -51,13 +52,13 @@ const dropdownItems = computed(() => [
         </td>
 
         <td class="tbody_td">
-            <div>{{ user.email || "-" }}</div>
+            <div><TruncatedText :text="user.email || '-'" /></div>
             <div class="text-sm text-gray-500">{{ user.phone || "-" }}</div>
         </td>
 
         <td class="tbody_td">
-            <div>{{ user.customer?.company || "-" }}</div>
-            <div class="text-sm text-gray-500">{{ user.customer?.city || "" }}</div>
+            <div><TruncatedText :text="user.customer?.company || '-'" /></div>
+            <div class="text-sm text-gray-500"><TruncatedText :text="user.customer?.city || ''" /></div>
         </td>
 
         <td class="tbody_td">
