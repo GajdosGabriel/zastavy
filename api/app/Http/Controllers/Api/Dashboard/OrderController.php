@@ -98,7 +98,7 @@ class OrderController extends Controller
 
         DB::transaction(function () use ($order, $request) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
-            $changes = $request->safe()->only(['shipping_method_id', 'payment_method_id', 'status', 'isOpened', 'note', 'wants_coupon']);
+            $changes = $request->safe()->only(['shipping_method_id', 'payment_method_id', 'status', 'isOpened', 'note', 'wants_coupon', 'price_adjustment']);
             if (array_key_exists('shipping_method_id', $changes)) {
                 $method = ShippingMethod::where('active', true)->findOrFail($changes['shipping_method_id']);
                 $changes['shipping_price'] = $method->resolvePrice($order->priceSum());
@@ -220,6 +220,9 @@ class OrderController extends Controller
             ];
         }
 
+        if ($request->has('price_adjustment') && $request->input('price_adjustment') != $order->price_adjustment) {
+            $changes[] = ['label' => 'Úprava ceny objednávky', 'old' => 'Pôvodná úprava', 'new' => $request->input('price_adjustment.label') ?: 'Aktualizovaná cena'];
+        }
         if ($request->boolean('has_product_changes')) {
             $changes[] = ['label' => 'Položky objednávky', 'old' => '—', 'new' => 'Pridané nové položky'];
         }

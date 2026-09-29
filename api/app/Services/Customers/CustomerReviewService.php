@@ -207,10 +207,14 @@ class CustomerReviewService
         // vyriešil, nemá čo svietiť v zozname pre človeka.
         if ($applied !== []) {
             $customer->refresh();
+            $fixedFields = array_column($applied, 'field');
             $issues = array_merge(
                 $this->rules->check($customer),
                 $this->registryIssues($customer, $registry),
-                array_values(array_filter($issues, static fn (array $i) => ($i['source'] ?? '') === 'ai')),
+                array_values(array_filter(
+                    $issues,
+                    static fn (array $i) => ($i['source'] ?? '') === 'ai' && ! in_array($i['field'] ?? '', $fixedFields, true),
+                )),
             );
         }
 
@@ -238,84 +242,6 @@ class CustomerReviewService
     }
 
     // -------------------------------------------------------------- opravy
-
-    /**
-     * Prijme návrhy, ktoré admin odklikol v detaile zákazníka.
-     *
-     * @param  array<int, int>  $indexes  poradové čísla výhrad v `issues`
-     * @return array<int, array<string, mixed>>  čo sa naozaj zmenilo
-     */
-    public function applySuggestions(CustomerReview $review, array $indexes, ?int $userId = null): array
-    {
-        $customer = $review->customer;
-
-        if ($customer === null) {
-            return [];
-        }
-
-        $issues = (array) ($review->issues ?? []);
-        $changes = [];
-
-        foreach ($indexes as $index) {
-            $issue = $issues[$index] ?? null;
-            $suggested = $issue['suggested'] ?? null;
-            $field = $issue['field'] ?? null;
-
-            if ($issue === null || $field === null || ! in_array($field, CustomerDataRules::FIELDS, true)) {
-                continue;
-            }
-
-            // Nález bez návrhu sa prijať nedá — nie je čo zapísať. Tie sú
-            // v paneli len ako informácia a admin ich prepíše ručne.
-            if ($suggested === null || $suggested === '') {
-                continue;
-            }
-
-            $before = $this->rules->raw($customer, $field);
-
-            if ($before === $suggested) {
-                continue;
-            }
-
-            $changes[] = [
-                'field' => $field,
-                'from' => $before,
-                'to' => $suggested,
-                'fix' => $issue['fix'] ?? 'manual',
-                'source' => $issue['source'] ?? 'rule',
-                'by' => $userId,
-                'at' => now()->toIso8601String(),
-            ];
-
-            $this->write($customer, $field, $suggested);
-        }
-
-        if ($changes === []) {
-            return [];
-        }
-
-        $this->persist($customer);
-
-        // Prijatý návrh musí zo zoznamu zmiznúť, inak by ho admin videl aj po
-        // kliknutí. Zvyšné nálezy sa prepočítajú z už opraveného riadku.
-        $review->forceFill([
-            'applied' => array_merge((array) ($review->applied ?? []), $changes),
-            'issues' => $this->rules->sort($this->dedupe(array_merge(
-                $this->rules->check($customer),
-                // Nálezy registra a AI sa neprepočítavajú (to by bolo ďalšie
-                // volanie von); ostávajú okrem tých na poliach, ktoré sa práve
-                // opravili — tie sú vybavené.
-                array_values(array_filter(
-                    $issues,
-                    static fn (array $i) => in_array($i['source'] ?? '', ['ai', 'registry'], true)
-                        && ! in_array($i['field'] ?? '', array_column($changes, 'field'), true),
-                )),
-            ))),
-            'fingerprint' => $this->rules->fingerprint($customer),
-        ])->save();
-
-        return $changes;
-    }
 
     /**
      * Vráti automatickú opravu späť.
@@ -457,9 +383,66 @@ class CustomerReviewService
         }
 
         $changes = array_merge($changes, $this->fillTaxIdsFromRegistry($customer, $registry, $allowed));
+        $changes = array_merge($changes, $this->applySuggestedValues($customer, $issues));
 
         if ($changes !== []) {
             $this->persist($customer);
+        }
+
+        return $changes;
+    }
+
+    /**
+     * Zapíše návrhy (register, pravidlá, AI) bez čakania na klik admina.
+     *
+     * Na jedno pole sa berie jeden návrh, v poradí register → pravidlo → AI.
+     * Každá zmena ide do `applied`, takže sa dá v detaile zákazníka vrátiť.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function applySuggestedValues(Customer $customer, array $issues): array
+    {
+        if (! config('customer_review.apply_suggestions', true)) {
+            return [];
+        }
+
+        $skip = (array) config('customer_review.suggestion_skip', []);
+        $priority = ['registry' => 0, 'rule' => 1, 'ai' => 2];
+
+        usort($issues, static fn (array $a, array $b) => ($priority[$a['source'] ?? ''] ?? 9) <=> ($priority[$b['source'] ?? ''] ?? 9));
+
+        $changes = [];
+        $done = [];
+
+        foreach ($issues as $issue) {
+            $field = $issue['field'] ?? null;
+            $after = $issue['suggested'] ?? null;
+
+            if ($field === null || isset($done[$field]) || ! in_array($field, CustomerDataRules::FIELDS, true)) {
+                continue;
+            }
+
+            if ($after === null || $after === '' || $issue['fix'] !== null || in_array($issue['key'] ?? '', $skip, true)) {
+                continue;
+            }
+
+            $before = $this->rules->raw($customer, $field);
+
+            if ($before === $after) {
+                continue;
+            }
+
+            $this->write($customer, $field, $after);
+            $done[$field] = true;
+
+            $changes[] = [
+                'field' => $field,
+                'from' => $before,
+                'to' => $after,
+                'fix' => 'suggestion',
+                'source' => $issue['source'] ?? 'rule',
+                'at' => now()->toIso8601String(),
+            ];
         }
 
         return $changes;
@@ -757,8 +740,7 @@ class CustomerReviewService
                 'message' => trim((string) ($issue['message'] ?? '')),
                 'current' => $current,
                 'suggested' => $suggested,
-                // AI návrh sa nikdy neaplikuje sám. Je to odhad, nie údaj
-                // zo zdroja — potvrdiť ho musí človek.
+                // Zapisuje ho applySuggestedValues() (vrátiteľne), nie autofix.
                 'fix' => null,
             ];
         }

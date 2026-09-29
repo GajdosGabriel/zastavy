@@ -57,7 +57,9 @@ class PublicOrderController extends Controller
                 'shipping_price'  => $shipping,
                 'payment_fee'     => $fee,
                 'discount_amount' => $discount,
-                'grand_total'     => round($subtotal + $shipping + $fee - $discount, 2),
+                'price_adjustment' => $order->price_adjustment,
+                'adjustment_amount' => $order->adjustmentAmount(),
+                'grand_total' => $order->grandTotal(),
             ],
         ]);
     }

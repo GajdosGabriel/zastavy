@@ -137,7 +137,7 @@ class DashboardService
             ->join('order_products', 'order_products.id', '=', 'stocks.order_product_id')
             ->joinSub($this->base($user)->select('orders.id'), 'o', 'o.id', '=', 'stocks.order_id')
             ->whereNull('stocks.deleted_at')
-            ->whereBetween('shippings.created_at', [$from, $to])
+            ->whereBetween('shippings.dispatched_at', [$from, $to])
             ->selectRaw('count(distinct stocks.order_id) as order_count')
             ->selectRaw('coalesce(sum(stocks.quantity * coalesce(order_products.price, 0)), 0) as value')
             ->first();
@@ -174,10 +174,10 @@ class DashboardService
             ->join('order_products', 'order_products.id', '=', 'stocks.order_product_id')
             ->joinSub($this->base($user)->select('orders.id'), 'o', 'o.id', '=', 'stocks.order_id')
             ->whereNull('stocks.deleted_at')
-            ->where('shippings.created_at', '>=', $from)
-            ->selectRaw('date(shippings.created_at) as day')
+            ->where('shippings.dispatched_at', '>=', $from)
+            ->selectRaw('date(shippings.dispatched_at) as day')
             ->selectRaw('coalesce(sum(stocks.quantity * coalesce(order_products.price, 0)), 0) as value')
-            ->groupByRaw('date(shippings.created_at)')
+            ->groupByRaw('date(shippings.dispatched_at)')
             ->get()
             ->keyBy('day');
 

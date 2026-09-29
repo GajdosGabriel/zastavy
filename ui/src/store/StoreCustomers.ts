@@ -165,38 +165,6 @@ export const useCustomers = defineStore("customers", {
         },
 
         /**
-         * Prijme vybrané návrhy.
-         *
-         * Posielajú sa iba poradové čísla výhrad, nie hodnoty — čo sa zapíše,
-         * rozhoduje server podľa toho, čo kontrola naozaj navrhla.
-         */
-        async applyReviewSuggestions(customerId: number | string, indexes: number[]): Promise<string> {
-            this.reviewLoading = true;
-
-            try {
-                const response = await axiosInstance.put(
-                    PAGE_CUSTOMER.URL + "/" + customerId + "/review",
-                    { issues: indexes }
-                );
-
-                this.review = response.data.data ?? null;
-
-                // Formulár drží rozpracované údaje zákazníka; po zápise musí
-                // ukázať to, čo je naozaj v databáze, inak by uloženie
-                // formulára opravu hneď prepísalo späť.
-                if (response.data.customer) {
-                    this.customer = { ...this.customer, ...response.data.customer };
-                }
-
-                return "";
-            } catch (e: any) {
-                return e.response?.data?.message || "Návrh sa nepodarilo použiť.";
-            } finally {
-                this.reviewLoading = false;
-            }
-        },
-
-        /**
          * Vráti automatickú opravu späť.
          *
          * Server odmietne vrátenie, ak hodnotu medzitým zmenil človek — jeho

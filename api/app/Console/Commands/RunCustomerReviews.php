@@ -152,7 +152,7 @@ class RunCustomerReviews extends Command
 
     private function notifyAdmins(array $records, int $total): void
     {
-        if ($records === [] || $this->option('no-mail')) {
+        if ($records === [] || $this->option('no-mail') || ! config('customer_review.notify', false)) {
             return;
         }
 

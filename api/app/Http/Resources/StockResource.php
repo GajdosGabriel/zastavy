@@ -38,9 +38,9 @@ class StockResource extends JsonResource
                 ? Carbon::parse($this->shipping->created_at)->diffForHumans()
                 : Carbon::parse($this->created_at)->diffForHumans(),
             'created_at_human'          => Carbon::parse($this->created_at)->diffForHumans(),
-            'name'                      => $product?->name,
+            'name'                      => $this->orderProduct?->product_details->name ?? $product?->name,
             'code'                      => $variant?->code ?? $product?->code,
-            'product_unit_value'        => $product?->unit_value,
+            'product_unit_value'        => $this->orderProduct?->product_details->unit_value ?? $product?->unit_value,
             // Tabuľka zobrazuje znamienko podľa typu — množstvo posielame kladné.
             'quantity'                  => abs((int) $this->quantity),
             'price'                     => $this->price,

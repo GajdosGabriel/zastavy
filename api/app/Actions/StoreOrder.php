@@ -51,6 +51,7 @@ class StoreOrder implements StoreOrderContract
             'payment_fee'        => $paymentFee,
             'coupon_id'          => $couponId,
             'discount_amount'    => $discountAmount,
+            'price_adjustment' => $this->isStaffRequest() ? $this->request->input('price_adjustment') : null,
             'note'               => $this->request->input('note') ?: null,
             // Uplatnenie kupónu a žiadosť o nový sa vylučujú
             'wants_coupon'       => $couponId ? false : (bool) $this->request->input('wants_coupon', false),
@@ -139,6 +140,13 @@ class StoreOrder implements StoreOrderContract
             ->keyBy('id');
 
         return $requested->map(function ($item, $index) use ($variants, $fallbackVariants, $isStaff) {
+            if (!empty($item['is_custom']) && $isStaff) {
+                return [
+                    'is_custom' => true, 'product_id' => null,
+                    'product_snapshot' => ['name' => $item['name'], 'unit_value' => $item['unit_value'] ?? 'ks', 'code' => null, 'vat' => (int) $item['vat'], 'variant_name' => null, 'variant_code' => null],
+                    'quantity' => (int) $item['input_order'], 'price' => round((float) $item['active_price'], 2),
+                ];
+            }
             $variant = isset($item['variant_id'])
                 ? $variants->get($item['variant_id'])
                 : $fallbackVariants->get($item['id'] ?? null)?->defaultVariant;

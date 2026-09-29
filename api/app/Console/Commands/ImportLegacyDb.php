@@ -566,6 +566,7 @@ class ImportLegacyDb extends Command
                         'id'         => $r->id,
                         'status'     => 'active',
                         'order_id'   => $r->order_id,
+                        'dispatched_at' => $r->created_at,
                         'created_at' => $r->created_at,
                         'updated_at' => $r->updated_at,
                     ])->toArray()
@@ -649,6 +650,7 @@ class ImportLegacyDb extends Command
                 'id'         => $maxShippingId,
                 'status'     => 'active',
                 'order_id'   => $orderId,
+                'dispatched_at' => $date,
                 'created_at' => $date,
                 'updated_at' => $date,
             ];

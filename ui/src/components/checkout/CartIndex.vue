@@ -1,4 +1,8 @@
 <script setup>
+import CustomOrderItem from '../forms/CustomOrderItem.vue';
+import OrderPriceAdjustment from '../forms/OrderPriceAdjustment.vue';
+import { adjustmentAmount } from '../../models/orderPricing';
+import useCheckoutOptions from '../../store/StoreCheckoutOptions';
 import BaseLayout from "../layout/BaseLayout.vue";
 import { computed, onMounted, ref } from "vue";
 import { storeToRefs } from "pinia";
@@ -32,6 +36,10 @@ const { getFieldErrors } = storeToRefs(useErrors());
 const { getUser } = storeToRefs(useUsers());
 const isSubmitting = ref(false);
 
+const isStaff = computed(() => getUser.value?.roles?.some(role => ['super-admin', 'admin', 'manager', 'sales', 'warehouse'].includes(role)));
+const { priceAdjustment } = storeToRefs(checkoutsStore);
+const checkoutOptions = useCheckoutOptions();
+const adjustment = computed(() => isStaff.value ? adjustmentAmount(getCheckout.value.grandTotal, priceAdjustment.value, checkoutOptions.discountAmount) : 0);
 const isSuperAdmin = computed(() => Boolean(getUser.value?.roles?.includes("super-admin")));
 const notifyCustomer = ref(true);
 const showSubmitModal = ref(false);
@@ -129,6 +137,8 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                     </router-link>
                 </div>
 
+                <CustomOrderItem v-if="isStaff" @add="checkoutsStore.submitCartToIndex($event)" />
+                <OrderPriceAdjustment v-if="isStaff && getCarts.length" v-model="priceAdjustment" :subtotal="getCheckout.grandTotal" :coupon="checkoutOptions.discountAmount" />
                 <!-- Prázdny košík -->
                 <div v-if="!getCarts.length" class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-4 h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
@@ -332,7 +342,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                     <h2 class="text-sm font-semibold text-gray-700">Doprava a platba</h2>
                                 </div>
                                 <div class="px-5 py-4">
-                                    <ShippingPaymentSelector :cartTotal="getCheckout.grandTotal" />
+                                    <ShippingPaymentSelector :cartTotal="getCheckout.grandTotal" :adjustment="adjustment" />
 
                                     <button
                                         type="button"

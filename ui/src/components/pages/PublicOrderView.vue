@@ -162,6 +162,7 @@ const hasPrice = (products) => products?.some(p => p.price);
                                         </td>
                                         <td class="px-6 py-2 text-right text-sm text-gray-600">{{ formatDecimal(order.payment_fee) }} €</td>
                                     </tr>
+                                    <tr v-if="order.adjustment_amount"><td class="px-6 py-2 text-sm" colspan="3">{{ order.price_adjustment?.label || (order.adjustment_amount < 0 ? 'Zľava' : 'Prirážka') }}</td><td class="px-6 py-2 text-right text-sm font-semibold">{{ formatDecimal(order.adjustment_amount) }} €</td></tr>
                                     <tr v-if="order.discount_amount > 0">
                                         <td colspan="3" class="px-6 py-2 text-right text-sm text-green-600">Zľava</td>
                                         <td class="px-6 py-2 text-right text-sm font-semibold text-green-600">−{{ formatDecimal(order.discount_amount) }} €</td>

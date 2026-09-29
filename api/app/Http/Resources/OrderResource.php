@@ -47,6 +47,12 @@ class OrderResource extends JsonResource
             'user' => $this->user ? new UserResource($this->user) : null,
             'shippings' => ShippingResource::collection($this->shippings),
             'price_sum' => $this->priceSum(),
+            'price_adjustment' => $this->price_adjustment,
+            'adjustment_amount' => $this->adjustmentAmount(),
+            'grand_total' => $this->grandTotal(),
+            'shipping_price' => (float) $this->shipping_price,
+            'payment_fee' => (float) $this->payment_fee,
+            'discount_amount' => (float) $this->discount_amount,
             'note'         => $this->note,
             'wants_coupon' => (bool) $this->wants_coupon,
             'issued_coupon' => $this->wants_coupon && $this->issuedCoupon ? [

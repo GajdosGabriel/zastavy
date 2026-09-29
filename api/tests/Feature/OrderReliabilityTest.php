@@ -237,7 +237,8 @@ class OrderReliabilityTest extends TestCase
             $this->putJson('/api/orders/'.$order->id, ['makeStorned' => true, 'notify_customer' => true])->assertOk();
         }
         if ($operation === 'ship') {
-            $this->postJson('/api/orders/'.$order->id.'/shippings', ['notify_customer' => true])->assertSuccessful();
+            $shippingId = $this->postJson('/api/orders/'.$order->id.'/shippings', ['notify_customer' => true, 'items' => $order->orderProducts->map(fn ($item) => ['order_product_id' => $item->id, 'quantity' => $item->quantity])->all()])->assertSuccessful()->json('data.id');
+            $this->putJson('/api/orders/'.$order->id.'/shippings/'.$shippingId, ['notify_customer' => true])->assertSuccessful();
         }
         if ($operation === 'delivery') {
             $this->putJson('/api/public-orders/'.$order->uuid.'/delivery-address?token='.$order->delivery_token,

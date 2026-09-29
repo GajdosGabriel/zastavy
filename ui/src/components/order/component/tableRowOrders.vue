@@ -112,7 +112,7 @@ const dropdownItems = computed(() => {
         </td>
 
         <td class="tbody_td whitespace-nowrap text-right font-bold">
-            {{ formatDecimal(order.price_sum) }} €
+            {{ formatDecimal(order.grand_total ?? order.price_sum) }} €
         </td>
 
         <td class="tbody_td min-w-36">

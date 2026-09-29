@@ -47,6 +47,12 @@ class OrderExpedition extends Notification implements ShouldQueue
             $this->shipping->load(['stocks.orderProduct.product']);
         }
 
+        if ($this->shipping?->prepared_items) {
+            return (new MailMessage)->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
+                ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
+                ->subject('Potvrdenie odoslania objednávky č. '.$this->order->serial_number)
+                ->view('emails.orderDispatched', ['order' => $this->order, 'shipping' => $this->shipping]);
+        }
         $isPartial = !$this->order->isFinished();
 
         return (new MailMessage)

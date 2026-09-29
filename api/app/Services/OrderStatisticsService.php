@@ -44,8 +44,7 @@ class OrderStatisticsService
     {
         $ordersQuery = $this->queryFor($user, $orderFilters);
         $notificationMissingCount = (clone $ordersQuery)
-            ->whereHas('shippings')
-            ->whereDoesntHave('shippings.notices')
+            ->whereHas('shippings', fn ($shipping) => $shipping->whereNotNull('dispatched_at')->whereDoesntHave('notices', fn ($notice) => $notice->where('notice', '!=', 'preparation_email')))
             ->count();
         $orderRows = $this->orderRows(clone $ordersQuery);
         $productRows = $this->productRows(clone $ordersQuery);
@@ -65,8 +64,7 @@ class OrderStatisticsService
     {
         $ordersQuery = $this->queryFor($user, $orderFilters);
         $notificationMissingCount = (clone $ordersQuery)
-            ->whereHas('shippings')
-            ->whereDoesntHave('shippings.notices')
+            ->whereHas('shippings', fn ($shipping) => $shipping->whereNotNull('dispatched_at')->whereDoesntHave('notices', fn ($notice) => $notice->where('notice', '!=', 'preparation_email')))
             ->count();
 
         return [
@@ -81,8 +79,7 @@ class OrderStatisticsService
         $ordersQuery = $this->queryFor($user, $orderFilters);
         $unopenedCount = (clone $ordersQuery)->where('isOpened', 0)->count();
         $notificationMissingCount = (clone $ordersQuery)
-            ->whereHas('shippings')
-            ->whereDoesntHave('shippings.notices')
+            ->whereHas('shippings', fn ($shipping) => $shipping->whereNotNull('dispatched_at')->whereDoesntHave('notices', fn ($notice) => $notice->where('notice', '!=', 'preparation_email')))
             ->count();
 
         return [
@@ -212,7 +209,7 @@ class OrderStatisticsService
 
     /**
      * Hodnota tovaru expedovaného vo zvolenom období.
-     * Počíta sa z dodacích listov (shippings.created_at) a ich skladových pohybov,
+     * Počíta sa z dodacích listov (shippings.dispatched_at) a ich skladových pohybov,
      * takže pri objednávke expedovanej vo viacerých dňoch započíta len daný deň.
      */
     private function shippedSummary(Builder $ordersQuery, ?string $shippedAt): ?array
@@ -261,7 +258,7 @@ class OrderStatisticsService
             ->whereNull('order_products.deleted_at')
             ->whereNull('products.deleted_at')
             ->whereIn('stocks.order_id', $orderIds)
-            ->whereBetween('shippings.created_at', $range)
+            ->whereBetween('shippings.dispatched_at', $range)
             ->select('order_products.product_id', 'products.name', 'products.unit_value')
             ->selectRaw('SUM(stocks.quantity) as shipped_quantity')
             ->selectRaw('SUM(stocks.quantity * COALESCE(order_products.price, 0)) as shipped_total')
@@ -286,7 +283,7 @@ class OrderStatisticsService
         // Počet objednávok expedovaných v danom období (unikátne objednávky, nie riadky).
         $base['order_count'] = DB::table('shippings')
             ->whereIn('order_id', $orderIds)
-            ->whereBetween('created_at', $range)
+            ->whereBetween('dispatched_at', $range)
             ->distinct()
             ->count('order_id');
 

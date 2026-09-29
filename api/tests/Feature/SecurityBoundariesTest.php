@@ -113,7 +113,7 @@ class SecurityBoundariesTest extends TestCase
             'quantity' => 2, 'price' => 10, 'total' => 20]);
         $this->getJson('/api/orders/'.$order->id)->assertOk();
         $this->putJson('/api/orders/'.$order->id, ['status' => 'processing'])->assertStatus($update ? 200 : 403);
-        $this->postJson('/api/orders/'.$order->id.'/shippings', ['notify_customer' => false])->assertStatus($ship ? 201 : 403);
+        $this->postJson('/api/orders/'.$order->id.'/shippings', ['notify_customer' => false, 'items' => $order->orderProducts->map(fn ($item) => ['order_product_id' => $item->id, 'quantity' => $item->quantity])->all()])->assertStatus($ship ? 201 : 403);
         $return = $order->orderReturns()->create(['reason' => 'other', 'status' => 'pending', 'created_by' => $user->id]);
         $this->postJson('/api/orders/'.$order->id.'/returns/'.$return->id.'/process', ['notify_customer' => false])
             ->assertStatus($ship ? 200 : 403);

@@ -1,4 +1,7 @@
 <script setup>
+import CustomOrderItem from '../forms/CustomOrderItem.vue';
+import OrderPriceAdjustment from '../forms/OrderPriceAdjustment.vue';
+import { adjustmentAmount } from '../../models/orderPricing';
 import { computed, onMounted, ref } from "vue";
 import BaseLayout from "../layout/BaseLayout.vue";
 import PageHeader from "../layout/page/pageHeader.vue";
@@ -32,6 +35,7 @@ const { getFieldErrors } = storeToRefs(errorsStore);
 const { setErrors, resetErrors } = errorsStore;
 
 const orderProducts = ref([]);
+const priceAdjustment = ref(null);
 const selectedProductId = ref("");
 const productSearch = ref("");
 const notifyCustomer = ref(true);
@@ -117,7 +121,8 @@ const applySavedAddress = (address) => {
 
 const { setOriginalData, markAsSaved } = useUnsavedChanges(() => ({
     customer: getCustomer.value,
-    orderProducts: orderProducts.value,
+    orderProducts: orderProducts.value.map(item => item.is_custom ? { ...item, id: null } : item),
+    price_adjustment: priceAdjustment.value,
     note: ordersStore.order?.note,
     shipping_method_id: selectedShippingId.value,
     payment_method_id: selectedPaymentId.value,
@@ -160,7 +165,7 @@ const shippingPrice = computed(() => {
 });
 
 const paymentFee = computed(() => parseFloat(selectedPayment.value?.fee ?? 0));
-const grandTotalWithExtras = computed(() => grandTotal.value + shippingPrice.value + paymentFee.value);
+const grandTotalWithExtras = computed(() => grandTotal.value + adjustmentAmount(grandTotal.value, priceAdjustment.value) + shippingPrice.value + paymentFee.value);
 
 const isCustomerComplete = computed(() =>
     requiredCustomerFields.every((field) => String(getCustomer.value?.[field] ?? "").trim())
@@ -225,7 +230,8 @@ const confirmSave = async (sendNotification = notifyCustomer.value) => {
 
     const order = await storeOrder({
         customer: getCustomer.value,
-        orderProducts: orderProducts.value,
+        orderProducts: orderProducts.value.map(item => item.is_custom ? { ...item, id: null } : item),
+    price_adjustment: priceAdjustment.value,
         note: ordersStore.order.note || null,
         notify_customer: Boolean(sendNotification),
         wants_coupon: wantsCoupon.value,
@@ -319,6 +325,8 @@ onMounted(async () => {
                                     </button>
                                 </div>
 
+                                <CustomOrderItem @add="orderProducts.push($event)" />
+                                <OrderPriceAdjustment v-model="priceAdjustment" :subtotal="grandTotal" />
                                 <!-- Tabuľka produktov -->
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full divide-y divide-gray-200">
@@ -342,13 +350,13 @@ onMounted(async () => {
                                                             class="h-12 w-12 shrink-0 rounded-lg border border-gray-200 object-cover"
                                                         />
                                                         <div>
-                                                            <p class="font-semibold text-gray-900">{{ product.name }}</p>
+                                                            <input v-if="product.is_custom" v-model="product.name" aria-label="Názov vlastnej položky" class="w-full rounded border-gray-300" /><p v-else class="font-semibold text-gray-900">{{ product.name }}</p>
                                                             <p class="text-xs text-gray-400">{{ product.code }}</p>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td class="px-4 py-3 text-right text-sm whitespace-nowrap text-gray-700">
-                                                    {{ formatDecimal(product.active_price) }} €
+                                                    <input v-if="product.is_custom" v-model.number="product.active_price" aria-label="Jednotková cena" type="number" min="0" step="0.01" class="w-24 rounded border-gray-300" /><span v-else>{{ formatDecimal(product.active_price) }} €</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     <div class="inline-flex items-center gap-1.5">

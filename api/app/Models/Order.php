@@ -22,6 +22,7 @@ class Order extends Model
 
     protected $casts = [
         'billing_snapshot' => 'array',
+        'price_adjustment' => 'array',
         'status' => OrderStatus::class,
         'delivery_token_expires_at' => 'datetime',
         'delivery_changed_at' => 'datetime',
@@ -281,6 +282,16 @@ class Order extends Model
         }
 
         return $this->publicUrl().'/adresa?token='.$this->delivery_token;
+    }
+
+    public function adjustmentAmount(): float
+    {
+        return \App\Support\OrderPricing::amount($this->priceSum(), $this->price_adjustment, (float) $this->discount_amount);
+    }
+
+    public function grandTotal(): float
+    {
+        return round(max(0, $this->priceSum() - (float) $this->discount_amount + $this->adjustmentAmount()) + (float) $this->shipping_price + (float) $this->payment_fee, 2);
     }
 
     public function priceSum()

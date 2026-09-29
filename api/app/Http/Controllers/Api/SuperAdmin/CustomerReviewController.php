@@ -13,11 +13,11 @@ use Illuminate\Support\Facades\Gate;
 /**
  * Posudok údajov zákazníka pre administráciu.
  *
- * Štyri veci, ktoré s ním admin robí: pozrie ho, pustí ho odznova, prijme
- * z neho návrhy, alebo ho odbaví ako „viem o tom, nechaj tak".
+ * Štyri veci, ktoré s ním admin robí: pozrie ho, pustí ho odznova, vráti
+ * automatickú opravu, alebo ho odbaví ako „viem o tom, nechaj tak".
  *
  * Autorizuje sa cez zákazníka, nie cez posudok — kto smie zákazníka upraviť,
- * smie prijať aj návrh na jeho údaje; nič viac tu nevzniká.
+ * smie aj vrátiť opravu jeho údajov; nič viac tu nevzniká.
  */
 class CustomerReviewController extends Controller
 {
@@ -64,40 +64,9 @@ class CustomerReviewController extends Controller
     }
 
     /**
-     * Prijme návrhy, ktoré admin odklikol.
-     *
-     * Poslať sa dajú len poradové čísla výhrad z posudku — nie hodnoty. Zápis
-     * tak nikdy nevychádza z toho, čo prišlo z prehliadača, ale z toho, čo
-     * kontrola naozaj navrhla.
-     */
-    public function update(Customer $customer, Request $request)
-    {
-        Gate::authorize('update', $customer);
-
-        $validated = $request->validate([
-            'issues' => 'required|array|min:1',
-            'issues.*' => 'integer|min:0',
-        ]);
-
-        $review = $this->service->reviewFor($customer);
-
-        if ($review === null) {
-            return response()->json(['message' => __('customer_review.messages.no_review')], 404);
-        }
-
-        $changes = $this->service->applySuggestions($review, $validated['issues'], $request->user()?->id);
-
-        return response()->json([
-            'data' => (new CustomerReviewResource($review->refresh()))->toArray($request),
-            'applied' => $changes,
-            'customer' => (new CustomerResource($customer->refresh()->load('users')))->toArray($request),
-        ]);
-    }
-
-    /**
      * Vráti automatické opravy späť.
      *
-     * Rovnako ako pri prijatí návrhu sa posielajú len poradové čísla —
+     * Posielajú sa len poradové čísla zmien —
      * hodnota, ktorá sa zapíše, je tá, čo je uložená v audite.
      */
     public function revert(Customer $customer, Request $request)

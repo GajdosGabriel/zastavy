@@ -18,6 +18,7 @@ class OrderProductResource extends JsonResource
         return [
             'id' => $this->id,
             'product_id' => $this->product_id,
+            'is_custom' => (bool) $this->is_custom,
             'order_id' => $this->order_id,
             'name' => $this->product_details->name,
             'product_variant_id' => $this->product_variant_id,

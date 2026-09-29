@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\ShippingMethod;
+use App\Rules\VatRule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -13,6 +14,7 @@ class CreateOrderRequest extends OrderRequest
     public function rules(): array
     {
         $rules = [
+            ...\App\Support\OrderPricing::rules((bool) $this->user('sanctum')?->isStaff()),
             'idempotency_key' => ['required', 'uuid'],
             'customer' => ['required', 'array'],
             'customer.id' => $this->user('sanctum')?->isStaff()
@@ -31,7 +33,12 @@ class CreateOrderRequest extends OrderRequest
             'customer_address_id' => $this->user('sanctum')?->isStaff()
                 ? ['nullable', 'integer'] : ['prohibited'],
             'orderProducts' => ['required', 'array', 'min:1'],
-            'orderProducts.*.id' => ['required', 'integer', Rule::exists('products', 'id')->whereNull('deleted_at')],
+            'orderProducts.*.id' => ['required_unless:orderProducts.*.is_custom,true', 'nullable', 'integer', Rule::exists('products', 'id')->whereNull('deleted_at')],
+            'orderProducts.*.is_custom' => $this->user('sanctum')?->isStaff() ? ['sometimes', 'boolean'] : ['prohibited'],
+            'orderProducts.*.name' => ['required_if:orderProducts.*.is_custom,true', 'string', 'max:200'],
+            'orderProducts.*.unit_value' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'orderProducts.*.vat' => ['required_if:orderProducts.*.is_custom,true', 'nullable', new VatRule()],
+            'orderProducts.*.active_price' => ['required_if:orderProducts.*.is_custom,true', 'numeric', 'min:0', 'max:999999'],
             'orderProducts.*.variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->whereNull('deleted_at')],
             'orderProducts.*.input_order' => ['required', 'integer', 'min:1', 'max:100000'],
             'note' => ['nullable', 'string', 'max:1000'],

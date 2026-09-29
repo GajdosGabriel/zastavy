@@ -17,6 +17,8 @@ class Shipping extends Model
 
     protected $casts = [
         'status' => ModelStatus::class,
+        'prepared_items' => 'array',
+        'dispatched_at' => 'datetime',
     ];
 
     public function stocks()

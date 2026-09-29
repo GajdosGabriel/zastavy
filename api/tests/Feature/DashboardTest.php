@@ -59,7 +59,7 @@ class DashboardTest extends TestCase
         ]);
 
         if ($shipped > 0) {
-            $shipping = $order->shippings()->create([]);
+            $shipping = $order->shippings()->create(['dispatched_at' => now()]);
             $order->stocks()->create([
                 'order_product_id' => $orderProduct->id,
                 'shipping_id'      => $shipping->id,

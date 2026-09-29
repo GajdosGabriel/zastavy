@@ -16,7 +16,7 @@ class ShippingNoticeController extends Controller
 
         $notifyType = $request->input('notifyType', 'email');
 
-        $shipping->notices()->create(['notice' => $notifyType]);
+        $shipping->notices()->create(['notice' => !$shipping->dispatched_at && $notifyType === 'email' ? 'preparation_email' : $notifyType]);
 
         if ($notifyType === 'email') {
             $shipping->loadMissing([
@@ -28,7 +28,7 @@ class ShippingNoticeController extends Controller
                 'order.orderProducts.stocks',
             ]);
 
-            $shipping->order->notifyCustomer(new OrderExpedition($shipping->order, $shipping));
+            $shipping->order->notifyCustomer(($shipping->dispatched_at ? new OrderExpedition($shipping->order, $shipping) : new \App\Notifications\OrderPreparing($shipping->order, $shipping)));
         }
 
         return response()->noContent();

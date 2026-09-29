@@ -6,6 +6,7 @@ import { useCheckoutOptions } from '../../store/StoreCheckoutOptions';
 
 const props = defineProps({
     cartTotal: { type: Number, default: 0 },
+    adjustment: { type: Number, default: 0 },
 });
 
 const store = useCheckoutOptions();
@@ -47,7 +48,7 @@ onMounted(async () => {
 
 const computedShippingPrice = () => shippingPrice(props.cartTotal);
 const computedTotal = () => {
-    const total = props.cartTotal + computedShippingPrice() + paymentFee.value - discountAmount.value;
+    const total = Math.max(0, props.cartTotal + props.adjustment - discountAmount.value) + computedShippingPrice() + paymentFee.value;
     return Math.max(0, total);
 };
 
@@ -210,6 +211,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                 <span>Poplatok za platbu</span>
                 <span class="font-medium text-gray-800">{{ formatDecimal(paymentFee) }} €</span>
             </div>
+            <div v-if="adjustment" class="flex justify-between"><span>Úprava ceny</span><span>{{ formatDecimal(adjustment) }} €</span></div>
             <div v-if="discountAmount > 0" class="flex justify-between text-green-700">
                 <span>Zľava ({{ getCouponData?.code }})</span>
                 <span class="font-semibold">−{{ formatDecimal(discountAmount) }} €</span>

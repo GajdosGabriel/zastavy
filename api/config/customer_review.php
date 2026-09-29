@@ -19,10 +19,10 @@ return [
     |   3. AI        — to, na čo pravidlo napísať nevieme: veľké písmená
     |                  v mene, preklepy, meno osoby v poli firmy
     |
-    | Opraviť sa smie iba to, čo NEMENÍ význam údaja (whitespace, „-" → null,
-    | telefón do +421 tvaru). Názov firmy ani adresu nikdy neprepisujeme sami —
-    | to by bola tichá zmena fakturačných údajov. Tie sa iba navrhnú a admin
-    | ich potvrdí jedným klikom v detaile zákazníka.
+    | Formátové opravy (whitespace, „-" → null, telefón do +421 tvaru) robí
+    | `autofix`. Návrhy registra, pravidiel a AI (napr. adresa vlepená do
+    | názvu firmy) zapisuje `apply_suggestions` — tiež samé, bez klikania.
+    | Všetko je v detaile zákazníka pod „Opravené automaticky" a dá sa vrátiť.
     */
 
     /*
@@ -83,6 +83,27 @@ return [
         'postcode_format',
         'registry_tax_ids',
     ],
+
+    /*
+     * Návrhy (register, pravidlá, AI) sa zapíšu hneď, bez klikania admina.
+     * Každá zmena je v detaile zákazníka pod „Opravené automaticky" a dá sa
+     * vrátiť. Vypnutím ostanú návrhy len ako informácia.
+     */
+    'apply_suggestions' => (bool) env('CUSTOMER_REVIEW_APPLY_SUGGESTIONS', true),
+
+    /*
+     * Návrhy, ktoré sa sami nezapisujú — „210" → „Bidovce 210" je v malej
+     * obci často pôvodný správny tvar.
+     */
+    'suggestion_skip' => [
+        'customer_review.issues.street_number_only',
+    ],
+
+    /*
+     * E-mailový súhrn adminom po behu kontroly. Predvolene vypnutý —
+     * opravy sa robia samé a vidno ich v detaile zákazníka.
+     */
+    'notify' => (bool) env('CUSTOMER_REVIEW_NOTIFY_ENABLED', false),
 
     /*
      * Komu chodí súhrn. Prázdne = všetkým používateľom s rolou nižšie.

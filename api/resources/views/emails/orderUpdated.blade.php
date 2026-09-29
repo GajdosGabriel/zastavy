@@ -79,9 +79,12 @@
                 </tr>
                 @endforeach
                 @if($order->orderProducts->first()?->price)
+                <tr><td colspan="3">Doprava a platba</td><td style="text-align:right">{{ number_format($order->shipping_price + $order->payment_fee, 2, ',', ' ') }} €</td></tr>
+                @if($order->discount_amount)<tr><td colspan="3">Zľavový kupón</td><td style="text-align:right">−{{ number_format($order->discount_amount, 2, ',', ' ') }} €</td></tr>@endif
+                @if($order->adjustmentAmount())<tr><td colspan="3">{{ $order->price_adjustment['label'] ?? 'Úprava ceny' }}</td><td style="text-align:right">{{ number_format($order->adjustmentAmount(), 2, ',', ' ') }} €</td></tr>@endif
                 <tr class="total-row">
                     <td colspan="3">Celková suma</td>
-                    <td style="text-align:right">{{ number_format($order->orderProducts->sum('total'), 2, ',', ' ') }} €</td>
+                    <td style="text-align:right">{{ number_format($order->grandTotal(), 2, ',', ' ') }} €</td>
                 </tr>
                 @endif
             </tbody>

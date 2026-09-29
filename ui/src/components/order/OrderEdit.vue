@@ -1,10 +1,13 @@
 <script setup>
+import CustomOrderItem from '../forms/CustomOrderItem.vue';
+import OrderPriceAdjustment from '../forms/OrderPriceAdjustment.vue';
+import { adjustmentAmount } from '../../models/orderPricing';
 import BaseLayout from "../layout/BaseLayout.vue";
 import useOrders from "../../store/StoreOrders";
 import useOrderProducts from "../../store/StoreOrderProducts";
 import { useProducts } from "../../store/StoreProducts";
 import { useRoute, useRouter } from "vue-router";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import productTableRow from "../orderProducts/productTableRow.vue";
 import { formatDecimal } from "../../models/functions";
@@ -39,6 +42,12 @@ const shippingMethods = ref([]);
 const paymentMethods  = ref([]);
 const selectedShippingId = ref(null);
 const selectedPaymentId  = ref(null);
+const editedShippingPrice = computed(() => {
+    const method = shippingMethods.value.find(m => m.id === selectedShippingId.value);
+    if (!method) return Number(getOrder.value.shipping_price || 0);
+    return method.free_from_price !== null && method.free_from_price !== undefined && getStatement.value.grandTotal >= Number(method.free_from_price) ? 0 : Number(method.price || 0);
+});
+const editedPaymentFee = computed(() => Number(paymentMethods.value.find(m => m.id === selectedPaymentId.value)?.fee || 0));
 const originalShippingId = ref(null);
 const originalPaymentId  = ref(null);
 
@@ -46,6 +55,7 @@ const showNotifyModal = ref(false);
 const notifyCustomer  = ref(true);
 const isSubmitting    = ref(false);
 const note            = ref('');
+const priceAdjustment = ref(null);
 const wantsCoupon     = ref(false);
 
 // Doručovacia adresa. Vypnutý prepínač znamená „doručiť na sídlo zákazníka" —
@@ -59,6 +69,7 @@ const { setOriginalData, markAsSaved } = useUnsavedChanges(() => ({
     payment_method_id: selectedPaymentId.value,
     note: note.value,
     wants_coupon: wantsCoupon.value,
+    price_adjustment: priceAdjustment.value,
     orderProducts: getOrderProducts.value,
     delivery: deliverToOtherAddress.value ? delivery.value : null,
 }));
@@ -88,6 +99,7 @@ onMounted(async () => {
     originalPaymentId.value  = selectedPaymentId.value;
     note.value        = getOrder.value?.note ?? '';
     wantsCoupon.value = !!getOrder.value?.wants_coupon;
+    priceAdjustment.value = getOrder.value?.price_adjustment ?? null;
 
     const orderDelivery = getOrder.value?.delivery;
     deliverToOtherAddress.value = Boolean(orderDelivery?.is_custom);
@@ -165,7 +177,7 @@ const confirmUpdate = async () => {
 const submitUpdate = async (notify) => {
     isSubmitting.value = true;
     try {
-        const pendingNew      = getOrderProducts.value.filter(p => p.isNew && p.product_id);
+        const pendingNew      = getOrderProducts.value.filter(p => p.isNew && (p.product_id || p.is_custom));
         const existingChanged = getOrderProducts.value.filter(p => !p.isNew);
 
         await Promise.all([
@@ -179,7 +191,8 @@ const submitUpdate = async (notify) => {
             notify_customer:     notify,
             note:                note.value || null,
             wants_coupon:        wantsCoupon.value,
-            has_product_changes: pendingNew.length > 0,
+            price_adjustment: priceAdjustment.value,
+            has_product_changes: true,
             // Prázdny `delivery` server prečíta ako „doručiť na sídlo" a odtlačok
             // adresy z objednávky odstráni — presne to znamená vypnutý prepínač.
             delivery:            deliverToOtherAddress.value ? delivery.value : null,
@@ -338,6 +351,9 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                                         </tr>
                                     </tfoot>
                                 </table>
+                                <CustomOrderItem v-if="getOrder.permissions?.manageItems?.allowed" @add="addOrderProduct(orderId, $event)" />
+                                <OrderPriceAdjustment v-model="priceAdjustment" :subtotal="getStatement.grandTotal" :coupon="Number(getOrder.discount_amount || 0)" />
+                                <p class="p-4 text-right font-bold">Celkom s dopravou a platbou: {{ formatDecimal(Math.max(0, getStatement.grandTotal - Number(getOrder.discount_amount || 0) + adjustmentAmount(getStatement.grandTotal, priceAdjustment, Number(getOrder.discount_amount || 0))) + editedShippingPrice + editedPaymentFee) }} €</p>
                             </div>
                         </div>
                     </div>

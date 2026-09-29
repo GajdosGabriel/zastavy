@@ -557,11 +557,18 @@ class CustomerDataRules
         // Adresa vlepená do názvu („Základná škola, Komenského 959, Senica").
         // Na faktúre potom stojí ulica dvakrát a zakaždým v inom tvare.
         if (substr_count($company, ',') >= 2 || preg_match('/,\s*\d{3}\s?\d{2}\b/u', $company) === 1) {
+            // Návrh = časť pred prvou čiarkou, ale len keď za ňou naozaj
+            // stojí adresa (číslo domu, PSČ) — inak by z názvu vypadol kus.
+            $parts = explode(',', $company, 2);
+            $head = trim($parts[0]);
+            $suggested = $head !== '' && preg_match('/\d/', $parts[1] ?? '') === 1 ? $head : null;
+
             return [$this->issue(
                 'company',
                 'warning',
                 'company_has_address',
                 $company,
+                $suggested,
             )];
         }
 

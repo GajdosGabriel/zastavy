@@ -17,6 +17,7 @@ class OrderProduct extends Model
 
     protected $casts = [
         'product_snapshot' => 'array',
+        'is_custom' => 'boolean',
         'status' => ModelStatus::class,
     ];
 

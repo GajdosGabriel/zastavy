@@ -14,8 +14,8 @@ const showNoticeModal = ref(false);
 
 const notices = computed(() => props.shipping?.notices ?? []);
 // Notifikácia emailom môže prísť aj dodatočne, preto ju hľadáme naprieč záznamami.
-const emailNotice = computed(() => notices.value.find((notice) => notice.notice === "email") ?? null);
-const lastNotice = computed(() => notices.value[notices.value.length - 1] ?? null);
+const emailNotice = computed(() => notices.value.find((notice) => notice.notice === (props.shipping?.is_preparing ? "preparation_email" : "email")) ?? null);
+const lastNotice = computed(() => notices.value.filter(n => props.shipping?.is_preparing || n.notice !== "preparation_email").at(-1) ?? null);
 
 const onClickShipping = () => {
     notifyCustomer.value = !emailNotice.value;
@@ -40,7 +40,7 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
         <button @click="onClickShipping"
             :title="emailNotice
                 ? `DL #${shipping.id} – notifikácia odoslaná`
-                : (lastNotice ? `DL #${shipping.id} – expedované bez emailu` : `DL #${shipping.id}`)"
+                : (lastNotice ? `DL #${shipping.id} – ${shipping.is_preparing ? 'príprava' : 'odoslanie'} bez emailu` : `DL #${shipping.id}`)"
             :class="emailNotice
                 ? 'text-green-700 hover:text-green-900'
                 : (lastNotice ? 'text-gray-500 hover:text-gray-700' : 'text-blue-700 hover:text-blue-900')"
@@ -61,11 +61,11 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
     <Teleport to="body">
         <div v-if="showNoticeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <div class="w-full max-w-sm rounded bg-white p-5 shadow-lg">
-                <h3 class="mb-3 text-lg font-semibold text-gray-800">Notifikácia expedície</h3>
+                <h3 class="mb-3 text-lg font-semibold text-gray-800">{{ shipping.is_preparing ? "Notifikácia prípravy v sklade" : "Notifikácia odoslania" }}</h3>
 
                 <template v-if="emailNotice">
                     <p class="mb-5 text-sm text-gray-600">
-                        Notifikácia o expedícii už bola zákazníkovi odoslaná
+                        {{ shipping.is_preparing ? "Informácia o príprave v sklade" : "Informácia o odoslaní" }} už bola zákazníkovi odoslaná
                         <span class="font-semibold">{{ emailNotice.created_at_human }}</span>.
                     </p>
                     <div class="flex justify-end">
@@ -78,7 +78,7 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
 
                 <template v-else-if="lastNotice">
                     <p class="mb-5 text-sm text-gray-600">
-                        Expedícia bola zaznamenaná <span class="font-semibold">{{ lastNotice.created_at_human }}</span>
+                        {{ shipping.is_preparing ? "Príprava bola zaznamenaná" : "Odoslanie bolo zaznamenané" }} <span class="font-semibold">{{ lastNotice.created_at_human }}</span>
                         bez emailu zákazníkovi.
                     </p>
                     <div class="flex justify-end gap-2">
@@ -97,7 +97,7 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
 
                 <template v-else>
                     <p class="mb-4 text-sm text-gray-600">
-                        Expedícia je zaznamenaná. Odoslať zákazníkovi email o expedícii?
+                        {{ shipping.is_preparing ? "Objednávka sa pripravuje v sklade. Odoslať zákazníkovi e-mail o príprave?" : "Zásielka bola odoslaná. Odoslať zákazníkovi potvrdenie?" }}
                     </p>
                     <label class="mb-5 flex items-center gap-2 text-sm text-gray-700">
                         <input type="checkbox" v-model="notifyCustomer" class="rounded" />

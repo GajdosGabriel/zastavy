@@ -67,7 +67,7 @@ const toPositiveNumber = (value: any, fallback = 0): number => {
  * tie sa kľúčujú produktom a server im doplní predvolený variant.
  */
 const cartKey = (item: any): string =>
-    item?.variant_id ? `v${item.variant_id}` : `p${item?.product_id ?? item?.id}`;
+    item?.is_custom ? String(item.key ?? item.id) : item?.variant_id ? `v${item.variant_id}` : `p${item?.product_id ?? item?.id}`;
 
 const normalizeCartItem = (item: any) => {
     const minOrder = toPositiveNumber(item?.min_order, 1);
@@ -126,6 +126,7 @@ export const useCheckouts = defineStore("checkouts", () => {
     const carts = ref<any[]>([]);
     let submitting = false;
     const note = ref("");
+    const priceAdjustment = ref<any>(null);
     // Prílohy zámerne neputujú do localStorage — File objekty sa serializovať nedajú.
     const attachments = ref<File[]>([]);
 
@@ -193,6 +194,7 @@ export const useCheckouts = defineStore("checkouts", () => {
     };
 
     const getlocalStorage = (): void => {
+        priceAdjustment.value = readJsonStorage("cart-price-adjustment", null);
         const stored = readJsonStorage(CART_STORAGE_KEY, []);
         carts.value = Array.isArray(stored) ? stored.map(normalizeCartItem) : [];
 
@@ -244,6 +246,7 @@ export const useCheckouts = defineStore("checkouts", () => {
     };
 
     const resetCarts = (): void => {
+        priceAdjustment.value = null;
         carts.value = [];
         attachments.value = [];
     };
@@ -299,7 +302,8 @@ export const useCheckouts = defineStore("checkouts", () => {
             notify_customer: notifyCustomer,
             // Server si cenu aj tak berie z databázy — posielame len identitu a počet.
             orderProducts: carts.value.map((item) => ({
-                id: item.product_id,
+                id: item.is_custom ? null : item.product_id,
+                ...(item.is_custom ? { is_custom: true, name: item.name, unit_value: item.unit_value, vat: item.vat, active_price: item.active_price } : {}),
                 variant_id: item.variant_id,
                 input_order: item.input_order,
             })),
@@ -312,6 +316,7 @@ export const useCheckouts = defineStore("checkouts", () => {
 
         const staff = useUsers().getUser?.roles?.some((role: string) =>
             ['super-admin', 'admin', 'manager', 'sales', 'warehouse'].includes(role));
+        if (staff) payload.price_adjustment = priceAdjustment.value;
         if (!staff) {
             payload.customer = { ...payload.customer };
             delete payload.customer.id;
@@ -343,6 +348,7 @@ export const useCheckouts = defineStore("checkouts", () => {
             finishOrderSubmission(scope);
             localStorage.removeItem(CUSTOMER_STORAGE_KEY);
             carts.value = [];
+            priceAdjustment.value = null;
             attachments.value = [];
             note.value = "";
             resetDelivery();
@@ -362,6 +368,7 @@ export const useCheckouts = defineStore("checkouts", () => {
     };
 
     // Side-effecty pôvodne v module-level `watch(state, ...)` – teraz vnútri setup-store.
+    watch(priceAdjustment, value => localStorage.setItem("cart-price-adjustment", JSON.stringify(value)), { deep: true });
     watch(carts, () => setlocalStorage(), { deep: true });
     watch(
         () => useCustomer().getCustomer,
@@ -372,6 +379,7 @@ export const useCheckouts = defineStore("checkouts", () => {
 
     return {
         carts,
+        priceAdjustment,
         note,
         attachments,
         delivery,

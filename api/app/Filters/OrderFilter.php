@@ -30,7 +30,7 @@ class OrderFilter extends Filters
         }
 
         return $this->builder->whereHas('shippings', function ($query) use ($range) {
-            $query->whereBetween('created_at', $range);
+            $query->whereBetween('dispatched_at', $range);
         });
     }
 
@@ -98,7 +98,7 @@ class OrderFilter extends Filters
 
     public function isNotificated()
     {
-        return $this->builder->whereHas('shippings')->whereDoesntHave('shippings.notices');
+        return $this->builder->whereHas('shippings', fn ($shipping) => $shipping->whereNotNull('dispatched_at')->whereDoesntHave('notices', fn ($notice) => $notice->where('notice', '!=', 'preparation_email')));
     }
 
     public function isDeleted()

@@ -1,4 +1,5 @@
 <script setup>
+import CustomOrderItem from '../forms/CustomOrderItem.vue';
 import ReorderButton from '../sales/ReorderButton.vue';
 import BaseLayout from "../layout/BaseLayout.vue";
 import useOrders from "../../store/StoreOrders";
@@ -134,6 +135,13 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                                         </tr>
                                     </tfoot>
                                 </table>
+                                <div class="p-4 text-right text-sm space-y-2">
+                                    <p v-if="getOrder.discount_amount">Zľavový kupón: −{{ formatDecimal(getOrder.discount_amount) }} €</p>
+                                    <p v-if="getOrder.adjustment_amount">{{ getOrder.price_adjustment?.label || (getOrder.adjustment_amount < 0 ? 'Zľava' : 'Prirážka') }}: {{ formatDecimal(getOrder.adjustment_amount) }} €</p>
+                                    <p>Doprava: {{ formatDecimal(getOrder.shipping_price || 0) }} € · Platba: {{ formatDecimal(getOrder.payment_fee || 0) }} €</p>
+                                    <p class="text-lg font-bold">Celkom: {{ formatDecimal(getOrder.grand_total || 0) }} €</p>
+                                </div>
+                                <CustomOrderItem v-if="getOrder.permissions?.manageItems?.allowed" @add="addOrderProduct(orderId, $event)" />
                             </div>
                         </div>
                     </div>

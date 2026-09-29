@@ -29,6 +29,26 @@ const router = useRouter();
 const { params: { orderId } } = useRoute();
 
 const notifyCustomer = ref(true);
+const dispatchTarget = ref(null);
+const preview = ref(null);
+const previewLoading = ref(false);
+const confirming = ref(false);
+const pendingShippings = computed(() => (getOrder.value?.shippings ?? []).filter(s => s.is_preparing));
+const selection = () => allProducts.value.map(item => ({ order_product_id: item.id, quantity: excludedItemIds.value.includes(item.id) ? 0 : Number(shippingItems.value[item.id] || 0) }));
+const loadPreview = async () => {
+    preview.value = null; previewLoading.value = true;
+    try {
+        const response = await axiosInstance.post('/orders/' + orderId + '/shippings/preview', dispatchTarget.value ? { shipping_id: dispatchTarget.value.id } : { items: selection() });
+        preview.value = response.data;
+    } catch(e) { setErrors(e); } finally { previewLoading.value = false; }
+};
+const openDispatch = async (shipping) => {
+    dispatchTarget.value = shipping; notifyCustomer.value = true; showCheckoutModal.value = true; await loadPreview();
+};
+const cancelPreparation = async (shipping) => {
+    if (!window.confirm('Zrušiť prípravu dodacieho listu?')) return;
+    try { await axiosInstance.delete('/orders/' + orderId + '/shippings/' + shipping.id); await fetchOrder(orderId); } catch(e) { setErrors(e); }
+};
 const shippingItems = ref({});
 const excludedItemIds = ref([]);
 const showCheckoutModal = ref(false);
@@ -42,7 +62,7 @@ const shippingPercentage = computed(() => Number(getOrder.value?.shipping_percen
 const remainingQuantity = computed(() => Number(getOrder.value?.shipping_remaining_quantity ?? 0));
 const shippedQuantity = computed(() => Number(getOrder.value?.stock_expedition ?? 0));
 const requiredQuantity = computed(() => Number(getOrder.value?.shipping_required_quantity ?? 0));
-const statusLabel = computed(() => getOrder.value?.shipping_status_label ?? (getOrder.value?.isFinished ? "Vybavená" : "Nevybavená"));
+const statusLabel = computed(() => pendingShippings.value.length ? "Pripravuje sa v sklade" : getOrder.value?.shipping_status_label ?? (getOrder.value?.isFinished ? "Vybavená" : "Nevybavená"));
 
 const markingReady = ref(false);
 const canMarkReadyToShip = computed(() => getOrder.value?.permissions?.update?.allowed && !getOrder.value?.isStorned
@@ -78,9 +98,9 @@ const selectedQuantity = computed(() => Object.values(shippingItems.value)
     .reduce((sum, q) => sum + Number(q || 0), 0));
 
 const remainingAfterShipping = computed(() => Math.max(0, remainingQuantity.value - selectedQuantity.value));
-const canConfirmShipping = computed(() => getOrder.value?.permissions?.ship?.allowed && selectedQuantity.value > 0 && !getOrder.value?.isFinished);
+const canConfirmShipping = computed(() => getOrder.value?.permissions?.ship?.allowed && !pendingShippings.value.length && selectedQuantity.value > 0 && !getOrder.value?.isFinished);
 
-const shippedRows = computed(() => (getOrder.value?.shippings ?? []).flatMap((shipping) => {
+const shippedRows = computed(() => (getOrder.value?.shippings ?? []).filter(s => !s.is_preparing).flatMap((shipping) => {
     const stocks = shipping.stocks?.length ? shipping.stocks : [];
     if (!stocks.length) return [{ shipping, stock: null }];
     return stocks.map((stock) => ({ shipping, stock }));
@@ -112,24 +132,30 @@ const toggleExcludeItem = (item) => {
     }
 };
 
-const openCheckoutModal = () => {
-    if (!canConfirmShipping.value) return alert("Zadajte aspoň jednu položku na expedovanie.");
+const openCheckoutModal = async () => {
+    dispatchTarget.value = null;
+    if (!canConfirmShipping.value) return alert("Zadajte aspoň jednu položku na prípravu.");
     notifyCustomer.value = true;
     showCheckoutModal.value = true;
+    await loadPreview();
 };
 
 const closeCheckoutModal = () => { showCheckoutModal.value = false; };
 
 const confirmShipping = async () => {
-    await storeShipping(getOrder.value, {
-        notify_customer: notifyCustomer.value,
-        items: allProducts.value.map((item) => ({
-            order_product_id: item.id,
-            quantity: excludedItemIds.value.includes(item.id) ? 0 : Number(shippingItems.value[item.id] || 0),
-        })),
-    });
-    closeCheckoutModal();
-    router.push({ name: "orders.show", params: { orderId } });
+    if (confirming.value) return;
+    confirming.value = true;
+    try {
+        if (dispatchTarget.value) {
+            await axiosInstance.put('/orders/' + orderId + '/shippings/' + dispatchTarget.value.id, { notify_customer: notifyCustomer.value });
+        } else {
+            const result = await storeShipping(getOrder.value, { notify_customer: notifyCustomer.value, items: selection() });
+            if (!result) return;
+        }
+        await fetchOrder(orderId);
+        closeCheckoutModal();
+        resetShippingItems();
+    } catch(e) { setErrors(e); } finally { confirming.value = false; }
 };
 
 // Storno helpers
@@ -237,11 +263,11 @@ watch(allProducts, () => {
                     <div class="border-2 border-gray-300 bg-white p-4 shadow">
                         <div class="mb-3 text-sm font-semibold text-gray-900">Nový dodací list</div>
                         <div class="mb-2 flex justify-between gap-2 text-sm">
-                            <span class="text-gray-500">Teraz expedovať</span>
+                            <span class="text-gray-500">Teraz pripraviť</span>
                             <span class="font-semibold">{{ selectedQuantity }} ks</span>
                         </div>
                         <div class="mb-4 flex justify-between gap-2 text-sm">
-                            <span class="text-gray-500">Po expedícii ostane</span>
+                            <span class="text-gray-500">Mimo tohto dodacieho listu</span>
                             <span class="font-semibold">{{ remainingAfterShipping }} ks</span>
                         </div>
                         <div class="flex flex-wrap gap-2">
@@ -268,7 +294,7 @@ watch(allProducts, () => {
                                 <th class="thead_th text-center">Expedované</th>
                                 <th class="thead_th text-center">Ostáva</th>
                                 <th class="thead_th text-center">Storno</th>
-                                <th class="thead_th text-center">Teraz expedovať</th>
+                                <th class="thead_th text-center">Teraz pripraviť</th>
                                 <th class="thead_th text-center">Panel</th>
                             </tr>
                         </thead>
@@ -348,7 +374,7 @@ watch(allProducts, () => {
                                     </div>
                                 </td>
 
-                                <!-- Teraz expedovať -->
+                                <!-- Teraz pripraviť -->
                                 <td class="tbody_td text-center">
                                     <input
                                         v-if="item.remaining > 0"
@@ -371,7 +397,7 @@ watch(allProducts, () => {
                                         :class="isExcluded(item)
                                             ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
                                             : 'bg-orange-50 text-orange-700 hover:bg-orange-100'">
-                                        {{ isExcluded(item) ? 'Expedovať' : 'Neexpedovať' }}
+                                        {{ isExcluded(item) ? 'Pripraviť' : 'Vynechať' }}
                                     </button>
                                 </td>
                             </tr>
@@ -394,6 +420,18 @@ watch(allProducts, () => {
                     </table>
                 </div>
 
+                <section v-if="pendingShippings.length" class="mb-5 rounded-lg border border-blue-200 bg-blue-50 p-5">
+                    <h2 class="font-semibold text-blue-900">Pripravuje sa v sklade</h2>
+                    <div v-for="shipping in pendingShippings" :key="shipping.id" class="mt-3">
+                        <p class="font-semibold">Dodací list #{{ shipping.id }} · {{ shipping.created_at }}</p>
+                        <p v-for="item in shipping.prepared_items" :key="item.order_product_id" class="mt-1 text-sm">{{ item.name }} — {{ item.quantity }} {{ item.unit }}</p>
+                        <p class="my-3 text-sm text-gray-600">Sklad sa odpíše po potvrdení odoslania.</p>
+                        <div v-if="getOrder.permissions?.ship?.allowed" class="flex flex-wrap gap-3">
+                            <button type="button" class="rounded bg-blue-700 px-4 py-2 text-white" @click="openDispatch(shipping)">Potvrdiť odoslanie</button>
+                            <button type="button" class="rounded border border-gray-300 bg-white px-4 py-2" @click="cancelPreparation(shipping)">Zrušiť prípravu</button>
+                        </div>
+                    </div>
+                </section>
                 <!-- Expedované dodacie listy — len ak už niečo bolo expedované -->
                 <div v-if="shippedRows.length" class="mb-5 overflow-x-auto border-2 border-gray-300 bg-white shadow">
                     <div class="border-b border-gray-200 px-4 py-3 text-sm font-semibold text-gray-900">
@@ -412,11 +450,11 @@ watch(allProducts, () => {
                         <tbody class="divide-y divide-gray-200">
                             <tr v-for="row in shippedRows" :key="`${row.shipping.id}-${row.stock?.id ?? 'empty'}`" class="hover:bg-gray-50">
                                 <td class="tbody_td text-center font-semibold">DL #{{ row.shipping.id }}</td>
-                                <td class="tbody_td text-center">{{ row.shipping.created_at }}</td>
+                                <td class="tbody_td text-center">{{ row.shipping.dispatched_at || row.shipping.created_at }}</td>
                                 <td class="tbody_td">{{ row.stock?.name ?? '-' }}</td>
                                 <td class="tbody_td text-center font-semibold">{{ row.stock?.quantity ?? 0 }}</td>
                                 <td class="tbody_td text-center">
-                                    <span v-if="row.shipping.notices?.length"
+                                    <span v-if="row.shipping.notices?.some(notice => notice.notice === 'email')"
                                         class="rounded bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
                                         Odoslaná
                                     </span>
@@ -500,30 +538,34 @@ watch(allProducts, () => {
                     <buttonLink :item="buttonBack" />
                     <button type="button" @click="openCheckoutModal" :disabled="!canConfirmShipping"
                         class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400">
-                        Vytvoriť dodací list
+                        Pripraviť dodací list
                     </button>
                 </div>
             </div>
 
-            <!-- Modal: Vytvoriť dodací list -->
+            <!-- Modal: Pripraviť dodací list -->
             <Teleport to="body">
                 <div v-if="showCheckoutModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-                    <div class="w-full max-w-sm rounded bg-white p-5 shadow-lg">
-                        <h3 class="mb-3 text-lg font-semibold text-gray-800">Vytvoriť dodací list</h3>
+                    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded bg-white p-5 shadow-lg">
+                        <h3 class="mb-3 text-lg font-semibold text-gray-800">{{ dispatchTarget ? "Potvrdiť odoslanie" : "Pripraviť dodací list" }}</h3>
                         <p class="mb-4 text-sm text-gray-600">
-                            Expedovať {{ selectedQuantity }} ks?
+                            {{ dispatchTarget ? "Potvrdzujete skutočné odoslanie zásielky." : "Objednávka sa začne pripravovať v sklade. Zásielka ešte nie je odoslaná." }}
                         </p>
                         <label class="mb-5 flex items-center gap-2 text-sm text-gray-700">
                             <input type="checkbox" v-model="notifyCustomer" class="rounded" />
-                            Informovať zákazníka o expedícii
+                            {{ dispatchTarget ? "Informovať zákazníka o odoslaní" : "Informovať zákazníka o príprave v sklade" }}
                         </label>
+                        <div v-if="notifyCustomer" class="mb-4">
+                            <p v-if="previewLoading" class="text-sm">Načítavam náhľad e-mailu…</p>
+                            <template v-if="preview"><p class="mb-2 text-sm font-semibold">Predmet: {{ preview.subject }}</p><iframe title="Náhľad e-mailu zákazníkovi" sandbox="" :srcdoc="preview.html" class="h-72 w-full rounded border bg-white"></iframe></template>
+                        </div>
                         <div class="flex justify-end gap-2">
                             <button type="button" @click="closeCheckoutModal"
                                 class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
                                 Zrušiť
                             </button>
                             <button type="button" @click="confirmShipping"
-                                :disabled="loadingStore.isLoading"
+                                :disabled="confirming || previewLoading || (notifyCustomer && !preview)"
                                 class="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed">
                                 <SpinnerButton v-if="loadingStore.isLoading" />
                                 Potvrdiť

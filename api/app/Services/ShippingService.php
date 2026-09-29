@@ -12,10 +12,14 @@ use Illuminate\Validation\ValidationException;
 
 class ShippingService
 {
-    public function create($order, ?array $items = null, ?string $key = null)
+    public function create($order, ?array $items = null, ?string $key = null, ?\App\Models\Shipping $prepared = null)
     {
-        return DB::transaction(function () use ($order, $items, $key) {
+        return DB::transaction(function () use ($order, $items, $key, $prepared) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            if ($prepared) {
+                $prepared = $order->shippings()->whereKey($prepared->id)->lockForUpdate()->firstOrFail();
+                if ($prepared->dispatched_at) return $prepared;
+            }
             $hash = hash('sha256', json_encode($items));
             if ($key && ($existing = $order->shippings()->where('submission_key', $key)->first())) {
                 abort_unless(hash_equals($existing->submission_hash, $hash), 409, 'Kľúč expedície už patrí inému obsahu.');
@@ -55,6 +59,9 @@ class ShippingService
                     continue;
                 }
 
+                if ($prepared && $quantity !== (int) $itemsToShip->get($item->id, 0)) {
+                    throw ValidationException::withMessages(['items' => 'Položky sa zmenili. Zrušte prípravu a vytvorte nový dodací list.']);
+                }
                 $variant = $variants->get($item->product_variant_id);
                 if ($variant && $variant->quantity !== null && ! $variant->product?->made_to_order) {
                     if ((int) $variant->quantity < $quantity) {
@@ -67,13 +74,15 @@ class ShippingService
                     'order_id' => $order->id,
                     'order_product_id' => $item->id,
                     'quantity' => $quantity,
+                    'inventory_delta' => $item->is_custom ? 0 : null,
                 ]));
             }
 
             $shipping = null;
 
             if ($stocks->isNotEmpty()) {
-                $shipping = $order->shippings()->create(['submission_key' => $key, 'submission_hash' => $key ? $hash : null]);
+                $shipping = $prepared ?? $order->shippings()->create(['submission_key' => $key, 'submission_hash' => $key ? $hash : null]);
+                $shipping->update(['dispatched_at' => now()]);
                 $shipping->stocks()->saveMany($stocks);
             }
 

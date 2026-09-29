@@ -21,7 +21,7 @@ const canEditProduct = () => isNew() || (!isOrderFinished.value && !props.item.s
 const canEditQty     = () => isNew() || !isOrderFinished.value;
 
 const onClickSave = async (item) => {
-    if (item.isNew && !item.product_variant_id) {
+    if (item.isNew && !item.is_custom && !item.product_variant_id) {
         alert("Vyberte variant.");
         return;
     }
@@ -84,7 +84,8 @@ const onChangeVariant = (variantId) => {
                 <img v-if="item.thumb" :src="item.thumb" :alt="item.name" class="object-cover h-8 w-8" />
             </div>
             <div class="w-full">
-                <select v-if="item.isNew"
+                <input v-if="item.is_custom" v-model="item.name" aria-label="Názov vlastnej položky" maxlength="200" class="w-full rounded border-gray-300" />
+                <select v-else-if="item.isNew"
                     class="shadow w-full appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     id="product"
                     v-model="item.product_variant_id"
@@ -106,7 +107,7 @@ const onChangeVariant = (variantId) => {
 
         <td class="tbody_td">
             <input v-model="item.quantity" type="number" class="w-16" :min="item.min_order ?? 1" :disabled="!canEditQty()" />
-            <span class="ml-2">{{ item.unit_value }}</span>
+            <input v-if="item.is_custom" v-model="item.unit_value" aria-label="Jednotka" maxlength="20" class="ml-2 w-16 rounded border-gray-300" /><span v-else class="ml-2">{{ item.unit_value }}</span>
         </td>
 
         <td class="tbody_td">

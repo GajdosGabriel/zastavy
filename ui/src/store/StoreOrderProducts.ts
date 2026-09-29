@@ -40,7 +40,7 @@ export const useOrderProducts = defineStore("orderProducts", {
             this.orderProducts = items;
         },
 
-        addOrderProduct(orderId: number | string): void {
+        addOrderProduct(orderId: number | string, custom: any = null): void {
             const tempId = "__new__" + Date.now();
             this.orderProducts.push({
                 id: tempId,
@@ -49,12 +49,14 @@ export const useOrderProducts = defineStore("orderProducts", {
                 product_id: null,
                 product_variant_id: null,
                 variant_name: null,
-                quantity: 1,
-                price: 0,
+                quantity: custom?.input_order ?? 1,
+                price: custom?.active_price ?? 0,
                 storno: 0,
                 stockSum: 0,
-                name: "",
-                unit_value: "",
+                is_custom: !!custom,
+                name: custom?.name ?? "",
+                unit_value: custom?.unit_value ?? "ks",
+                product_vat: custom?.vat ?? null,
                 shipping_required_quantity: 1,
                 shipping_remaining_quantity: 1,
                 shipping_percentage: 0,
@@ -75,6 +77,10 @@ export const useOrderProducts = defineStore("orderProducts", {
             const response = await axiosInstance.post(item.endpoints.store, {
                 // Položka objednávky visí na variante — produkt si server dohľadá sám.
                 product_variant_id: item.product_variant_id,
+                is_custom: !!item.is_custom,
+                name: item.name,
+                unit_value: item.unit_value,
+                vat: item.is_custom ? item.product_vat : undefined,
                 quantity: item.quantity,
                 price: item.price,
             });

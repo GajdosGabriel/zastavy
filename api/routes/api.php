@@ -110,6 +110,7 @@ Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/orders/statistics', [OrderController::class, 'statistics'])->name('orders.statistics');
 
+    Route::post('orders/{order}/shippings/preview', [OrderShippingController::class, 'preview']);
     Route::apiResources([
         'orders' => OrderController::class,
         'orders.shippings' => OrderShippingController::class,
@@ -150,7 +151,6 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     // Post-kontrola údajov zákazníka (viď App\Services\Customers\CustomerReviewService).
     Route::get('customers/{customer}/review', [CustomerReviewController::class, 'show'])->name('customers.review.show');
     Route::post('customers/{customer}/review', [CustomerReviewController::class, 'store'])->name('customers.review.store');
-    Route::put('customers/{customer}/review', [CustomerReviewController::class, 'update'])->name('customers.review.update');
     Route::post('customers/{customer}/review/revert', [CustomerReviewController::class, 'revert'])->name('customers.review.revert');
     Route::delete('customers/{customer}/review', [CustomerReviewController::class, 'destroy'])->name('customers.review.destroy');
 

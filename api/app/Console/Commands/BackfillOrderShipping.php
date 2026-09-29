@@ -106,6 +106,7 @@ class BackfillOrderShipping extends Command
                 $shippingId = DB::table('shippings')->insertGetId([
                     'status'     => 'active',
                     'order_id'   => $order->id,
+                    'dispatched_at' => $at,
                     'created_at' => $at,
                     'updated_at' => $at,
                 ]);

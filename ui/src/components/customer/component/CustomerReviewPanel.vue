@@ -8,27 +8,23 @@ import useCustomers from "../../../store/StoreCustomers";
  *
  * Panel má dve časti a je dôležité, aby ich admin nepomiešal:
  *
- *   „Opravené automaticky"  — oznam. Toto sa už stalo, pôvodná hodnota je
- *                             vidieť, aby sa dalo vrátiť.
- *   „Na pozretie"           — otázka. Návrh, ktorý by zmenil význam údaja,
- *                             takže čaká na klik.
- *
- * Prijíma sa poradové číslo výhrady, nie hodnota — server zapíše to, čo sám
- * navrhol, takže z prehliadača sa nedá poslať vlastný text.
+ *   „Opravené automaticky"  — oznam. Toto sa už stalo (aj návrhy AI
+ *                             a registra), pôvodná hodnota je vidieť,
+ *                             aby sa dalo vrátiť.
+ *   „Na pozretie"           — len informácia: nález, ku ktorému kontrola
+ *                             nevie navrhnúť hodnotu. Opraví sa ručne.
  */
 const props = defineProps<{ customerId: number | string }>();
 
 const customersStore = useCustomers();
 const { getReview, isReviewLoading } = storeToRefs(customersStore);
-const { runReview, applyReviewSuggestions, revertReviewChanges, resolveReview } = customersStore;
+const { runReview, revertReviewChanges, resolveReview } = customersStore;
 
-const selected = ref<number[]>([]);
 const message = ref("");
 const open = ref(true);
 
 const issues = computed(() => getReview.value?.issues ?? []);
 const applied = computed(() => getReview.value?.applied ?? []);
-const applicable = computed(() => issues.value.filter((i) => i.applicable));
 
 const score = computed(() => getReview.value?.score ?? null);
 
@@ -48,29 +44,10 @@ const severityClass = (severity: string) =>
         notice: "bg-gray-100 text-gray-600",
     }[severity] ?? "bg-gray-100 text-gray-600");
 
-const toggle = (index: number) => {
-    const at = selected.value.indexOf(index);
-    at === -1 ? selected.value.push(index) : selected.value.splice(at, 1);
-};
-
-const selectAll = () => {
-    selected.value = applicable.value.map((i) => i.index);
-};
-
 const onRun = async () => {
     message.value = "";
     const error = await runReview(props.customerId);
     message.value = error || "Kontrola prebehla.";
-    selected.value = [];
-};
-
-const onApply = async () => {
-    if (!selected.value.length) return;
-
-    message.value = "";
-    const error = await applyReviewSuggestions(props.customerId, [...selected.value]);
-    message.value = error || "Zmeny sú zapísané.";
-    selected.value = [];
 };
 
 const onRevert = async (index: number) => {
@@ -142,17 +119,7 @@ const onResolve = async () => {
 
             <!-- Otázka: čo čaká na potvrdenie -->
             <div v-if="issues.length">
-                <div class="mb-2 flex items-center justify-between">
-                    <h3 class="text-xs font-bold uppercase tracking-wide text-gray-500">Na pozretie</h3>
-                    <button
-                        v-if="applicable.length > 1"
-                        type="button"
-                        class="text-xs font-semibold text-blue-600 hover:underline"
-                        @click="selectAll"
-                    >
-                        Označiť všetky s návrhom
-                    </button>
-                </div>
+                <h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Na pozretie</h3>
 
                 <ul class="space-y-2">
                     <li
@@ -160,17 +127,8 @@ const onResolve = async () => {
                         :key="issue.index"
                         class="rounded-md border border-gray-200 bg-white px-3 py-2"
                     >
-                        <div class="flex items-start gap-3">
-                            <input
-                                v-if="issue.applicable"
-                                type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-gray-300"
-                                :checked="selected.includes(issue.index)"
-                                @change="toggle(issue.index)"
-                            />
-                            <span v-else class="mt-1 h-4 w-4"></span>
-
-                            <div class="min-w-0 flex-1">
+                        <div>
+                            <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-semibold text-gray-800">{{ issue.label }}</span>
                                     <span class="rounded px-1.5 py-0.5 text-[11px] font-semibold" :class="severityClass(issue.severity)">
@@ -195,14 +153,6 @@ const onResolve = async () => {
             <p v-else-if="!applied.length" class="text-sm text-gray-600">Údaje sú v poriadku.</p>
 
             <div class="mt-4 flex flex-wrap items-center gap-2">
-                <button
-                    type="button"
-                    :disabled="!selected.length || isReviewLoading"
-                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:bg-gray-300"
-                    @click="onApply"
-                >
-                    Použiť označené ({{ selected.length }})
-                </button>
                 <button
                     type="button"
                     :disabled="isReviewLoading"

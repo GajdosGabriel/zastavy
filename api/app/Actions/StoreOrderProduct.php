@@ -27,6 +27,7 @@ class StoreOrderProduct implements StoreOrderProductContract
             $this->order->orderProducts()->create([
                 'product_snapshot' => $value['product_snapshot'] ?? null,
                 'product_id' => $value['product_id'],
+                'is_custom' => $value['is_custom'] ?? false,
                 'product_variant_id' => $value['product_variant_id'] ?? null,
                 'variant_label' => $value['variant_label'] ?? null,
                 'quantity' => $value['quantity'],

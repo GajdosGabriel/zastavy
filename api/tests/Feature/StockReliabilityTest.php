@@ -18,6 +18,13 @@ class StockReliabilityTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function prepare(Order $order): int
+    {
+        return $this->postJson('/api/orders/'.$order->id.'/shippings', ['notify_customer' => false,
+            'items' => $order->orderProducts()->get()->map(fn ($item) => ['order_product_id' => $item->id, 'quantity' => $item->quantity])->all()
+        ])->assertSuccessful()->json('data.id');
+    }
+
     private function fixture(?int $stock = 10, int $quantity = 4, bool $custom = false): array
     {
         Notification::fake();
@@ -36,9 +43,11 @@ class StockReliabilityTest extends TestCase
     public function test_insufficient_stock_rolls_back_entire_shipment(): void
     {
         [$order, $item, $variant] = $this->fixture(3);
-        $this->postJson('/api/orders/'.$order->id.'/shippings')->assertUnprocessable();
+        $shippingId = $this->prepare($order);
+        $this->putJson('/api/orders/'.$order->id.'/shippings/'.$shippingId)->assertUnprocessable();
         $this->assertSame(3, (int) $variant->fresh()->quantity);
-        $this->assertDatabaseCount('shippings', 0);
+        $this->assertDatabaseCount('shippings', 1);
+        $this->assertNull($order->shippings()->first()->dispatched_at);
         $this->assertDatabaseCount('stocks', 0);
     }
 
@@ -47,7 +56,8 @@ class StockReliabilityTest extends TestCase
         [$order, $item, $variant] = $this->fixture(6);
         $copy = $item->replicate();
         $copy->save();
-        $this->postJson('/api/orders/'.$order->id.'/shippings')->assertUnprocessable();
+        $shippingId = $this->prepare($order);
+        $this->putJson('/api/orders/'.$order->id.'/shippings/'.$shippingId)->assertUnprocessable();
         $this->assertSame(6, (int) $variant->fresh()->quantity);
         $this->assertDatabaseCount('stocks', 0);
     }
@@ -56,7 +66,8 @@ class StockReliabilityTest extends TestCase
     {
         foreach ([[0, true], [null, false]] as [$stock, $custom]) {
             [$order, $item, $variant] = $this->fixture($stock, 4, $custom);
-            $this->postJson('/api/orders/'.$order->id.'/shippings', ['notify_customer' => false])->assertSuccessful();
+            $shippingId = $this->prepare($order);
+            $this->putJson('/api/orders/'.$order->id.'/shippings/'.$shippingId, ['notify_customer' => false])->assertSuccessful();
             $this->assertEquals($stock === null ? null : -4, $variant->fresh()->quantity);
         }
     }
@@ -69,6 +80,8 @@ class StockReliabilityTest extends TestCase
         $first = $this->postJson('/api/orders/'.$order->id.'/shippings', $payload)->assertSuccessful();
         $retry = $this->postJson('/api/orders/'.$order->id.'/shippings', $payload)->assertSuccessful();
         $this->assertSame($first->json('data.id'), $retry->json('data.id'));
+        $this->assertSame(10, (int) $variant->fresh()->quantity);
+        $this->putJson('/api/orders/'.$order->id.'/shippings/'.$first->json('data.id'), ['notify_customer' => false])->assertSuccessful();
         $this->assertSame(8, (int) $variant->fresh()->quantity);
         $this->assertDatabaseCount('shippings', 1);
         $payload['items'][0]['quantity'] = 1;

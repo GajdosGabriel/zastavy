@@ -75,7 +75,6 @@ class CustomerReviewResource extends JsonResource
             'endpoints' => [
                 'show' => route('customers.review.show', $this->customer_id),
                 'run' => route('customers.review.store', $this->customer_id),
-                'apply' => route('customers.review.update', $this->customer_id),
                 'revert' => route('customers.review.revert', $this->customer_id),
                 'resolve' => route('customers.review.destroy', $this->customer_id),
             ],

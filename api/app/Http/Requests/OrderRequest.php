@@ -30,6 +30,7 @@ class OrderRequest extends FormRequest
             'payment_method_id' => ['sometimes', 'nullable', 'integer', \Illuminate\Validation\Rule::exists('payment_methods', 'id')->where('active', true)->whereNull('deleted_at')],
             'status' => ['sometimes', \Illuminate\Validation\Rule::enum(\App\Enums\OrderStatus::class)],
             'isOpened' => ['sometimes', 'boolean'],
+            ...\App\Support\OrderPricing::rules((bool) $this->user()?->isStaff()),
             'wants_coupon' => ['sometimes', 'boolean'],
             'notify_customer' => ['sometimes', 'boolean'],
             'makeStorned' => ['sometimes', 'boolean'],

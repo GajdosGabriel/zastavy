@@ -95,7 +95,7 @@
                     $shipping  = (float) ($order->shipping_price ?? 0);
                     $fee       = (float) ($order->payment_fee ?? 0);
                     $discount  = (float) ($order->discount_amount ?? 0);
-                    $grandTotal = round($subtotal + $shipping + $fee - $discount, 2);
+                    $grandTotal = $order->grandTotal();
                 @endphp
                 @if($shipping > 0)
                 <tr>
@@ -119,6 +119,9 @@
                     <td colspan="3" style="color:#28a745;">Zľava</td>
                     <td style="text-align:right;color:#28a745;">−{{ number_format($discount, 2, ',', ' ') }} €</td>
                 </tr>
+                @endif
+                @if($order->adjustmentAmount())
+                <tr><td colspan="3">{{ ($order->price_adjustment['label'] ?? null) ?: ($order->adjustmentAmount() < 0 ? 'Zľava' : 'Prirážka') }}</td><td style="text-align:right">{{ number_format($order->adjustmentAmount(), 2, ',', ' ') }} €</td></tr>
                 @endif
                 <tr class="total-row">
                     <td colspan="3">Celková suma</td>
