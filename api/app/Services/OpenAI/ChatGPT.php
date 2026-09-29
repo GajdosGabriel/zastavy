@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Validator;
  * Postavené rovnako ako v projekte event, len oveľa menšie — tu ide o jednu
  * úlohu (posúdiť riadok v `customers`) a nie o extrakciu podujatí z plagátov.
  * Tvar volania sa zámerne nelíši, nech je čo porovnávať, keď sa niečo pokazí:
- * chat/completions, teplota 0, vynútená JSON schéma, validácia odpovede.
+ * chat/completions, vynútená JSON schéma, validácia odpovede. Teplota sa
+ * neposiela — gpt-6-luna podporuje len predvolenú.
  *
  * Model NIKDY nedostane e-mail ani telefón zákazníka — viď
  * PromptCustomerReview::prompt(). Posudzovať sa dá aj bez nich a osobné údaje
@@ -32,8 +33,8 @@ class ChatGPT
     public function extractCustomerReview(array $customer, ?array $registry = null): array
     {
         $content = $this->chatComplete(
-            (string) config('customer_review.model', 'gpt-4o-mini'),
-            0,
+            (string) config('customer_review.model', 'gpt-6-luna'),
+            null,
             $this->promptCustomerReview->prompt($customer, $registry),
             $this->promptCustomerReview->jsonSchema(),
         );
@@ -60,7 +61,7 @@ class ChatGPT
 
     private function chatComplete(
         string $model,
-        float $temperature,
+        ?float $temperature,
         array $messages,
         ?array $responseFormat = null,
         int $timeout = 45,
@@ -71,14 +72,21 @@ class ChatGPT
             throw new \RuntimeException('OPENAI_API_KEY nie je nastavený.');
         }
 
+        $payload = [
+            'model' => $model,
+            'response_format' => $responseFormat ?? ['type' => 'json_object'],
+            'messages' => $messages,
+        ];
+
+        // gpt-6-luna odmieta čokoľvek iné ako predvolenú teplotu (1), preto
+        // null = parameter vôbec neposlať.
+        if ($temperature !== null) {
+            $payload['temperature'] = $temperature;
+        }
+
         $response = Http::timeout($timeout)
             ->withToken($apiKey)
-            ->post('https://api.openai.com/v1/chat/completions', [
-                'model' => $model,
-                'temperature' => $temperature,
-                'response_format' => $responseFormat ?? ['type' => 'json_object'],
-                'messages' => $messages,
-            ]);
+            ->post('https://api.openai.com/v1/chat/completions', $payload);
 
         if (! $response->successful()) {
             throw new \RuntimeException('OpenAI API error: '.$response->status().' '.$response->body());

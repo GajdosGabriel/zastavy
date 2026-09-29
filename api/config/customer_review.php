@@ -60,7 +60,7 @@ return [
     /*
      * Model. Kontrola je čítanie desiatich krátkych polí, nie tvorba.
      */
-    'model' => env('CUSTOMER_REVIEW_MODEL', 'gpt-4o-mini'),
+    'model' => env('CUSTOMER_REVIEW_MODEL', 'gpt-6-luna'),
 
     /*
      * Ktoré nálezy sa smú opraviť samé. Zoznam je zámerne konečný a zámerne
