@@ -12,7 +12,7 @@ import BaseLayout from '../layout/BaseLayout.vue';
                         <div class="md:col-span-8">
                             <img
                                 src="/src/assets/images/header.jpg"
-                                alt="Zástavy a vlajky"
+                                alt="Zástavy-vlajky.sk"
                                 class="h-36 w-full rounded-md object-cover object-center md:h-48"
                             >
                         </div>
@@ -39,7 +39,7 @@ import BaseLayout from '../layout/BaseLayout.vue';
 
                     <div class="bg-blue-900 px-5 py-8 text-white sm:px-8">
                         <p class="text-sm font-semibold uppercase tracking-wide text-blue-100">
-                            Zástavy a vlajky
+                            Zástavy-vlajky.sk
                         </p>
                         <h1 class="mt-2 text-3xl font-semibold sm:text-4xl">
                             Ochrana osobných údajov

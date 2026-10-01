@@ -26,8 +26,8 @@ function toggle(code,value){const next={...selected.value};const values=next[cod
   <fieldset v-for="facet in attributes.getFacets" :key="facet.code" class="mt-3"><legend class="font-medium">{{facet.name}}</legend>
    <label v-for="value in facet.values" :key="value.id" class="flex gap-2 text-sm py-1"><input type="checkbox" :checked="(selected[facet.code]??[]).includes(value.code)" @change="toggle(facet.code,value.code)" />{{value.value}}</label>
   </fieldset>
-  <label class="flex gap-2 my-4"><input type="checkbox" :checked="query.inStock==='1'" @change="change({inStock:$event.target.checked?'1':''})" />Len skladom</label>
-  <form @submit.prevent="change({priceFrom:from,priceTo:to})" class="space-y-2"><p>Cena s DPH</p><div class="flex gap-2"><input v-model="from" aria-label="Cena od" placeholder="Od" type="number" min="0" step="0.01" class="w-1/2 rounded border p-2"/><input v-model="to" aria-label="Cena do" placeholder="Do" type="number" min="0" step="0.01" class="w-1/2 rounded border p-2"/></div><button class="text-blue-700">Použiť cenu</button></form>
+  <label class="flex gap-2 my-4"><input type="checkbox" name="inStock" aria-label="Len skladom" :checked="query.inStock==='1'" @change="change({inStock:$event.target.checked?'1':''})" />Len skladom</label>
+  <form @submit.prevent="change({priceFrom:from,priceTo:to})" class="space-y-2"><p>Cena s DPH</p><div class="flex gap-2"><input v-model="from" aria-label="Cena od" placeholder="Od" type="number" min="0" step="0.01" class="w-1/2 rounded border p-2"/><input v-model="to" aria-label="Cena do" placeholder="Do" type="number" min="0" step="0.01" class="w-1/2 rounded border p-2"/></div><button type="submit" class="rounded-md border border-blue-800 bg-blue-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-900">Použiť cenu</button></form>
  </details>
  <button v-if="Object.keys(query).length" @click="router.push({query:{}})" class="text-red-700">Zrušiť filtre</button>
 

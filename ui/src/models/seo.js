@@ -9,7 +9,7 @@ import { htmlToText } from './html';
  * prechod na inú routu najprv zavolá resetSeo().
  */
 
-export const DEFAULT_TITLE = 'Zástavy a vlajky | Vlajky Slovenska, obecné zástavy a štátne symboly';
+export const DEFAULT_TITLE = 'Zástavy-vlajky.sk | Vlajky Slovenska, obecné zástavy a štátne symboly';
 
 // Popis sa v <head> orezáva na 160 znakov — držať ho kratší, nech nekončí v polovici vety.
 export const DEFAULT_DESCRIPTION =

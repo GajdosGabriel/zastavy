@@ -15,7 +15,7 @@ const { getUser } = storeToRefs(useUser());
   <div class="w-full bg-gray-800 text-gray-300 pt-2">
     <div class="md:flex justify-between container mx-auto max-w-6xl">
       <div class="m-4">
-        <h3 class="font-semibold text-lg">Obecné zástavy</h3>
+        <h3 class="font-semibold text-lg">Zástavy-vlajky.sk</h3>
         <iframe src="https://player.vimeo.com/video/62613770" width="w-full" frameborder="0" webkitallowfullscreen
           mozallowfullscreen allowfullscreen></iframe>
       </div>
@@ -51,7 +51,7 @@ const { getUser } = storeToRefs(useUser());
 
           <li v-if="!getUser?.isAuth">
             <router-link :to="{ name: 'public.login.index' }">
-              Vstúpiť
+              Prihlásiť sa
             </router-link>
           </li>
         </ul>
@@ -60,7 +60,7 @@ const { getUser } = storeToRefs(useUser());
     </div>
 
     <div class="text-center border-2 border-gray-500 p-2 text-gray-400">
-      <p>&copy; 2016 Všetky práva vyhradené | Design by Gabriel Gajdoš</p>
+      <p>&copy; {{ new Date().getFullYear() }} Všetky práva vyhradené | Design by Gabriel Gajdoš</p>
     </div>
   </div>
 </template>

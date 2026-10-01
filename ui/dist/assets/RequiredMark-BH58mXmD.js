@@ -1,0 +1,1 @@
+import{c as e}from"./BaseLayout-D8Pd6nQ6.js";import{d as o,o as n}from"./index-4d60zvx6.js";const t={},r={class:"text-red-600 text-sm align-top leading-none","aria-label":"povinné pole"};function a(c,s){return n(),o("span",r,"*")}const l=e(t,[["render",a]]);export{l as R};

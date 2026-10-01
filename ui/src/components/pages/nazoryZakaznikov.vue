@@ -7,9 +7,6 @@ const reviews = [
         text: 'Veľmi rýchly nákup bez problémov.',
     },
     {
-        text: 'Nevyjadrujem sa...',
-    },
-    {
         text: 'Veľmi dobrá spolupráca, profesionalita a ochota. Doporučujem ako obchodného partnera.',
     },
     {

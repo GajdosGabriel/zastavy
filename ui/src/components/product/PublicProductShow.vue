@@ -215,7 +215,7 @@ onUnmounted(() => {
                             <section class="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
                                 <div class="mb-4 border-b border-gray-200 pb-4">
                                     <p class="mb-2 text-sm font-semibold uppercase text-blue-800">
-                                        Zástavy a vlajky
+                                        Zástavy-vlajky.sk
                                     </p>
                                     <h1 class="text-3xl font-semibold leading-tight text-gray-900">
                                         {{ getProduct.name }}

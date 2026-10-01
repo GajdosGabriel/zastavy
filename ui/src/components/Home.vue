@@ -6,7 +6,6 @@ import { catalogQuery, changeCatalogQuery } from '../models/catalogQuery';
 import BaseLayout from './layout/BaseLayout.vue';
 import cart from './checkout/cart.vue';
 import nazoryZakaznikov from './pages/nazoryZakaznikov.vue';
-import kosikLink from './checkout/kosikLink.vue';
 import CatalogFilter from './product/CatalogFilter.vue';
 import { storeToRefs } from "pinia";
 import { useHome } from "../store/StoreHome";
@@ -15,7 +14,7 @@ import templateProduct from '../models/templateProduct';
 import { setJsonLd, organizationJsonLd, websiteJsonLd, absoluteUrl } from '../models/seo';
 
 const homeStore = useHome();
-const { getProducts } = storeToRefs(homeStore);
+const { getProducts, loadError } = storeToRefs(homeStore);
 const { fetchProducts } = homeStore;
 
 const route=useRoute(), router=useRouter(), paginator=usePaginator();
@@ -56,12 +55,17 @@ watch(getProducts, (products) => {
 
             <template #main>
                   <section class="col-span-12 bg-slate-100 px-3 pb-8 md:px-6">
+                        <h1 class="sr-only">Vlajky a zástavy – predaj vlajok Slovenska, obecných zástav a štátnych symbolov</h1>
                         <div class="grid gap-6 lg:grid-cols-12">
 
                               <div class="order-last lg:order-first lg:col-span-9">
                                     <div v-if="getProducts.length" class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                                           <cart v-for="card in getProducts" :item="templateProduct(card)"
                                                 :key="card.id" />
+                                    </div>
+                                    <div v-else-if="loadError" role="alert" class="rounded-md border border-red-200 bg-red-50 px-4 py-16 text-center text-red-800">
+                                          <p class="mb-4">Tovar sa nepodarilo načítať. Skontrolujte pripojenie a skúste to znova.</p>
+                                          <button type="button" @click="fetchProducts()" class="rounded-md bg-blue-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900">Skúsiť znova</button>
                                     </div>
                                     <p v-else class="rounded-md border border-dashed border-slate-300 bg-white px-4 py-16 text-center text-slate-500">
                                           Zvoleným filtrom nezodpovedá žiadny tovar.
@@ -76,7 +80,6 @@ watch(getProducts, (products) => {
                               <aside class="order-first lg:order-last space-y-5 lg:col-span-3">
                                     <div class="sticky top-4 space-y-5">
                                           <CatalogFilter />
-                                          <kosikLink />
                                           <nazoryZakaznikov />
                                           <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
                                                 <router-link to="/dopyt" class="block font-semibold text-blue-700 underline hover:text-blue-900">Požiadať o cenovú ponuku</router-link>

@@ -146,6 +146,12 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                     </svg>
                     <p class="text-lg font-semibold text-gray-400">Košík je prázdny</p>
                     <p class="mt-1 text-sm text-gray-400">Vyberte produkty z nášho katalógu</p>
+                    <router-link
+                        :to="{ name: 'public.index' }"
+                        class="mt-6 inline-flex items-center rounded-md bg-blue-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-900"
+                    >
+                        Prejsť do katalógu
+                    </router-link>
                 </div>
 
                 <!-- Obsah košíka -->

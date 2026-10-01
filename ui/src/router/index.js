@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { APP_NAME } from '../constants';
 import product from './product';
 import order from './order';
 import customer from './customer';
@@ -69,7 +68,7 @@ const routes = [
         },
         // Titulok, popis aj structured data doplní komponent po načítaní produktu.
         meta: {
-            title: APP_NAME,
+            title: 'Detail produktu',
         }
     },
     {
