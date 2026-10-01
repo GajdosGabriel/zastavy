@@ -1,5 +1,5 @@
 <script setup>
-import { formatDecimal } from "../../../models/functions";
+import { formatDecimal, formatPrice } from "../../../models/functions";
 const props = defineProps({
     items: { type: Array, default: () => [] },
     sum: { type: [Number, String], default: 0 },
@@ -19,7 +19,7 @@ const props = defineProps({
                 <span class="font-semibold text-slate-900">{{ product.name }}</span>
                 <span class="text-slate-700">{{ product.total_quantity ?? '—' }} ks</span>
                 <span class="text-right font-medium text-slate-900">
-                    {{ Math.trunc(Number(product.price_from ?? 0) * Number(product.total_quantity ?? 0)) }},- €
+                    {{ formatPrice(Number(product.price_from ?? 0) * Number(product.total_quantity ?? 0)) }} €
                 </span>
             </div>
         </div>

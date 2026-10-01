@@ -8,11 +8,12 @@ import { useRoute } from "vue-router";
 import { storeToRefs } from "pinia";
 import kosik from "../checkout/kosikLink.vue";
 import kosikButton from "../icons/kosik.vue";
-import { formatDecimal, formatPriceWithoutVat } from "../../models/functions";
+import { formatDecimal, formatPrice, formatPriceWithoutVat, formatUnitName } from "../../models/functions";
 import RequiredMark from "../forms/RequiredMark.vue";
 import VariantPicker from "./components/VariantPicker.vue";
 import { applySeo, setJsonLd, productJsonLd, breadcrumbJsonLd, organizationJsonLd } from "../../models/seo";
 import { sanitizeHtml, htmlToText } from "../../models/html";
+import { useCheckoutOptions } from "../../store/StoreCheckoutOptions";
 
 // store.product je reaktívny aj mutovateľný (Pinia proxy); getProduct getter cez storeToRefs.
 const productStore = useProducts();
@@ -21,6 +22,18 @@ const { fetchProduct, resetProduct } = productStore;
 const { getImages } = storeToRefs(useImages());
 const { addVariantToCart } = useCheckouts();
 const route = useRoute();
+
+// Prah dopravy zdarma vidno už na produkte, nie až v košíku.
+const checkoutOptions = useCheckoutOptions();
+const freeShipping = computed(() => {
+    const methods = (checkoutOptions.getShippingMethods ?? [])
+        .filter((method) => Number(method.free_from_price) > 0)
+        .sort((a, b) => Number(a.free_from_price) - Number(b.free_from_price));
+    return methods[0] ?? null;
+});
+if (!(checkoutOptions.getShippingMethods ?? []).length) {
+    checkoutOptions.fetchShippingMethods().catch(() => {});
+}
 const messages = ref([]);
 const currentImage = ref(0);
 
@@ -38,10 +51,29 @@ const canBuy = computed(() => !!selectedVariant.value);
 const madeToOrder = computed(() => !!getProduct.value.made_to_order);
 
 // Popis chodí z administrácie ako HTML — pred v-html ho prečistíme.
-const safeDescription = computed(() => sanitizeHtml(getProduct.value.description));
+// Starší text bez HTML značiek (číslovaný zoznam, rozmery) má zalomenia len ako nové riadky — premeníme ich na <br>.
+const safeDescription = computed(() => {
+    const raw = String(getProduct.value.description ?? '');
+    const hasBlocks = /<(p|br|ul|ol|li|h2|h3)[\s>/]/i.test(raw);
+    return sanitizeHtml(hasBlocks ? raw : raw.replace(/\r?\n/g, '<br>'));
+});
 
-const orderTotal = computed(() => formatDecimal(quantity.value * activePrice.value));
-const minOrderTotal = computed(() => formatDecimal(minOrder.value * activePrice.value));
+const belowMinimum = computed(() => Number(quantity.value) < minOrder.value);
+
+// Jasná správa namiesto všeobecnej hlášky prehliadača.
+const onQuantityInvalid = (event) => {
+    const input = event.target;
+    if (input.validity.rangeUnderflow || input.validity.valueMissing) {
+        input.setCustomValidity(`Minimálny odber je ${minOrder.value} ${formatUnitName(minOrder.value)}.`);
+    } else if (input.validity.rangeOverflow) {
+        input.setCustomValidity('Zadajte menšie množstvo alebo nás kontaktujte pri väčšej objednávke.');
+    } else if (input.validity.stepMismatch || input.validity.badInput) {
+        input.setCustomValidity('Zadajte celé číslo.');
+    }
+};
+
+const orderTotal = computed(() => formatPrice(quantity.value * activePrice.value));
+const minOrderTotal = computed(() => formatPrice(minOrder.value * activePrice.value));
 
 const loadProduct = async (productId) => {
     currentImage.value = 0;
@@ -163,10 +195,10 @@ onUnmounted(() => {
 
                         <section class="mt-6 rounded-md border border-gray-200 bg-white p-5 shadow-sm">
                             <h2 class="mb-3 text-xl font-semibold text-gray-900">Popis tovaru</h2>
-                            <p class="leading-7 text-gray-600">
-                                <span v-if="!getProduct.description">Popis produktu pripravujeme.</span>
-                                <span v-else class="product-description" v-html="safeDescription" />
-                            </p>
+                            <div class="leading-7 text-gray-600">
+                                <p v-if="!getProduct.description">Popis produktu pripravujeme.</p>
+                                <div v-else class="product-description" v-html="safeDescription" />
+                            </div>
                         </section>
 
                         <!-- Prehľad všetkých variantov: parametre aj skladová dostupnosť -->
@@ -191,7 +223,7 @@ onUnmounted(() => {
                                             <td class="px-5 py-2 font-medium text-gray-900">{{ variant.name || '—' }}</td>
                                             <td class="px-5 py-2 font-mono text-xs text-gray-500">{{ variant.code }}</td>
                                             <td class="px-5 py-2 text-right font-semibold text-gray-900">
-                                                {{ formatDecimal(variant.active_price) }} €
+                                                {{ formatPrice(variant.active_price) }} €
                                             </td>
                                             <td class="px-5 py-2 text-right">
                                                 <span v-if="madeToOrder"
@@ -232,16 +264,16 @@ onUnmounted(() => {
                                         <span class="text-sm text-gray-500">Cena s DPH</span>
                                         <div class="text-right">
                                             <span v-if="hasDiscount" class="mr-2 text-sm text-gray-400 line-through">
-                                                {{ formatDecimal(basePrice) }} €
+                                                {{ formatPrice(basePrice) }} €
                                             </span>
                                             <span class="text-3xl font-bold text-red-600">
-                                                {{ formatDecimal(activePrice) }} €
+                                                {{ formatPrice(activePrice) }} €
                                             </span>
                                         </div>
                                     </div>
                                     <div class="flex justify-between text-sm text-gray-500">
                                         <span>Cena bez DPH ({{ getProduct.vat }}%)</span>
-                                        <span>{{ formatPriceWithoutVat(activePrice, getProduct.vat) }} €</span>
+                                        <span>{{ formatPrice(formatPriceWithoutVat(activePrice, getProduct.vat)) }} €</span>
                                     </div>
                                 </div>
 
@@ -254,9 +286,12 @@ onUnmounted(() => {
                                         Množstvo <RequiredMark />
                                     </label>
                                     <div class="flex gap-3">
-                                        <input id="input_order" type="number" v-model.number="quantity"
+                                        <input id="input_order" type="number" inputmode="numeric" v-model.number="quantity"
                                             class="w-28 rounded border-gray-300 text-center"
-                                            :min="minOrder" required />
+                                            :min="minOrder" step="1" max="100000" required
+                                            :aria-invalid="belowMinimum"
+                                            aria-describedby="order_hint"
+                                            @invalid="onQuantityInvalid" @input="$event.target.setCustomValidity('')" />
                                         <button :disabled="!canBuy"
                                             class="flex flex-1 items-center justify-center rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400">
                                             <kosikButton />
@@ -264,6 +299,15 @@ onUnmounted(() => {
                                         </button>
                                     </div>
                                 </form>
+
+                                <p v-if="selectedVariant" id="order_hint" class="mt-2 text-sm" :class="belowMinimum ? 'font-semibold text-red-600' : 'text-gray-500'" role="status">
+                                    <template v-if="belowMinimum">
+                                        Minimálny odber tohto prevedenia je {{ minOrder }} {{ formatUnitName(minOrder) }}.
+                                    </template>
+                                    <template v-else-if="minOrder > 1">
+                                        Minimálny odber: {{ minOrder }} {{ formatUnitName(minOrder) }}.
+                                    </template>
+                                </p>
 
                                 <div v-if="selectedVariant" class="mt-4 rounded bg-blue-50 p-3 text-sm text-blue-900">
                                     <div class="flex justify-between">
@@ -308,6 +352,11 @@ onUnmounted(() => {
                                     <div class="text-gray-500">Košík si pamätá zvolené prevedenie.</div>
                                 </div>
                             </section>
+
+                            <p v-if="freeShipping" class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                                Doprava zdarma pri objednávke od <strong>{{ formatPrice(freeShipping.free_from_price) }} €</strong>
+                                ({{ freeShipping.name }}).
+                            </p>
 
                             <section class="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
                                 <kosik />

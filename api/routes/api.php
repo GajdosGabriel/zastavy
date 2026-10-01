@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\SuperAdmin\ShippingMethodController as AdminShippin
 use App\Http\Controllers\Api\SuperAdmin\ShippingNoticeController;
 use App\Http\Controllers\Api\SuperAdmin\CouponSettingsController;
 use App\Http\Controllers\Api\SuperAdmin\StockController;
+use App\Http\Controllers\Api\SuperAdmin\SystemLogController;
 use App\Http\Controllers\Api\SuperAdmin\UserController;
 use App\Http\Controllers\Api\SuperAdmin\UserExportController;
 use App\Http\Controllers\Api\PasswordResetController;
@@ -186,6 +187,7 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
         ->parameters(['variants' => 'variant']);
 
     Route::prefix('admin')->group(function () {
+        Route::get('system-logs', [SystemLogController::class, 'index'])->name('admin.system-logs.index');
         Route::apiResource('shipping-methods', AdminShippingMethodController::class)->except(['show', 'create', 'edit'])->names('admin.shipping-methods');
         Route::post('shipping-methods/{id}/restore', [AdminShippingMethodController::class, 'restore'])->name('admin.shipping-methods.restore');
         Route::apiResource('payment-methods', AdminPaymentMethodController::class)->except(['show', 'create', 'edit'])->names('admin.payment-methods');

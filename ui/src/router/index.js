@@ -165,16 +165,11 @@ const routes = [
         }
     },
 
+    // Registrácia zatiaľ nie je pripravená — backend ju odmieta (REGISTRATION_ENABLED).
     {
         path: '/register',
         name: 'public.register.index',
-        components: {
-            default: () => import('../components/auth/register.vue'),
-        },
-        meta: {
-            title: 'Registrácia',
-            guestOnly: true,
-        }
+        redirect: { name: 'public.login.index' },
     },
 
     {

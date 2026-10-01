@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\SystemLogSubscriber;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Stock;
@@ -10,6 +11,7 @@ use App\Observers\CustomerObserver;
 use App\Observers\OrderObserver;
 use App\Observers\StockObserver;
 use App\Observers\UserObserver;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,5 +33,7 @@ class AppServiceProvider extends ServiceProvider
         Order::observe(OrderObserver::class);
         Stock::observe(StockObserver::class);
         User::observe(UserObserver::class);
+
+        Event::subscribe(SystemLogSubscriber::class);
     }
 }

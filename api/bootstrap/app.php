@@ -18,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SetLocale::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Chyba odoslania mailu (SMTP) skončí v denníku udalostí.
+        $exceptions->reportable(function (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
+            \App\Listeners\SystemLogSubscriber::mailFailed($e);
+        });
+
         // API vždy odpovedá v JSON (aj chyby), nie HTML/redirect.
         $exceptions->shouldRenderJsonWhen(
             fn ($request) => $request->is('api/*') || $request->expectsJson()

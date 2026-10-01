@@ -6,6 +6,7 @@ use Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Enums\ModelStatus;
 use App\Models\User;
+use App\Services\SystemLog\Recorder;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -21,6 +22,13 @@ class SanctumController extends Controller
         $user = User::where('email', $request->email)->orderBy('id')->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
+            Recorder::warning('auth', 'failed', $user ? 'Nesprávne heslo' : 'Neznámy účet',
+                status: 'failed',
+                recipient: is_string($request->email) ? $request->email : null,
+                userId: $user?->id,
+                ip: $request->ip(),
+            );
+
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
@@ -45,6 +53,13 @@ class SanctumController extends Controller
         }
 
         $user->recordLogin($request->ip());
+
+        Recorder::info('auth', 'login', 'Prihlásenie',
+            status: 'ok',
+            recipient: $user->email,
+            userId: $user->id,
+            ip: $request->ip(),
+        );
 
         return response()->json([
             'token' => $user->createToken('API Token')->plainTextToken

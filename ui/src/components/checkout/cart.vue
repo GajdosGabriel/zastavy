@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from "vue";
 import useCheckouts from "../../store/StoreCheckouts";
-import { formatDecimal, formatUnitName } from "../../models/functions";
+import { formatPrice, formatUnitName } from "../../models/functions";
 import { htmlToText } from "../../models/html";
 import kosikButton from "../icons/kosik.vue";
 
@@ -31,6 +31,14 @@ const submitCart = () => {
     quantity.value = Number(singleVariant.value.min_order) || 1;
 };
 
+// Orezanie na celé slovo, aby sa popis nelámal uprostred slova.
+const shortDescription = computed(() => {
+    const text = htmlToText(props.item.description);
+    if (text.length <= 150) return text;
+    const cut = text.slice(0, 150);
+    return cut.slice(0, Math.max(cut.lastIndexOf(" "), 1)).replace(/[\s.,;:–-]+$/, "") + "…";
+});
+
 // router-link namiesto @click: robot potrebuje skutočný <a href>, inak sa
 // na detaily tovaru z výpisu vôbec nedostane.
 const productRoute = computed(() => ({
@@ -43,15 +51,9 @@ const productRoute = computed(() => ({
 </script>
 
 <template>
-    <article class="flex h-full flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md">
-        <div class="min-h-16 bg-blue-900 p-3 text-center text-sm font-bold text-gray-100 md:text-base">
-            <router-link :to="productRoute" class="cursor-pointer">
-                {{ item.name }}
-            </router-link>
-        </div>
-
+    <article class="relative flex h-full flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md">
         <div class="relative flex h-56 items-center justify-center bg-slate-50 p-5">
-            <router-link :to="productRoute" class="cursor-pointer">
+            <router-link :to="productRoute" class="cursor-pointer" tabindex="-1" aria-hidden="true">
                 <img :src="item.images?.[0]?.path ?? item.thumb" class="max-h-48 w-full object-contain" :alt="item.name" />
             </router-link>
             <span v-if="!item.is_in_stock"
@@ -62,15 +64,16 @@ const productRoute = computed(() => ({
 
         <div class="flex flex-1 flex-col px-4 py-4">
             <h2 class="mb-3 text-center text-lg font-semibold text-slate-900">
-                <router-link :to="productRoute" class="cursor-pointer hover:text-blue-800">
+                <router-link :to="productRoute" class="cursor-pointer hover:text-blue-800 after:absolute after:inset-0 after:content-['']">
                     {{ item.name }}
                 </router-link>
             </h2>
 
             <div class="rounded-md bg-slate-100 px-3 py-2 text-center font-semibold text-slate-900">
-                <span v-if="isPriceRange">od {{ formatDecimal(priceFrom) }} €</span>
-                <span v-else>Cena: {{ formatDecimal(priceFrom) }} €</span>
+                <span v-if="hasChoice">od {{ formatPrice(priceFrom) }} €</span>
+                <span v-else>Cena: {{ formatPrice(priceFrom) }} €</span>
                 <span class="text-xs font-medium text-slate-500"> s DPH</span>
+                <span v-if="hasChoice" class="block text-xs font-normal text-slate-500">cena závisí od zvoleného prevedenia</span>
             </div>
 
             <div v-if="hasChoice" class="mt-3 flex flex-wrap justify-center gap-1.5">
@@ -88,7 +91,7 @@ const productRoute = computed(() => ({
             </div>
 
             <p v-if="item.description" class="mt-3 flex-1 text-xs leading-5 text-slate-500 md:text-sm">
-                {{ htmlToText(item.description).substring(0, 150) }}
+                {{ shortDescription }}
                 <router-link :to="productRoute" class="cursor-pointer">
                     <span class="font-semibold text-blue-800 hover:underline">viac popisu</span>
                 </router-link>
@@ -96,15 +99,17 @@ const productRoute = computed(() => ({
 
             <!-- Viac variantov = zákazník musí najprv vybrať, ktorý chce -->
             <router-link v-if="hasChoice" :to="productRoute"
-                class="mt-4 inline-flex w-full items-center justify-center rounded-md border-2 border-blue-700 px-4 py-2 font-semibold text-blue-700 transition hover:bg-blue-50">
+                class="relative z-10 mt-4 inline-flex w-full items-center justify-center rounded-md border-2 border-blue-700 px-4 py-2 font-semibold text-blue-700 transition hover:bg-blue-50">
                 Vybrať variant
             </router-link>
 
-            <form v-else-if="singleVariant" class="mt-4" @submit.prevent="submitCart">
+            <form v-else-if="singleVariant" class="relative z-10 mt-4" @submit.prevent="submitCart">
                 <div class="flex items-center justify-center gap-3">
                     <input
                         v-model.number="quantity"
                         type="number"
+                        step="1"
+                        :aria-label="`Množstvo: ${item.name}`"
                         class="w-24 rounded border-slate-300 text-center"
                         :min="singleVariant.min_order"
                         required
@@ -122,7 +127,7 @@ const productRoute = computed(() => ({
 
             <p v-if="singleVariant" class="pt-3 text-center text-xs text-slate-500 md:text-sm">
                 {{ quantity }} {{ formatUnitName(quantity) }} =
-                {{ formatDecimal(quantity * Number(singleVariant.active_price ?? singleVariant.price)) }},- € s DPH
+                {{ formatPrice(quantity * Number(singleVariant.active_price ?? singleVariant.price)) }} € s DPH
             </p>
 
             <router-link :to="{ name: 'public.cart.index' }">

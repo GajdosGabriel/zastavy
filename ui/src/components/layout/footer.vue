@@ -1,9 +1,11 @@
 <script setup>
+import { ref } from 'vue';
 import { NAV_ITEMS } from '../../constants';
 import { storeToRefs } from 'pinia';
 import { useUsers as useUser } from '../../store/StoreUsers';
 
 const { getUser } = storeToRefs(useUser());
+const playVideo = ref(false);
 </script>
 
 <!-- <template>
@@ -15,9 +17,16 @@ const { getUser } = storeToRefs(useUser());
   <div class="w-full bg-gray-800 text-gray-300 pt-2">
     <div class="md:flex justify-between container mx-auto max-w-6xl">
       <div class="m-4">
-        <h3 class="font-semibold text-lg">Zástavy-vlajky.sk</h3>
-        <iframe src="https://player.vimeo.com/video/62613770" width="w-full" frameborder="0" webkitallowfullscreen
-          mozallowfullscreen allowfullscreen></iframe>
+        <h3 class="font-semibold text-lg">Video o nás</h3>
+        <!-- Prehrávač sa načíta až po kliknutí, inak Vimeo spomaľuje každú stránku. -->
+        <iframe v-if="playVideo" src="https://player.vimeo.com/video/62613770?autoplay=1" width="100%" height="200"
+          frameborder="0" allow="autoplay; fullscreen" allowfullscreen title="Video o firme"></iframe>
+        <button v-else type="button" @click="playVideo = true"
+          class="flex h-[200px] w-full items-center justify-center rounded bg-gray-900 text-gray-200 hover:bg-gray-700"
+          aria-label="Prehrať video">
+          <svg viewBox="0 0 24 24" class="mr-2 h-10 w-10" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+          Prehrať video
+        </button>
       </div>
 
       <div class="m-4">

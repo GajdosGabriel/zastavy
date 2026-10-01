@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount } from "vue";
+import { ref, watch, onBeforeUnmount, getCurrentInstance } from "vue";
 import { storeToRefs } from "pinia";
 import axiosInstance from "../../axiosInstance";
 import useCustomers from "../../store/StoreCustomers";
@@ -26,6 +26,10 @@ const { findCustomerByIco } = customersStore;
 const isSearchingCompany = ref(false);
 const icoSearchMessage = ref("");
 const icoSearchInput = ref("");
+
+// Unikátne id, aby sa label viazal na vstup aj pri viacerých formulároch na stránke.
+const uid = `cust-${getCurrentInstance()?.uid ?? 0}`;
+const fid = (field: string) => `${uid}-${field}`;
 
 const isRequired = (field: string) => props.requiredFields.includes(field);
 
@@ -138,10 +142,12 @@ const onClickIco = async () => {
 <template>
     <!-- IČO vyhľadávanie -->
     <div class="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
-        <label class="mb-2 block text-sm font-semibold text-blue-900">Rýchle doplnenie — vyhľadajte firmu podľa IČO</label>
+        <label for="ico-search" class="mb-2 block text-sm font-semibold text-blue-900">Rýchle doplnenie — vyhľadajte firmu podľa IČO</label>
         <div class="flex gap-2">
             <FormInput
                 v-model="icoSearchInput"
+                id="ico-search"
+                autocomplete="off"
                 placeholder="IČO organizácie"
                 inputmode="numeric"
                 pattern="[0-9]*"
@@ -164,67 +170,67 @@ const onClickIco = async () => {
     <!-- Polia -->
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div class="sm:col-span-2 lg:col-span-3">
-            <label class="mb-1.5 block text-sm font-semibold text-gray-700">
+            <label :for="fid('company')" class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Názov firmy <RequiredMark v-if="isRequired('company')" />
             </label>
-            <FormInput v-model="getCustomer.company" :invalid="isMissing('company')" :error="fieldError('company')" placeholder="Názov firmy" field-key="customer.company" />
+            <FormInput v-model="getCustomer.company" :id="fid('company')" autocomplete="organization" :required="isRequired('company')" :invalid="isMissing('company')" :error="fieldError('company')" placeholder="Názov firmy" field-key="customer.company" />
             <FieldHint :hint="hintFor('company')" @apply="applyHint('company')" />
         </div>
         <div>
-            <label class="mb-1.5 block text-sm font-semibold text-gray-700">
+            <label :for="fid('street')" class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Ulica a číslo <RequiredMark v-if="isRequired('street')" />
             </label>
-            <FormInput v-model="getCustomer.street" :invalid="isMissing('street')" :error="fieldError('street')" placeholder="Ulica a číslo" field-key="customer.street" />
+            <FormInput v-model="getCustomer.street" :id="fid('street')" autocomplete="street-address" :required="isRequired('street')" :invalid="isMissing('street')" :error="fieldError('street')" placeholder="Ulica a číslo" field-key="customer.street" />
             <FieldHint :hint="hintFor('street')" @apply="applyHint('street')" />
         </div>
         <div>
-            <label class="mb-1.5 block text-sm font-semibold text-gray-700">
+            <label :for="fid('postcode')" class="mb-1.5 block text-sm font-semibold text-gray-700">
                 PSČ <RequiredMark v-if="isRequired('postcode')" />
             </label>
-            <FormInput v-model="getCustomer.postcode" :invalid="isMissing('postcode')" :error="fieldError('postcode')" placeholder="PSČ" field-key="customer.postcode" />
+            <FormInput v-model="getCustomer.postcode" :id="fid('postcode')" autocomplete="postal-code" :required="isRequired('postcode')" :invalid="isMissing('postcode')" :error="fieldError('postcode')" placeholder="PSČ" field-key="customer.postcode" />
             <FieldHint :hint="hintFor('postcode')" @apply="applyHint('postcode')" />
         </div>
         <div>
-            <label class="mb-1.5 block text-sm font-semibold text-gray-700">
+            <label :for="fid('city')" class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Mesto <RequiredMark v-if="isRequired('city')" />
             </label>
-            <FormInput v-model="getCustomer.city" :invalid="isMissing('city')" :error="fieldError('city')" placeholder="Mesto" field-key="customer.city" />
+            <FormInput v-model="getCustomer.city" :id="fid('city')" autocomplete="address-level2" :required="isRequired('city')" :invalid="isMissing('city')" :error="fieldError('city')" placeholder="Mesto" field-key="customer.city" />
             <FieldHint :hint="hintFor('city')" @apply="applyHint('city')" />
         </div>
         <div>
-            <label class="mb-1.5 block text-sm font-semibold text-gray-700">
+            <label :for="fid('name')" class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Kontaktné meno <RequiredMark v-if="isRequired('name')" />
             </label>
-            <FormInput v-model="getCustomer.name" :invalid="isMissing('name')" :error="fieldError('name')" placeholder="Meno kontaktnej osoby" field-key="customer.name" />
+            <FormInput v-model="getCustomer.name" :id="fid('name')" autocomplete="name" :required="isRequired('name')" :invalid="isMissing('name')" :error="fieldError('name')" placeholder="Meno kontaktnej osoby" field-key="customer.name" />
             <FieldHint :hint="hintFor('name')" @apply="applyHint('name')" />
         </div>
         <div>
-            <label class="mb-1.5 block text-sm font-semibold text-gray-700">
+            <label :for="fid('email')" class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Email <RequiredMark v-if="isRequired('email')" />
             </label>
-            <FormInput v-model="getCustomer.email" type="email" :invalid="isMissing('email') || !!fieldError('email')" :error="fieldError('email')" placeholder="Email" field-key="customer.email" />
+            <FormInput v-model="getCustomer.email" :id="fid('email')" autocomplete="email" :required="isRequired('email')" type="email" :invalid="isMissing('email') || !!fieldError('email')" :error="fieldError('email')" placeholder="Email" field-key="customer.email" />
             <FieldHint :hint="hintFor('email')" @apply="applyHint('email')" />
         </div>
         <div>
-            <label class="mb-1.5 block text-sm font-semibold text-gray-700">
+            <label :for="fid('phone')" class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Telefón <RequiredMark v-if="isRequired('phone')" />
             </label>
-            <FormInput v-model="getCustomer.phone" :invalid="isMissing('phone')" :error="fieldError('phone')" placeholder="Telefón" field-key="customer.phone" />
+            <FormInput v-model="getCustomer.phone" :id="fid('phone')" autocomplete="tel" type="tel" :required="isRequired('phone')" :invalid="isMissing('phone')" :error="fieldError('phone')" placeholder="Telefón" field-key="customer.phone" />
             <FieldHint :hint="hintFor('phone')" @apply="applyHint('phone')" />
         </div>
         <div>
-            <label class="mb-1.5 block text-sm font-semibold text-gray-700">IČO</label>
-            <FormInput v-model="getCustomer.ico" :invalid="!!icoValidationError()" :error="icoValidationError()" inputmode="numeric" pattern="[0-9]*" placeholder="IČO" @keyup.enter="onClickIco" />
+            <label :for="fid('ico')" class="mb-1.5 block text-sm font-semibold text-gray-700">IČO</label>
+            <FormInput v-model="getCustomer.ico" :id="fid('ico')" autocomplete="off" :invalid="!!icoValidationError()" :error="icoValidationError()" inputmode="numeric" pattern="[0-9]*" placeholder="IČO" @keyup.enter="onClickIco" />
             <FieldHint :hint="hintFor('ico')" @apply="applyHint('ico')" />
         </div>
         <div>
-            <label class="mb-1.5 block text-sm font-semibold text-gray-700">DIČ</label>
-            <FormInput v-model="getCustomer.dic" placeholder="DIČ" />
+            <label :for="fid('dic')" class="mb-1.5 block text-sm font-semibold text-gray-700">DIČ</label>
+            <FormInput v-model="getCustomer.dic" :id="fid('dic')" autocomplete="off" placeholder="DIČ" />
             <FieldHint :hint="hintFor('dic')" @apply="applyHint('dic')" />
         </div>
         <div>
-            <label class="mb-1.5 block text-sm font-semibold text-gray-700">IČ DPH</label>
-            <FormInput v-model="getCustomer.ic_dic" placeholder="IČ DPH" />
+            <label :for="fid('ic_dic')" class="mb-1.5 block text-sm font-semibold text-gray-700">IČ DPH</label>
+            <FormInput v-model="getCustomer.ic_dic" :id="fid('ic_dic')" autocomplete="off" placeholder="IČ DPH" />
             <FieldHint :hint="hintFor('ic_dic')" @apply="applyHint('ic_dic')" />
         </div>
 

@@ -33,3 +33,6 @@ if (config('operations.enabled')) {
     })->name('operations-heartbeats')->everyFiveMinutes()->withoutOverlapping();
     Schedule::command('ops:check')->everyFiveMinutes()->withoutOverlapping();
 }
+
+// Denník udalostí drží len posledných 30 dní (config/logging.php).
+Schedule::command('model:prune', ['--model' => \App\Models\SystemLog::class])->dailyAt('03:25');

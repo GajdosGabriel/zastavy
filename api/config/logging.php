@@ -129,4 +129,18 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Denník udalostí (tabuľka system_logs)
+    |--------------------------------------------------------------------------
+    |
+    | Koľko dní sa záznamy držia (odoslané maily, prihlásenia, chyby).
+    | Maže model:prune v noci.
+    |
+    */
+
+    'system_log' => [
+        'days' => (int) env('SYSTEM_LOG_DAYS', 30),
+    ],
+
 ];

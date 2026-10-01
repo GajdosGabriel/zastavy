@@ -11,7 +11,7 @@ import useCustomers from "../../store/StoreCustomers";
 import { useUsers } from "../../store/StoreUsers";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
-import { formatDecimal, formatFileSize } from "../../models/functions";
+import { formatDecimal, formatPrice, formatFileSize } from "../../models/functions";
 import { htmlToText } from "../../models/html";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import DeliveryAddressFields from "../forms/DeliveryAddressFields.vue";
@@ -61,6 +61,20 @@ const onPickAttachments = (event) => {
       // Reset inputu, aby sa dal ten istý súbor po odobratí vybrať znova.
       event.target.value = "";
 };
+
+// Najnižší prah dopravy zdarma spomedzi spôsobov dopravy.
+const freeShippingInfo = computed(() => {
+      const withFree = [...(checkoutOptions.getShippingMethods ?? [])]
+            .filter((method) => method.free_from_price !== null && method.free_from_price !== undefined && Number(method.free_from_price) > 0)
+            .sort((a, b) => Number(a.free_from_price) - Number(b.free_from_price));
+      if (!withFree.length) return null;
+      const threshold = Number(withFree[0].free_from_price);
+      return {
+            threshold,
+            methodName: withFree[0].name,
+            remaining: Math.max(0, threshold - Number(getCheckout.value?.grandTotal ?? 0)),
+      };
+});
 
 const shortDescription = (product) => htmlToText(product.description).substring(0, 25);
 const productTotal = (product) => formatDecimal(Number(product.active_price || 0) * Number(product.input_order || 0));
@@ -160,6 +174,17 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                     <!-- Ľavý stĺpec: produkty + formulár -->
                     <div class="lg:col-span-2 space-y-6">
 
+                        <!-- Doprava zdarma: suma a podmienky vidno hneď, nie až pri výbere dopravy -->
+                        <div v-if="freeShippingInfo" class="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800" role="status">
+                            <template v-if="freeShippingInfo.remaining > 0">
+                                Doprava zdarma pri objednávke od <strong>{{ formatPrice(freeShippingInfo.threshold) }} €</strong>
+                                ({{ freeShippingInfo.methodName }}). Do dopravy zdarma vám chýba <strong>{{ formatPrice(freeShippingInfo.remaining) }} €</strong>.
+                            </template>
+                            <template v-else>
+                                Máte nárok na dopravu zdarma ({{ freeShippingInfo.methodName }}).
+                            </template>
+                        </div>
+
                         <!-- Tabuľka produktov -->
                         <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                             <table class="min-w-full divide-y divide-gray-200">
@@ -191,12 +216,15 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 text-right text-sm whitespace-nowrap text-gray-700">
-                                            {{ formatDecimal(product.active_price) }} €
+                                            {{ formatPrice(product.active_price) }} €
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             <div class="inline-flex items-center gap-1.5">
                                                 <input
                                                     type="number"
+                                                    inputmode="numeric"
+                                                    step="1"
+                                                    :aria-label="`Množstvo: ${product.name}${product.variant_name ? ' – ' + product.variant_name : ''} (${product.unit_value || 'ks'})`"
                                                     v-model.number="product.input_order"
                                                     class="w-16 rounded-lg border border-gray-300 px-2 py-1 text-center text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                                     :min="product.min_order"
@@ -250,12 +278,12 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                 />
                                 <div class="mt-4">
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
-                                    <input v-model="note" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />
+                                    <input v-model="note" type="text" aria-label="Poznámka k objednávke" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />
                                 </div>
 
                                 <!-- Prílohy k objednávke (logo, návrh, podklady) -->
                                 <div class="mt-4">
-                                    <label class="mb-1.5 block text-sm font-semibold text-gray-700">Prílohy</label>
+                                    <label for="cart-attachments" class="mb-1.5 block text-sm font-semibold text-gray-700">Prílohy</label>
                                     <p class="mb-2 text-xs text-gray-500">
                                         Podklady k výrobe – logo, návrh, rozmery. Max. 5 súborov, každý do 10 MB
                                         (pdf, jpg, png, svg, ai, eps, cdr, psd, zip, doc, xls).
@@ -263,6 +291,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
 
                                     <input
                                         ref="attachmentInput"
+                                        id="cart-attachments"
                                         type="file"
                                         multiple
                                         class="hidden"

@@ -87,13 +87,6 @@ const onClickForm = async () => {
                             <SpinnerButton v-if="loadingStore.isLoading" />
                             Prihlásiť
                         </button>
-
-                        <div class="border-t border-slate-200 pt-5 text-center text-sm text-slate-600">
-                            Nemáte účet?
-                            <router-link :to="{ name: 'public.register.index' }" class="font-semibold text-blue-700 hover:text-blue-900">
-                                Registrácia
-                            </router-link>
-                        </div>
                     </form>
                 </section>
             </div>

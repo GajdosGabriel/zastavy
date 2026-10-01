@@ -11,14 +11,14 @@ export const formatDecimal = (number = null) => {
   return Number(number).toFixed(2);
 };
 
+// Cena na zobrazenie: slovenská desatinná čiarka (23,00). Na hodnoty vo formulároch ostáva formatDecimal.
+export const formatPrice = (number = null) => formatDecimal(number).replace('.', ',');
+
 export const formatUnitName = (number = 0) => {
-  if (number === 1) {
-    return 'kus'
-  } else if (number > 1 && number < 9) {
-    return 'kusy';
-  } else {
-    return 'kusov';
-  }
+  const n = Math.abs(Number(number));
+  if (n === 1) return 'kus';
+  if (n >= 2 && n <= 4) return 'kusy';
+  return 'kusov';
 };
 
 export const formatPriceWithoutVat = (price, vat) => {

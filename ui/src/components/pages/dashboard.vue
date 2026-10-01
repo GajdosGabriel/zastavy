@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import BaseLayout from '../layout/BaseLayout.vue';
 import DailyChart from '../dashboard/DailyChart.vue';
@@ -39,6 +39,7 @@ let clockTimer: ReturnType<typeof setInterval> | undefined;
 onMounted(() => {
       document.title = 'Dashboard';
       fetchDashboard();
+      fetchLogs();
       // Dashboard býva otvorený celý deň — obnovíme ho, len keď je karta viditeľná.
       refreshTimer = setInterval(() => {
             if (document.visibilityState === 'visible') fetchDashboard();
@@ -157,6 +158,25 @@ const progress = (order: any) => order.required_quantity > 0
       ? Math.round((order.shipped_quantity / order.required_quantity) * 100)
       : 0;
 
+// ── Denník udalostí (len super-admin) ────────────────────────
+const logs = ref<any[]>([]);
+const logSummary = ref<Record<string, number> | null>(null);
+const fetchLogs = async () => {
+      if (!isSuperAdmin.value) return;
+      try {
+            const response = await axiosInstance.get('/admin/system-logs', { params: { per_page: 8 } });
+            logs.value = response.data.data;
+            logSummary.value = response.data.summary;
+      } catch { /* denník je doplnok, dashboard sa kvôli nemu nemá rozbiť */ }
+};
+watch(isSuperAdmin, fetchLogs, { immediate: true });
+const logTime = (value: string | null) => value
+      ? new Date(value).toLocaleString('sk-SK', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : '';
+const logStatusClass = (status: string | null) => status === 'failed'
+      ? 'bg-red-100 text-red-700'
+      : status ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600';
+
 // ── Správa ───────────────────────────────────────────────────
 const adminLinks = computed(() => [
       { route: 'announcements.index', label: 'Oznamy a bannery', hint: 'Horný banner, dolný oznam, termíny', show: true },
@@ -164,6 +184,7 @@ const adminLinks = computed(() => [
       { route: 'shipping-methods.index', label: 'Spôsoby dopravy', hint: 'Ceny a doprava zdarma', show: isSuperAdmin.value },
       { route: 'payment-methods.index', label: 'Spôsoby platby', hint: 'Poplatky a poradie', show: isSuperAdmin.value },
       { route: 'attributes.index', label: 'Vlastnosti produktov', hint: 'Rozmer, materiál, uchytenie', show: isSuperAdmin.value },
+      { route: 'system-logs.index', label: 'Denník udalostí', hint: 'Čo komu odišlo, chyby, prihlásenia (30 dní)', show: isSuperAdmin.value },
       { route: 'customers.export.index', label: 'Export zákazníkov', hint: 'CSV s vybranými stĺpcami', show: isSuperAdmin.value },
       { route: 'users.export.index', label: 'Export používateľov', hint: 'CSV s voliteľnými atribútmi', show: isSuperAdmin.value },
 ].filter((item) => item.show));
@@ -374,6 +395,30 @@ const adminLinks = computed(() => [
 
                               <!-- Správa -->
                               <div class="xl:col-span-3">
+                                    <!-- Denník udalostí -->
+                                    <div v-if="isSuperAdmin" class="mb-6 rounded-lg border border-slate-200 bg-white shadow-sm">
+                                          <div class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+                                                <div>
+                                                      <h2 class="text-base font-semibold text-slate-900">Denník udalostí</h2>
+                                                      <p v-if="logSummary" class="text-xs text-slate-500">
+                                                            24 h: {{ logSummary.sentDay }} e-mailov odoslaných,
+                                                            <span :class="logSummary.failedDay ? 'font-semibold text-red-700' : ''">{{ logSummary.failedDay }} neodoslaných</span>,
+                                                            {{ logSummary.loginsDay }} prihlásení
+                                                      </p>
+                                                </div>
+                                                <router-link :to="{ name: 'system-logs.index' }" class="text-sm font-medium text-blue-700 hover:underline">Celý denník →</router-link>
+                                          </div>
+                                          <ul class="divide-y divide-slate-100">
+                                                <li v-for="log in logs" :key="log.id" class="flex items-start gap-3 px-5 py-2.5 text-sm">
+                                                      <span class="mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="logStatusClass(log.status)">{{ log.event }}</span>
+                                                      <div class="min-w-0 flex-1">
+                                                            <div class="truncate text-slate-900">{{ log.message || '—' }}</div>
+                                                            <div class="truncate text-xs text-slate-500">{{ logTime(log.createdAt) }}<template v-if="log.recipient"> · ✉ {{ log.recipient }}</template></div>
+                                                      </div>
+                                                </li>
+                                                <li v-if="!logs.length" class="px-5 py-6 text-center text-sm text-slate-500">Zatiaľ žiadne záznamy.</li>
+                                          </ul>
+                                    </div>
                                     <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Správa obchodu</h2>
                                     <div class="grid gap-3 sm:grid-cols-2">
                                           <router-link v-for="link in adminLinks" :key="link.route" :to="{ name: link.route }"

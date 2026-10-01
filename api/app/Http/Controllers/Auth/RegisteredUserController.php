@@ -22,6 +22,9 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // Registrácia zatiaľ nie je pripravená. Zapnúť sa dá REGISTRATION_ENABLED=true.
+        abort_unless(config('app.registration_enabled'), 403, 'Registrácia nových používateľov je zatiaľ vypnutá.');
+
         $request->validate([
             'firstName' => ['required', 'string', 'max:255'],
             'lastName' => ['required', 'string', 'max:255'],

@@ -73,6 +73,11 @@ return [
     'timezone' => 'Europe/Bratislava',
 
     /*
+    | Registrácia nových používateľov z webu. Zatiaľ vypnutá — nie je pripravená.
+    */
+    'registration_enabled' => (bool) env('REGISTRATION_ENABLED', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------

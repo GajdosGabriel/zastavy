@@ -22,6 +22,17 @@ const admin = [
         },
     },
     {
+        path: '/admin/dennik',
+        name: 'system-logs.index',
+        components: {
+            default: () => import('../components/admin/SystemLogIndex.vue'),
+        },
+        meta: {
+            title: 'Denník udalostí',
+            superAdminOnly: true,
+        },
+    },
+    {
         path: '/admin/kupony',
         name: 'coupons.index',
         components: {
