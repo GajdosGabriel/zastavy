@@ -242,6 +242,16 @@ export const useProducts = defineStore('products', () => {
         }
     };
 
+    const restoreProduct = async (restoreUrl: string): Promise<void> => {
+        try {
+            await axiosInstance.post(restoreUrl);
+            useFlash().success('Produkt bol obnovený.');
+            await fetchProducts();
+        } catch (e) {
+            useErrors().setErrors(e);
+        }
+    };
+
     // --- Varianty -----------------------------------------------------------
 
     const variantPayload = (variant: ProductVariant) => ({
@@ -369,6 +379,7 @@ export const useProducts = defineStore('products', () => {
         updateProduct,
         storeProduct,
         destroyProduct,
+        restoreProduct,
         fetchVariants,
         storeVariant,
         updateVariant,

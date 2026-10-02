@@ -70,4 +70,15 @@ class ProductController extends Controller
 
         return response(new ProductResource($product));
     }
+
+    public function restore(int $id)
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('restore', $product);
+
+        $product->restore();
+
+        return new ProductResource($product->refresh()->load(['images', 'categories']));
+    }
 }

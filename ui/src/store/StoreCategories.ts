@@ -24,7 +24,7 @@ export const useCategories = defineStore('categories', {
         async fetchCategories(): Promise<void> {
             try {
                 const response = await axiosInstance.get(PAGE_CATEGORY.URL);
-                this.categories = response.data;
+                this.categories = response.data.data ?? response.data;
             } catch (e) {
                 useErrors().setErrors(e);
             }

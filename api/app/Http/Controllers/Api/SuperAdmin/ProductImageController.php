@@ -14,6 +14,8 @@ class ProductImageController extends Controller
 {
     public function store(Product $product, Request $request)
     {
+        Gate::authorize('update', $product);
+
         $request->validate([
             'images' => ['required', 'array'],
             'images.*' => ['file', 'image', 'max:5120'],
@@ -26,6 +28,8 @@ class ProductImageController extends Controller
 
     public function reorder(Product $product, Request $request)
     {
+        Gate::authorize('update', $product);
+
         $request->validate([
             'ids'   => ['required', 'array'],
             'ids.*' => ['integer'],

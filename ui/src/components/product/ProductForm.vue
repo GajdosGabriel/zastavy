@@ -18,7 +18,7 @@ import HtmlEditor from '../forms/HtmlEditor.vue';
 // store.product je reaktívny aj mutovateľný (Pinia proxy); getProduct getter cez storeToRefs.
 const productStore = useProducts();
 const { getProduct } = storeToRefs(productStore);
-const { updateProduct, storeProduct, fetchProduct, setProduct } = productStore;
+const { updateProduct, storeProduct, fetchProduct, resetProduct } = productStore;
 const { destroyImage, storeImages, reorderImages } = useImages();
 
 const dragIndex = ref(null);
@@ -38,7 +38,9 @@ const onDrop = async (targetIndex) => {
 const categoriesStore = useCategories();
 const { categories } = storeToRefs(categoriesStore);
 const { fetchCategories } = categoriesStore;
-const productId = computed(() => useRoute().params.productId);
+// useRoute() musí bežať v setupe — vnútri computed by po mounte už route nenašiel.
+const route = useRoute();
+const productId = computed(() => route.params.productId);
 
 let selectedImageFiles = ref([]);
 let imageUrls = ref([]);
@@ -55,8 +57,23 @@ onMounted(async () => {
     if (productId.value) {
         await fetchProduct(productId.value);
         setOriginalData();
+    } else {
+        // V store môže ostať produkt zo zoznamu (prepínač publikovania) — nový začína načisto.
+        resetProduct();
     }
     fetchCategories();
+});
+
+// Create a edit zdieľajú komponent, takže pri prechode medzi nimi sa nemountuje znova.
+watch(productId, async (id, previousId) => {
+    if (id === previousId) return;
+
+    if (id) {
+        await fetchProduct(id);
+    } else {
+        resetProduct();
+    }
+    setOriginalData();
 });
 
 const handleImageSelected = (event) => {
@@ -96,10 +113,12 @@ const onSubmitForm = async () => {
         if (product?.id && selectedImageFiles.value.length) {
             await storeImages(product.id, selectedImageFiles.value);
         }
-    }
+        selectedImageFiles.value = [];
 
-    markAsSaved();
-    router.push({ name: "products.index" });
+        // Cena a sklad sú na variantoch a tie sa dajú pridať až v úprave — pokračujeme rovno tam.
+        markAsSaved();
+        router.push({ name: "products.edit", params: { productId: product.id } });
+    }
 };
 
 watch(selectedImageFiles, (files) => {
@@ -120,7 +139,7 @@ const onClickImageRemove = async (imageId) => {
     }
 };
 
-onUnmounted(() => setProduct({}));
+onUnmounted(() => resetProduct());
 
 const pageTitle = computed(() => productId.value ? 'Upraviť produkt' : 'Nový produkt');
 const buttonSubmit = { name: 'Uložiť', spinner: true };

@@ -18,6 +18,10 @@ class ProductVariantRequest extends FormRequest
 
     public function rules(): array
     {
+        // Sklad môže po expedícii klesnúť pod nulu. Taký variant sa musí dať uložiť
+        // (napr. zmena ceny) bez prepísania stavu — nižšie než aktuálne však ísť nesmie.
+        $minQuantity = min(0, (int) ($this->route('variant')?->quantity ?? 0));
+
         return [
             'code'       => [
                 'sometimes',
@@ -37,7 +41,7 @@ class ProductVariantRequest extends FormRequest
             'price'      => 'required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0|lte:price',
             'discount'   => 'nullable|numeric|min:0|max:100',
-            'quantity'   => 'nullable|integer|min:0',
+            'quantity'   => 'nullable|integer|min:' . $minQuantity,
             'weight'     => 'nullable|numeric|min:0',
             'min_order'  => 'sometimes|integer|min:1',
             'image_id'   => 'nullable|integer|exists:images,id',

@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import useErrors from "./StoreErrors";
 
 interface FlashState {
     message: string;
@@ -16,6 +17,8 @@ export const useFlash = defineStore("flash", {
 
     actions: {
         success(message: string): void {
+            // Úspešná akcia ruší chybu z predošlého pokusu — inak by hore svietili obe naraz.
+            useErrors().resetErrors();
             clearTimeout(timer);
             this.message = message;
             this.key++;

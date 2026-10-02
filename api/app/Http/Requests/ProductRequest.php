@@ -34,7 +34,7 @@ class ProductRequest extends FormRequest
                 'regex:/^[A-Za-z0-9._\\-\\/]+$/',
                 Rule::unique('products', 'code')->ignore($this->route('product')),
             ],
-            'name' => 'required|min:2',
+            'name' => 'required|string|min:2|max:255',
             'published' => 'required|boolean',
             'description' => 'string|nullable',
             'featured' => 'sometimes|boolean',
@@ -50,7 +50,9 @@ class ProductRequest extends FormRequest
     public function messages()
     {
         return [
-            'name.required' => 'Názov produktu musí mať minimálne 2 znaky.',
+            'name.required' => 'Názov produktu je povinný.',
+            'name.min' => 'Názov produktu musí mať minimálne 2 znaky.',
+            'name.max' => 'Názov produktu môže mať najviac 255 znakov.',
         ];
     }
 }

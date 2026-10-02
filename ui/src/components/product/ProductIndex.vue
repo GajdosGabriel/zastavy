@@ -81,9 +81,11 @@ const template = (product) => {
 
                         <clipboard-panel v-if="quickMark.length" :items="quickMark" :sum="quickMarkSum()" />
 
+                        <!-- Pri užšom okne sa posúva len tabuľka, nie celá stránka. -->
+                        <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                               <thead class="thead">
-                                    <tr>
+                                    <tr class="[&>th]:px-4">
                                           <th scope="col" class="thead_th flex items-center">
                                                 Produkt
                                           </th>
@@ -106,6 +108,7 @@ const template = (product) => {
                                           @checkmark="onClickRowComponent(product)" />
                               </tbody>
                         </table>
+                        </div>
 
                         <PageBottom :item="template().page_bottom" />
 

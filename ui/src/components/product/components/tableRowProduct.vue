@@ -13,7 +13,7 @@ import { htmlToText } from "../../../models/html";
 const emits = defineEmits(['checkmark']);
 const props = defineProps(["product"]);
 
-const { destroyProduct, updateProduct, setProduct, getStatment } = useProducts();
+const { destroyProduct, restoreProduct, updateProduct, setProduct, getStatment } = useProducts();
 
 // Produkt nemá jednu cenu — ukazujeme rozsah cez varianty.
 const priceLabel = computed(() => {
@@ -36,12 +36,17 @@ const onClickUpdate = async () => {
 const actionMap = {
     update: { to: '/products/' + props.product.id + '/edit' },
     delete: { onClick: () => destroyProduct(props.product.endpoints.destroy) },
+    restore: { onClick: () => restoreProduct(props.product.endpoints.restore) },
 };
 
 const dropdownItems = computed(() => {
     if (!Object.keys(props.product.endpoints).length) return [];
 
+    // Zmazaný produkt API pod bežnými adresami nenájde — dá sa iba obnoviť.
+    const isDeleted = !!props.product.endpoints.restore;
+
     return Object.entries(props.product.permissions || {})
+        .filter(([key]) => isDeleted ? key === 'restore' : key !== 'restore')
         .filter(([key, perm]) => perm.allowed && actionMap[key])
         .map(([key, perm]) => ({ label: perm.label, ...actionMap[key] }));
 })
@@ -51,7 +56,7 @@ const dropdownItems = computed(() => {
 <template>
 
     <tr class="hover:bg-gray-50">
-        <td class="px-6 py-4 whitespace-nowrap">
+        <td class="px-4 py-4 whitespace-nowrap">
             <div class="flex items-center">
                 <div class="flex-shrink-0 h-10 w-10">
                     <img width="40" height="40" loading="lazy" class="h-10 w-10 rounded-full" :src="product.thumb" :alt="product.name" />
@@ -80,7 +85,7 @@ const dropdownItems = computed(() => {
                 </div>
             </div>
         </td>
-        <td class="px-6 py-4 whitespace-nowrap">
+        <td class="px-4 py-4 whitespace-nowrap">
             <div class="text-sm text-gray-900" @click="$emit('checkmark')">
                 <Checkmark v-if="product.quickMark" />
                 <CheckmarkLight v-else="product.quickMark" />
@@ -90,11 +95,11 @@ const dropdownItems = computed(() => {
                 </span>
             </div>
         </td>
-        <td class="px-6 py-4 whitespace-nowrap">
+        <td class="px-4 py-4 whitespace-nowrap">
             <div class="text-sm text-gray-900">{{ priceLabel }}</div>
             <div class="text-sm text-gray-500">DPH {{ product.vat }} %</div>
         </td>
-        <td class="px-6 py-4 whitespace-nowrap">
+        <td class="px-4 py-4 whitespace-nowrap">
 
             <!-- <spinnerIcon v-if="getStatment.spinner.row" /> -->
             <span @click="onClickUpdate()"
@@ -110,7 +115,7 @@ const dropdownItems = computed(() => {
                 <span v-else>{{ product.published ? "ÁNO" : "STOP" }}</span>
             </span>
         </td>
-        <td class="px-6 py-4 whitespace-nowrap">
+        <td class="px-4 py-4 whitespace-nowrap">
             <span v-if="product.variants_count"
                 class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
                 {{ product.variants_count }}×
@@ -118,14 +123,14 @@ const dropdownItems = computed(() => {
             <span v-else class="text-xs font-semibold text-red-600">bez variantu</span>
         </td>
 
-        <td class="px-6 py-4 whitespace-nowrap">
+        <td class="px-4 py-4 whitespace-nowrap">
             <span v-if="product.total_quantity !== null">
                 {{ product.total_quantity }} {{ product.unit_value }}
             </span>
             <span v-else class="text-xs text-gray-400">nesleduje sa</span>
         </td>
 
-        <td class="px-6 py-4 whitespace-nowrap flex justify-between">
+        <td class="px-4 py-4 whitespace-nowrap flex justify-between">
             <panel-dropdown :items="dropdownItems" />
         </td>
     </tr>

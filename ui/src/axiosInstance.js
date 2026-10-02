@@ -17,6 +17,17 @@ axiosInstance.interceptors.request.use((config) => {
         config.baseURL = '';
     }
 
+    // API vracia v `endpoints` absolútne adresy (APP_URL). Pri dev proxy by šli mimo
+    // originu Vite, teda bez prihlasovacej cookie — necháme z nich len cestu.
+    if (URL_BASE_API.startsWith('/') && /^https?:\/\//i.test(config.url ?? '')) {
+        const { pathname, search } = new URL(config.url);
+
+        if (pathname === URL_BASE_API || pathname.startsWith(`${URL_BASE_API}/`)) {
+            config.url = pathname + search;
+            config.baseURL = '';
+        }
+    }
+
     if (config.data instanceof FormData) {
         delete config.headers['Content-Type'];
         delete config.headers['content-type'];

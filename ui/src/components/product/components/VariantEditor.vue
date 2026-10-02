@@ -131,6 +131,9 @@ const templateFrom = (variants) => {
         id: null,
         code: '',
         ean: '',
+        // Akcia sa vo formulári nového variantu nezadáva, takže sa nesmie potichu zdediť.
+        sale_price: '',
+        discount: '',
         is_default: false,
     };
 };

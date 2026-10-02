@@ -176,6 +176,9 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::get('users/export/attributes', [UserExportController::class, 'attributes'])->name('users.export.attributes');
     Route::get('users/export', [UserExportController::class, 'export'])->name('users.export');
     Route::apiResource('users', UserController::class)->only(['index', 'show', 'update', 'store']);
+    Route::post('products/{id}/restore', [ProductController::class, 'restore'])
+        ->whereNumber('id')
+        ->name('products.restore');
     Route::apiResource('products', ProductController::class)->except(['show']);
 
     // Taxonómia vlastností a varianty produktu.

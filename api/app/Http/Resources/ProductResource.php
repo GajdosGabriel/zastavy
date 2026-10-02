@@ -86,6 +86,8 @@ class ProductResource extends JsonResource
                 'store'     => route('products.store'),
                 'destroy'   => route('products.destroy', $this->id),
                 'variants'  => route('products.variants.index', $this->id),
+                // Len pri zmazanom produkte — UI podľa toho ponúkne obnovenie namiesto úprav.
+                ...($this->resource->trashed() ? ['restore' => route('products.restore', $this->id)] : []),
             ] : [],
             'permissions' => $staff ? [
                 'view' => [
