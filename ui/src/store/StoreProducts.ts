@@ -272,7 +272,7 @@ export const useProducts = defineStore('products', () => {
     // Kľúč je id variantu alebo 'new'.
     const variantErrors = ref<Record<string, string[]>>({});
 
-    const setVariantErrors = (key: string | number, e: any): void => {
+    const setVariantErrors = (key: string | number | null, e: any): void => {
         const fieldMessages = Object.values(e?.response?.data?.errors ?? {}).flat() as string[];
         variantErrors.value = {
             [String(key)]: fieldMessages.length

@@ -20,7 +20,7 @@ const mobileMenuOpen = ref(false);
 // Admin menu potrebuje ~1050 px; pod touto šírkou ostáva hamburger, inak stránka horizontálne presahuje.
 const desktopQuery = window.matchMedia("(min-width: 1100px)");
 const isDesktop = ref(desktopQuery.matches);
-const syncDesktop = (e) => { isDesktop.value = e.matches; };
+const syncDesktop = (e: MediaQueryListEvent) => { isDesktop.value = e.matches; };
 const route = useRoute();
 const router = useRouter();
 
