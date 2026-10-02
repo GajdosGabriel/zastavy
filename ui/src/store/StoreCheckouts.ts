@@ -8,8 +8,12 @@ import useUsers from "./StoreUsers";
 import { prepareOrderSubmission, finishOrderSubmission } from "../models/orderSubmission";
 
 const CART_STORAGE_KEY = "form";
-const CUSTOMER_STORAGE_KEY = "customer";
+// Fakturačné údaje verejného košíka. Admin formulár (Nová objednávka) ich nesmie
+// zapisovať — preto vlastný kľúč a zápis len pre zákazníka, nie pre obsluhu.
+export const CUSTOMER_STORAGE_KEY = "cart-customer";
 const DELIVERY_STORAGE_KEY = "delivery";
+
+const STAFF_ROLES = ['super-admin', 'admin', 'manager', 'sales', 'warehouse'];
 
 /** Prázdna doručovacia adresa — tvar, aký očakáva API aj DeliveryAddressFields. */
 export const emptyDeliveryAddress = () => ({
@@ -158,6 +162,9 @@ export const useCheckouts = defineStore("checkouts", () => {
     };
 
     const setlocalStorageCustomer = (): void => {
+        if (useUsers().getUser?.roles?.some((role: string) => STAFF_ROLES.includes(role))) {
+            return;
+        }
         localStorage.setItem(
             CUSTOMER_STORAGE_KEY,
             JSON.stringify(useCustomer().getCustomer)

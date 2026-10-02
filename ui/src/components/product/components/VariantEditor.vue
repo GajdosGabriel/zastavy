@@ -3,14 +3,14 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useProducts, defaultVariant } from "../../../store/StoreProducts";
 import { useAttributes } from "../../../store/StoreAttributes";
-import { formatDecimal } from "../../../models/functions";
+import { formatDecimal, formatPrice } from "../../../models/functions";
 
 const props = defineProps({
     productId: { type: [String, Number], default: null },
 });
 
 const productStore = useProducts();
-const { getVariants, getProduct } = storeToRefs(productStore);
+const { getVariants, getProduct, variantErrors } = storeToRefs(productStore);
 const { fetchVariants, storeVariant, updateVariant, destroyVariant } = productStore;
 
 const attributesStore = useAttributes();
@@ -95,8 +95,12 @@ const applyDiscount = (draft) => {
 const onSave = async (variantId) => {
     const draft = drafts[variantId];
     savingId.value = variantId;
-    await updateVariant(props.productId, { ...payloadFrom(draft), id: variantId });
+    const saved = await updateVariant(props.productId, { ...payloadFrom(draft), id: variantId });
     savingId.value = null;
+
+    // Pri chybe ostáva rozpracovaná úprava — o zadané hodnoty by človek prišiel.
+    if (!saved) return;
+
     delete drafts[variantId];
     syncDrafts(getVariants.value ?? []);
 };
@@ -278,10 +282,15 @@ const hasAttributes = computed(() => getVariantAttributes.value.length > 0);
                         </div>
                     </div>
 
+                    <div v-if="variantErrors[variant.id]" role="alert"
+                        class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        <p v-for="(message, i) in variantErrors[variant.id]" :key="i">{{ message }}</p>
+                    </div>
+
                     <div class="flex items-center justify-between border-t border-gray-100 pt-3">
                         <span class="text-sm text-gray-500">
                             Predajná cena:
-                            <strong class="text-gray-900">{{ formatDecimal(activePrice(drafts[variant.id])) }} €</strong>
+                            <strong class="text-gray-900">{{ formatPrice(activePrice(drafts[variant.id])) }} €</strong>
                         </span>
                         <div class="flex gap-2">
                             <button type="button" @click="onDestroy(variant)"
@@ -356,6 +365,11 @@ const hasAttributes = computed(() => getVariantAttributes.value.length > 0);
                 <p class="text-xs text-gray-500">
                     Kód variantu sa vygeneruje z kódu produktu a zvolenej kombinácie.
                 </p>
+
+                <div v-if="variantErrors.new" role="alert"
+                    class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <p v-for="(message, i) in variantErrors.new" :key="i">{{ message }}</p>
+                </div>
 
                 <div class="flex justify-end gap-2">
                     <button type="button" @click="isAdding = false"

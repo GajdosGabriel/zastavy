@@ -19,7 +19,7 @@ const stock = [
             default: () => import('../components/stock/StockCreate.vue'),
         },
         meta: {
-            title: 'Novy prijem tovaru',
+            title: 'Príjem / odpis tovaru',
             superAdminOnly: true,
         },
     },

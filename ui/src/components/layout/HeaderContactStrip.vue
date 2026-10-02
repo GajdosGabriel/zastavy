@@ -10,6 +10,7 @@ import gabrielImage from "../../assets/images/gabriel.jpg";
                 <div class="lg:col-span-8">
                     <img
                         :src="headerImage"
+                        width="700" height="180"
                         alt="Zástavy-vlajky.sk"
                         class="aspect-[700/180] h-auto w-full rounded-md object-contain object-left"
                     />
@@ -19,6 +20,7 @@ import gabrielImage from "../../assets/images/gabriel.jpg";
                     <div class="flex items-center gap-4 rounded-md border border-slate-200 bg-slate-50 px-4 py-4 xl:gap-5 xl:px-6 xl:py-5">
                         <img
                             :src="gabrielImage"
+                            width="128" height="128" loading="lazy"
                             alt="Gabriel Gajdoš, kontaktná osoba"
                             class="h-24 w-24 shrink-0 rounded-md xl:h-32 xl:w-32 object-cover shadow-sm"
                         />

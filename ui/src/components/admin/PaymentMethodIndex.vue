@@ -7,7 +7,7 @@ import PanelDropdown from '../layout/PanelDropdown.vue';
 import FormInput from '../forms/FormInput.vue';
 import { storeToRefs } from 'pinia';
 import { usePaymentMethods } from '../../store/StorePaymentMethods';
-import { formatDecimal } from '../../models/functions';
+import { formatPrice } from '../../models/functions';
 
 const store = usePaymentMethods();
 const { paymentMethod, getPaymentMethods, getTrashedMethods, getPaymentTypes } = storeToRefs(store);
@@ -79,7 +79,7 @@ const dropdownItems = (method) => [
                             <tr v-for="method in getPaymentMethods" :key="method.id">
                                 <td class="tbody_td text-slate-400">{{ method.sort_order ?? 99 }}</td>
                                 <td class="tbody_td font-semibold text-slate-800">{{ method.name }}</td>
-                                <td class="tbody_td">{{ method.fee > 0 ? `+ ${formatDecimal(method.fee)} €` : 'Zdarma' }}</td>
+                                <td class="tbody_td">{{ method.fee > 0 ? `+ ${formatPrice(method.fee)} €` : 'Zdarma' }}</td>
                                 <td class="tbody_td">{{ typeLabel(method.type) }}</td>
                                 <td class="tbody_td">
                                     <span :class="method.active ? 'text-green-600' : 'text-gray-400'">
@@ -109,7 +109,7 @@ const dropdownItems = (method) => [
                             <tbody class="divide-y divide-red-100">
                                 <tr v-for="method in getTrashedMethods" :key="method.id">
                                     <td class="tbody_td text-slate-500 line-through">{{ method.name }}</td>
-                                    <td class="tbody_td text-slate-400">{{ method.fee > 0 ? `+ ${formatDecimal(method.fee)} €` : 'Zdarma' }}</td>
+                                    <td class="tbody_td text-slate-400">{{ method.fee > 0 ? `+ ${formatPrice(method.fee)} €` : 'Zdarma' }}</td>
                                     <td class="tbody_td">
                                         <button type="button" @click="restorePaymentMethod(method)"
                                             class="rounded bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-200">

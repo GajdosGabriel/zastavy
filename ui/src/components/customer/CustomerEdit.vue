@@ -27,13 +27,13 @@ onMounted(async () => {
 });
 
 const saveCustomer = async () => {
-    await updateCustomer();
+    if (!(await updateCustomer())) return;
     markAsSaved();
     router.push({ name: "customers.index" });
 };
 
 const buttonBack = { name: "Späť", spinner: true, link: "/zakaznici", icon: "arrow-left" };
-const requiredFields = ["company", "street", "city", "postcode", "email", "name"];
+const requiredFields = ["company", "city", "postcode", "email", "name"];
 </script>
 
 <template>

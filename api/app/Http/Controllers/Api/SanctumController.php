@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Enums\ModelStatus;
+use App\Http\Middleware\AuthTokenFromCookie;
 use App\Models\User;
 use App\Services\SystemLog\Recorder;
 use Illuminate\Http\Request;
@@ -61,15 +62,23 @@ class SanctumController extends Controller
             ip: $request->ip(),
         );
 
-        return response()->json([
-            'token' => $user->createToken('API Token')->plainTextToken
-        ]);
+        $token = $user->createToken('API Token')->plainTextToken;
+
+        // Token odchádza iba v httpOnly cookie; v tele odpovede ho klient nedostane.
+        return response()->json(['message' => 'Logged in'])
+            ->withCookie(cookie(
+                AuthTokenFromCookie::COOKIE, $token, 60 * 24 * 30, '/',
+                config('session.domain'), $request->isSecure(), true, false,
+                config('session.same_site', 'lax'),
+            ));
     }
 
 
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete(); // Vymaže aktuálny token
-        return response()->json(['message' => 'Logged out']);
+
+        return response()->json(['message' => 'Logged out'])
+            ->withCookie(cookie()->forget(AuthTokenFromCookie::COOKIE, '/', config('session.domain')));
     }
 }

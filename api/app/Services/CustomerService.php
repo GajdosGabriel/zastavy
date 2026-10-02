@@ -21,7 +21,10 @@ class CustomerService
         $request = $this->normalizeRequest($request);
         // Anonymný nákup nesmie meniť existujúcu firmu ani jej členstvá.
         if (! $actor?->isStaff()) {
-            $customer = Customer::create($this->customerData($request));
+            // Opakovaná objednávka toho istého kontaktu sa viaže na už existujúceho
+            // zákazníka (podľa IČO + e-mailu), údaje firmy sa pritom nemenia.
+            $customer = $this->findReturningCustomer($request)
+                ?? Customer::create($this->customerData($request));
             $contact = $this->storeUser($customer, $request);
 
             return [$customer, $actor ?? $contact];
@@ -144,6 +147,32 @@ class CustomerService
         ]);
     }
 
+    /**
+     * Anonymný nákup môže znovupoužiť zákazníka len ak e-mail už patrí jeho
+     * kontaktu. Samotné IČO je verejné — cudzia osoba by sa inak pripojila
+     * k cudzej firme jej zadaním.
+     */
+    private function findReturningCustomer(array $request): ?Customer
+    {
+        $ico = preg_replace('/\s+/', '', (string) ($request['ico'] ?? ''));
+        $email = $request['email'] ?? null;
+
+        if ($ico === '' || ! $email) {
+            return null;
+        }
+
+        // Stĺpec drží IČO doplnené nulami na 8 miest (IcoFormater).
+        $ico = str_pad($ico, 8, '0', STR_PAD_LEFT);
+
+        return Customer::where('ico', $ico)
+            ->where(function ($query) use ($email) {
+                $query->where('email', $email)
+                    ->orWhereHas('users', fn ($users) => $users->where('email', $email));
+            })
+            ->orderBy('id')
+            ->first();
+    }
+
     private function findCustomer(array $request): ?Customer
     {
         if (!empty($request['id'])) {
@@ -169,8 +198,9 @@ class CustomerService
             'email' => $request['email'] ?? null,
             'phone' => $request['phone'] ?? null,
             'street' => $request['street'] ?? null,
-            'postcode' => $request['postcode'] ?? null,
-            'city' => $request['city'] ?? null,
+            // NOT NULL stĺpce — chýbajúca hodnota je prázdny reťazec, nie SQL chyba.
+            'postcode' => $request['postcode'] ?? '',
+            'city' => $request['city'] ?? '',
             'ico' => $request['ico'] ?? null,
             'dic' => $request['dic'] ?? null,
             'ic_dic' => $request['ic_dic'] ?? null,

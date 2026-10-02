@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import { formatDecimal } from '../../models/functions';
+import { formatPrice } from '../../models/functions';
 import { useCheckoutOptions } from '../../store/StoreCheckoutOptions';
 
 const props = defineProps({
@@ -87,13 +87,13 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                             <span class="text-green-600">Zdarma</span>
                         </template>
                         <template v-else>
-                            {{ formatDecimal(method.price) }} €
+                            {{ formatPrice(method.price) }} €
                         </template>
                     </span>
                 </label>
             </div>
             <p v-if="getSelectedShipping?.free_from_price !== null && cartTotal < parseFloat(getSelectedShipping?.free_from_price ?? 0)" class="mt-1.5 text-xs text-gray-400">
-                Doprava zdarma od {{ formatDecimal(getSelectedShipping.free_from_price) }} €
+                Doprava zdarma od {{ formatPrice(getSelectedShipping.free_from_price) }} €
             </p>
         </div>
 
@@ -122,7 +122,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                         <span class="text-sm font-medium text-gray-800">{{ method.name }}</span>
                     </div>
                     <span class="text-sm font-semibold" :class="method.fee > 0 ? 'text-gray-700' : 'text-green-600'">
-                        {{ method.fee > 0 ? `+ ${formatDecimal(method.fee)} €` : 'Zdarma' }}
+                        {{ method.fee > 0 ? `+ ${formatPrice(method.fee)} €` : 'Zdarma' }}
                     </span>
                 </label>
             </div>
@@ -136,7 +136,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                 <div>
                     <span class="text-sm font-semibold text-green-700">{{ getCouponData.code }}</span>
                     <span class="ml-2 text-xs text-green-600">
-                        −{{ getCouponData.type === 'percent' ? `${getCouponData.value}%` : `${formatDecimal(getCouponData.value)} €` }}
+                        −{{ getCouponData.type === 'percent' ? `${getCouponData.value}%` : `${formatPrice(getCouponData.value)} €` }}
                     </span>
                 </div>
                 <button type="button" @click="clearCoupon(); setCouponMode(null)" class="text-xs text-gray-400 hover:text-red-600">Odstrániť</button>
@@ -199,26 +199,26 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
         <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-4 space-y-2 text-sm">
             <div class="flex justify-between text-gray-600">
                 <span>Produkty</span>
-                <span class="font-medium text-gray-800">{{ formatDecimal(cartTotal) }} €</span>
+                <span class="font-medium text-gray-800">{{ formatPrice(cartTotal) }} €</span>
             </div>
             <div v-if="getSelectedShipping" class="flex justify-between text-gray-600">
                 <span>Doprava ({{ getSelectedShipping.name }})</span>
                 <span class="font-medium" :class="computedShippingPrice() === 0 ? 'text-green-600' : 'text-gray-800'">
-                    {{ computedShippingPrice() === 0 ? 'Zdarma' : `${formatDecimal(computedShippingPrice())} €` }}
+                    {{ computedShippingPrice() === 0 ? 'Zdarma' : `${formatPrice(computedShippingPrice())} €` }}
                 </span>
             </div>
             <div v-if="paymentFee > 0" class="flex justify-between text-gray-600">
                 <span>Poplatok za platbu</span>
-                <span class="font-medium text-gray-800">{{ formatDecimal(paymentFee) }} €</span>
+                <span class="font-medium text-gray-800">{{ formatPrice(paymentFee) }} €</span>
             </div>
-            <div v-if="adjustment" class="flex justify-between"><span>Úprava ceny</span><span>{{ formatDecimal(adjustment) }} €</span></div>
+            <div v-if="adjustment" class="flex justify-between"><span>Úprava ceny</span><span>{{ formatPrice(adjustment) }} €</span></div>
             <div v-if="discountAmount > 0" class="flex justify-between text-green-700">
                 <span>Zľava ({{ getCouponData?.code }})</span>
-                <span class="font-semibold">−{{ formatDecimal(discountAmount) }} €</span>
+                <span class="font-semibold">−{{ formatPrice(discountAmount) }} €</span>
             </div>
             <div class="border-t border-gray-200 pt-2 flex justify-between">
                 <span class="font-semibold text-gray-900">Celkom s DPH</span>
-                <span class="text-lg font-bold text-blue-700">{{ formatDecimal(computedTotal()) }} €</span>
+                <span class="text-lg font-bold text-blue-700">{{ formatPrice(computedTotal()) }} €</span>
             </div>
         </div>
     </div>

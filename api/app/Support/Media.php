@@ -51,7 +51,16 @@ class Media
             }
         }
 
-        return $filesystem->url($path);
+        $url = $filesystem->url($path);
+
+        // Lokálny disk: relatívna cesta, aby obrázky fungovali na akejkoľvek doméne (dev proxy, iný host než APP_URL).
+        if (! self::isCloud($disk)) {
+            $relative = parse_url($url, PHP_URL_PATH);
+
+            return $relative ?: $url;
+        }
+
+        return $url;
     }
 
     public static function delete(?string $disk, ?string $path): void

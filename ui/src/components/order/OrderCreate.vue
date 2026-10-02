@@ -12,7 +12,7 @@ import { useUsers as useUser } from "../../store/StoreUsers";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
 import axiosInstance from "../../axiosInstance";
-import { formatDecimal } from "../../models/functions";
+import { formatPrice } from "../../models/functions";
 import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
@@ -146,9 +146,23 @@ const filteredProducts = computed(() => {
     );
 });
 
-const selectedProduct = computed(() =>
-    (getProducts.value || []).find((product) => String(product.id) === String(selectedProductId.value))
+// Cena, DPH aj minimálny odber žijú na variantoch — produkt ich nemá, preto sa ponúkajú varianty.
+const variantOptions = computed(() =>
+    filteredProducts.value.flatMap((product) =>
+        (product.variants ?? []).map((variant) => ({
+            key: `${product.id}:${variant.id}`,
+            product,
+            variant,
+            label: [product.name, variant.name].filter(Boolean).join(" – "),
+        }))
+    )
 );
+
+const selectedOption = computed(() =>
+    variantOptions.value.find((option) => option.key === selectedProductId.value)
+);
+
+const rowKey = (item) => item.variant_id ? `${item.id}:${item.variant_id}` : item.id;
 
 const grandQuantity = computed(() => orderProducts.value.reduce((sum, item) => sum + Number(item.input_order || 0), 0));
 const grandTotal = computed(() => orderProducts.value.reduce((sum, item) =>
@@ -165,25 +179,35 @@ const shippingPrice = computed(() => {
 });
 
 const paymentFee = computed(() => parseFloat(selectedPayment.value?.fee ?? 0));
-const grandTotalWithExtras = computed(() => grandTotal.value + adjustmentAmount(grandTotal.value, priceAdjustment.value) + shippingPrice.value + paymentFee.value);
+// Prázdna objednávka nemá čo spoplatniť — doprava ani poplatok sa bez položiek nerátajú.
+const grandTotalWithExtras = computed(() => orderProducts.value.length
+    ? grandTotal.value + adjustmentAmount(grandTotal.value, priceAdjustment.value) + shippingPrice.value + paymentFee.value
+    : 0);
 
 const isCustomerComplete = computed(() =>
     requiredCustomerFields.every((field) => String(getCustomer.value?.[field] ?? "").trim())
 );
 
 const addProduct = () => {
-    const product = selectedProduct.value;
-    if (!product) return;
+    const option = selectedOption.value;
+    if (!option) return;
 
-    const existing = orderProducts.value.find((item) => item.id === product.id);
-    const minOrder = Number(product.min_order || 1);
+    const { product, variant } = option;
+    const existing = orderProducts.value.find((item) => item.variant_id === variant.id);
+    const minOrder = Number(variant.min_order || 1);
 
     if (existing) {
         existing.input_order = Number(existing.input_order || 0) + minOrder;
     } else {
         orderProducts.value.push({
             ...product,
-            input_order: Number(product.input_order || minOrder),
+            variant_id: variant.id,
+            name: option.label,
+            code: variant.code || product.code,
+            thumb: variant.thumb || product.thumb,
+            active_price: Number(variant.active_price ?? 0),
+            min_order: minOrder,
+            input_order: minOrder,
         });
     }
 
@@ -191,7 +215,7 @@ const addProduct = () => {
 };
 
 const removeProduct = (product) => {
-    orderProducts.value = orderProducts.value.filter((item) => item.id !== product.id);
+    orderProducts.value = orderProducts.value.filter((item) => rowKey(item) !== rowKey(product));
 };
 
 const normalizeQuantity = (product) => {
@@ -312,8 +336,8 @@ onMounted(async () => {
                                     />
                                     <select v-model="selectedProductId" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                                         <option value="">Vyberte produkt</option>
-                                        <option v-for="product in filteredProducts" :key="product.id" :value="product.id">
-                                            {{ product.code }} – {{ product.name }} ({{ formatDecimal(product.active_price) }} €)
+                                        <option v-for="option in variantOptions" :key="option.key" :value="option.key">
+                                            {{ option.variant.code || option.product.code }} – {{ option.label }} ({{ formatPrice(option.variant.active_price) }} €)
                                         </option>
                                     </select>
                                     <button
@@ -340,7 +364,7 @@ onMounted(async () => {
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-100 bg-white">
-                                            <tr v-for="product in orderProducts" :key="product.id" class="transition hover:bg-gray-50">
+                                            <tr v-for="product in orderProducts" :key="rowKey(product)" class="transition hover:bg-gray-50">
                                                 <td class="px-4 py-3">
                                                     <div class="flex items-center gap-3">
                                                         <img
@@ -356,7 +380,7 @@ onMounted(async () => {
                                                     </div>
                                                 </td>
                                                 <td class="px-4 py-3 text-right text-sm whitespace-nowrap text-gray-700">
-                                                    <input v-if="product.is_custom" v-model.number="product.active_price" aria-label="Jednotková cena" type="number" min="0" step="0.01" class="w-24 rounded border-gray-300" /><span v-else>{{ formatDecimal(product.active_price) }} €</span>
+                                                    <input v-if="product.is_custom" v-model.number="product.active_price" aria-label="Jednotková cena" type="number" min="0" step="0.01" class="w-24 rounded border-gray-300" /><span v-else>{{ formatPrice(product.active_price) }} €</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     <div class="inline-flex items-center gap-1.5">
@@ -371,7 +395,7 @@ onMounted(async () => {
                                                     </div>
                                                 </td>
                                                 <td class="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap text-gray-900">
-                                                    {{ formatDecimal(Number(product.active_price || 0) * Number(product.input_order || 0)) }} €
+                                                    {{ formatPrice(Number(product.active_price || 0) * Number(product.input_order || 0)) }} €
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     <button
@@ -521,7 +545,7 @@ onMounted(async () => {
                                 <div class="divide-y divide-gray-50 px-5 py-3">
                                     <div
                                         v-for="product in orderProducts"
-                                        :key="product.id"
+                                        :key="rowKey(product)"
                                         class="flex items-start justify-between gap-2 py-1.5 text-sm"
                                     >
                                         <span class="text-gray-600 leading-snug">
@@ -529,7 +553,7 @@ onMounted(async () => {
                                             <span class="text-gray-400">× {{ product.input_order }}</span>
                                         </span>
                                         <span class="shrink-0 font-medium text-gray-900">
-                                            {{ formatDecimal(Number(product.active_price || 0) * Number(product.input_order || 0)) }} €
+                                            {{ formatPrice(Number(product.active_price || 0) * Number(product.input_order || 0)) }} €
                                         </span>
                                     </div>
                                     <div v-if="!orderProducts.length" class="py-3 text-sm text-gray-400 text-center">
@@ -573,7 +597,7 @@ onMounted(async () => {
                                                         <span class="text-green-600">Zdarma</span>
                                                     </template>
                                                     <template v-else>
-                                                        {{ method.price > 0 ? `${formatDecimal(method.price)} €` : 'Zdarma' }}
+                                                        {{ method.price > 0 ? `${formatPrice(method.price)} €` : 'Zdarma' }}
                                                     </template>
                                                 </span>
                                             </label>
@@ -604,7 +628,7 @@ onMounted(async () => {
                                                     <span class="text-sm font-medium text-gray-800">{{ method.name }}</span>
                                                 </div>
                                                 <span class="text-sm font-semibold" :class="method.fee > 0 ? 'text-gray-700' : 'text-green-600'">
-                                                    {{ method.fee > 0 ? `+ ${formatDecimal(method.fee)} €` : 'Zdarma' }}
+                                                    {{ method.fee > 0 ? `+ ${formatPrice(method.fee)} €` : 'Zdarma' }}
                                                 </span>
                                             </label>
                                         </div>
@@ -614,21 +638,21 @@ onMounted(async () => {
                                     <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-4 space-y-2 text-sm">
                                         <div class="flex justify-between text-gray-600">
                                             <span>Produkty ({{ grandQuantity }} ks)</span>
-                                            <span class="font-medium text-gray-800">{{ formatDecimal(grandTotal) }} €</span>
+                                            <span class="font-medium text-gray-800">{{ formatPrice(grandTotal) }} €</span>
                                         </div>
-                                        <div v-if="selectedShipping" class="flex justify-between text-gray-600">
+                                        <div v-if="selectedShipping && orderProducts.length" class="flex justify-between text-gray-600">
                                             <span>Doprava ({{ selectedShipping.name }})</span>
                                             <span class="font-medium" :class="shippingPrice === 0 ? 'text-green-600' : 'text-gray-800'">
-                                                {{ shippingPrice === 0 ? 'Zdarma' : `${formatDecimal(shippingPrice)} €` }}
+                                                {{ shippingPrice === 0 ? 'Zdarma' : `${formatPrice(shippingPrice)} €` }}
                                             </span>
                                         </div>
-                                        <div v-if="paymentFee > 0" class="flex justify-between text-gray-600">
+                                        <div v-if="paymentFee > 0 && orderProducts.length" class="flex justify-between text-gray-600">
                                             <span>Poplatok za platbu</span>
-                                            <span class="font-medium text-gray-800">{{ formatDecimal(paymentFee) }} €</span>
+                                            <span class="font-medium text-gray-800">{{ formatPrice(paymentFee) }} €</span>
                                         </div>
                                         <div class="border-t border-gray-200 pt-2 flex justify-between">
                                             <span class="font-semibold text-gray-900">Celkom</span>
-                                            <span class="text-lg font-bold text-blue-700">{{ formatDecimal(grandTotalWithExtras) }} €</span>
+                                            <span class="text-lg font-bold text-blue-700">{{ formatPrice(grandTotalWithExtras) }} €</span>
                                         </div>
                                     </div>
 
@@ -645,6 +669,9 @@ onMounted(async () => {
                                         </svg>
                                         {{ isSubmitting ? 'Ukladám...' : 'Uložiť objednávku' }}
                                     </button>
+                                    <p v-if="!orderProducts.length" class="-mt-2 text-center text-xs text-gray-500">
+                                        Pridajte aspoň jednu položku, potom bude možné objednávku uložiť.
+                                    </p>
                                 </div>
                             </div>
 

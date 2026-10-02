@@ -4,14 +4,14 @@ import OrderPriceAdjustment from '../forms/OrderPriceAdjustment.vue';
 import { adjustmentAmount } from '../../models/orderPricing';
 import useCheckoutOptions from '../../store/StoreCheckoutOptions';
 import BaseLayout from "../layout/BaseLayout.vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
-import useCheckouts from "../../store/StoreCheckouts";
+import useCheckouts, { CUSTOMER_STORAGE_KEY } from "../../store/StoreCheckouts";
 import useCustomers from "../../store/StoreCustomers";
 import { useUsers } from "../../store/StoreUsers";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
-import { formatDecimal, formatPrice, formatFileSize } from "../../models/functions";
+import { formatDecimal, formatPrice, formatFileSize, formatSubstring } from "../../models/functions";
 import { htmlToText } from "../../models/html";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import DeliveryAddressFields from "../forms/DeliveryAddressFields.vue";
@@ -31,6 +31,8 @@ const {
 
 const customersStore = useCustomers();
 const { getCustomer } = storeToRefs(customersStore);
+const isPrivatePerson = ref(false);
+watch(isPrivatePerson, (value) => { if (value) getCustomer.value.company = ''; });
 const { setCustomer } = customersStore;
 const { getFieldErrors } = storeToRefs(useErrors());
 const { getUser } = storeToRefs(useUsers());
@@ -46,9 +48,9 @@ const showSubmitModal = ref(false);
 
 const parseStoredCustomer = () => {
       try {
-            return JSON.parse(localStorage.getItem('customer')) || {};
+            return JSON.parse(localStorage.getItem(CUSTOMER_STORAGE_KEY)) || {};
       } catch {
-            localStorage.removeItem('customer');
+            localStorage.removeItem(CUSTOMER_STORAGE_KEY);
             return {};
       }
 };
@@ -76,8 +78,8 @@ const freeShippingInfo = computed(() => {
       };
 });
 
-const shortDescription = (product) => htmlToText(product.description).substring(0, 25);
-const productTotal = (product) => formatDecimal(Number(product.active_price || 0) * Number(product.input_order || 0));
+const shortDescription = (product) => formatSubstring(htmlToText(product.description), 60);
+const productTotal = (product) => formatPrice(Number(product.active_price || 0) * Number(product.input_order || 0));
 
 onMounted(() => {
       getlocalStorage();
@@ -203,6 +205,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                             <div class="flex items-center gap-3">
                                                 <img
                                                     :src="product.thumb"
+                                                    width="48" height="48" loading="lazy"
                                                     :alt="product.name"
                                                     class="h-12 w-12 shrink-0 rounded-lg border border-gray-200 object-cover"
                                                 />
@@ -272,9 +275,11 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                 <h2 class="text-base font-semibold text-gray-800">Fakturačné údaje</h2>
                             </div>
                             <div class="px-6 py-5">
+                                <fieldset class="mb-4 flex gap-6 text-sm"><legend class="sr-only">Typ zákazníka</legend><label class="flex items-center gap-2"><input type="radio" :value="false" v-model="isPrivatePerson" />Firma</label><label class="flex items-center gap-2"><input type="radio" :value="true" v-model="isPrivatePerson" />Súkromná osoba</label></fieldset>
                                 <CustomerFormFields
+                                    :hideCompany="isPrivatePerson"
                                     :fieldErrors="getFieldErrors"
-                                    :requiredFields="['company', 'name', 'email', 'phone', 'street', 'postcode', 'city']"
+                                    :requiredFields="(isPrivatePerson ? [] : ['company']).concat(['name', 'email', 'phone', 'street', 'postcode', 'city'])"
                                 />
                                 <div class="mt-4">
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>

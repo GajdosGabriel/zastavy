@@ -28,10 +28,11 @@ class CustomerUpdateRequest extends FormRequest
     {
         return [
             'name' => 'required',
-            'postcode' => 'required',
-            'street' => 'required',
-            'city' => 'required',
+            'postcode' => $this->postcodeRules(),
+            'street' => 'nullable|string|max:250',
+            'city' => 'required|string|max:100',
             'email' => 'required|email',
+            'phone' => $this->phoneRules(),
             // Kontrolná číslica IČO a tvar daňových čísel — tie isté pravidlá,
             // aké po uložení použije post-kontrola. V administrácii sedí za
             // formulárom personál, takže novú chybu má zmysel zastaviť hneď.
@@ -40,6 +41,35 @@ class CustomerUpdateRequest extends FormRequest
             'ic_dic' => $this->taxRules('ic_dic'),
             'status' => ['required', Rule::in(ModelStatus::allowedValuesForUser($this->user()))],
         ];
+    }
+
+    public function messages()
+    {
+        return [
+            'postcode.regex' => __('rules.postcode.invalid'),
+        ];
+    }
+
+    /** PSČ: päť číslic, medzera v zápise „811 01" je v poriadku. */
+    protected function postcodeRules(): array
+    {
+        return ['required', 'regex:/^\d{3}\s?\d{2}$/'];
+    }
+
+    /** Telefón sa kontroluje len keď sa mení — staré záznamy nechávame post-kontrole. */
+    protected function phoneRules(): array
+    {
+        $customer = $this->route('customer');
+
+        if ($customer instanceof \App\Models\Customer) {
+            $stored = str_replace(' ', '', (string) ($customer->getAttributes()['phone'] ?? ''));
+
+            if (str_replace(' ', '', trim((string) $this->input('phone'))) === $stored) {
+                return ['nullable'];
+            }
+        }
+
+        return ['nullable', new \App\Rules\CustomerPhone()];
     }
 
     /**

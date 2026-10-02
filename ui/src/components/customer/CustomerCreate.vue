@@ -16,14 +16,16 @@ resetCustomer();
 
 const { markAsSaved } = useUnsavedChanges(() => getCustomer.value);
 
-const onClickSaveCustomer = () => {
-    storeCustomer();
+const onClickSaveCustomer = async () => {
+    // Počkáme na odpoveď: pri chybe ostávame vo formulári a zoznam sa načíta
+    // až keď zákazník naozaj existuje (inak by ho ešte nenašiel).
+    if (!(await storeCustomer())) return;
     markAsSaved();
     router.push({ name: "customers.index" });
 };
 
 const buttonBack = { name: "Späť", spinner: true, link: "/zakaznici", icon: "arrow-left" };
-const requiredFields = ["company", "email"];
+const requiredFields = ["company", "email", "postcode", "city"];
 </script>
 
 <template>

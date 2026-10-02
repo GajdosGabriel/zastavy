@@ -1,4 +1,5 @@
 <script setup>
+import { formatPrice } from "../../../models/functions";
 import { computed } from "vue";
 import PanelDropdown from "../../layout/PanelDropdown.vue";
 import { useStocks } from "../../../store/StoreStocks";
@@ -65,8 +66,8 @@ const dropdownItems = computed(() => {
         </td>
         <td class="px-4 py-3 text-right whitespace-nowrap text-sm">
             <template v-if="item.total_price !== null">
-                <div class="font-semibold text-gray-800">{{ Number(item.total_price).toFixed(2) }} €</div>
-                <div class="text-xs text-gray-400">{{ Number(item.price).toFixed(2) }} € / ks</div>
+                <div class="font-semibold text-gray-800">{{ formatPrice(item.total_price) }} €</div>
+                <div class="text-xs text-gray-400">{{ formatPrice(item.price) }} € / ks</div>
             </template>
             <span v-else class="text-gray-300">—</span>
         </td>

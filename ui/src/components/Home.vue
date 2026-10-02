@@ -14,7 +14,7 @@ import templateProduct from '../models/templateProduct';
 import { setJsonLd, organizationJsonLd, websiteJsonLd, absoluteUrl } from '../models/seo';
 
 const homeStore = useHome();
-const { getProducts, loadError } = storeToRefs(homeStore);
+const { getProducts, loadError, loading } = storeToRefs(homeStore);
 const { fetchProducts } = homeStore;
 
 const route=useRoute(), router=useRouter(), paginator=usePaginator();
@@ -66,6 +66,10 @@ watch(getProducts, (products) => {
                                     <div v-else-if="loadError" role="alert" class="rounded-md border border-red-200 bg-red-50 px-4 py-16 text-center text-red-800">
                                           <p class="mb-4">Tovar sa nepodarilo načítať. Skontrolujte pripojenie a skúste to znova.</p>
                                           <button type="button" @click="fetchProducts()" class="rounded-md bg-blue-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900">Skúsiť znova</button>
+                                    </div>
+                                    <div v-else-if="loading" role="status" aria-live="polite" class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                                          <span class="sr-only">Načítavam tovar…</span>
+                                          <div v-for="n in 6" :key="n" class="h-72 animate-pulse rounded-md bg-slate-200" aria-hidden="true"></div>
                                     </div>
                                     <p v-else class="rounded-md border border-dashed border-slate-300 bg-white px-4 py-16 text-center text-slate-500">
                                           Zvoleným filtrom nezodpovedá žiadny tovar.

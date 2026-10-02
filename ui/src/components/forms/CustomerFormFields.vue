@@ -12,11 +12,13 @@ const props = withDefaults(defineProps<{
     highlightRequired?: boolean;
     requiredFields?: string[];
     withStatus?: boolean;
+    hideCompany?: boolean;
 }>(), {
     fieldErrors: () => ({}),
     highlightRequired: false,
     requiredFields: () => [],
     withStatus: false,
+    hideCompany: false,
 });
 
 const customersStore = useCustomers();
@@ -42,7 +44,11 @@ const fieldError = (field: string) => {
 };
 
 const icoValidationError = () => {
-    if (String(getCustomer.value?.ico ?? "").length > 8) {
+    const ico = String(getCustomer.value?.ico ?? "");
+    if (/[^\d\s]/.test(ico)) {
+        return "IČO smie obsahovať len číslice.";
+    }
+    if (ico.replace(/\D/g, "").length > 8) {
         return "IČO môže mať maximálne 8 číslic.";
     }
     return fieldError("ico");
@@ -60,12 +66,6 @@ const stripDigits = (val: unknown) => String(val ?? "").replace(/\D/g, "");
 watch(icoSearchInput, (val) => {
     const cleaned = stripDigits(val);
     if (cleaned !== val) icoSearchInput.value = cleaned;
-}, { flush: "sync" });
-
-watch(() => getCustomer.value?.ico, (val) => {
-    if (!getCustomer.value || val === undefined) return;
-    const cleaned = stripDigits(val);
-    if (cleaned !== String(val)) getCustomer.value.ico = cleaned;
 }, { flush: "sync" });
 
 /**
@@ -117,6 +117,10 @@ const applyHint = (field: string) => {
 
     if (hint?.suggested) {
         getCustomer.value[field] = hint.suggested;
+        // Stará rada patrila k pôvodnej hodnote — nech nevisí, kým dobehne nová kontrola.
+        delete hints.value[field];
+        clearTimeout(checkTimer);
+        runCheck();
     }
 };
 
@@ -169,7 +173,7 @@ const onClickIco = async () => {
 
     <!-- Polia -->
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="sm:col-span-2 lg:col-span-3">
+        <div v-if="!hideCompany" class="sm:col-span-2 lg:col-span-3">
             <label :for="fid('company')" class="mb-1.5 block text-sm font-semibold text-gray-700">
                 Názov firmy <RequiredMark v-if="isRequired('company')" />
             </label>
@@ -220,7 +224,7 @@ const onClickIco = async () => {
         </div>
         <div>
             <label :for="fid('ico')" class="mb-1.5 block text-sm font-semibold text-gray-700">IČO</label>
-            <FormInput v-model="getCustomer.ico" :id="fid('ico')" autocomplete="off" :invalid="!!icoValidationError()" :error="icoValidationError()" inputmode="numeric" pattern="[0-9]*" placeholder="IČO" @keyup.enter="onClickIco" />
+            <FormInput v-model="getCustomer.ico" :id="fid('ico')" autocomplete="off" :invalid="!!icoValidationError()" :error="icoValidationError()" inputmode="numeric" placeholder="IČO" @keyup.enter="onClickIco" />
             <FieldHint :hint="hintFor('ico')" @apply="applyHint('ico')" />
         </div>
         <div>

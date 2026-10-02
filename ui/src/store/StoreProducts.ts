@@ -3,6 +3,7 @@ import axiosInstance from "../axiosInstance";
 import { computed, ref } from "vue";
 import useImages from "./StoreImages";
 import useErrors from './StoreErrors';
+import useFlash from './StoreFlash';
 import usePaginator from './StorePaginator';
 import useQuery from './StoreQuery';
 import { PAGE_PRODUCT } from "../constants";
@@ -191,7 +192,9 @@ export const useProducts = defineStore('products', () => {
         }
     };
 
-    const updateProduct = async (): Promise<void> => {
+    const updateProduct = async (): Promise<boolean> => {
+        useErrors().resetErrors();
+
         try {
             await axiosInstance.put(product.value.endpoints.update, productPayload()).then((res) => {
                 const index = products.value.findIndex(item => item.id === res.data.data.id);
@@ -199,15 +202,23 @@ export const useProducts = defineStore('products', () => {
                     products.value.splice(index, 1, res.data.data);
                 }
             });
+            useFlash().success('Produkt bol uložený.');
+
+            return true;
         } catch (e) {
             useErrors().setErrors(e);
+
+            return false;
         }
     };
 
     const storeProduct = async (): Promise<any> => {
+        useErrors().resetErrors();
+
         try {
             const response = await axiosInstance.post(url.value, productPayload());
             fetchProducts();
+            useFlash().success('Produkt bol vytvorený.');
 
             return response.data.data ?? response.data;
         } catch (e) {
@@ -257,6 +268,19 @@ export const useProducts = defineStore('products', () => {
         attribute_values: (variant.attribute_values ?? []).map((v: any) => v.id ?? v),
     });
 
+    // Chyby variantu sa ukazujú pri formulári variantu, nie hore na stránke.
+    // Kľúč je id variantu alebo 'new'.
+    const variantErrors = ref<Record<string, string[]>>({});
+
+    const setVariantErrors = (key: string | number, e: any): void => {
+        const fieldMessages = Object.values(e?.response?.data?.errors ?? {}).flat() as string[];
+        variantErrors.value = {
+            [String(key)]: fieldMessages.length
+                ? fieldMessages
+                : [e?.response?.data?.message ?? e?.message ?? 'Nastala neočakávaná chyba.'],
+        };
+    };
+
     const fetchVariants = async (productId: number | string): Promise<void> => {
         try {
             const response = await axiosInstance.get(variantUrl(productId));
@@ -268,25 +292,29 @@ export const useProducts = defineStore('products', () => {
 
     const storeVariant = async (productId: number | string, variant: ProductVariant): Promise<any> => {
         try {
+            variantErrors.value = {};
             const response = await axiosInstance.post(variantUrl(productId), variantPayload(variant));
             await fetchVariants(productId);
+            useFlash().success('Variant bol vytvorený.');
             return response.data.data ?? response.data;
         } catch (e) {
-            useErrors().setErrors(e);
+            setVariantErrors('new', e);
             return null;
         }
     };
 
     const updateVariant = async (productId: number | string, variant: ProductVariant): Promise<any> => {
         try {
+            variantErrors.value = {};
             const response = await axiosInstance.put(
                 variantUrl(productId, variant.id),
                 variantPayload(variant)
             );
             await fetchVariants(productId);
+            useFlash().success('Variant bol uložený.');
             return response.data.data ?? response.data;
         } catch (e) {
-            useErrors().setErrors(e);
+            setVariantErrors(variant.id, e);
             return null;
         }
     };
@@ -296,11 +324,13 @@ export const useProducts = defineStore('products', () => {
             return false;
         }
         try {
+            variantErrors.value = {};
             await axiosInstance.delete(variantUrl(productId, variant.id));
             await fetchVariants(productId);
+            useFlash().success('Variant bol zmazaný.');
             return true;
         } catch (e) {
-            useErrors().setErrors(e);
+            setVariantErrors(variant.id, e);
             return false;
         }
     };
@@ -333,6 +363,7 @@ export const useProducts = defineStore('products', () => {
         getProducts,
         getProduct,
         getVariants,
+        variantErrors,
         fetchProducts,
         fetchProduct,
         updateProduct,

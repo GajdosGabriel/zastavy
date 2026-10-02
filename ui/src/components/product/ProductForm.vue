@@ -70,7 +70,10 @@ const handleImageSelected = (event) => {
 
 const onSubmitForm = async () => {
     if (productId.value) {
-        await updateProduct();
+        // Pri neplatnom uložení ostávame vo formulári s chybami; nič ďalšie sa neodosiela.
+        if (!(await updateProduct())) {
+            return;
+        }
 
         if (selectedImageFiles.value.length) {
             const product = await storeImages(productId.value, selectedImageFiles.value);
@@ -86,6 +89,10 @@ const onSubmitForm = async () => {
         return;
     } else {
         const product = await storeProduct();
+        // Pri chybe validácie nesmieme odnavigovať — chyby by zmizli so stránkou.
+        if (!product) {
+            return;
+        }
         if (product?.id && selectedImageFiles.value.length) {
             await storeImages(product.id, selectedImageFiles.value);
         }

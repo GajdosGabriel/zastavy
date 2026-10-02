@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import axiosInstance from '../axiosInstance';
 import usePaginator from './StorePaginator';
 import useErrors from './StoreErrors';
+import useFlash from './StoreFlash';
 import useQuery from './StoreQuery';
 import { confirmDialog } from '../models/confirmDialog';
 import { PAGE_STOCK } from '../constants';
@@ -142,11 +143,13 @@ export const useStocks = defineStore('stocks', {
 
         // Vracia úspech — formulár nesmie odnavigovať preč, keď zápis zlyhal.
         async storeStock(): Promise<boolean> {
+            const isWriteoff = Number(this.create.quantity) < 0;
             try {
                 useErrors().resetErrors();
                 await axiosInstance.post(PAGE_STOCK.URL, this.create);
                 this.create = emptyCreate();
                 await this.fetchSummary();
+                useFlash().success(isWriteoff ? 'Odpis bol zaznamenaný.' : 'Príjem tovaru bol zaznamenaný.');
                 return true;
             } catch (e) {
                 useErrors().setErrors(e);

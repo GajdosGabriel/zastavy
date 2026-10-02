@@ -131,7 +131,7 @@ class Product extends Model
         }
 
         // Lokálny placeholder — bez závislosti na externej službe (výkon, súkromie, dostupnosť).
-        return asset('images/product-placeholder.svg');
+        return '/images/product-placeholder.svg';
     }
 
     public function scopeFilter($query, $filters)

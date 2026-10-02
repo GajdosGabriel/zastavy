@@ -25,7 +25,8 @@ class UserStoreRequest extends FormRequest
             'phone'       => ['nullable', 'string', 'max:40'],
             'locale'      => ['nullable', Rule::in(config('app.supported_locales', []))],
             'note'        => ['nullable', 'string', 'max:2000'],
-            'customer_id' => ['required', 'integer', 'exists:customers,id'],
+            // Zamestnanec s rolou (admin…) nepatrí k žiadnemu zákazníkovi.
+            'customer_id' => ['required_without:roles', 'nullable', 'integer', 'exists:customers,id'],
             'active'      => ['sometimes', 'boolean'],
             // Status vie určiť len super-admin; ostatným ho vynúti controller (draft + overenie emailu).
             'status' => [

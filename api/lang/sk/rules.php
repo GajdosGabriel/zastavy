@@ -5,9 +5,16 @@ return [
         'min' => 'Firma musí obsahovať minimálne 2 znaky.',
     ],
     'ico' => [
+        'digits' => 'IČO smie obsahovať len číslice.',
         'unique' => 'Firma s týmto IČO už existuje.',
         'length' => 'IČO musí mať najviac 8 číslic.',
         'checksum' => 'IČO nesedí na kontrolnú číslicu — skontrolujte, či nie je preklep.',
+    ],
+    'phone' => [
+        'invalid' => 'Telefón nie je v platnom tvare (napr. +421 905 123 456).',
+    ],
+    'postcode' => [
+        'invalid' => 'PSČ musí mať 5 číslic.',
     ],
     'dic' => [
         'length' => 'DIČ musí mať 10 číslic.',

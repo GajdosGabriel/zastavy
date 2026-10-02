@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\SuperAdmin;
 use App\Models\Coupon;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CouponController extends Controller
 {
@@ -21,7 +22,8 @@ class CouponController extends Controller
         $data = $request->validate([
             'code'            => 'required|string|max:50|unique:coupons,code',
             'type'            => 'required|in:percent,fixed',
-            'value'           => 'required|numeric|min:0',
+            // Percentuálna zľava nad 100 % by zo súčtu košíka spravila zápornú sumu.
+            'value'           => ['required', 'numeric', 'min:0', Rule::when($request->input('type') === 'percent', ['max:100'])],
             'min_order_price' => 'nullable|numeric|min:0',
             'usage_limit'     => 'nullable|integer|min:1',
             'valid_from'      => 'nullable|date',
@@ -39,7 +41,8 @@ class CouponController extends Controller
         $data = $request->validate([
             'code'            => 'required|string|max:50|unique:coupons,code,' . $coupon->id,
             'type'            => 'required|in:percent,fixed',
-            'value'           => 'required|numeric|min:0',
+            // Percentuálna zľava nad 100 % by zo súčtu košíka spravila zápornú sumu.
+            'value'           => ['required', 'numeric', 'min:0', Rule::when($request->input('type') === 'percent', ['max:100'])],
             'min_order_price' => 'nullable|numeric|min:0',
             'usage_limit'     => 'nullable|integer|min:1',
             'valid_from'      => 'nullable|date',

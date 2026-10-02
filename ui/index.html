@@ -33,7 +33,23 @@
 
   </head>
   <body>
+    <!-- Statický základ do vykreslenia SPA (po prvom vykreslení ho odstráni main.js): landmark <main> a titulok. -->
     <div id="app"></div>
+    <main id="static-main"><h1 id="static-h1">Zástavy-vlajky.sk</h1></main>
+    <script>
+      (function () {
+        var titles = {
+          '/obchodne-podmienky': 'Obchodné podmienky',
+          '/ochrana-osobnych-udajov': 'Ochrana osobných údajov',
+          '/kontakt': 'Kontakt'
+        };
+        var t = titles[location.pathname.replace(/\/+$/, '')];
+        if (t) {
+          document.title = t + ' | Zástavy-vlajky.sk';
+          document.getElementById('static-h1').textContent = t;
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -1,4 +1,5 @@
 <script setup>
+import { formatPrice } from "../../../models/functions";
 import { computed } from "vue";
 import PanelDropdown from "../../layout/PanelDropdown.vue";
 import { useProducts } from "../../../store/StoreProducts";
@@ -21,9 +22,9 @@ const priceLabel = computed(() => {
 
     if (from === null || from === undefined) return '—';
     if (to !== null && to !== undefined && Number(to) > Number(from)) {
-        return `${Number(from).toFixed(2)} – ${Number(to).toFixed(2)} €`;
+        return `${formatPrice(from)} – ${formatPrice(to)} €`;
     }
-    return `${Number(from).toFixed(2)} €`;
+    return `${formatPrice(from)} €`;
 });
 
 const onClickUpdate = async () => {
@@ -53,7 +54,7 @@ const dropdownItems = computed(() => {
         <td class="px-6 py-4 whitespace-nowrap">
             <div class="flex items-center">
                 <div class="flex-shrink-0 h-10 w-10">
-                    <img class="h-10 w-10 rounded-full" :src="product.thumb" :alt="product.name" />
+                    <img width="40" height="40" loading="lazy" class="h-10 w-10 rounded-full" :src="product.thumb" :alt="product.name" />
                 </div>
                 <div class="ml-4">
                     <routerLinkComponent :permission="product.endpoints.show">

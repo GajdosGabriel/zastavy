@@ -106,9 +106,9 @@ class UserController extends Controller
         Gate::authorize('create', User::class);
 
         $validated = $request->validated();
-        $this->authorizeCustomerScope($request->user(), (int) $validated['customer_id']);
+        $this->authorizeCustomerScope($request->user(), isset($validated['customer_id']) ? (int) $validated['customer_id'] : null);
 
-        $roles       = $validated['roles'] ?? [];
+        $roles      = $validated['roles'] ?? [];
         $permissions = $validated['permissions'] ?? [];
         unset($validated['roles'], $validated['permissions']);
 

@@ -18,6 +18,7 @@ interface HomeState {
     products: HomeProduct[];
     product: HomeProduct;
     loadError: boolean;
+    loading: boolean;
 }
 
 export const useHome = defineStore('home', {
@@ -29,6 +30,7 @@ export const useHome = defineStore('home', {
         products: [],
         product: { variants: [] } as unknown as HomeProduct,
         loadError: false,
+        loading: true,
     }),
 
     getters: {
@@ -41,15 +43,18 @@ export const useHome = defineStore('home', {
             const q = useQuery();
             const paginator = usePaginator();
             this.loadError = false;
+            this.loading = true;
             await this.listRequests.run(
                 () => axiosInstance.get(this.url + q.stringForUrl),
                 (response: { data: any }) => {
                     this.products = response.data.data;
                     paginator.setPaginator(response.data.meta);
                     paginator.setLinks(response.data.links);
+                    this.loading = false;
                 },
                 (error: unknown) => {
                     this.loadError = true;
+                    this.loading = false;
                     this.products = [];
                     useErrors().setErrors(error);
                 },

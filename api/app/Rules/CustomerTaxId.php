@@ -47,7 +47,13 @@ class CustomerTaxId implements ValidationRule
     {
         $digits = preg_replace('/\D+/', '', $value) ?? '';
 
-        if ($digits === '' || strlen($digits) > 8) {
+        if ($digits === '' || preg_match('/^[\d\s\/.-]+$/u', $value) !== 1) {
+            $fail(__('rules.ico.digits'));
+
+            return;
+        }
+
+        if (strlen($digits) > 8) {
             $fail(__('rules.ico.length'));
 
             return;

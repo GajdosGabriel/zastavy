@@ -8,7 +8,7 @@ const customer = [
             default: () => import('../components/customer/CustomerIndex.vue'),
         },
         meta: {
-            title: 'Zakaznici',
+            title: 'Zákazníci',
             superAdminOnly: true,
         },
     },
@@ -29,7 +29,7 @@ const customer = [
             default: () => import('../components/customer/CustomerShow.vue'),
         },
         meta: {
-            title: 'Objednavky zakaznika',
+            title: 'Objednávky zákazníka',
             superAdminOnly: true,
         },
     },
@@ -50,7 +50,7 @@ const customer = [
             default: () => import('../components/customer/CustomerDuplicates.vue'),
         },
         meta: {
-            title: 'Duplicitni zakaznici',
+            title: 'Duplicitní zákazníci',
             superAdminOnly: true,
         },
     },
@@ -61,7 +61,7 @@ const customer = [
             default: () => import('../components/customer/CustomerCreate.vue'),
         },
         meta: {
-            title: 'Novy zakaznik',
+            title: 'Nový zákazník',
             superAdminOnly: true,
         },
     },

@@ -8,7 +8,7 @@ const user = [
             default: () => import('../components/user/UserIndex.vue'),
         },
         meta: {
-            title: 'Použivatelia',
+            title: 'Používatelia',
             superAdminOnly: true,
         },
     },
@@ -19,7 +19,7 @@ const user = [
             default: () => import('../components/user/UserShow.vue'),
         },
         meta: {
-            title: 'Pouzivatel',
+            title: 'Používateľ',
             superAdminOnly: true,
         },
     },
@@ -30,7 +30,7 @@ const user = [
             default: () => import('../components/user/UserEdit.vue'),
         },
         meta: {
-            title: 'Upravit pouzivatela',
+            title: 'Upraviť používateľa',
             superAdminOnly: true,
         },
     },

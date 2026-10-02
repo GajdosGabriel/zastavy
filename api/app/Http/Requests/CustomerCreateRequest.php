@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\CustomerPhone;
 use App\Rules\CustomerTaxId;
 use App\Rules\IcoRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,6 +29,13 @@ class CustomerCreateRequest extends CustomerUpdateRequest
     {
         return [
             'company'=>'required|min:2',
+            'email' => 'required|email',
+            'phone' => ['nullable', new CustomerPhone()],
+            'street' => 'nullable|string|max:250',
+            // Stĺpce `postcode` a `city` sú v databáze NOT NULL — bez nich by
+            // uloženie skončilo SQL chybou, tak sa vyžadujú už tu.
+            'postcode' => $this->postcodeRules(),
+            'city' => 'required|string|max:100',
             // IcoRule stráži jedinečnosť, CustomerTaxId správnosť — sú to dve
             // rôzne otázky a obe treba položiť.
             'ico' => ['nullable', new IcoRule(), new CustomerTaxId('ico')],
@@ -41,6 +49,7 @@ class CustomerCreateRequest extends CustomerUpdateRequest
         return [
             'company.required' => __('rules.company.min'),
             'company.min' => __('rules.company.min'),
+            'postcode.regex' => __('rules.postcode.invalid'),
             'ico.max' => __('rules.ico.length'),
         ];
     }

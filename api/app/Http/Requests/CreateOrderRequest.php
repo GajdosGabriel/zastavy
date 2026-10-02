@@ -11,6 +11,18 @@ use Illuminate\Validation\Rules\Exists;
 
 class CreateOrderRequest extends OrderRequest
 {
+    protected function prepareForValidation(): void
+    {
+        parent::prepareForValidation();
+
+        // Súkromná osoba nemá firmu: ako názov fakturačného subjektu slúži jej meno.
+        $customer = $this->input('customer');
+        if (is_array($customer) && trim((string) ($customer['company'] ?? '')) === '' && trim((string) ($customer['name'] ?? '')) !== '') {
+            $customer['company'] = $customer['name'];
+            $this->merge(['customer' => $customer]);
+        }
+    }
+
     public function rules(): array
     {
         $rules = [

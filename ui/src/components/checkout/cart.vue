@@ -54,7 +54,7 @@ const productRoute = computed(() => ({
     <article class="relative flex h-full flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md">
         <div class="relative flex h-56 items-center justify-center bg-slate-50 p-5">
             <router-link :to="productRoute" class="cursor-pointer" tabindex="-1" aria-hidden="true">
-                <img :src="item.images?.[0]?.path ?? item.thumb" class="max-h-48 w-full object-contain" :alt="item.name" />
+                <img :src="item.images?.[0]?.path ?? item.thumb" width="400" height="192" loading="lazy" class="max-h-48 w-full object-contain" :alt="item.name" />
             </router-link>
             <span v-if="!item.is_in_stock"
                 class="absolute right-3 top-3 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">

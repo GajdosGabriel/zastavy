@@ -39,7 +39,7 @@ watch(getQueryStringUrl, () => {
 const template = () => {
     return {
         page_header: {
-            title: "Použivatelia",
+            title: "Používatelia",
             buttonLink: getUserCan.value['users.create']
                 ? { name: "Nový používateľ", link: "/users/create", icon: "plus" }
                 : null,

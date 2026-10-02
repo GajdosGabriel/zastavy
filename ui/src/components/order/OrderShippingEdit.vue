@@ -12,7 +12,7 @@ import SpinnerButton from "../icons/spinnerButton.vue";
 import loadingStore from "../../store/StoreLoading";
 import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
-import { formatDecimal } from "../../models/functions";
+import { formatPrice } from "../../models/functions";
 import { storeToRefs } from "pinia";
 
 const ordersStore = useOrders();
@@ -321,8 +321,8 @@ watch(allProducts, () => {
                                 </td>
 
                                 <td class="tbody_td text-right whitespace-nowrap">
-                                    <div class="font-semibold text-gray-900">{{ formatDecimal(item.unitPrice) }} €</div>
-                                    <div class="text-xs text-gray-500">spolu {{ formatDecimal(item.lineTotal) }} €</div>
+                                    <div class="font-semibold text-gray-900">{{ formatPrice(item.unitPrice) }} €</div>
+                                    <div class="text-xs text-gray-500">spolu {{ formatPrice(item.lineTotal) }} €</div>
                                 </td>
 
                                 <td class="tbody_td text-center">{{ item.quantity }}</td>
@@ -412,7 +412,7 @@ watch(allProducts, () => {
                             <tr>
                                 <td class="tbody_td text-right font-semibold text-gray-700">Spolu s DPH</td>
                                 <td class="tbody_td text-right font-bold text-gray-900 whitespace-nowrap">
-                                    {{ formatDecimal(productsTotal) }} €
+                                    {{ formatPrice(productsTotal) }} €
                                 </td>
                                 <td class="tbody_td" colspan="6"></td>
                             </tr>

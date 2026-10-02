@@ -7,6 +7,8 @@ import axiosInstance from '../../axiosInstance';
 import useErrors from '../../store/StoreErrors';
 import { useUsers as useUser } from '../../store/StoreUsers';
 import { PAGE_ORDER } from '../../constants';
+import { plural } from '../../models/functions';
+import { eventLabel } from '../../systemLogLabels';
 
 const REFRESH_MS = 2 * 60 * 1000;
 
@@ -199,7 +201,7 @@ const adminLinks = computed(() => [
                         <!-- Hlavička -->
                         <header class="flex flex-wrap items-end justify-between gap-4">
                               <div>
-                                    <p class="text-sm capitalize text-slate-500">{{ todayLabel }}</p>
+                                    <p class="text-sm text-slate-500">{{ todayLabel }}</p>
                                     <h1 class="mt-1 text-3xl font-semibold text-slate-900">
                                           {{ greeting }}<template v-if="getUser?.firstName">, {{ getUser.firstName }}</template>
                                     </h1>
@@ -251,6 +253,9 @@ const adminLinks = computed(() => [
                                           <p class="mt-1 text-xs text-slate-500">{{ tile.hint }}</p>
                                     </router-link>
                               </div>
+                              <p class="mt-2 text-xs text-slate-500">
+                                    Karty sa môžu prekrývať – tá istá objednávka môže byť napríklad aj „Čakajú na expedíciu“, aj „Pripravené na odoslanie“. Počet otvorených objednávok je preto menší než súčet kariet.
+                              </p>
                         </div>
 
                         <!-- Tržby -->
@@ -272,7 +277,7 @@ const adminLinks = computed(() => [
                                           <template v-else>{{ money(card.value) }}</template>
                                     </div>
                                     <div class="mt-3 flex justify-between border-t border-slate-100 pt-3 text-sm text-slate-500">
-                                          <span><strong class="text-slate-800">{{ number(card.orders) }}</strong> objednávok</span>
+                                          <span><strong class="text-slate-800">{{ number(card.orders) }}</strong> {{ plural(card.orders, 'objednávka', 'objednávky', 'objednávok') }}</span>
                                           <span>expedované <strong class="text-emerald-700">{{ money(card.shipped) }}</strong></span>
                                     </div>
                               </div>
@@ -410,7 +415,7 @@ const adminLinks = computed(() => [
                                           </div>
                                           <ul class="divide-y divide-slate-100">
                                                 <li v-for="log in logs" :key="log.id" class="flex items-start gap-3 px-5 py-2.5 text-sm">
-                                                      <span class="mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="logStatusClass(log.status)">{{ log.event }}</span>
+                                                      <span class="mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="logStatusClass(log.status)" :title="log.event">{{ eventLabel(log.event) }}</span>
                                                       <div class="min-w-0 flex-1">
                                                             <div class="truncate text-slate-900">{{ log.message || '—' }}</div>
                                                             <div class="truncate text-xs text-slate-500">{{ logTime(log.createdAt) }}<template v-if="log.recipient"> · ✉ {{ log.recipient }}</template></div>

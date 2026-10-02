@@ -13,8 +13,9 @@ class Coupon extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'valid_from' => 'date',
-        'valid_to'   => 'date',
+        // Len dátum (Y-m-d), nie ISO čas v UTC — inak sa 28. 9. zobrazí ako 2026-09-27T22:00:00Z.
+        'valid_from' => 'date:Y-m-d',
+        'valid_to'   => 'date:Y-m-d',
     ];
 
     public function isValid(float $cartTotal): bool
@@ -45,7 +46,7 @@ class Coupon extends Model
     public function calculateDiscount(float $cartTotal): float
     {
         if ($this->type === 'percent') {
-            return round($cartTotal * ((float) $this->value / 100), 2);
+            return round($cartTotal * (min(100.0, (float) $this->value) / 100), 2);
         }
 
         return min((float) $this->value, $cartTotal);

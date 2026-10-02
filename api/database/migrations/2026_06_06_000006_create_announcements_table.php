@@ -41,16 +41,6 @@ return new class extends Migration
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            [
-                'status' => ModelStatus::Active->value,
-                'placement' => 'bottom',
-                'title' => 'Nav Bar Bottom component',
-                'body' => null,
-                'style_class' => 'bg-blue-500 text-gray-200',
-                'sort_order' => 10,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
         ]);
     }
 

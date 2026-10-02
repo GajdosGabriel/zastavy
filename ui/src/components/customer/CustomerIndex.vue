@@ -56,6 +56,10 @@ watch(iconStatus, () => {
 });
 
 onMounted(() => {
+    // Query store je globálny a prežije prechod medzi stránkami, kým lokálne
+    // stavy filtrov (sortByOrders, …) sa pri vstupe resetujú — bez resetu by
+    // zostal skrytý aktívny filter a nový zákazník by v zozname „zmizol".
+    resetQuery();
     fetchCustomers();
 });
 
@@ -108,6 +112,7 @@ const buttonBottomLeft = { name: 'Späť', spinner: true, link: '/zakaznici', ic
 
                 <filter-panel />
 
+                <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="thead">
                         <tr>
@@ -136,6 +141,7 @@ const buttonBottomLeft = { name: 'Späť', spinner: true, link: '/zakaznici', ic
                         <table-row v-else v-for="customer in getCustomers" :customer="customer" :key="customer.id" />
                     </tbody>
                 </table>
+                </div>
                 <PageBottom :item="template().page_bottom" />
                 <pagination-component @setUrl="paginatorUrl"></pagination-component>
             </div>

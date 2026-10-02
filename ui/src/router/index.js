@@ -9,6 +9,7 @@ import admin from './admin';
 import useStoreErrors from '../store/StoreErrors';
 import useStoreOrders from '../store/StoreOrders';
 import useUser from '../store/StoreUsers';
+import { hasSessionHint } from '../authSession';
 import { applyRouteSeo, DEFAULT_TITLE, DEFAULT_DESCRIPTION } from '../models/seo';
 
 
@@ -228,7 +229,7 @@ router.beforeResolve(async (to, from, next) => {
     // Pinia store — hodnoty cez store (getUser je getter, bez .value).
     const usersStore = useUser();
 
-    if (localStorage.getItem('authToken') && !usersStore.getUser?.isAuth) {
+    if (hasSessionHint() && !usersStore.getUser?.isAuth) {
         await usersStore.fetchUser();
     }
 

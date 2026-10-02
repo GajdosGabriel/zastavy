@@ -13,14 +13,32 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->api(append: [\App\Http\Middleware\EnsureAccountIsActive::class]);
+        $middleware->api(
+            prepend: [\App\Http\Middleware\AuthTokenFromCookie::class],
+            append: [\App\Http\Middleware\EnsureAccountIsActive::class],
+        );
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
         $middleware->append(SetLocale::class);
+        // API nemá prihlasovaciu stránku: neprihlásený dostane 401, nie redirect na neexistujúcu route login.
+        $middleware->redirectGuestsTo(fn () => null);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Chyba odoslania mailu (SMTP) skončí v denníku udalostí.
         $exceptions->reportable(function (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
             \App\Listeners\SystemLogSubscriber::mailFailed($e);
+        });
+
+        // Text SQL chyby (dotaz, názov databázy, host) nepatrí do odpovede.
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, $request) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
+                return null;
+            }
+
+            report($e);
+
+            return response()->json([
+                'message' => 'Údaje sa nepodarilo uložiť. Skontrolujte formulár a skúste to znova.',
+            ], 500);
         });
 
         // API vždy odpovedá v JSON (aj chyby), nie HTML/redirect.

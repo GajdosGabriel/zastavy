@@ -119,7 +119,7 @@ class ProductVariant extends Model
             return $image->url;
         }
 
-        return asset('images/product-placeholder.svg');
+        return '/images/product-placeholder.svg';
     }
 
     public function getOrderProductsCount(): int

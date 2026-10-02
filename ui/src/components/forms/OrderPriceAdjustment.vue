@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { adjustmentAmount } from '../../models/orderPricing';
-import { formatDecimal } from '../../models/functions';
+import { formatPrice } from '../../models/functions';
 const props = defineProps({ modelValue: Object, subtotal: { type: Number, default: 0 }, coupon: { type: Number, default: 0 } });
 const emit = defineEmits(['update:modelValue']);
 const change = (key, value) => emit('update:modelValue', { ...props.modelValue, [key]: value });
@@ -17,5 +17,5 @@ const amount = computed(() => adjustmentAmount(props.subtotal, props.modelValue,
 </div>
 <label class="block text-sm">Popis<input :value="modelValue.label" @input="change('label', $event.target.value)" maxlength="200" placeholder="Napr. dohodnutá zľava" class="mt-1 w-full rounded border-gray-300" /></label>
 <p class="text-sm text-gray-600">Percentá sa počítajú z položiek bez dopravy a platobného poplatku. Súčet zliav neprekročí cenu položiek.</p>
-<p class="font-semibold">Úprava: {{ formatDecimal(amount) }} € · Položky po zľavách: {{ formatDecimal(Math.max(0, subtotal - coupon + amount)) }} €</p>
+<p class="font-semibold">Úprava: {{ formatPrice(amount) }} € · Položky po zľavách: {{ formatPrice(Math.max(0, subtotal - coupon + amount)) }} €</p>
 </div></div></template>

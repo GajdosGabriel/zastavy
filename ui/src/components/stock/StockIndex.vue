@@ -1,4 +1,5 @@
 <script setup>
+import { formatPrice } from "../../models/functions";
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
@@ -99,7 +100,7 @@ const visibleSummary = computed(() =>
         : getSummary.value
 );
 
-const money = (value) => Number(value ?? 0).toFixed(2);
+const money = (value) => formatPrice(value);
 </script>
 
 <template>

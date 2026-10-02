@@ -35,7 +35,7 @@ export const PAGE_CUSTOMER: Page = {
 }
 
 export const PAGE_USER: Page = {
-    NAME: 'Použivatelia',
+    NAME: 'Používatelia',
     URL: URL_BASE_API + '/users',
     ROUTE: 'users.index',
     ICON: ''

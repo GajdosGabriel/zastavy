@@ -1,4 +1,5 @@
 <script setup>
+import { formatPrice } from "../../models/functions";
 import { computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { storeToRefs } from "pinia";
@@ -110,9 +111,9 @@ const paginatorUrl = (url) => setPaginator(url);
                     </div>
 
                     <div v-if="getVariantSummary?.avg_price" class="border-t border-gray-100 px-5 py-3 text-xs text-gray-500">
-                        Priemerná nákupná cena {{ Number(getVariantSummary.avg_price).toFixed(2) }} € / ks
+                        Priemerná nákupná cena {{ formatPrice(getVariantSummary.avg_price) }} € / ks
                         &nbsp;·&nbsp;
-                        Hodnota zásoby {{ Number(getVariantSummary.stock_value).toFixed(2) }} €
+                        Hodnota zásoby {{ formatPrice(getVariantSummary.stock_value) }} €
                     </div>
                 </div>
 

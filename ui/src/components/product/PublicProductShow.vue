@@ -179,7 +179,7 @@ onUnmounted(() => {
                     <div class="lg:col-span-7">
                         <div class="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
                             <div class="flex min-h-96 items-center justify-center bg-gray-50 p-4 md:p-8">
-                                <img :src="selectedImage" :alt="getProduct.name"
+                                <img :src="selectedImage" :alt="getProduct.name" width="520" height="520"
                                     class="max-h-[520px] w-full object-contain" />
                             </div>
                         </div>
@@ -189,7 +189,7 @@ onUnmounted(() => {
                                 @click="onClickImage(index)"
                                 class="h-20 w-20 overflow-hidden rounded border bg-white p-1 shadow-sm hover:border-blue-500"
                                 :class="currentImage === index ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200'">
-                                <img :src="image.path" :alt="getProduct.name" class="h-full w-full object-contain" />
+                                <img :src="image.path" :alt="getProduct.name" width="72" height="72" loading="lazy" class="h-full w-full object-contain" />
                             </button>
                         </div>
 

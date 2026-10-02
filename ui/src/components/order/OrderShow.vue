@@ -10,7 +10,7 @@ import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import { computed, onMounted, ref } from "vue";
 import productTableRow from "../orderProducts/productTableRow.vue";
-import { formatDecimal, formatFileSize } from "../../models/functions";
+import { formatPrice, formatFileSize } from "../../models/functions";
 import shippingButton from "./component/shippingButton.vue";
 import OrderCustomerCard from "./component/OrderCustomerCard.vue";
 import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
@@ -33,10 +33,18 @@ const { fetchReturns } = returnsStore;
 const router = useRouter();
 const { params: { orderId } } = useRoute();
 
-onMounted(() => {
-    fetchOrder(orderId);
+// Store ešte drží objednávku z vytvorenia (bez položiek) alebo z predošlého
+// detailu — kým nedobehne načítanie, ukazujeme skeleton namiesto prázdnej objednávky.
+const isLoaded = ref(false);
+
+onMounted(async () => {
     fetchProducts();
     fetchReturns(orderId);
+    try {
+        await fetchOrder(orderId);
+    } finally {
+        isLoaded.value = true;
+    }
 });
 
 const STATUS_STYLES = {
@@ -82,7 +90,12 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
             </h1>
 
 
-            <div class="page-body col-span-12">
+            <div v-if="!isLoaded" class="page-body col-span-12 animate-pulse space-y-4" aria-busy="true">
+                <div class="h-24 rounded-lg bg-gray-200"></div>
+                <div class="h-64 rounded-lg bg-gray-200"></div>
+            </div>
+
+            <div v-else class="page-body col-span-12">
 
 <ReorderButton :endpoint="'/orders/'+orderId+'/reorder'" />
 <router-link v-if="getOrder.permissions?.update?.allowed" :to="'/vyroba/'+orderId" class="text-blue-700 underline">Grafika a plán výroby</router-link>
@@ -90,13 +103,13 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                     <OrderCustomerCard :customer="customer" :user="getOrder.user" :order="getOrder" />
                 </div>
                 <div class="flex flex-col">
-                    <div class="-my-2 sm:-mx-6 lg:-mx-8">
-                        <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                            <div class="shadow border-b border-gray-200 sm:rounded-lg">
+                    <div class="-my-2">
+                        <div class="py-2 block min-w-0">
+                            <div class="overflow-x-auto shadow border-b border-gray-200 sm:rounded-lg">
                                 <table class="min-w-full divide-y border-2 border-gray-500">
                                     <thead class="thead">
                                         <tr>
-                                            <th class="thead_th">Name</th>
+                                            <th class="thead_th">Názov</th>
                                             <th class="thead_th">Množstvo</th>
                                             <th class="thead_th">Cena</th>
                                             <th class="thead_th">DPH</th>
@@ -122,7 +135,7 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                                             <td class="tbody_td font-semibold">
                                                 Cena:
                                                 {{
-                                                    formatDecimal(getStatement.grandTotal) +
+                                                    formatPrice(getStatement.grandTotal) +
                                                     " €"
                                                 }}
                                             </td>
@@ -136,10 +149,10 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                                     </tfoot>
                                 </table>
                                 <div class="p-4 text-right text-sm space-y-2">
-                                    <p v-if="getOrder.discount_amount">Zľavový kupón: −{{ formatDecimal(getOrder.discount_amount) }} €</p>
-                                    <p v-if="getOrder.adjustment_amount">{{ getOrder.price_adjustment?.label || (getOrder.adjustment_amount < 0 ? 'Zľava' : 'Prirážka') }}: {{ formatDecimal(getOrder.adjustment_amount) }} €</p>
-                                    <p>Doprava: {{ formatDecimal(getOrder.shipping_price || 0) }} € · Platba: {{ formatDecimal(getOrder.payment_fee || 0) }} €</p>
-                                    <p class="text-lg font-bold">Celkom: {{ formatDecimal(getOrder.grand_total || 0) }} €</p>
+                                    <p v-if="getOrder.discount_amount">Zľavový kupón: −{{ formatPrice(getOrder.discount_amount) }} €</p>
+                                    <p v-if="getOrder.adjustment_amount">{{ getOrder.price_adjustment?.label || (getOrder.adjustment_amount < 0 ? 'Zľava' : 'Prirážka') }}: {{ formatPrice(getOrder.adjustment_amount) }} €</p>
+                                    <p>Doprava: {{ formatPrice(getOrder.shipping_price || 0) }} € · Platba: {{ formatPrice(getOrder.payment_fee || 0) }} €</p>
+                                    <p class="text-lg font-bold">Celkom: {{ formatPrice(getOrder.grand_total || 0) }} €</p>
                                 </div>
                                 <CustomOrderItem v-if="getOrder.permissions?.manageItems?.allowed" @add="addOrderProduct(orderId, $event)" />
                             </div>

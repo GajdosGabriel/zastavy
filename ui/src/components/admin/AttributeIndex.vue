@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia';
 import BaseLayout from '../layout/BaseLayout.vue';
 import PageHeader from '../layout/page/pageHeader.vue';
 import { useAttributes, emptyAttribute } from '../../store/StoreAttributes';
+import { plural } from '../../models/functions';
 
 const store = useAttributes();
 const { getAttributes } = storeToRefs(store);
@@ -116,7 +117,7 @@ const onAddValue = async (attribute) => {
                                     <span class="ml-2 font-mono text-xs text-gray-400">{{ attribute.code }}</span>
                                 </span>
                                 <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-                                    {{ attribute.values?.length ?? 0 }} hodnôt
+                                    {{ attribute.values?.length ?? 0 }} {{ plural(attribute.values?.length ?? 0, 'hodnota', 'hodnoty', 'hodnôt') }}
                                 </span>
                             </button>
 

@@ -7,7 +7,7 @@ import PanelDropdown from '../layout/PanelDropdown.vue';
 import FormInput from '../forms/FormInput.vue';
 import { storeToRefs } from 'pinia';
 import { useShippingMethods } from '../../store/StoreShippingMethods';
-import { formatDecimal } from '../../models/functions';
+import { formatPrice } from '../../models/functions';
 
 const store = useShippingMethods();
 const { shippingMethod, getShippingMethods, getTrashedMethods } = storeToRefs(store);
@@ -75,8 +75,8 @@ const dropdownItems = (method) => [
                             <tr v-for="method in getShippingMethods" :key="method.id">
                                 <td class="tbody_td text-slate-400">{{ method.sort_order ?? 99 }}</td>
                                 <td class="tbody_td font-semibold text-slate-800">{{ method.name }}</td>
-                                <td class="tbody_td">{{ formatDecimal(method.price) }} €</td>
-                                <td class="tbody_td">{{ method.free_from_price ? `${formatDecimal(method.free_from_price)} €` : '—' }}</td>
+                                <td class="tbody_td">{{ formatPrice(method.price) }} €</td>
+                                <td class="tbody_td">{{ method.free_from_price ? `${formatPrice(method.free_from_price)} €` : '—' }}</td>
                                 <td class="tbody_td">
                                     <span :class="method.active ? 'text-green-600' : 'text-gray-400'">
                                         {{ method.active ? 'Aktívny' : 'Neaktívny' }}
@@ -105,7 +105,7 @@ const dropdownItems = (method) => [
                             <tbody class="divide-y divide-red-100">
                                 <tr v-for="method in getTrashedMethods" :key="method.id">
                                     <td class="tbody_td text-slate-500 line-through">{{ method.name }}</td>
-                                    <td class="tbody_td text-slate-400">{{ formatDecimal(method.price) }} €</td>
+                                    <td class="tbody_td text-slate-400">{{ formatPrice(method.price) }} €</td>
                                     <td class="tbody_td">
                                         <button type="button" @click="restoreShippingMethod(method)"
                                             class="rounded bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-200">

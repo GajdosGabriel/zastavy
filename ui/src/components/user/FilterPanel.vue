@@ -41,7 +41,7 @@ const clearInput = () => {
     <div class="filter-panel">
         <div class="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
             <div class="filter-field md:col-span-2">
-                <label class="filter-label" for="user-search">Hladanie pouzivatela</label>
+                <label class="filter-label" for="user-search">Hľadanie používateľa</label>
                 <div class="filter-control">
                     <input
                         id="user-search"
@@ -54,7 +54,7 @@ const clearInput = () => {
                         v-if="search.value"
                         type="button"
                         class="filter-clear"
-                        aria-label="Zrusit hladanie"
+                        aria-label="Zrušiť hľadanie"
                         @click="clearInput"
                     >
                         x
@@ -65,7 +65,7 @@ const clearInput = () => {
             <div class="filter-field">
                 <label class="filter-label" for="user-role">Rola</label>
                 <select id="user-role" v-model="role" class="filter-select">
-                    <option value="">Vsetky role</option>
+                    <option value="">Všetky roly</option>
                     <option value="super-admin">Super admin</option>
                     <option value="admin">Admin</option>
                     <option value="manager">Manager</option>
@@ -78,7 +78,7 @@ const clearInput = () => {
             <div v-if="getStatuses.length" class="filter-field">
                 <label class="filter-label" for="user-status">Status</label>
                 <select id="user-status" v-model="status" class="filter-select">
-                    <option value="">Vsetky statusy</option>
+                    <option value="">Všetky statusy</option>
                     <option v-for="item in getStatuses" :key="item.value" :value="item.value">
                         {{ item.label }}
                     </option>

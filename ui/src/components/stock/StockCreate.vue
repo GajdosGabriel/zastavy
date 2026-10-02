@@ -1,4 +1,5 @@
 <script setup>
+import { formatPrice } from "../../models/functions";
 import { computed, onMounted, ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useStocks } from "../../store/StoreStocks";
@@ -248,7 +249,7 @@ const onSubmit = async () => {
                                     <div v-if="!isWriteoff && store.create.price" class="flex justify-between text-gray-600">
                                         <span>Cena celkom</span>
                                         <span class="font-semibold text-gray-900">
-                                            {{ (Number(store.create.price) * quantity).toFixed(2) }} €
+                                            {{ formatPrice(Number(store.create.price) * quantity) }} €
                                         </span>
                                     </div>
                                     <div v-if="selectedRow" class="flex justify-between border-t pt-3 text-gray-600">

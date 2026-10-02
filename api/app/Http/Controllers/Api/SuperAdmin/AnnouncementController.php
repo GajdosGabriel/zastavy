@@ -69,7 +69,10 @@ class AnnouncementController extends Controller
     {
         return [
             'meta' => [
-                'statuses' => ModelStatus::allowedForUser(request()->user()),
+                'statuses' => array_map(
+                    fn (ModelStatus $status) => $status->toArray(),
+                    AnnouncementRequest::STATUSES,
+                ),
                 'placements' => [
                     ['value' => 'top', 'label' => 'Horný banner'],
                     ['value' => 'bottom', 'label' => 'Dolný oznam'],

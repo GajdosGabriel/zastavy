@@ -3,6 +3,9 @@ import axiosInstance from "../axiosInstance";
 import useErrors from "./StoreErrors";
 import useNavigation from "./StoreNavigation";
 import router from "../router";
+import { markSession } from "../authSession";
+import useCustomers from "./StoreCustomers";
+import useCheckouts, { CUSTOMER_STORAGE_KEY } from "./StoreCheckouts";
 
 interface AuthUser {
     isAuth: boolean;
@@ -28,7 +31,7 @@ export const useUsers = defineStore('users', {
         },
         userOrder: {},
         filterCounter: {},
-        token: localStorage.getItem('authToken'),
+        token: null,
     }),
 
     getters: {
@@ -41,21 +44,17 @@ export const useUsers = defineStore('users', {
 
     actions: {
         async fetchUser(): Promise<void> {
-            const token = localStorage.getItem('authToken');
-
-            if (!token) {
-                delete axiosInstance.defaults.headers.common['Authorization'];
-            }
-
             try {
                 const response = await axiosInstance.get("/user");
 
-                this.user = response.data.data;
-                this.userOrder = response.data.data;
-                this.token = token;
-                useNavigation().setMainNavigation(response.data.data?.navigation?.main);
+                const data = response.data?.data ?? { isAuth: false, order: {} };
 
-                this.updateUserIsAuth(Boolean(response.data.data?.isAuth));
+                this.user = data;
+                this.userOrder = data;
+                markSession(Boolean(data.isAuth));
+                useNavigation().setMainNavigation(data.navigation?.main);
+
+                this.updateUserIsAuth(Boolean(data.isAuth));
             } catch (error: any) {
                 if (error.response?.status === 401) {
                     this.clearAuth();
@@ -85,10 +84,8 @@ export const useUsers = defineStore('users', {
             try {
                 const response = await axiosInstance.post('/login', form);
 
-                const token = response.data.token;
-                localStorage.setItem('authToken', token);
-                this.token = token;
-                axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                // Token prišiel v httpOnly cookie, JS ho nevidí; držíme len príznak, že má zmysel sa pýtať na /user.
+                markSession(true);
 
                 console.log('Prihlasenie uspesne');
 
@@ -105,12 +102,8 @@ export const useUsers = defineStore('users', {
 
         async register(form: Record<string, any>): Promise<void> {
             try {
-                const response = await axiosInstance.post("/register", form);
-                const token = response.data.token ?? response.data;
-
-                localStorage.setItem('authToken', token);
-                this.token = token;
-                axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                await axiosInstance.post("/register", form);
+                markSession(true);
 
                 this.fetchUser();
                 router.push({ name: "public.index" });
@@ -121,11 +114,17 @@ export const useUsers = defineStore('users', {
         },
 
         updateUserIsAuth(isLoggedIn: boolean): void {
+            if (!this.user) {
+                this.user = { isAuth: isLoggedIn, order: {} };
+                return;
+            }
+
             this.user.isAuth = isLoggedIn;
         },
 
         clearAuth(): void {
-            localStorage.removeItem('authToken');
+            markSession(false);
+            localStorage.removeItem('authToken'); // zvyšok zo starého ukladania tokenu
             localStorage.removeItem('token');
             delete axiosInstance.defaults.headers.common['Authorization'];
             this.token = null;
@@ -135,6 +134,10 @@ export const useUsers = defineStore('users', {
             };
             this.userOrder = {};
             useNavigation().resetNavigation();
+            // Na zdieľanom počítači nesmú po odhlásení ostať osobné údaje predchádzajúceho používateľa.
+            localStorage.removeItem(CUSTOMER_STORAGE_KEY);
+            useCustomers().resetCustomer();
+            useCheckouts().resetDelivery();
         },
 
         resetModelUrl(url: string): void {

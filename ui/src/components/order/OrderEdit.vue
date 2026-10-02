@@ -10,7 +10,7 @@ import { useRoute, useRouter } from "vue-router";
 import { computed, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import productTableRow from "../orderProducts/productTableRow.vue";
-import { formatDecimal } from "../../models/functions";
+import { formatPrice } from "../../models/functions";
 import shippingButton from "./component/shippingButton.vue";
 import iconEmail from "../icons/email.vue";
 import iconPhone from "../icons/phone.vue";
@@ -244,8 +244,8 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                             <div class="text-gray-500 ml-2">prijatá</div>
                         </div>
                         <div class="flex items-center">
-                            <div v-for="shipping in getOrder.shippings" :key="shipping.id" class="flex items-center">
-                                <icon-calendar />{{ shipping.created_at }}
+                            <div v-for="shipping in (getOrder.shippings ?? []).filter(s => s.dispatched_at)" :key="shipping.id" class="flex items-center">
+                                <icon-calendar />{{ shipping.dispatched_at }}
                                 <div class="text-gray-500 ml-2">expedovaná</div>
                             </div>
                         </div>
@@ -261,7 +261,7 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                             class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                             <option :value="null">— nevybrané —</option>
                             <option v-for="m in shippingMethods" :key="m.id" :value="m.id">
-                                {{ m.name }} ({{ m.price > 0 ? `${parseFloat(m.price).toFixed(2)} €` : 'Zdarma' }})
+                                {{ m.name }} ({{ m.price > 0 ? `${formatPrice(m.price)} €` : 'Zdarma' }})
                             </option>
                         </select>
                     </div>
@@ -271,7 +271,7 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                             class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                             <option :value="null">— nevybrané —</option>
                             <option v-for="m in paymentMethods" :key="m.id" :value="m.id">
-                                {{ m.name }}{{ m.fee > 0 ? ` (+ ${parseFloat(m.fee).toFixed(2)} €)` : '' }}
+                                {{ m.name }}{{ m.fee > 0 ? ` (+ ${formatPrice(m.fee)} €)` : '' }}
                             </option>
                         </select>
                     </div>
@@ -316,13 +316,13 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
 
                 <!-- Produkty -->
                 <div class="flex flex-col">
-                    <div class="-my-2 sm:-mx-6 lg:-mx-8">
-                        <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                            <div class="shadow border-b border-gray-200 sm:rounded-lg">
+                    <div class="-my-2">
+                        <div class="py-2 block min-w-0">
+                            <div class="overflow-x-auto shadow border-b border-gray-200 sm:rounded-lg">
                                 <table class="min-w-full divide-y border-2 border-gray-500">
                                     <thead class="thead">
                                         <tr>
-                                            <th class="thead_th">Name</th>
+                                            <th class="thead_th">Názov</th>
                                             <th class="thead_th">Množstvo</th>
                                             <th class="thead_th">Cena</th>
                                             <th class="thead_th">DPH</th>
@@ -340,7 +340,7 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                                             <td class="tbody_td font-semibold">Rekapitulácia objednávky:</td>
                                             <td class="tbody_td" colspan="3">Položiek: {{ getStatement.grandQuantity }}</td>
                                             <td class="tbody_td font-semibold">
-                                                Cena: {{ formatDecimal(getStatement.grandTotal) }} €
+                                                Cena: {{ formatPrice(getStatement.grandTotal) }} €
                                             </td>
                                             <td colspan="2" class="tbody_td font-semibold text-3xl">
                                                 <shipping-button :order="getOrder" />
@@ -353,7 +353,7 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                                 </table>
                                 <CustomOrderItem v-if="getOrder.permissions?.manageItems?.allowed" @add="addOrderProduct(orderId, $event)" />
                                 <OrderPriceAdjustment v-model="priceAdjustment" :subtotal="getStatement.grandTotal" :coupon="Number(getOrder.discount_amount || 0)" />
-                                <p class="p-4 text-right font-bold">Celkom s dopravou a platbou: {{ formatDecimal(Math.max(0, getStatement.grandTotal - Number(getOrder.discount_amount || 0) + adjustmentAmount(getStatement.grandTotal, priceAdjustment, Number(getOrder.discount_amount || 0))) + editedShippingPrice + editedPaymentFee) }} €</p>
+                                <p class="p-4 text-right font-bold">Celkom s dopravou a platbou: {{ formatPrice(Math.max(0, getStatement.grandTotal - Number(getOrder.discount_amount || 0) + adjustmentAmount(getStatement.grandTotal, priceAdjustment, Number(getOrder.discount_amount || 0))) + editedShippingPrice + editedPaymentFee) }} €</p>
                             </div>
                         </div>
                     </div>

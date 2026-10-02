@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import useOrders from "../../store/StoreOrders";
-import { formatDecimal } from "../../models/functions";
+import { formatPrice } from "../../models/functions";
 import useOrderProducts from "../../store/StoreOrderProducts";
 import { useProducts } from "../../store/StoreProducts";
 import PanelDropdown from "../layout/PanelDropdown.vue";
@@ -119,7 +119,7 @@ const onChangeVariant = (variantId) => {
         </td>
 
         <td class="tbody_td">
-            <span v-if="item.price">{{ formatDecimal(item.price * item.quantity) + " €" }}</span>
+            <span v-if="item.price">{{ formatPrice(item.price * item.quantity) + " €" }}</span>
         </td>
 
         <td class="tbody_td">

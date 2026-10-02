@@ -12,7 +12,8 @@ export const formatDecimal = (number = null) => {
 };
 
 // Cena na zobrazenie: slovenská desatinná čiarka (23,00). Na hodnoty vo formulároch ostáva formatDecimal.
-export const formatPrice = (number = null) => formatDecimal(number).replace('.', ',');
+const priceFormatter = new Intl.NumberFormat('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const formatPrice = (number = null) => priceFormatter.format(Number(number ?? 0));
 
 export const formatUnitName = (number = 0) => {
   const n = Math.abs(Number(number));
@@ -21,11 +22,25 @@ export const formatUnitName = (number = 0) => {
   return 'kusov';
 };
 
+// Slovenské skloňovanie podľa počtu: 1 objednávka, 2–4 objednávky, 0 a 5+ objednávok.
+export const plural = (count, one, few, many) => {
+  const n = Math.abs(Number(count) || 0);
+  if (n === 1) return one;
+  if (n >= 2 && n <= 4) return few;
+  return many;
+};
+
+// Dátum na zobrazenie (28. 9. 2026). Čisté Y-m-d sa nepreráta cez časové pásmo, ISO čas áno.
+export const formatDate = (value) => {
+  if (!value) return '';
+  const plain = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value));
+  if (plain) return `${Number(plain[3])}. ${Number(plain[2])}. ${plain[1]}`;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString('sk-SK');
+};
+
 export const formatPriceWithoutVat = (price, vat) => {
-  let result = Math.round(
-    Number(price) - (Number(price) / 100) * Number(vat)
-  );
-  return formatDecimal(result);
+  return formatDecimal(Number(price) / (1 + Number(vat) / 100));
 };
 
 

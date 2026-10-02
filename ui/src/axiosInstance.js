@@ -3,26 +3,18 @@ import { installRequestActivity } from './models/httpActivity';
 import loadingStore from "./store/StoreLoading";
 import { URL_BASE_API } from "./constants";
 
-// Získanie tokenu z localStorage (alebo iného úložiska)
-const token = localStorage.getItem('authToken');
-
 const axiosInstance = axios.create({
     baseURL: URL_BASE_API, // 👈 Backend API URL
+    withCredentials: true, // prihlasovací token je v httpOnly cookie
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Ak existuje token, pridá ho do hlavičky
-if (token) {
-    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
-
-// Middleware na automatické pridanie tokenu do každého requestu
 axiosInstance.interceptors.request.use((config) => {
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
-        config.headers.Authorization = `Bearer ${storedToken}`;
+    // Pri relatívnom URL_BASE_API (/api, dev proxy) už URL obsahuje prefix; baseURL by ho zdvojil.
+    if (URL_BASE_API.startsWith('/') && config.url?.startsWith(`${URL_BASE_API}/`)) {
+        config.baseURL = '';
     }
 
     if (config.data instanceof FormData) {

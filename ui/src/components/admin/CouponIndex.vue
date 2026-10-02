@@ -8,7 +8,7 @@ import FormInput from '../forms/FormInput.vue';
 import { storeToRefs } from 'pinia';
 import { useCoupons } from '../../store/StoreCoupons';
 import axiosInstance from '../../axiosInstance';
-import { formatDecimal } from '../../models/functions';
+import { formatDate, formatPrice } from '../../models/functions';
 
 const store = useCoupons();
 const { coupon, getCoupons, getTrashedCoupons } = storeToRefs(store);
@@ -185,16 +185,16 @@ const dropdownItems = (coupon) => [
                             <tr v-for="coupon in getCoupons" :key="coupon.id">
                                 <td class="tbody_td font-semibold text-slate-800 tracking-wide">{{ coupon.code }}</td>
                                 <td class="tbody_td">
-                                    {{ coupon.type === 'percent' ? `${coupon.value}%` : `${formatDecimal(coupon.value)} €` }}
+                                    {{ coupon.type === 'percent' ? `${Number(coupon.value).toLocaleString('sk-SK')} %` : `${formatPrice(coupon.value)} €` }}
                                 </td>
                                 <td class="tbody_td text-xs text-slate-500">
-                                    <div v-if="coupon.min_order_price">Min: {{ formatDecimal(coupon.min_order_price) }} €</div>
+                                    <div v-if="coupon.min_order_price">Min: {{ formatPrice(coupon.min_order_price) }} €</div>
                                     <div v-else>—</div>
                                 </td>
                                 <td class="tbody_td text-xs text-slate-500">
                                     <div v-if="coupon.valid_from || coupon.valid_to">
-                                        <div v-if="coupon.valid_from">Od: {{ coupon.valid_from }}</div>
-                                        <div v-if="coupon.valid_to">Do: {{ coupon.valid_to }}</div>
+                                        <div v-if="coupon.valid_from">Od: {{ formatDate(coupon.valid_from) }}</div>
+                                        <div v-if="coupon.valid_to">Do: {{ formatDate(coupon.valid_to) }}</div>
                                     </div>
                                     <div v-else>—</div>
                                 </td>
@@ -236,7 +236,7 @@ const dropdownItems = (coupon) => [
                                 <tr v-for="coupon in getTrashedCoupons" :key="coupon.id">
                                     <td class="tbody_td text-slate-500 line-through tracking-wide">{{ coupon.code }}</td>
                                     <td class="tbody_td text-slate-400">
-                                        {{ coupon.type === 'percent' ? `${coupon.value}%` : `${formatDecimal(coupon.value)} €` }}
+                                        {{ coupon.type === 'percent' ? `${Number(coupon.value).toLocaleString('sk-SK')} %` : `${formatPrice(coupon.value)} €` }}
                                     </td>
                                     <td class="tbody_td">
                                         <button type="button" @click="restoreCoupon(coupon)"

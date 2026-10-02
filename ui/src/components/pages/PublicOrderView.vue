@@ -4,7 +4,7 @@ import { computed, ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import axiosInstance from '../../axiosInstance';
 import BaseLayout from '../layout/BaseLayout.vue';
-import { formatDecimal, formatFileSize } from '../../models/functions';
+import { formatPrice, formatFileSize } from '../../models/functions';
 
 const route = useRoute();
 const order = ref(null);
@@ -142,10 +142,10 @@ const hasPrice = (products) => products?.some(p => p.price);
                                         <td class="px-6 py-3 text-sm font-medium text-gray-900">{{ item.name }}</td>
                                         <td class="px-4 py-3 text-right text-sm text-gray-700">{{ item.quantity }} ks</td>
                                         <td v-if="hasPrice(order.order_products)" class="px-4 py-3 text-right text-sm text-gray-700">
-                                            {{ item.price ? formatDecimal(item.price) + ' €' : '—' }}
+                                            {{ item.price ? formatPrice(item.price) + ' €' : '—' }}
                                         </td>
                                         <td v-if="hasPrice(order.order_products)" class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                                            {{ item.total ? formatDecimal(item.total) + ' €' : '—' }}
+                                            {{ item.total ? formatPrice(item.total) + ' €' : '—' }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -154,22 +154,22 @@ const hasPrice = (products) => products?.some(p => p.price);
                                         <td colspan="3" class="px-6 py-2 text-right text-sm text-gray-500">
                                             Poštovné{{ order.shipping_method ? ' (' + order.shipping_method.name + ')' : '' }}
                                         </td>
-                                        <td class="px-6 py-2 text-right text-sm text-gray-600">{{ formatDecimal(order.shipping_price) }} €</td>
+                                        <td class="px-6 py-2 text-right text-sm text-gray-600">{{ formatPrice(order.shipping_price) }} €</td>
                                     </tr>
                                     <tr v-if="order.payment_fee > 0">
                                         <td colspan="3" class="px-6 py-2 text-right text-sm text-gray-500">
                                             {{ order.payment_method?.name ?? 'Poplatok za platbu' }}
                                         </td>
-                                        <td class="px-6 py-2 text-right text-sm text-gray-600">{{ formatDecimal(order.payment_fee) }} €</td>
+                                        <td class="px-6 py-2 text-right text-sm text-gray-600">{{ formatPrice(order.payment_fee) }} €</td>
                                     </tr>
-                                    <tr v-if="order.adjustment_amount"><td class="px-6 py-2 text-sm" colspan="3">{{ order.price_adjustment?.label || (order.adjustment_amount < 0 ? 'Zľava' : 'Prirážka') }}</td><td class="px-6 py-2 text-right text-sm font-semibold">{{ formatDecimal(order.adjustment_amount) }} €</td></tr>
+                                    <tr v-if="order.adjustment_amount"><td class="px-6 py-2 text-sm" colspan="3">{{ order.price_adjustment?.label || (order.adjustment_amount < 0 ? 'Zľava' : 'Prirážka') }}</td><td class="px-6 py-2 text-right text-sm font-semibold">{{ formatPrice(order.adjustment_amount) }} €</td></tr>
                                     <tr v-if="order.discount_amount > 0">
                                         <td colspan="3" class="px-6 py-2 text-right text-sm text-green-600">Zľava</td>
-                                        <td class="px-6 py-2 text-right text-sm font-semibold text-green-600">−{{ formatDecimal(order.discount_amount) }} €</td>
+                                        <td class="px-6 py-2 text-right text-sm font-semibold text-green-600">−{{ formatPrice(order.discount_amount) }} €</td>
                                     </tr>
                                     <tr>
                                         <td colspan="3" class="px-6 py-3 text-right text-base font-semibold text-gray-900">Celková suma</td>
-                                        <td class="px-6 py-3 text-right text-base font-semibold text-gray-900">{{ formatDecimal(order.grand_total) }} €</td>
+                                        <td class="px-6 py-3 text-right text-base font-semibold text-gray-900">{{ formatPrice(order.grand_total) }} €</td>
                                     </tr>
                                 </tfoot>
                             </table>

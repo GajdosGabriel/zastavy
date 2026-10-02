@@ -31,7 +31,7 @@ const playVideo = ref(false);
 
       <div class="m-4">
         <h3 class="font-semibold text-lg border-b-2 border-gray-500 mb-2">
-          Adresa
+          Prevádzka a kontakt
         </h3>
         <address>
           <ul>
@@ -41,7 +41,7 @@ const playVideo = ref(false);
             <li>Telefón : 0905 320 616</li>
             <li>
               Email :
-              <a class="mail" href="mailto:obchod@zastavy-vlajky.sk">obchod(at)zastavy-vlajky.sk</a>
+              <a class="mail" href="mailto:obchod@zastavy-vlajky.sk">obchod@zastavy-vlajky.sk</a>
             </li>
           </ul>
         </address>

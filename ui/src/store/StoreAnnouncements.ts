@@ -32,8 +32,8 @@ const emptyAnnouncement = (): Announcement => ({
     published_from: '',
     published_until: '',
     status: {
-        value: 'active',
-        label: 'Aktívny',
+        value: 'draft',
+        label: 'Koncept',
     },
 });
 

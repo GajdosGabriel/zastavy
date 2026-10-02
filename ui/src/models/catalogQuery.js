@@ -3,7 +3,8 @@ export function catalogQuery(query = {}) {
  /** @type {Record<string, string>} */
  const result = {};
  for (const key of allowed) {
-  const value = query[key];
+  const raw = query[key];
+  const value = typeof raw === 'number' ? String(raw) : raw;
   if (typeof value !== 'string' || !value.trim()) continue;
   if (['page','byCategory'].includes(key) && !/^[1-9][0-9]{0,8}$/.test(value)) continue;
   if (['priceFrom','priceTo'].includes(key) && (!Number.isFinite(Number(value)) || Number(value)<0)) continue;

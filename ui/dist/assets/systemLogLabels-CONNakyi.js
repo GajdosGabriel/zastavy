@@ -1,0 +1,1 @@
+const a={"mail.sent":"E-mail odoslaný","mail.failed":"E-mail zlyhal","auth.login":"Prihlásenie","auth.failed":"Neúspešné prihlásenie","auth.password_reset":"Obnova hesla","queue.failed":"Zlyhanie fronty","scheduler.failed":"Zlyhanie plánovača"},l=e=>a[e]??e;export{l as e};

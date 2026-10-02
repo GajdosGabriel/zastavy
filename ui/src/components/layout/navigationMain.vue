@@ -9,6 +9,7 @@ import { useProducts as useProduct } from "../../store/StoreProducts";
 import { useStocks as useStock } from "../../store/StoreStocks";
 import { useAnnouncements as useAnnouncement } from "../../store/StoreAnnouncements";
 import useNavigation from "../../store/StoreNavigation";
+import { hasSessionHint } from "../../authSession";
 import mainNavigationDropdown from "./navigationMainDropdown.vue";
 import NavKosikLink from "../checkout/NavKosikLink.vue";
 import badge from "../plugins/badge.vue";
@@ -16,6 +17,10 @@ import { APP_NAME, Page } from "../../constants";
 import useOrder from "../../store/StoreOrders";
 
 const mobileMenuOpen = ref(false);
+// Admin menu potrebuje ~1050 px; pod touto šírkou ostáva hamburger, inak stránka horizontálne presahuje.
+const desktopQuery = window.matchMedia("(min-width: 1100px)");
+const isDesktop = ref(desktopQuery.matches);
+const syncDesktop = (e) => { isDesktop.value = e.matches; };
 const route = useRoute();
 const router = useRouter();
 
@@ -49,7 +54,8 @@ const { fetchUser } = usersStore;
 const { getMainNavigation } = storeToRefs(useNavigation());
 
 onMounted(() => {
-      if (localStorage.getItem('authToken') && !getUser.value?.isAuth) {
+      desktopQuery.addEventListener("change", syncDesktop);
+      if (hasSessionHint() && !getUser.value?.isAuth) {
             fetchUser();
       }
       getlocalStorage();
@@ -70,7 +76,7 @@ onMounted(() => {
                                     </router-link>
                               </div>
 
-                              <ul class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                              <ul v-if="isDesktop" class="space-x-8 sm:-my-px sm:ml-10 flex">
                                     <li v-for="page in getMainNavigation" :key="page.ROUTE" class="nav_link">
                                           <router-link :to="{ name: page.ROUTE }" @click="onClickItem(page)"
                                                 class="nav_link" :class="{ nav_link_active: isNavActive(page) }">
@@ -90,7 +96,9 @@ onMounted(() => {
 
                               <!-- Hamburger – only mobile -->
                               <button
-                                    class="sm:hidden ml-1 rounded-md p-2 text-gray-600 hover:bg-gray-200 hover:text-gray-900 focus:outline-none"
+                                    type="button"
+                                    v-if="!isDesktop"
+                                    class="ml-1 rounded-md p-2 text-gray-600 hover:bg-gray-200 hover:text-gray-900 focus:outline-none"
                                     @click="mobileMenuOpen = !mobileMenuOpen"
                                     aria-label="Menu"
                               >
@@ -106,7 +114,7 @@ onMounted(() => {
             </div>
 
             <!-- Mobile menu panel -->
-            <div v-show="mobileMenuOpen" class="sm:hidden border-t border-gray-400 bg-gray-200">
+            <div v-if="!isDesktop && mobileMenuOpen" class="border-t border-gray-400 bg-gray-200">
                   <ul class="px-4 py-2 space-y-1">
                         <li v-for="page in getMainNavigation" :key="page.ROUTE">
                               <router-link

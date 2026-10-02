@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import BaseLayout from '../layout/BaseLayout.vue';
 import axiosInstance from '../../axiosInstance';
 import useErrors from '../../store/StoreErrors';
+import { eventLabel } from '../../systemLogLabels';
 
 type Row = {
       id: number; createdAt: string | null; level: 'info' | 'warning' | 'error'; channel: string; event: string;
@@ -135,7 +136,7 @@ onMounted(() => { document.title = 'Denník udalostí'; load(); });
                               <ul class="divide-y divide-slate-100" :class="{ 'opacity-60': loading }">
                                     <li v-for="row in page.data" :key="row.id" class="py-3">
                                           <div class="flex flex-wrap items-center gap-2 text-xs">
-                                                <span class="rounded-full px-2 py-0.5 font-semibold" :class="levelClass[row.level]">{{ row.event }}</span>
+                                                <span class="rounded-full px-2 py-0.5 font-semibold" :class="levelClass[row.level]" :title="row.event">{{ eventLabel(row.event) }}</span>
                                                 <span v-if="row.status" class="rounded-full px-2 py-0.5 font-medium" :class="statusClass[row.status]">{{ statusLabels[row.status] ?? row.status }}</span>
                                                 <span class="text-slate-500">{{ formatDate(row.createdAt) }}</span>
                                           </div>

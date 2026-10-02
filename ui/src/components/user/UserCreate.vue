@@ -136,14 +136,14 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="mb-2 block text-sm font-bold text-gray-700">Zákazník <RequiredMark /></label>
+                            <label class="mb-2 block text-sm font-bold text-gray-700">Zákazník <RequiredMark v-if="!store.user.roles?.length" /></label>
                             <SearchableSelect
                                 v-model="store.user.customer_id"
                                 :options="getCustomers"
                                 placeholder="— Vybrať zákazníka —"
                                 search-placeholder="Hľadať zákazníka podľa názvu alebo mesta…"
                                 empty-text="Žiadny zákazník nezodpovedá hľadaniu"
-                                required
+                                :required="!store.user.roles?.length"
                                 :error="fe('customer_id')"
                                 field-key="customer_id"
                             />

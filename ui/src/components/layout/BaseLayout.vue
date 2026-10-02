@@ -10,8 +10,15 @@ import footerComponent from './footer.vue';
 import spinner from '../icons/spinnerTable.vue';
 import loadingStore from '../../store/StoreLoading';
 import GlobalErrorPanel from '../plugins/GlobalErrorPanel.vue';
+import FlashPanel from '../plugins/FlashPanel.vue';
 
 const route = useRoute();
+// Oznamy (banner hore/dole) patria zákazníkom, v administrácii by len zavadzali.
+const PUBLIC_ROUTE_NAMES = ['sales.request', 'sales.quote.public', 'artwork.public', 'Stranka-sa-nenasla'];
+const showAnnouncements = computed(() => {
+  const name = String(route.name ?? '');
+  return name.startsWith('public.') || PUBLIC_ROUTE_NAMES.includes(name);
+});
 const showHeaderContactStrip = computed(() => ['public.index', 'public.contactUs'].includes(route.name));
 
 </script>
@@ -21,13 +28,13 @@ const showHeaderContactStrip = computed(() => ['public.index', 'public.contactUs
 
     <main>
 
-      <NavBarTop />
+      <NavBarTop v-if="showAnnouncements" />
 
       <navigationMain />
 
       <HeaderContactStrip v-if="showHeaderContactStrip" />
 
-      <NavBarBottom />
+      <NavBarBottom v-if="showAnnouncements" />
 
 
       <div class="container mx-auto bg-slate-100 min-h-screen relative">
@@ -37,6 +44,7 @@ const showHeaderContactStrip = computed(() => ['public.index', 'public.contactUs
         <!-- <spinner size="50px" v-if="loadingStore.isLoading" /> -->
 
         <article class="md:grid grid-cols-12">
+          <FlashPanel />
           <GlobalErrorPanel />
 
           <slot name="main"></slot>

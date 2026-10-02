@@ -89,6 +89,12 @@ class CustomerDataRules
             $raw[$field] = $value === null ? null : (string) $value;
         }
 
+        // „811 01" je zobrazovací tvar, v akom PSČ vracia API a v akom ho má
+        // formulár po načítaní zákazníka — do stĺpca pôjde tak či tak bez medzery.
+        if (isset($raw['postcode']) && preg_match('/^(\d{3}) (\d{2})$/', trim($raw['postcode']), $m)) {
+            $raw['postcode'] = $m[1].$m[2];
+        }
+
         $customer->setRawAttributes($raw);
 
         return $this->sort($this->check($customer));
@@ -443,6 +449,11 @@ class CustomerDataRules
 
         if (str_starts_with($value, '+')) {
             $digits = substr($value, 1);
+
+            // +4210556367007 — nula za predvoľbou navyše (vnútroštátna nula sa pri +421 nepíše).
+            if (str_starts_with($digits, '4210') && strlen($digits) === 13) {
+                $digits = '421'.substr($digits, 4);
+            }
 
             return preg_match('/^\d{9,15}$/', $digits) === 1 ? '+'.$digits : null;
         }

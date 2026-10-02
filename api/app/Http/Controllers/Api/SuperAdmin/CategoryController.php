@@ -21,7 +21,11 @@ class CategoryController extends Controller
     {
         Gate::authorize('create', Category::class);
 
-        Category::create($request->all());
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:60', 'regex:/\S/'],
+        ]);
+
+        Category::create(['name' => trim($data['name'])]);
     }
 
     public function destroy(Category $category)

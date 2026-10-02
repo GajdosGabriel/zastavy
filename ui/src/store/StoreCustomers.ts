@@ -4,6 +4,7 @@ import usePaginator from "./StorePaginator";
 import useQuery from "./StoreQuery";
 import useOrders from "./StoreOrders";
 import useErrors from "./StoreErrors";
+import useFlash from "./StoreFlash";
 import { PAGE_CUSTOMER } from "../constants";
 import { AxiosResponse } from "axios";
 import { ApiResponse } from "../types";
@@ -259,7 +260,9 @@ export const useCustomers = defineStore("customers", {
             };
         },
 
-        async updateCustomer(): Promise<void> {
+        async updateCustomer(): Promise<boolean> {
+            useErrors().resetErrors();
+
             try {
                 const payload = {
                     ...this.customer,
@@ -272,17 +275,29 @@ export const useCustomers = defineStore("customers", {
                 );
             } catch (e) {
                 useErrors().setErrors(e);
+                return false;
             }
+
+            useFlash().success("Zákazník bol uložený.");
             this.fetchCustomers();
+
+            return true;
         },
 
-        async storeCustomer(): Promise<void> {
+        async storeCustomer(): Promise<boolean> {
+            useErrors().resetErrors();
+
             try {
                 const response = await axiosInstance.post(PAGE_CUSTOMER.URL, this.customer);
                 this.customer = response.data.data;
             } catch (e) {
                 useErrors().setErrors(e);
+                return false;
             }
+
+            useFlash().success("Zákazník bol vytvorený.");
+
+            return true;
         },
 
         async destroyCustomer(url: string): Promise<void> {

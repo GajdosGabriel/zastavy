@@ -19,7 +19,7 @@ const product = [
             default: () => import('../components/product/PublicProductShow.vue'),
         },
         meta: {
-            title: 'Zobrazit polozku',
+            title: 'Zobraziť položku',
             superAdminOnly: true,
         },
     },
@@ -30,7 +30,7 @@ const product = [
             default: () => import('../components/product/ProductForm.vue'),
         },
         meta: {
-            title: 'Pridat novy tovar',
+            title: 'Pridať nový tovar',
             superAdminOnly: true,
         },
     },
@@ -41,7 +41,7 @@ const product = [
             default: () => import('../components/product/ProductForm.vue'),
         },
         meta: {
-            title: 'Upravit polozku',
+            title: 'Upraviť položku',
             superAdminOnly: true,
         },
     },
