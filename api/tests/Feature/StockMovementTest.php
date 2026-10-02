@@ -210,6 +210,103 @@ class StockMovementTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('quantity');
     }
 
+    public function test_store_saves_receipt_document_fields(): void
+    {
+        $this->actingAsSuperAdmin();
+
+        $variant = $this->makeVariant(10);
+
+        $this->postJson(route('stocks.store'), [
+            'product_variant_id' => $variant->id,
+            'quantity'           => 5,
+            'price'              => 3.45,
+            'supplier'           => 'Vlajky s.r.o.',
+            'document_number'    => 'DL-2026/0153',
+            'received_at'        => now()->subDay()->toDateString(),
+        ])
+            ->assertCreated()
+            ->assertJsonPath('supplier', 'Vlajky s.r.o.')
+            ->assertJsonPath('document_number', 'DL-2026/0153')
+            ->assertJsonPath('received_at', now()->subDay()->toDateString());
+
+        $this->assertSame(15, (int) $variant->fresh()->quantity);
+    }
+
+    /**
+     * Bez dátumu z formulára platí dnešok — príjemka nesmie ostať bez dátumu.
+     */
+    public function test_store_defaults_received_at_to_today(): void
+    {
+        $this->actingAsSuperAdmin();
+
+        $variant = $this->makeVariant(10);
+
+        $this->postJson(route('stocks.store'), [
+            'product_variant_id' => $variant->id,
+            'quantity'           => 1,
+        ])->assertCreated()->assertJsonPath('received_at', now()->toDateString());
+    }
+
+    public function test_store_rejects_invalid_receipt_values(): void
+    {
+        $this->actingAsSuperAdmin();
+
+        $variant = $this->makeVariant(10);
+
+        $this->postJson(route('stocks.store'), [
+            'product_variant_id' => $variant->id,
+            'quantity'           => 1.5,
+            'price'              => 1.234,
+            'document_number'    => str_repeat('x', 65),
+            'received_at'        => now()->addDay()->toDateString(),
+        ])->assertStatus(422)->assertJsonValidationErrors(['quantity', 'price', 'document_number', 'received_at']);
+
+        $this->postJson(route('stocks.store'), [
+            'product_variant_id' => $variant->id,
+            'quantity'           => 100001,
+            'price'              => -1,
+        ])->assertStatus(422)->assertJsonValidationErrors(['quantity', 'price']);
+
+        $this->assertSame(10, (int) $variant->fresh()->quantity);
+    }
+
+    public function test_store_rejects_deleted_variant(): void
+    {
+        $this->actingAsSuperAdmin();
+
+        $variant = $this->makeVariant(10);
+        $variant->delete();
+
+        $this->postJson(route('stocks.store'), [
+            'product_variant_id' => $variant->id,
+            'quantity'           => 1,
+        ])->assertStatus(422)->assertJsonValidationErrors('product_variant_id');
+    }
+
+    /**
+     * Odpis musí mať dôvod a nesmie niesť nákupnú cenu — tá by skreslila hodnotu skladu.
+     */
+    public function test_writeoff_requires_reason_and_has_no_price(): void
+    {
+        $this->actingAsSuperAdmin();
+
+        $variant = $this->makeVariant(10);
+
+        $this->postJson(route('stocks.store'), [
+            'product_variant_id' => $variant->id,
+            'quantity'           => -2,
+            'price'              => 3.50,
+        ])->assertStatus(422)->assertJsonValidationErrors(['note', 'price']);
+
+        $this->postJson(route('stocks.store'), [
+            'product_variant_id' => $variant->id,
+            'quantity'           => -2,
+            'note'               => 'Poškodené pri preprave',
+        ])->assertCreated();
+
+        $this->assertSame(8, (int) $variant->fresh()->quantity);
+    }
+
     /**
      * Výber vo formulári príjmu nesmie byť stránkovaný — inak sa dá naskladniť
      * len prvá stránka produktov.

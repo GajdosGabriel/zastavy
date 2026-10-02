@@ -28,8 +28,11 @@ class CustomerCreateRequest extends CustomerUpdateRequest
     public function rules()
     {
         return [
-            'company'=>'required|min:2',
-            'email' => 'required|email',
+            // Dĺžky kopírujú stĺpce v databáze — dlhší text by skončil SQL chybou.
+            'company' => 'required|string|min:2|max:200',
+            'name' => 'nullable|string|max:150',
+            'email' => 'required|email|max:150',
+            'note' => 'nullable|string|max:255',
             'phone' => ['nullable', new CustomerPhone()],
             'street' => 'nullable|string|max:250',
             // Stĺpce `postcode` a `city` sú v databáze NOT NULL — bez nich by

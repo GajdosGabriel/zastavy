@@ -49,6 +49,61 @@ class CustomerFormValidationTest extends TestCase
             ->assertJsonValidationErrors(['ico', 'phone']);
     }
 
+    /**
+     * Dĺžky kopírujú stĺpce v databáze — bez nich by dlhý text skončil SQL chybou.
+     */
+    public function test_too_long_values_are_validation_errors(): void
+    {
+        $this->actingAsSuperAdmin();
+
+        $this->postJson('/api/customers', $this->payload([
+            'company' => str_repeat('x', 201),
+            'name' => str_repeat('x', 151),
+            'note' => str_repeat('x', 256),
+        ]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['company', 'name', 'note']);
+    }
+
+    /**
+     * Poznámku mení len formulár, ktorý ju pozná — úprava bez nej ju nesmie vymazať.
+     */
+    public function test_note_is_saved_and_survives_update_without_it(): void
+    {
+        $this->actingAsSuperAdmin();
+
+        $id = $this->postJson('/api/customers', $this->payload(['note' => 'Fakturovať až po dodaní']))
+            ->assertSuccessful()
+            ->assertJsonPath('data.note', 'Fakturovať až po dodaní')
+            ->json('data.id');
+
+        $update = $this->payload(['name' => 'Ján Novák', 'status' => ModelStatus::Active->value]);
+
+        $this->putJson('/api/customers/' . $id, $update)
+            ->assertSuccessful()
+            ->assertJsonPath('data.note', 'Fakturovať až po dodaní');
+
+        $this->putJson('/api/customers/' . $id, $update + ['note' => 'Platí vopred'])
+            ->assertSuccessful()
+            ->assertJsonPath('data.note', 'Platí vopred');
+    }
+
+    public function test_address_rejects_garbage_postcode_and_phone(): void
+    {
+        $this->actingAsSuperAdmin();
+
+        $id = $this->postJson('/api/customers', $this->payload())->assertSuccessful()->json('data.id');
+
+        $address = ['street' => 'Hlavná 1', 'city' => 'Nitra', 'postcode' => '949 01'];
+
+        $this->postJson("/api/customers/{$id}/addresses", ['postcode' => 'abc', 'phone' => 'abc'] + $address)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['postcode', 'phone']);
+
+        $this->postJson("/api/customers/{$id}/addresses", $address + ['phone' => '0905 123 456'])
+            ->assertSuccessful();
+    }
+
     public function test_valid_customer_is_created_without_street(): void
     {
         $this->actingAsSuperAdmin();

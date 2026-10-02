@@ -27,11 +27,14 @@ class CustomerUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required',
+            // Dĺžky kopírujú stĺpce v databáze — dlhší text by skončil SQL chybou.
+            'name' => 'required|string|max:150',
+            'company' => 'nullable|string|max:200',
             'postcode' => $this->postcodeRules(),
             'street' => 'nullable|string|max:250',
             'city' => 'required|string|max:100',
-            'email' => 'required|email',
+            'email' => 'required|email|max:150',
+            'note' => 'nullable|string|max:255',
             'phone' => $this->phoneRules(),
             // Kontrolná číslica IČO a tvar daňových čísel — tie isté pravidlá,
             // aké po uložení použije post-kontrola. V administrácii sedí za
@@ -47,6 +50,15 @@ class CustomerUpdateRequest extends FormRequest
     {
         return [
             'postcode.regex' => __('rules.postcode.invalid'),
+        ];
+    }
+
+    public function attributes()
+    {
+        // Všeobecný preklad `name` je „názov" — tu ide o človeka.
+        return [
+            'name' => 'kontaktné meno',
+            'note' => 'poznámka',
         ];
     }
 

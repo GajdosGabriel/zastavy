@@ -52,11 +52,16 @@ const dropdownItems = computed(() => {
                 </router-link>
                 <div v-if="item.order_serial" class="text-xs text-gray-400">Obj. č. {{ item.order_serial }}</div>
             </template>
-            <span v-else-if="item.note" class="text-gray-500">{{ item.note }}</span>
+            <template v-else-if="item.supplier || item.document_number || item.note">
+                <div v-if="item.supplier" class="font-semibold text-gray-700">{{ item.supplier }}</div>
+                <div v-if="item.document_number" class="text-xs text-gray-400">Doklad č. {{ item.document_number }}</div>
+                <div v-if="item.note" class="text-gray-500">{{ item.note }}</div>
+            </template>
             <span v-else class="text-gray-300">—</span>
         </td>
         <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
             {{ item.shipping_created_at_human }}
+            <div v-if="item.received_at_formatted" class="text-xs text-gray-400">{{ item.received_at_formatted }}</div>
         </td>
         <td class="px-4 py-3 text-right whitespace-nowrap">
             <span class="text-sm font-bold" :class="quantityClass">

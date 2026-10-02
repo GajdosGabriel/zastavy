@@ -193,7 +193,11 @@ class CustomerService
         // Meno kontaktnej osoby tu zámerne nie je — patrí do `users` a zapisuje
         // ho storeUser(). Na `customers` bývalo v dvoch stĺpcoch naraz
         // (`name`, `username`) a formulár aj tak ukazoval hodnotu z `users`.
-        return [
+        // Poznámka sa prepisuje len keď ju formulár naozaj poslal — checkout ju
+        // nepozná a jeho uloženie by ju inak zakaždým vymazalo.
+        $note = array_key_exists('note', $request) ? ['note' => $request['note'] ?: null] : [];
+
+        return $note + [
             'company' => $company,
             'email' => $request['email'] ?? null,
             'phone' => $request['phone'] ?? null,
@@ -204,7 +208,6 @@ class CustomerService
             'ico' => $request['ico'] ?? null,
             'dic' => $request['dic'] ?? null,
             'ic_dic' => $request['ic_dic'] ?? null,
-            'note' => $request['note'] ?? null,
         ];
     }
 

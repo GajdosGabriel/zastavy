@@ -57,7 +57,9 @@ class CustomerResource extends JsonResource
             'ico' => $this->ico,
             'dic' => $this->dic,
             'ic_dic' => $this->ic_dic,
-            'email' => $contact?->email ?? $this->email,
+            // Interná poznámka personálu — zákazník ju vo svojom účte nevidí.
+            'note' => $this->when((bool) $user?->isStaff(), $this->note),
+            'email'=> $contact?->email ?? $this->email,
             'created_at' => $this->created_at,
             'phone' => $contact?->phone ?? $this->phone,
             'status' => $this->statusData(),

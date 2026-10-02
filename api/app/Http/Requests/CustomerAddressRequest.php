@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\CustomerPhone;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CustomerAddressRequest extends FormRequest
@@ -18,10 +19,13 @@ class CustomerAddressRequest extends FormRequest
             'company'    => ['nullable', 'string', 'max:200'],
             'name'       => ['nullable', 'string', 'max:150'],
             'street'     => ['required', 'string', 'max:250'],
-            'postcode'   => ['required', 'string', 'max:20'],
+            // Normalizácia by z nezmyslu spravila „00012" alebo null (a ten SQL chybu),
+            // preto sa tvar stráži tu — rovnako ako pri fakturačnej adrese.
+            'postcode'   => ['required', 'string', 'regex:/^\d{3}\s?\d{2}$/'],
             'city'       => ['required', 'string', 'max:100'],
             'country'    => ['nullable', 'string', 'size:2'],
-            'phone'      => ['nullable', 'string', 'max:40'],
+            // Na toto číslo volá kuriér — nečitateľné je horšie než žiadne.
+            'phone'      => ['nullable', 'string', 'max:40', new CustomerPhone()],
             'note'       => ['nullable', 'string', 'max:255'],
             'is_default' => ['nullable', 'boolean'],
         ];
@@ -33,6 +37,18 @@ class CustomerAddressRequest extends FormRequest
             'street.required'   => 'Vyplňte ulicu a číslo.',
             'postcode.required' => 'Vyplňte PSČ.',
             'city.required'     => 'Vyplňte mesto.',
+            'postcode.regex'    => __('rules.postcode.invalid'),
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'label'   => 'pomenovanie',
+            'company' => 'názov príjemcu',
+            'name'    => 'kontaktná osoba',
+            'phone'   => 'telefón',
+            'note'    => 'poznámka',
         ];
     }
 }

@@ -20,6 +20,7 @@ class Stock extends Model
 
     protected $casts = [
         'status' => ModelStatus::class,
+        'received_at' => 'date',
     ];
 
     public function shipping()

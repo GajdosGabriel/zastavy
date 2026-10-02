@@ -79,9 +79,30 @@ const closeForm = () => {
     fieldErrors.value = {};
 };
 
+// Tie isté pravidlá ako CustomerAddressRequest — nech sa na povinné pole
+// nečaká až na odpoveď servera.
+const clientErrors = () => {
+    const errors = {};
+
+    if (!form.value.street.trim()) errors.street = 'Vyplňte ulicu a číslo.';
+    if (!form.value.postcode.trim()) errors.postcode = 'Vyplňte PSČ.';
+    else if (!/^\d{3}\s?\d{2}$/.test(form.value.postcode.trim())) errors.postcode = 'PSČ musí mať 5 číslic.';
+    if (!form.value.city.trim()) errors.city = 'Vyplňte mesto.';
+
+    return errors;
+};
+
+const inputClass = (field) => errorFor(field)
+    ? 'border-red-500 bg-red-50'
+    : 'border-gray-300 focus:border-blue-500';
+
+const clearError = (field) => delete fieldErrors.value[field];
+
 const save = async () => {
+    fieldErrors.value = clientErrors();
+    if (Object.keys(fieldErrors.value).length) return;
+
     saving.value = true;
-    fieldErrors.value = {};
 
     try {
         if (editingId.value) {
@@ -138,49 +159,59 @@ const errorFor = (field) => {
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Pomenovanie</label>
-                    <input v-model="form.label" type="text" placeholder="Napr. Sklad Nitra"
-                           class="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none" />
+                    <input v-model="form.label" type="text" placeholder="Napr. Sklad Nitra" maxlength="100"
+                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           :class="inputClass('label')" @input="clearError('label')" />
+                    <p v-if="errorFor('label')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('label') }}</p>
                 </div>
                 <div class="sm:col-span-1 lg:col-span-2">
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Názov príjemcu</label>
-                    <input v-model="form.company" type="text" placeholder="Napr. Základná škola Testovce"
-                           class="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none" />
+                    <input v-model="form.company" type="text" placeholder="Napr. Základná škola Testovce" maxlength="200"
+                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           :class="inputClass('company')" @input="clearError('company')" />
+                    <p v-if="errorFor('company')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('company') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Ulica a číslo *</label>
-                    <input v-model="form.street" type="text"
+                    <input v-model="form.street" type="text" maxlength="250"
                            class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
-                           :class="errorFor('street') ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500'" />
+                           :class="inputClass('street')" @input="clearError('street')" />
                     <p v-if="errorFor('street')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('street') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">PSČ *</label>
-                    <input v-model="form.postcode" type="text"
+                    <input v-model="form.postcode" type="text" maxlength="6"
                            class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
-                           :class="errorFor('postcode') ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500'" />
+                           :class="inputClass('postcode')" @input="clearError('postcode')" />
                     <p v-if="errorFor('postcode')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('postcode') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Mesto *</label>
-                    <input v-model="form.city" type="text"
+                    <input v-model="form.city" type="text" maxlength="100"
                            class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
-                           :class="errorFor('city') ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500'" />
+                           :class="inputClass('city')" @input="clearError('city')" />
                     <p v-if="errorFor('city')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('city') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Kontaktná osoba na mieste</label>
-                    <input v-model="form.name" type="text"
-                           class="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none" />
+                    <input v-model="form.name" type="text" maxlength="150"
+                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           :class="inputClass('name')" @input="clearError('name')" />
+                    <p v-if="errorFor('name')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('name') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Telefón na mieste</label>
-                    <input v-model="form.phone" type="text"
-                           class="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none" />
+                    <input v-model="form.phone" type="tel" maxlength="40"
+                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           :class="inputClass('phone')" @input="clearError('phone')" />
+                    <p v-if="errorFor('phone')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('phone') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Poznámka pre doručenie</label>
-                    <input v-model="form.note" type="text" placeholder="Napr. zvoniť na vrátnicu"
-                           class="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none" />
+                    <input v-model="form.note" type="text" placeholder="Napr. zvoniť na vrátnicu" maxlength="255"
+                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           :class="inputClass('note')" @input="clearError('note')" />
+                    <p v-if="errorFor('note')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('note') }}</p>
                 </div>
             </div>
 

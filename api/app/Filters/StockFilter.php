@@ -26,6 +26,9 @@ class StockFilter extends Filters
         return $this->builder->where(function ($q) use ($productIds, $variantIds) {
             $q->whereIn('product_id', $productIds)
               ->orWhereIn('product_variant_id', $variantIds)
+              // Príjemka sa dohľadáva aj podľa dokladu a dodávateľa.
+              ->orWhere('document_number', 'like', '%' . $input . '%')
+              ->orWhere('supplier', 'like', '%' . $input . '%')
               ->orWhereHas('orderProduct', fn ($q) => $q
                   ->whereIn('product_id', $productIds)
                   ->orWhereIn('product_variant_id', $variantIds));

@@ -7,9 +7,12 @@ import router from "../../router";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import useUnsavedChanges from "../../models/useUnsavedChanges";
+import useErrors from "../../store/StoreErrors";
 
 const customersStore = useCustomers();
 const { getCustomer } = storeToRefs(customersStore);
+// Chyby zo servera patria k poliam — bez toho ostali len v spoločnom paneli hore.
+const { getFieldErrors } = storeToRefs(useErrors());
 const { storeCustomer, resetCustomer } = customersStore;
 
 resetCustomer();
@@ -39,7 +42,7 @@ const requiredFields = ["company", "email", "postcode", "city"];
                         <h2 class="text-base font-semibold text-gray-800">Údaje zákazníka</h2>
                     </div>
                     <div class="px-6 py-5">
-                        <CustomerFormFields :requiredFields="requiredFields" />
+                        <CustomerFormFields :requiredFields="requiredFields" :fieldErrors="getFieldErrors" errorPrefix="" :withNote="true" />
                         <div class="mt-6 flex justify-end">
                             <buttonSubmitComponent :item="{ name: 'Uložiť zákazníka', spinner: true }" />
                         </div>

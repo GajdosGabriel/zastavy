@@ -233,7 +233,7 @@ const money = (value) => formatPrice(value);
                             <FilterSearch
                                 v-model="searchInput"
                                 history-key="stockSearchHistory"
-                                placeholder="Názov, kód produktu alebo variantu"
+                                placeholder="Názov, kód, číslo dokladu alebo dodávateľ"
                                 @search="applySearch"
                             />
                         </div>

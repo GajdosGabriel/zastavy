@@ -8,11 +8,14 @@ import { useRoute } from "vue-router";
 import router from "../../router";
 import buttonSubmitComponent from "../layout/page/ButtonSubmit.vue";
 import useUnsavedChanges from "../../models/useUnsavedChanges";
+import useErrors from "../../store/StoreErrors";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import CustomerReviewPanel from "./component/CustomerReviewPanel.vue";
 
 const customersStore = useCustomers();
 const { getCustomer } = storeToRefs(customersStore);
+// Chyby zo servera patria k poliam — bez toho ostali len v spoločnom paneli hore.
+const { getFieldErrors } = storeToRefs(useErrors());
 const { updateCustomer, fetchCustomer, fetchReview } = customersStore;
 const { setOriginalData, markAsSaved } = useUnsavedChanges(() => getCustomer.value);
 const route = useRoute();
@@ -48,7 +51,7 @@ const requiredFields = ["company", "city", "postcode", "email", "name"];
                     </div>
                     <div class="px-6 py-5">
                         <CustomerReviewPanel :customerId="customerId as string" />
-                        <CustomerFormFields :requiredFields="requiredFields" :withStatus="true" />
+                        <CustomerFormFields :requiredFields="requiredFields" :fieldErrors="getFieldErrors" errorPrefix="" :withNote="true" :withStatus="true" />
                         <div class="mt-6 flex justify-end">
                             <buttonSubmitComponent :item="{ name: 'Uložiť zmeny', spinner: true }" />
                         </div>

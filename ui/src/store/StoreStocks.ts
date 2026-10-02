@@ -42,6 +42,10 @@ interface StockCreateForm {
     quantity: number | string;
     price: number | string;
     note: string;
+    supplier: string;
+    document_number: string;
+    // YYYY-MM-DD — dátum fyzického príjmu, nie zápisu do systému.
+    received_at: string;
 }
 
 interface StocksState {
@@ -55,11 +59,21 @@ interface StocksState {
     create: StockCreateForm;
 }
 
-const emptyCreate = (): StockCreateForm => ({
+// Lokálny dátum — toISOString() by po polnoci v našom pásme vrátil včerajšok.
+export const todayIso = (): string => {
+    const now = new Date();
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+};
+
+export const emptyCreate = (): StockCreateForm => ({
     product_variant_id: null,
     quantity: '',
     price: '',
     note: '',
+    supplier: '',
+    document_number: '',
+    received_at: todayIso(),
 });
 
 export const useStocks = defineStore('stocks', {
@@ -142,11 +156,14 @@ export const useStocks = defineStore('stocks', {
         },
 
         // Vracia úspech — formulár nesmie odnavigovať preč, keď zápis zlyhal.
-        async storeStock(): Promise<boolean> {
-            const isWriteoff = Number(this.create.quantity) < 0;
+        // Formulár posiela vlastný payload (množstvo so znamienkom), aby sa mu
+        // rozpracované hodnoty pri chybe neprepísali.
+        async storeStock(form?: StockCreateForm): Promise<boolean> {
+            const payload = form ?? this.create;
+            const isWriteoff = Number(payload.quantity) < 0;
             try {
                 useErrors().resetErrors();
-                await axiosInstance.post(PAGE_STOCK.URL, this.create);
+                await axiosInstance.post(PAGE_STOCK.URL, payload);
                 this.create = emptyCreate();
                 await this.fetchSummary();
                 useFlash().success(isWriteoff ? 'Odpis bol zaznamenaný.' : 'Príjem tovaru bol zaznamenaný.');

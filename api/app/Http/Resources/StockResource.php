@@ -48,7 +48,11 @@ class StockResource extends JsonResource
                 ? round(abs((int) $this->quantity) * (float) $this->price, 2)
                 : null,
             'note'                      => $this->note,
-            'status'                    => $this->statusData(),
+            'supplier'                  => $this->supplier,
+            'document_number'           => $this->document_number,
+            'received_at'               => $this->received_at?->toDateString(),
+            'received_at_formatted'     => $this->received_at?->format('d.m.Y'),
+            'status'                   => $this->statusData(),
             'endpoints' => [
                 'destroy' => route('stocks.destroy', $this->id),
             ],
