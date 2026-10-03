@@ -324,4 +324,149 @@ class StockMovementTest extends TestCase
         $this->assertArrayHasKey('tracked_quantity', $response->json('data.0'));
         $this->assertArrayHasKey('balance', $response->json('data.0'));
     }
+
+    private function receiptPayload(array $variants): array
+    {
+        return [
+            'uuid' => (string) Str::uuid(), 'received_at' => now()->toDateString(),
+            'supplier' => 'Dodávateľ s.r.o.', 'supplier_ico' => '12345678',
+            'warehouse' => 'Hlavný sklad', 'received_by' => 'Ján Skladník',
+            'document_number' => 'DL-001', 'note' => 'Prevzaté bez poškodenia',
+            'items' => array_map(fn ($variant) => [
+                'product_variant_id' => $variant->id, 'quantity' => 3,
+                'price' => 10, 'discount' => 10, 'vat' => 23, 'note' => 'Kontrola OK',
+            ], $variants),
+        ];
+    }
+
+    public function test_multi_item_receipt_is_saved_with_totals_and_snapshots(): void
+    {
+        $this->actingAsSuperAdmin();
+        $first = $this->makeVariant(10);
+        $second = $this->makeVariant(null);
+        $response = $this->postJson(route('stocks.receipts.store'), $this->receiptPayload([$first, $second]))
+            ->assertCreated()->assertJsonCount(2, 'data.items')
+            ->assertJsonPath('data.net', 54)->assertJsonPath('data.tax', 12.42)
+            ->assertJsonPath('data.total', 66.42);
+        $this->assertStringStartsWith('PR-' . now()->format('Y') . '-', $response->json('data.number'));
+        $this->assertSame(13, (int) $first->fresh()->quantity);
+        $this->assertNull($second->fresh()->quantity);
+        $this->assertEquals(9, Stock::where('stock_receipt_id', $response->json('data.id'))->first()->price);
+        $originalCode = $first->code;
+        $first->update(['code' => 'NEW-CODE']);
+        $this->getJson(route('stocks.receipts.show', $response->json('data.id')))
+            ->assertOk()->assertJsonPath('data.items.0.code', $originalCode);
+    }
+
+    public function test_invalid_receipt_item_does_not_save_anything(): void
+    {
+        $this->actingAsSuperAdmin();
+        $first = $this->makeVariant(10);
+        $second = $this->makeVariant(20);
+        $payload = $this->receiptPayload([$first, $second]);
+        $payload['items'][1]['quantity'] = 0;
+        $this->postJson(route('stocks.receipts.store'), $payload)->assertUnprocessable()
+            ->assertJsonValidationErrors('items.1.quantity');
+        $this->assertDatabaseCount('stock_receipts', 0);
+        $this->assertDatabaseCount('stocks', 0);
+        $this->assertSame(10, (int) $first->fresh()->quantity);
+        $this->assertSame(20, (int) $second->fresh()->quantity);
+    }
+
+    public function test_receipt_transaction_rolls_back_if_second_item_fails(): void
+    {
+        $this->actingAsSuperAdmin();
+        $first = $this->makeVariant(10);
+        $second = $this->makeVariant(20);
+        $event = 'eloquent.creating: ' . Stock::class;
+        \Illuminate\Support\Facades\Event::listen($event, function ($stock) use ($second) {
+            if ($stock->product_variant_id === $second->id) {
+                throw new \RuntimeException('Simulated storage failure');
+            }
+        });
+        try {
+            $this->postJson(route('stocks.receipts.store'), $this->receiptPayload([$first, $second]))->assertStatus(500);
+            $this->assertDatabaseCount('stock_receipts', 0);
+            $this->assertDatabaseCount('stocks', 0);
+            $this->assertSame(10, (int) $first->fresh()->quantity);
+            $this->assertSame(20, (int) $second->fresh()->quantity);
+        } finally {
+            \Illuminate\Support\Facades\Event::forget($event);
+            Stock::observe(\App\Observers\StockObserver::class);
+        }
+    }
+
+    public function test_retry_does_not_receive_the_same_goods_twice(): void
+    {
+        $this->actingAsSuperAdmin();
+        $variant = $this->makeVariant(10);
+        $payload = $this->receiptPayload([$variant]);
+        $first = $this->postJson(route('stocks.receipts.store'), $payload)->assertCreated();
+        $this->postJson(route('stocks.receipts.store'), $payload)->assertCreated()
+            ->assertJsonPath('data.id', $first->json('data.id'));
+        $this->assertDatabaseCount('stock_receipts', 1);
+        $this->assertDatabaseCount('stocks', 1);
+        $this->assertSame(13, (int) $variant->fresh()->quantity);
+    }
+
+    public function test_receipt_rejects_duplicates_deleted_variants_and_missing_prices(): void
+    {
+        $this->actingAsSuperAdmin();
+        $variant = $this->makeVariant(10);
+        $this->postJson(route('stocks.receipts.store'), $this->receiptPayload([$variant, $variant]))
+            ->assertUnprocessable()->assertJsonValidationErrors('items.1.product_variant_id');
+        $payload = $this->receiptPayload([$variant]);
+        $payload['items'][0]['price'] = null;
+        $payload['items'][0]['vat'] = 101;
+        $payload['items'][0]['discount'] = -1;
+        $this->postJson(route('stocks.receipts.store'), $payload)->assertUnprocessable()
+            ->assertJsonValidationErrors(['items.0.price', 'items.0.vat', 'items.0.discount']);
+        $variant->delete();
+        $this->postJson(route('stocks.receipts.store'), $this->receiptPayload([$variant]))
+            ->assertUnprocessable()->assertJsonValidationErrors('items.0.product_variant_id');
+        $this->assertDatabaseCount('stock_receipts', 0);
+    }
+
+    public function test_whole_receipt_cancellation_is_reversible_once_and_preserves_document(): void
+    {
+        $this->actingAsSuperAdmin();
+        $first = $this->makeVariant(10);
+        $second = $this->makeVariant(20);
+        $id = $this->postJson(route('stocks.receipts.store'), $this->receiptPayload([$first, $second]))->json('data.id');
+        $stock = Stock::where('stock_receipt_id', $id)->first();
+        $this->deleteJson(route('stocks.destroy', $stock))->assertUnprocessable();
+        $this->putJson(route('stocks.update', $stock), ['quantity' => 8])->assertUnprocessable();
+        $this->postJson(route('stocks.receipts.cancel', $id), ['reason' => ''])->assertUnprocessable();
+        $this->postJson(route('stocks.receipts.cancel', $id), ['reason' => 'Omyl'])->assertOk()
+            ->assertJsonCount(2, 'data.items')->assertJsonPath('data.cancellation_reason', 'Omyl');
+        $this->postJson(route('stocks.receipts.cancel', $id), ['reason' => 'Opakovanie'])->assertOk()
+            ->assertJsonPath('data.cancellation_reason', 'Omyl');
+        $this->assertSame(10, (int) $first->fresh()->quantity);
+        $this->assertSame(20, (int) $second->fresh()->quantity);
+        $this->assertSame(0, Stock::count());
+        $this->getJson(route('stocks.receipts.show', $id))->assertOk()->assertJsonCount(2, 'data.items');
+        $this->getJson(route('stocks.receipts.index', ['status' => 'cancelled', 'search' => 'DL-001']))
+            ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $id);
+        $this->getJson(route('stocks.receipts.index', ['status' => 'active']))->assertOk()->assertJsonCount(0, 'data');
+    }
+
+    public function test_receipts_are_not_accessible_to_ordinary_users(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $variant = $this->makeVariant(10);
+        $this->postJson(route('stocks.receipts.store'), $this->receiptPayload([$variant]))->assertForbidden();
+        $this->assertDatabaseCount('stock_receipts', 0);
+    }
+
+    public function test_discount_keeps_unit_cost_precision_and_rounds_document_lines(): void
+    {
+        $this->actingAsSuperAdmin();
+        $variant = $this->makeVariant(0);
+        $payload = $this->receiptPayload([$variant]);
+        $payload['items'][0] = array_merge($payload['items'][0], ['quantity' => 100, 'price' => 0.01, 'discount' => 50, 'vat' => 0]);
+        $id = $this->postJson(route('stocks.receipts.store'), $payload)->assertCreated()
+            ->assertJsonPath('data.net', 0.5)->assertJsonPath('data.total', 0.5)->json('data.id');
+        $this->assertEquals(0.005, (float) Stock::where('stock_receipt_id', $id)->first()->price);
+        $this->getJson(route('stocks.summary'))->assertOk()->assertJsonPath('data.0.stock_value', 0.5);
+    }
 }

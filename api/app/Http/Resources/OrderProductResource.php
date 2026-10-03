@@ -25,7 +25,7 @@ class OrderProductResource extends JsonResource
             'variant_name' => $this->variant_name,
             'variant_code' => $this->product_details->variant_code,
             'activePrice' => $this->price,
-            'thumb' => url($this->variant?->thumb ?? ($this->product?->thumb ?? asset('images/product-placeholder.svg'))),
+            'thumb' => $this->variant?->thumb ?? ($this->product?->thumb ?? '/images/product-placeholder.svg'),
             'unit_value' => $this->product_details->unit_value,
             'min_order' => $this->variant?->min_order ?? 1,
             'product_vat' => $this->product_details->vat,

@@ -2,6 +2,24 @@ import { PAGE_STOCK } from '../constants';
 
 const stock = [
     {
+        path: '/sklad/prijemky',
+        name: 'stocks.receipts.index',
+        components: { default: () => import('../components/stock/StockReceiptIndex.vue') },
+        meta: { title: 'Príjemky', superAdminOnly: true },
+    },
+    {
+        path: '/sklad/odpis/create',
+        name: 'stocks.writeoff',
+        components: { default: () => import('../components/stock/StockWriteoff.vue') },
+        meta: { title: 'Odpis zo skladu', superAdminOnly: true },
+    },
+    {
+        path: '/sklad/prijemky/:receiptId(\\d+)',
+        name: 'stocks.receipts.show',
+        components: { default: () => import('../components/stock/StockReceiptShow.vue') },
+        meta: { title: 'Príjemka', superAdminOnly: true },
+    },
+    {
         path: '/sklad',
         name: PAGE_STOCK.ROUTE,
         components: {

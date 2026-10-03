@@ -134,6 +134,10 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::post('/product/{product}/image/reorder', [ProductImageController::class, 'reorder'])->name('product.image.reorder');
 
     // Musí byť pred apiResource('stocks'), inak by "summary" pohltilo {stock}.
+    Route::get('stocks/receipts', [\App\Http\Controllers\Api\SuperAdmin\StockReceiptController::class, 'index'])->name('stocks.receipts.index');
+    Route::post('stocks/receipts', [\App\Http\Controllers\Api\SuperAdmin\StockReceiptController::class, 'store'])->name('stocks.receipts.store');
+    Route::get('stocks/receipts/{receipt}', [\App\Http\Controllers\Api\SuperAdmin\StockReceiptController::class, 'show'])->name('stocks.receipts.show');
+    Route::post('stocks/receipts/{receipt}/cancel', [\App\Http\Controllers\Api\SuperAdmin\StockReceiptController::class, 'cancel'])->name('stocks.receipts.cancel');
     Route::get('stocks/summary', [StockController::class, 'summary'])->name('stocks.summary');
     Route::get('stocks/variants', [StockController::class, 'variants'])->name('stocks.variants');
     Route::get('stocks/summary/{variantId}', [StockController::class, 'variantSummary'])

@@ -57,6 +57,7 @@ class StockController extends Controller
                 'orderProduct.variant',
                 'productDirect',
                 'variant',
+                'receipt',
             ])
             ->latest()
             ->filter($stockFilters)
@@ -304,6 +305,7 @@ class StockController extends Controller
 
         DB::transaction(function () use ($stock, $data) {
             $stock = Stock::whereKey($stock->id)->lockForUpdate()->firstOrFail();
+            abort_if($stock->stock_receipt_id, 422, 'Položku príjemky nemožno meniť samostatne. Stornujte celý doklad.');
             abort_if($stock->order_id || $stock->shipping_id || $stock->order_return_id, 422, 'Pohyb objednávky upravte cez expedíciu alebo vratku.');
             $stock->update($data);
         });
@@ -318,6 +320,7 @@ class StockController extends Controller
 
         DB::transaction(function () use ($stock) {
             $stock = Stock::whereKey($stock->id)->lockForUpdate()->firstOrFail();
+            abort_if($stock->stock_receipt_id, 422, 'Položku príjemky nemožno zmazať samostatne. Stornujte celý doklad.');
             abort_if($stock->order_id || $stock->shipping_id || $stock->order_return_id, 422, 'Pohyb objednávky nemožno zmazať zo skladu.');
             $stock->delete();
         });

@@ -21,11 +21,17 @@ class Stock extends Model
     protected $casts = [
         'status' => ModelStatus::class,
         'received_at' => 'date',
+        'receipt_item_snapshot' => 'array',
     ];
 
     public function shipping()
     {
         return $this->belongsTo(Shipping::class);
+    }
+
+    public function receipt()
+    {
+        return $this->belongsTo(StockReceipt::class, 'stock_receipt_id');
     }
 
     public function orderReturn()

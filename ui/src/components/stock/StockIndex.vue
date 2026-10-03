@@ -115,6 +115,7 @@ const money = (value) => formatPrice(value);
                 }" />
 
                 <!-- Prehľadové čísla -->
+                <div class="mb-5 flex gap-4 text-sm font-semibold"><router-link :to="{ name: 'stocks.receipts.index' }" class="text-blue-700 hover:underline">Evidencia príjemiek</router-link><router-link v-if="getUserCan?.['stocks.create']" :to="{ name: 'stocks.writeoff' }" class="text-red-700 hover:underline">Odpis zo skladu</router-link></div>
                 <div v-if="getSummaryMeta" class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
                         <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Skladové položky</div>

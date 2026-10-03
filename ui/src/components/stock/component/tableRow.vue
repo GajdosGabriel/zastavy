@@ -43,6 +43,7 @@ const dropdownItems = computed(() => {
             <div v-if="item.code" class="text-xs text-gray-400">{{ item.code }}</div>
         </td>
         <td class="px-4 py-3 text-sm text-gray-600">
+            <router-link v-if="item.stock_receipt_id" :to="{ name: 'stocks.receipts.show', params: { receiptId: item.stock_receipt_id } }" class="block font-semibold text-blue-700 hover:underline">{{ item.receipt_number }}</router-link>
             <template v-if="!isIncoming && !isWriteoff && item.company">
                 <router-link
                     :to="{ name: 'orders.show', params: { orderId: item.order_id } }"

@@ -24,6 +24,8 @@ class StockResource extends JsonResource
 
         return [
             'id'                        => $this->id,
+            'stock_receipt_id'          => $this->stock_receipt_id,
+            'receipt_number'            => $this->receipt?->number,
             'type'                      => $type,
             'inventory_delta' => $this->inventory_delta !== null ? (int) $this->inventory_delta : ($this->shipping_id ? -(int) $this->quantity : (int) $this->quantity),
             'shipping_id'               => $this->shipping_id,
@@ -58,7 +60,7 @@ class StockResource extends JsonResource
             ],
             'permissions' => [
                 'delete' => [
-                    'allowed' => !$this->order_id && !$this->shipping_id && !$this->order_return_id && ($user?->can('delete', $this->resource) ?? false),
+                    'allowed' => !$this->stock_receipt_id && !$this->order_id && !$this->shipping_id && !$this->order_return_id && ($user?->can('delete', $this->resource) ?? false),
                     'label'   => __('actions.delete'),
                 ],
             ],
