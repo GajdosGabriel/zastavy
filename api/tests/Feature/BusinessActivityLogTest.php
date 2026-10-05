@@ -46,7 +46,12 @@ class BusinessActivityLogTest extends TestCase
         $url = '/api/orders/'.$this->order->id;
         $this->putJson($url, ['note' => 'Call before delivery'])->assertOk();
         $log = SystemLog::where('event', 'order.updated')->sole();
-        $this->assertSame(['before' => null, 'after' => 'Call before delivery'], $log->context['changes']['note']);
+        // MySQL JSON storage may reorder object keys; compare their values strictly.
+        $noteChange = $log->context['changes']['note'];
+        $this->assertCount(2, $noteChange);
+        $this->assertArrayHasKey('before', $noteChange);
+        $this->assertNull($noteChange['before']);
+        $this->assertSame('Call before delivery', $noteChange['after']);
         $this->assertSame($this->staff->id, $log->user_id);
         $this->assertSame('TEST-1', $log->context['serial_number']);
         $this->putJson($url, ['note' => 'Call before delivery'])->assertOk();
