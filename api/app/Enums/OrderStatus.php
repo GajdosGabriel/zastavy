@@ -64,12 +64,13 @@ enum OrderStatus: string
 
     public static function fromOrder(Order $order): self
     {
-        if ($order->status === self::Cancelled || $order->isStorned()) {
-            return self::Cancelled;
-        }
-
+        // Archív môže obsahovať neúplnú historickú objednávku bez položiek.
         if ($order->status === self::Archived) {
             return self::Archived;
+        }
+
+        if ($order->status === self::Cancelled || $order->isStorned()) {
+            return self::Cancelled;
         }
 
         if ($order->isFinished()) {
