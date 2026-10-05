@@ -45,7 +45,10 @@ class SystemLogSubscriber
             MessageSent::class => 'mailSent',
             JobProcessing::class => fn () => self::$inQueueJob = true,
             JobProcessed::class => fn () => self::$inQueueJob = false,
-            Looping::class => fn () => self::$inQueueJob = false,
+            // Vrátenie false z Looping pozastaví worker pred vybratím úlohy.
+            Looping::class => function (): void {
+                self::$inQueueJob = false;
+            },
             JobFailed::class => 'jobFailed',
             ScheduledTaskFailed::class => 'scheduledTaskFailed',
             PasswordReset::class => 'passwordReset',

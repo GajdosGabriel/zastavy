@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Order;
+use App\Services\SystemLog\Recorder;
 
 class OrderObserver
 {
@@ -14,7 +15,18 @@ class OrderObserver
      */
     public function created(Order $order)
     {
-        //
+        Recorder::info('order', 'created', 'Vytvorená objednávka #'.$order->id,
+            status: 'ok',
+            recipient: $order->routeNotificationForMail(),
+            userId: request()->user('sanctum')?->id,
+            ip: app()->runningInConsole() ? null : request()->ip(),
+            context: [
+                'order_id' => $order->id,
+                'order_uuid' => $order->uuid,
+                'customer_id' => $order->customer_id,
+                'customer_name' => $order->billingSnapshot()['company'] ?? $order->billingSnapshot()['name'] ?? null,
+            ],
+        );
     }
 
     /**

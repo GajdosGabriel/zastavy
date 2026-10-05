@@ -84,6 +84,10 @@ class ShippingService
                 $shipping = $prepared ?? $order->shippings()->create(['submission_key' => $key, 'submission_hash' => $key ? $hash : null]);
                 $shipping->update(['dispatched_at' => now()]);
                 $shipping->stocks()->saveMany($stocks);
+                \App\Services\SystemLog\Activity::record('order', 'dispatched', 'Zásielka expedovaná #'.($order->serial_number ?: $order->id),
+                    ['shipping_id' => $shipping->id, 'items' => $stocks->map(fn (Stock $stock) => [
+                        'order_product_id' => $stock->order_product_id, 'quantity' => $stock->quantity,
+                    ])->all()], $order);
             }
 
             return $shipping;

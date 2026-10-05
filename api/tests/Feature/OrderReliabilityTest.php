@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ShippingMethod;
+use App\Models\SystemLog;
 use App\Models\User;
 use App\Notifications\OrderCancelled;
 use App\Notifications\OrderCreated;
@@ -55,6 +56,45 @@ class OrderReliabilityTest extends TestCase
         $this->assertDatabaseCount('customers', 1);
         $this->assertDatabaseCount('order_products', 1);
         Notification::assertSentToTimes(Order::firstOrFail(), OrderCreated::class, 1);
+        $log = SystemLog::where('event', 'order.created')->sole();
+        $this->assertSame('buyer@example.test', $log->recipient);
+        $this->assertNull($log->user_id);
+        $this->assertSame(Order::firstOrFail()->id, $log->context['order_id']);
+    }
+
+    public function test_staff_order_creation_is_visible_in_filtered_system_log(): void
+    {
+        $staff = User::factory()->create();
+        $staff->assignRole('super-admin');
+        Sanctum::actingAs($staff);
+        $this->postJson('/api/orders', $this->payload())->assertSuccessful();
+
+        $order = Order::firstOrFail();
+        $log = SystemLog::where('event', 'order.created')->sole();
+        $this->assertSame($staff->id, $log->user_id);
+        $this->assertSame($order->customer_id, $log->context['customer_id']);
+        $this->getJson('/api/admin/system-logs?channel=order&search=Vytvoren')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.event', 'order.created')
+            ->assertJsonPath('data.0.user.id', $staff->id);
+    }
+
+    public function test_rolled_back_order_creation_does_not_leave_a_log(): void
+    {
+        $this->postJson('/api/checkouts', $this->payload())->assertOk();
+        $order = Order::firstOrFail();
+
+        DB::beginTransaction();
+        try {
+            $order->replicate(['uuid', 'serial_number', 'delivery_token'])->save();
+            $this->assertSame(2, SystemLog::where('event', 'order.created')->count());
+        } finally {
+            DB::rollBack();
+        }
+
+        $this->assertDatabaseCount('orders', 1);
+        $this->assertSame(1, SystemLog::where('event', 'order.created')->count());
     }
 
     public function test_changed_payload_with_same_key_is_rejected(): void

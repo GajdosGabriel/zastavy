@@ -16,7 +16,7 @@ const loading = ref(false);
 const currentPage = ref(1);
 const filters = reactive({ channel: '', level: '', status: '', date_from: '', date_to: '', search: '', recipient: '' });
 
-const channelLabels: Record<string, string> = { mail: 'E-maily', auth: 'Prihlásenia', queue: 'Fronta', scheduler: 'Plánovač' };
+const channelLabels: Record<string, string> = { order: 'Objednávky', quote: 'Cenové ponuky', stock: 'Sklad', customer: 'Zákazníci', user: 'Používatelia', mail: 'E-maily', auth: 'Prihlásenia', queue: 'Fronta', scheduler: 'Plánovač' };
 const statusLabels: Record<string, string> = { sent: 'odoslané', failed: 'zlyhalo', ok: 'v poriadku' };
 const levelClass: Record<string, string> = {
       info: 'bg-slate-100 text-slate-700', warning: 'bg-amber-100 text-amber-800', error: 'bg-red-100 text-red-700',
@@ -70,7 +70,7 @@ onMounted(() => { document.title = 'Denník udalostí'; load(); });
                         <div>
                               <h1 class="text-2xl font-semibold text-slate-900">Denník udalostí</h1>
                               <p class="text-sm text-slate-600">
-                                    Čo komu odišlo, čo zlyhalo a kto sa prihlásil.
+                                    Vytvorené objednávky, čo komu odišlo, čo zlyhalo a kto sa prihlásil.
                                     <template v-if="page">Záznamy sa držia {{ page.retention.days }} dní.</template>
                               </p>
                         </div>
@@ -116,7 +116,7 @@ onMounted(() => { document.title = 'Denník udalostí'; load(); });
                                     <input v-model="filters.date_to" type="date" class="rounded border border-slate-300 px-2 py-1.5" @change="apply">
                               </label>
                               <label class="grid gap-1">
-                                    <span class="text-xs text-slate-500">Hľadať (e-mail, predmet)</span>
+                                    <span class="text-xs text-slate-500">Hľadať (e-mail, predmet, objednávka)</span>
                                     <input v-model="filters.search" type="search" class="rounded border border-slate-300 px-2 py-1.5" placeholder="napr. objednávku">
                               </label>
                               <button type="submit" class="rounded bg-blue-700 px-4 py-1.5 font-semibold text-white hover:bg-blue-800">Filtrovať</button>
@@ -143,6 +143,8 @@ onMounted(() => { document.title = 'Denník udalostí'; load(); });
                                           <p class="mt-1 break-words text-sm text-slate-900">{{ row.message || '—' }}</p>
                                           <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
                                                 <button v-if="row.recipient" type="button" class="break-all underline decoration-dotted hover:text-slate-900" title="Všetko pre tohto príjemcu" @click="filterRecipient(row.recipient)">✉ {{ row.recipient }}</button>
+                                                <router-link v-if="row.context?.order_id" :to="{ name: 'orders.show', params: { orderId: row.context.order_id } }" class="underline decoration-dotted hover:text-slate-900">Objednávka {{ row.context.serial_number || '#' + row.context.order_id }}</router-link>
+                                                <span v-if="row.user">Vykonal: {{ row.user.email || '#' + row.user.id }}</span>
                                                 <span v-if="row.ip">🌐 {{ row.ip }}</span>
                                           </div>
                                           <details v-if="row.context" class="mt-2 text-xs">

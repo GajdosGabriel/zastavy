@@ -1,4 +1,5 @@
 <script setup>
+import CollapsibleFilterPanel from "../plugins/CollapsibleFilterPanel.vue";
 import { onUnmounted, reactive, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
@@ -158,7 +159,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="filter-panel">
+    <CollapsibleFilterPanel id="order-filters">
         <div class="filter-row">
             <!-- Radio: typ hľadania -->
             <div class="filter-radio-group">
@@ -205,5 +206,5 @@ onUnmounted(() => {
                 @labelemit="onClickLabel" />
             <FilterLabel v-if="getQuery.length" :label="resetFilter" @labelemit="onClearQuery" />
         </div>
-    </div>
+    </CollapsibleFilterPanel>
 </template>

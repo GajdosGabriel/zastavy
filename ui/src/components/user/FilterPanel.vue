@@ -1,4 +1,5 @@
 <script setup>
+import CollapsibleFilterPanel from "../plugins/CollapsibleFilterPanel.vue";
 import { reactive, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import useQuery from "../../store/StoreQuery";
@@ -38,7 +39,7 @@ const clearInput = () => {
 </script>
 
 <template>
-    <div class="filter-panel">
+    <CollapsibleFilterPanel id="user-filters">
         <div class="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
             <div class="filter-field md:col-span-2">
                 <label class="filter-label" for="user-search">Hľadanie používateľa</label>
@@ -96,5 +97,5 @@ const clearInput = () => {
                 </select>
             </div>
         </div>
-    </div>
+    </CollapsibleFilterPanel>
 </template>

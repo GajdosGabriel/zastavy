@@ -1,4 +1,5 @@
 <script setup>
+import CollapsibleFilterPanel from "../plugins/CollapsibleFilterPanel.vue";
 import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useProducts } from "../../store/StoreProducts";
@@ -69,7 +70,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="filter-panel">
+    <CollapsibleFilterPanel id="product-filters">
         <div class="filter-row">
             <!-- Hľadanie + história -->
             <FilterSearch v-model="searchInput" history-key="productFilterHistory"
@@ -92,5 +93,5 @@ onUnmounted(() => {
             <FilterLabel v-for="label in labelList" :key="label.key" :label="label" @labelemit="onClickLabel" />
             <FilterLabel v-if="getQuery.length" :label="resetFilter" @labelemit="onClearQuery" />
         </div>
-    </div>
+    </CollapsibleFilterPanel>
 </template>

@@ -132,7 +132,7 @@ class UserController extends Controller
             $user = User::create($validated);
 
             if ($isSuperAdmin && ! empty($roles)) {
-                $user->syncRoles($roles);
+                $this->syncRolesWithLog($user, $roles);
             }
 
             if (! empty($permissions)) {
@@ -152,6 +152,17 @@ class UserController extends Controller
         $user->notify(new UserInvited($user, $password, $roles, $verificationUrl));
 
         return new UserIndexResource($user->load(['roles', 'customer'])->loadCount('orders'));
+    }
+
+    private function syncRolesWithLog(User $user, array $roles): void
+    {
+        $before = $user->roles()->pluck('name')->sort()->values()->all();
+        $user->syncRoles($roles);
+        $after = $user->roles()->pluck('name')->sort()->values()->all();
+        if ($before !== $after) {
+            \App\Services\SystemLog\Activity::record('user', 'roles_changed', 'Zmenené roly používateľa #'.$user->id,
+                ['user_id' => $user->id, 'email' => $user->email, 'changes' => ['roles' => ['before' => $before, 'after' => $after]]]);
+        }
     }
 
     public function verifyEmail(string $uuid)
@@ -196,7 +207,7 @@ class UserController extends Controller
             $user->update($validated);
 
             if ($request->user()->hasAnyRole(['admin', 'super-admin']) && is_array($roles)) {
-                $user->syncRoles($roles);
+                $this->syncRolesWithLog($user, $roles);
             }
 
             if (is_array($permissions) && $user->customer_id !== null) {

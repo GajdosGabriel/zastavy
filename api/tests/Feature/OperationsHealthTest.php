@@ -67,6 +67,14 @@ class OperationsHealthTest extends TestCase
         $this->assertSame('failed', app(OperationsHealth::class)->checks()['queue_worker']);
     }
 
+    public function test_cron_worker_consumes_queue_until_empty_with_system_log_subscriber(): void
+    {
+        QueueHeartbeat::dispatch();
+        $this->artisan('queue:work', ['connection' => 'database', '--stop-when-empty' => true, '--tries' => 1, '--sleep' => 0])->assertExitCode(0);
+        $this->assertDatabaseCount('jobs', 0);
+        $this->assertSame(now()->timestamp, Cache::get('ops:worker-heartbeat'));
+    }
+
     public function test_heartbeat_job_is_consumed_by_database_worker(): void
     {
         $this->assertNull(Cache::get('ops:worker-heartbeat'));

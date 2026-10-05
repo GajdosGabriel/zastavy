@@ -34,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
         Stock::observe(StockObserver::class);
         User::observe(UserObserver::class);
 
+        foreach ([Order::class, \App\Models\OrderProduct::class, \App\Models\Shipping::class,
+            \App\Models\OrderReturn::class, Stock::class, User::class, \App\Models\SalesQuote::class] as $model) {
+            $model::observe(\App\Observers\BusinessActivityObserver::class);
+        }
+
         Event::subscribe(SystemLogSubscriber::class);
     }
 }

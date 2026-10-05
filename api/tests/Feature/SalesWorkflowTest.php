@@ -99,6 +99,9 @@ class SalesWorkflowTest extends TestCase
         $this->assertSame('Large', $o->orderProducts->first()->variant_name);
         $this->assertEquals(3, $o->shipping_price);
         Notification::assertSentToTimes($o, OrderCreated::class, 1);
+        $log = \App\Models\SystemLog::where('event', 'quote.accepted')->sole();
+        $this->assertSame($o->id, $log->context['order_id']);
+        $this->assertSame(1, $log->context['version']);
     }
 
     public function test_old_quote_version_and_expired_quote_cannot_be_accepted(): void

@@ -159,6 +159,8 @@ class CustomerDuplicateService
                 'resolved_by' => null,
             ]);
 
+            \App\Services\SystemLog\Activity::record('customer', 'merged', 'Zlúčení zákazníci do #'.$keep->id,
+                ['customer_id' => $keep->id, 'merged_ids' => $ids, 'orders_moved' => $orders, 'users_moved' => $users, 'filled' => $filled]);
             return [
                 'orders' => $orders,
                 'users' => $users,

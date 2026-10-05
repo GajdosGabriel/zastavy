@@ -57,6 +57,9 @@ class OrderReturnController extends Controller
                 ]);
             }
 
+            \App\Services\SystemLog\Activity::record('order', 'return_created', 'Vytvorená vratka #'.$return->id,
+                ['return_id' => $return->id, 'reason' => $return->reason, 'items' => $validated['items']], $order);
+
             return $return;
         });
 
@@ -101,9 +104,15 @@ class OrderReturnController extends Controller
             if (isset($validated['items'])) {
                 $this->validateItems($order, $validated['items']);
 
+                $beforeItems = $orderReturn->items()->orderBy('order_product_id')->get(['order_product_id', 'quantity'])->toArray();
                 $orderReturn->items()->delete();
                 foreach ($validated['items'] as $item) {
                     $orderReturn->items()->create($item);
+                }
+                $afterItems = $orderReturn->items()->orderBy('order_product_id')->get(['order_product_id', 'quantity'])->toArray();
+                if ($beforeItems !== $afterItems) {
+                    \App\Services\SystemLog\Activity::record('order', 'return_items_updated', 'Upravené položky vratky #'.$orderReturn->id,
+                        ['return_id' => $orderReturn->id, 'changes' => ['items' => ['before' => $beforeItems, 'after' => $afterItems]]], $order);
                 }
             }
         });
