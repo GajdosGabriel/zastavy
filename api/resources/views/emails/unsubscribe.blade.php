@@ -1,0 +1,4 @@
+<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Odhlásenie z ponúk</title></head>
+<body style="background:#f1f5f9;font-family:Arial,sans-serif;color:#163047;padding:40px 16px"><main style="max-width:480px;margin:40px auto;background:white;padding:32px;border-radius:16px"><h1>{{ $done ? 'Odhlásenie je hotové' : 'Odhlásenie z emailových ponúk' }}</h1>
+@if($done)<p>Na túto adresu už nebudeme posielať marketingové kampane. Správy k objednávkam zostávajú zachované.</p>@else<p>Ak si už neželáte dostávať naše ponuky, potvrďte odhlásenie.</p><form method="post"><button style="background:#117866;color:white;border:0;padding:16px;border-radius:8px;cursor:pointer">Odhlásiť sa</button></form>@endif
+</main></body></html>

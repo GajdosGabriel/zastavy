@@ -16,17 +16,17 @@ import gabrielImage from "../../assets/images/gabriel.jpg";
                     />
                 </div>
 
-                <aside class="hidden md:block lg:col-span-4">
-                    <div class="flex items-center gap-4 rounded-md border border-slate-200 bg-slate-50 px-4 py-4 xl:gap-5 xl:px-6 xl:py-5">
+                <aside class="lg:col-span-4">
+                    <div class="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 sm:gap-4 sm:p-4 xl:gap-5 xl:px-6 xl:py-5">
                         <img
                             :src="gabrielImage"
                             width="128" height="128" loading="lazy"
                             alt="Gabriel Gajdoš, kontaktná osoba"
-                            class="h-24 w-24 shrink-0 rounded-md xl:h-32 xl:w-32 object-cover shadow-sm"
+                            class="h-16 w-16 shrink-0 rounded-md sm:h-24 sm:w-24 xl:h-32 xl:w-32 object-cover shadow-sm"
                         />
                         <div class="min-w-0">
                             <div class="text-sm font-semibold uppercase text-slate-500">Kontakt</div>
-                            <strong class="mt-1 block whitespace-nowrap text-xl text-slate-900 xl:text-2xl">Tel.: 0905 320 616</strong>
+                            <a href="tel:+421905320616" class="mt-1 block whitespace-nowrap text-base font-bold text-slate-900 hover:underline sm:text-xl xl:text-2xl">Tel.: 0905 320 616</a>
                             <div class="mt-1 text-base text-slate-600">Zástavy, vlajky a symboly</div>
                         </div>
                     </div>

@@ -15,6 +15,7 @@ class OrderObserver
      */
     public function created(Order $order)
     {
+        app(\App\Services\EmailingService::class)->orderCreated($order);
         Recorder::info('order', 'created', 'Vytvorená objednávka #'.$order->id,
             status: 'ok',
             recipient: $order->routeNotificationForMail(),

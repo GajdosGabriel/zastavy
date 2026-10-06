@@ -131,6 +131,7 @@ Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function 
 });
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
+    Route::post('email-order-preview', \App\Http\Controllers\Api\SuperAdmin\EmailOrderController::class)->middleware('throttle:5,1');
     Route::post('/product/{product}/image/reorder', [ProductImageController::class, 'reorder'])->name('product.image.reorder');
 
     // Musí byť pred apiResource('stocks'), inak by "summary" pohltilo {stock}.
@@ -233,4 +234,22 @@ Route::middleware(['auth:sanctum',DashboardMiddleware::class])->group(function()
  Route::put('orders/{order}/production',[\App\Http\Controllers\Api\ProductionController::class,'update']);
  Route::post('orders/{order}/artworks',[\App\Http\Controllers\Api\ProductionController::class,'upload']);
  Route::post('orders/{order}/artworks/share',[\App\Http\Controllers\Api\ProductionController::class,'share']);
+});
+
+Route::match(['get', 'post'], 'emailing/unsubscribe/{token}', [\App\Http\Controllers\Api\SuperAdmin\EmailingController::class, 'unsubscribe'])->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:60,1')->withoutMiddleware([\App\Http\Middleware\EnsureAccountIsActive::class])->name('emailing.unsubscribe');
+Route::get('emailing/link/{token}', [\App\Http\Controllers\Api\EmailingMeasurementController::class, 'click'])->where('token', '[A-Za-z0-9]{64}')->withoutMiddleware([\App\Http\Middleware\EnsureAccountIsActive::class, \App\Http\Middleware\AuthTokenFromCookie::class])->name('emailing.click');
+Route::get('emailing/image/{token}.gif', [\App\Http\Controllers\Api\EmailingMeasurementController::class, 'open'])->where('token', '[A-Za-z0-9]{64}')->withoutMiddleware([\App\Http\Middleware\EnsureAccountIsActive::class, \App\Http\Middleware\AuthTokenFromCookie::class])->name('emailing.open');
+Route::middleware(['auth:sanctum', AdminMiddleware::class])->prefix('emailing')->controller(\App\Http\Controllers\Api\SuperAdmin\EmailingController::class)->group(function () {
+    Route::get('/', 'index');
+    Route::get('/contacts', 'contacts');
+    Route::post('/contacts', 'addContacts');
+    Route::post('/contacts/{id}/suppress', 'suppress')->whereNumber('id');
+    Route::post('/templates', 'template');
+    Route::post('/preview', 'preview');
+    Route::post('/test', 'test')->middleware('throttle:5,1');
+    Route::post('/campaigns', 'save');
+    Route::put('/campaigns/{id}', 'save')->whereNumber('id');
+    Route::post('/campaigns/{id}/queue', 'queue')->whereNumber('id');
+    Route::post('/campaigns/{id}/cancel', 'cancel')->whereNumber('id');
+    Route::get('/campaigns/{id}/deliveries', 'deliveries')->whereNumber('id');
 });

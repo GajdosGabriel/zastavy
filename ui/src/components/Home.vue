@@ -58,7 +58,7 @@ watch(getProducts, (products) => {
                         <h1 class="sr-only">Vlajky a zástavy – predaj vlajok Slovenska, obecných zástav a štátnych symbolov</h1>
                         <div class="grid gap-6 lg:grid-cols-12">
 
-                              <div class="order-last lg:order-first lg:col-span-9">
+                              <div class="lg:col-span-9">
                                     <div v-if="getProducts.length" class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                                           <cart v-for="card in getProducts" :item="templateProduct(card)"
                                                 :key="card.id" />
@@ -81,8 +81,8 @@ watch(getProducts, (products) => {
                                     </nav>
                               </div>
 
-                              <aside class="order-first lg:order-last space-y-5 lg:col-span-3">
-                                    <div class="sticky top-4 space-y-5">
+                              <aside class="space-y-5 lg:col-span-3">
+                                    <div class="space-y-5 lg:sticky lg:top-4">
                                           <CatalogFilter />
                                           <nazoryZakaznikov />
                                           <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm">

@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { NAV_ITEMS } from '../../constants';
 import { storeToRefs } from 'pinia';
 import { useUsers as useUser } from '../../store/StoreUsers';
+import videoThumbnail from '../../assets/footer-video.jpg';
 
 const { getUser } = storeToRefs(useUser());
 const playVideo = ref(false);
@@ -16,16 +17,20 @@ const playVideo = ref(false);
 <template>
   <div class="w-full bg-gray-800 text-gray-300 pt-2">
     <div class="md:flex justify-between container mx-auto max-w-6xl">
-      <div class="m-4">
+      <div class="m-4 w-auto md:w-[356px] md:shrink-0">
         <h3 class="font-semibold text-lg">Video o nás</h3>
         <!-- Prehrávač sa načíta až po kliknutí, inak Vimeo spomaľuje každú stránku. -->
         <iframe v-if="playVideo" src="https://player.vimeo.com/video/62613770?autoplay=1" width="100%" height="200"
-          frameborder="0" allow="autoplay; fullscreen" allowfullscreen title="Video o firme"></iframe>
+          class="block rounded" frameborder="0" allow="autoplay; fullscreen" allowfullscreen title="Video o firme"></iframe>
         <button v-else type="button" @click="playVideo = true"
-          class="flex h-[200px] w-full items-center justify-center rounded bg-gray-900 text-gray-200 hover:bg-gray-700"
+          class="group relative flex h-[200px] w-full items-center justify-center overflow-hidden rounded bg-gray-900 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           aria-label="Prehrať video">
-          <svg viewBox="0 0 24 24" class="mr-2 h-10 w-10" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-          Prehrať video
+          <img :src="videoThumbnail" width="640" height="360" loading="lazy" alt=""
+            class="absolute inset-0 h-full w-full object-cover" />
+          <span class="relative flex items-center rounded bg-black/70 px-4 py-2 group-hover:bg-black/90">
+            <svg viewBox="0 0 24 24" class="mr-2 h-10 w-10" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+            Prehrať video
+          </span>
         </button>
       </div>
 

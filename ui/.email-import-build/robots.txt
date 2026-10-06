@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Súkromné a nákupné časti — nemá ich zmysel indexovať.
+Disallow: /kosik
+Disallow: /objednavka/
+Disallow: /objednavka-odoslana
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /dashboard
+Disallow: /admin
+
+# Administrácia (pozor: verejný detail tovaru je /product/, nie /products/).
+Disallow: /products
+Disallow: /objednavky
+Disallow: /zakaznici
+Disallow: /sklad
+Disallow: /users
+Disallow: /oznamy
+
+Sitemap: https://zastavy-vlajky.sk/sitemap.xml

@@ -182,6 +182,7 @@ const logStatusClass = (status: string | null) => status === 'failed'
 // ── Správa ───────────────────────────────────────────────────
 const adminLinks = computed(() => [
       { route: 'announcements.index', label: 'Oznamy a bannery', hint: 'Horný banner, dolný oznam, termíny', show: true },
+      { route: 'emailing.index', label: 'Emailing', hint: 'Kampane, šablóny a príjemcovia', show: isSuperAdmin.value },
       { route: 'coupons.index', label: 'Kupóny', hint: 'Zľavy, limity, platnosť', show: isSuperAdmin.value },
       { route: 'shipping-methods.index', label: 'Spôsoby dopravy', hint: 'Ceny a doprava zdarma', show: isSuperAdmin.value },
       { route: 'payment-methods.index', label: 'Spôsoby platby', hint: 'Poplatky a poradie', show: isSuperAdmin.value },

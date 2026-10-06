@@ -41,6 +41,7 @@ return [
      */
     'openai' => [
         'key' => env('OPENAI_API_KEY', ''),
+        'order_model' => env('OPENAI_ORDER_MODEL', 'gpt-6-luna'),
     ],
 
 ];

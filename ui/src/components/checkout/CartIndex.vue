@@ -16,6 +16,7 @@ import { htmlToText } from "../../models/html";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import DeliveryAddressFields from "../forms/DeliveryAddressFields.vue";
 import ShippingPaymentSelector from "../forms/ShippingPaymentSelector.vue";
+import EmailOrderImport from "./EmailOrderImport.vue";
 
 const checkoutsStore = useCheckouts();
 const { getCarts, getCheckout, note, attachments, delivery, deliverToOtherAddress } = storeToRefs(checkoutsStore);
@@ -45,6 +46,7 @@ const adjustment = computed(() => isStaff.value ? adjustmentAmount(getCheckout.v
 const isSuperAdmin = computed(() => Boolean(getUser.value?.roles?.includes("super-admin")));
 const notifyCustomer = ref(true);
 const showSubmitModal = ref(false);
+const emailImport = ref(null);
 
 const parseStoredCustomer = () => {
       try {
@@ -154,6 +156,10 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                 </div>
 
                 <CustomOrderItem v-if="isStaff" @add="checkoutsStore.submitCartToIndex($event)" />
+                <EmailOrderImport v-if="isSuperAdmin" ref="emailImport" @applied="isPrivatePerson = !$event.company" />
+                <div v-if="isSuperAdmin && !getCarts.length" class="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
+                    <button type="button" class="text-sm font-semibold text-blue-800 underline" @click="emailImport?.open()">Doplniť z e-mailu pomocou AI</button>
+                </div>
                 <OrderPriceAdjustment v-if="isStaff && getCarts.length" v-model="priceAdjustment" :subtotal="getCheckout.grandTotal" :coupon="checkoutOptions.discountAmount" />
                 <!-- Prázdny košík -->
                 <div v-if="!getCarts.length" class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center shadow-sm">
@@ -280,7 +286,11 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                     :hideCompany="isPrivatePerson"
                                     :fieldErrors="getFieldErrors"
                                     :requiredFields="(isPrivatePerson ? [] : ['company']).concat(['name', 'email', 'phone', 'street', 'postcode', 'city'])"
-                                />
+                                >
+                                    <template #quick-fill-action>
+                                        <button v-if="isSuperAdmin" type="button" class="text-sm font-semibold text-blue-800 underline hover:text-blue-950" @click="emailImport?.open()">Doplniť z e-mailu pomocou AI</button>
+                                    </template>
+                                </CustomerFormFields>
                                 <div class="mt-4">
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
                                     <input v-model="note" type="text" aria-label="Poznámka k objednávke" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />

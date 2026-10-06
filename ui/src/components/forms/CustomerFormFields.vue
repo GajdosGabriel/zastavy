@@ -161,7 +161,10 @@ const onClickIco = async () => {
 <template>
     <!-- IČO vyhľadávanie -->
     <div class="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
-        <label for="ico-search" class="mb-2 block text-sm font-semibold text-blue-900">Rýchle doplnenie — vyhľadajte firmu podľa IČO</label>
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <label for="ico-search" class="block text-sm font-semibold text-blue-900">Rýchle doplnenie — vyhľadajte firmu podľa IČO</label>
+            <slot name="quick-fill-action" />
+        </div>
         <div class="flex gap-2">
             <FormInput
                 v-model="icoSearchInput"

@@ -1,4 +1,5 @@
 const admin = [
+    { path: '/admin/emailing', name: 'emailing.index', components: { default: () => import('../components/admin/EmailingIndex.vue') }, meta: { title: 'Emailing', superAdminOnly: true } },
     {
         path: '/admin/doprava',
         name: 'shipping-methods.index',
