@@ -280,6 +280,40 @@ class EmailingTest extends TestCase
         $this->assertSame(0, app(EmailingService::class)->runBatch());
     }
 
+    public function test_hard_bounce_suppresses_contact_and_soft_bounces_only_after_repeated_failures(): void
+    {
+        $this->admin();
+        $this->contact('gone@example.test full@example.test');
+        $id = $this->campaign();
+        $this->postJson("/api/emailing/campaigns/$id/queue")->assertOk();
+        $messages = [
+            'Expected response code "250/251/252" but got code "550", with message "550 5.1.1 User unknown".',
+            'Expected response code "250" but got code "552", with message "552 5.2.2 Mailbox full".',
+        ];
+        Mail::shouldReceive('html')->twice()->andReturnUsing(function () use (&$messages) {
+            throw new \RuntimeException(array_shift($messages));
+        });
+        $this->assertSame(2, app(EmailingService::class)->runBatch());
+        $gone = DB::table('mailing_contacts')->where('email', 'gone@example.test')->first();
+        $full = DB::table('mailing_contacts')->where('email', 'full@example.test')->first();
+        $this->assertNotNull($gone->bounced_at);
+        $this->assertSame('hard', $gone->bounce_type);
+        $this->assertNull($full->bounced_at);
+        $this->assertSame(1, $full->soft_bounces);
+        $this->assertDatabaseHas('mailing_deliveries', ['contact_id' => $gone->id, 'status' => 'bounced']);
+        $this->assertDatabaseHas('mailing_deliveries', ['contact_id' => $full->id, 'status' => 'failed']);
+
+        $service = app(EmailingService::class);
+        $this->assertFalse($service->recordBounce('full@example.test', 'soft'));
+        $this->assertTrue($service->recordBounce('full@example.test', 'soft'));
+        $this->assertSame('soft_limit', DB::table('mailing_contacts')->where('id', $full->id)->value('bounce_type'));
+        // Opätovné pridanie adresy ju neoživí; až ručná reaktivácia.
+        $this->contact('gone@example.test');
+        $this->assertNotNull(DB::table('mailing_contacts')->where('id', $gone->id)->value('bounced_at'));
+        $this->postJson("/api/emailing/contacts/{$gone->id}/reactivate")->assertNoContent();
+        $this->assertNull(DB::table('mailing_contacts')->where('id', $gone->id)->value('bounced_at'));
+    }
+
     public function test_messages_have_individual_recipient_and_unsubscribe_headers(): void
     {
         $this->admin();

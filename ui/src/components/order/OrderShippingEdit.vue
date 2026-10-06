@@ -17,7 +17,7 @@ import { storeToRefs } from "pinia";
 
 const ordersStore = useOrders();
 const { getOrder, customer } = storeToRefs(ordersStore);
-const { fetchOrder, updateOrder } = ordersStore;
+const { fetchOrder } = ordersStore;
 const { storeShipping } = useShippings();
 const { updateOrderProducts } = useOrderProducts();
 const returnsStore = useReturns();
@@ -62,19 +62,7 @@ const shippingPercentage = computed(() => Number(getOrder.value?.shipping_percen
 const remainingQuantity = computed(() => Number(getOrder.value?.shipping_remaining_quantity ?? 0));
 const shippedQuantity = computed(() => Number(getOrder.value?.stock_expedition ?? 0));
 const requiredQuantity = computed(() => Number(getOrder.value?.shipping_required_quantity ?? 0));
-const statusLabel = computed(() => pendingShippings.value.length ? "Pripravuje sa v sklade" : getOrder.value?.shipping_status_label ?? (getOrder.value?.isFinished ? "Vybavená" : "Nevybavená"));
-
-const markingReady = ref(false);
-const canMarkReadyToShip = computed(() => getOrder.value?.permissions?.update?.allowed && !getOrder.value?.isStorned
-    && Number(getOrder.value?.stock_expedition ?? 0) === 0
-    && getOrder.value?.status?.value !== "ready_to_ship");
-
-const markReadyToShip = async () => {
-    markingReady.value = true;
-    await updateOrder({ id: orderId, status: "ready_to_ship" });
-    await fetchOrder(orderId);
-    markingReady.value = false;
-};
+const statusLabel = computed(() => pendingShippings.value.length ? "Pripravené na odoslanie" : getOrder.value?.shipping_status_label ?? (getOrder.value?.isFinished ? "Vybavená" : "Nevybavená"));
 
 // All products enriched — no filtering
 const allProducts = computed(() => orderProducts.value.map((item) => ({
@@ -234,10 +222,6 @@ watch(allProducts, () => {
                             <div class="rounded border border-gray-200 bg-gray-50 p-3">
                                 <div class="text-xs uppercase text-gray-500">Stav</div>
                                 <div class="font-semibold text-gray-900">{{ statusLabel }}</div>
-                                <button v-if="canMarkReadyToShip" type="button" @click="markReadyToShip" :disabled="markingReady"
-                                    class="mt-2 rounded bg-indigo-600 px-2 py-1 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
-                                    {{ markingReady ? '...' : 'Označiť ako pripravené na odoslanie' }}
-                                </button>
                             </div>
                             <div class="rounded border border-gray-200 bg-gray-50 p-3 text-center">
                                 <div class="text-xs uppercase text-gray-500">Vybavené</div>
@@ -421,7 +405,8 @@ watch(allProducts, () => {
                 </div>
 
                 <section v-if="pendingShippings.length" class="mb-5 rounded-lg border border-blue-200 bg-blue-50 p-5">
-                    <h2 class="font-semibold text-blue-900">Pripravuje sa v sklade</h2>
+                    <h2 class="font-semibold text-blue-900">Pripravené na odoslanie</h2>
+                    <p class="text-sm text-blue-800">Balík je pripravený pre prepravcu. Keď ho prepravca prevezme, potvrďte odoslanie.</p>
                     <div v-for="shipping in pendingShippings" :key="shipping.id" class="mt-3">
                         <p class="font-semibold">Dodací list #{{ shipping.id }} · {{ shipping.created_at }}</p>
                         <p v-for="item in shipping.prepared_items" :key="item.order_product_id" class="mt-1 text-sm">{{ item.name }} — {{ item.quantity }} {{ item.unit }}</p>

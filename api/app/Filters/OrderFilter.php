@@ -58,14 +58,16 @@ class OrderFilter extends Filters
         $isOpen     = "(not {$isStorned} and not {$isArchived})";
         $unshipped  = "({$isOpen} and {$required} <> {$shipped} and {$shipped} = 0)";
 
+        $pending = '(exists (select 1 from shippings sh where sh.order_id = orders.id and sh.dispatched_at is null))';
+
         $condition = match ($status) {
             OrderStatus::Cancelled        => $isStorned,
             OrderStatus::Archived         => "(not {$isStorned} and {$isArchived})",
             OrderStatus::Shipped          => "({$isOpen} and {$required} = {$shipped})",
             OrderStatus::PartiallyShipped => "({$isOpen} and {$required} <> {$shipped} and {$shipped} > 0)",
-            OrderStatus::ReadyToShip      => "({$unshipped} and coalesce(orders.status, '') = 'ready_to_ship')",
-            OrderStatus::Draft            => "({$unshipped} and coalesce(orders.status, '') <> 'ready_to_ship' and coalesce(orders.isOpened, 0) = 0)",
-            OrderStatus::Processing       => "({$unshipped} and coalesce(orders.status, '') <> 'ready_to_ship' and coalesce(orders.isOpened, 0) <> 0)",
+            OrderStatus::ReadyToShip      => "({$unshipped} and {$pending})",
+            OrderStatus::Draft            => "({$unshipped} and not {$pending} and coalesce(orders.isOpened, 0) = 0)",
+            OrderStatus::Processing       => "({$unshipped} and not {$pending} and coalesce(orders.isOpened, 0) <> 0)",
         };
 
         return $this->builder->whereRaw($condition);

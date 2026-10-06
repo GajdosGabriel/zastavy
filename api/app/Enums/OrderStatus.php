@@ -81,7 +81,8 @@ enum OrderStatus: string
             return self::PartiallyShipped;
         }
 
-        if ($order->status === self::ReadyToShip) {
+        // Dodací list je pripravený, čaká sa na potvrdenie odoslania (odovzdanie prepravcovi).
+        if ($order->hasPendingShipping()) {
             return self::ReadyToShip;
         }
 

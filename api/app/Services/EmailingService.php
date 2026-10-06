@@ -12,7 +12,7 @@ class EmailingService
     {
         if (! \Illuminate\Support\Facades\Schema::hasColumn('mailing_campaigns', 'trigger_event')) return;
         $email = mb_strtolower(trim($order->routeNotificationForMail() ?? ''));
-        $contact = DB::table('mailing_contacts')->where('email', $email)->whereNull('unsubscribed_at')->first();
+        $contact = DB::table('mailing_contacts')->where('email', $email)->whereNull('unsubscribed_at')->whereNull('bounced_at')->first();
         if (! $contact) return;
         DB::transaction(function () use ($order, $contact) {
             $campaigns = DB::table('mailing_campaigns')->where('trigger_event', 'order_created')
@@ -81,6 +81,41 @@ class EmailingService
         return URL::secure(URL::route('emailing.unsubscribe', ['token' => $contact->token], false));
     }
 
+    public const SOFT_BOUNCE_LIMIT = 3;
+
+    /**
+     * Zaznamená nedoručiteľnosť adresy (z SMTP odpovede alebo z doručenej správy o nedoručení).
+     * Hard bounce vylúči kontakt hneď, soft až po opakovanom zlyhaní za sebou.
+     * Vráti true, ak je kontakt po zápise vylúčený.
+     */
+    public function recordBounce(string $email, string $type, string $reason = ''): bool
+    {
+        $email = mb_strtolower(trim($email));
+        $reason = mb_substr($reason, 0, 255);
+
+        return DB::transaction(function () use ($email, $type, $reason) {
+            $contact = DB::table('mailing_contacts')->where('email', $email)->lockForUpdate()->first();
+            if (! $contact) {
+                return false;
+            }
+            if ($contact->bounced_at) {
+                return true;
+            }
+            $soft = $contact->soft_bounces + ($type === EmailBounceClassifier::SOFT ? 1 : 0);
+            $suppress = $type === EmailBounceClassifier::HARD || $soft >= self::SOFT_BOUNCE_LIMIT;
+            DB::table('mailing_contacts')->where('id', $contact->id)->update([
+                'soft_bounces' => $soft, 'bounce_reason' => $reason, 'updated_at' => now(),
+            ] + ($suppress ? ['bounced_at' => now(), 'bounce_type' => $type === EmailBounceClassifier::HARD ? 'hard' : 'soft_limit'] : []));
+            if ($suppress) {
+                // Čakajúce správy tejto adresy sa už nemajú odosielať.
+                DB::table('mailing_deliveries')->where('contact_id', $contact->id)->where('status', 'pending')
+                    ->update(['status' => 'skipped', 'updated_at' => now()]);
+            }
+
+            return $suppress;
+        });
+    }
+
     public function runBatch(): int
     {
         if (! $this->ready()) {
@@ -125,13 +160,20 @@ class EmailingService
             $coupon = $campaign->coupon_id ? \App\Models\Coupon::find($campaign->coupon_id) : null;
             $couponEligible = ! $campaign->trigger_event || ! $campaign->coupon_code || ($coupon && $coupon->active
                 && (! $coupon->valid_to || ! $coupon->valid_to->copy()->endOfDay()->isPast()));
-            if ($contact && ! $contact->unsubscribed_at && $campaign->status === 'queued' && $orderEligible && $couponEligible) {
+            if ($contact && ! $contact->unsubscribed_at && ! $contact->bounced_at && $campaign->status === 'queued' && $orderEligible && $couponEligible) {
                 try {
                     $this->send($campaign, $contact, false, $delivery);
                     $result = ['status' => 'sent', 'sent_at' => now()];
+                    if ($contact->soft_bounces) {
+                        DB::table('mailing_contacts')->where('id', $contact->id)->update(['soft_bounces' => 0]);
+                    }
                 } catch (\Throwable $e) {
                     report($e);
+                    $bounce = app(EmailBounceClassifier::class)->classify($e->getMessage());
                     $result = ['status' => 'failed', 'error' => 'Odoslanie zlyhalo. Podrobnosti sú v serverovom denníku.'];
+                    if ($bounce['type'] !== EmailBounceClassifier::NONE) {
+                        $result = ['status' => $this->recordBounce($contact->email, $bounce['type'], $bounce['reason']) ? 'bounced' : 'failed', 'error' => $bounce['reason']];
+                    }
                 }
             }
             DB::table('mailing_deliveries')->where('id', $delivery->id)->update($result + ['updated_at' => now()]);

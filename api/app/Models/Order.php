@@ -141,6 +141,14 @@ class Order extends Model
         return $this->hasMany(Shipping::class);
     }
 
+    /** Existuje rozpracovaný dodací list (pripravený, ešte neodoslaný)? */
+    public function hasPendingShipping(): bool
+    {
+        return $this->relationLoaded('shippings')
+            ? $this->shippings->contains(fn ($shipping) => $shipping->dispatched_at === null)
+            : $this->shippings()->whereNull('dispatched_at')->exists();
+    }
+
     public function orderProducts()
     {
         return $this->hasMany(OrderProduct::class);

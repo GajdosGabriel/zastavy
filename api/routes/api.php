@@ -244,6 +244,8 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->prefix('emailing')-
     Route::get('/contacts', 'contacts');
     Route::post('/contacts', 'addContacts');
     Route::post('/contacts/{id}/suppress', 'suppress')->whereNumber('id');
+    Route::post('/contacts/{id}/reactivate', 'reactivate')->whereNumber('id');
+    Route::post('/bounces', 'bounce');
     Route::post('/templates', 'template');
     Route::post('/preview', 'preview');
     Route::post('/test', 'test')->middleware('throttle:5,1');

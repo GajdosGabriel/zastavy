@@ -28,7 +28,6 @@ const confirmStorno = async () => {
     showStornoModal.value = false;
 };
 
-const markReadyToShip = () => updateOrder({ id: props.order.id, status: "ready_to_ship" });
 const archiveOrder = () => updateOrder({ id: props.order.id, status: "archived" });
 
 const actionMap = {
@@ -38,12 +37,6 @@ const actionMap = {
     delete:  { onClick: () => destroyOrder(props.order.endpoints.destroy) },
     archive: { onClick: archiveOrder },
 };
-
-// Objednávka ešte nemá žiadnu expedíciu ani nie je stornovaná/archivovaná — dá sa označiť ako pripravená na odoslanie
-const canMarkReadyToShip = computed(() => props.order.permissions?.update?.allowed
-    && !props.order.isStorned
-    && props.order.stock_expedition === 0
-    && props.order.status?.value !== "ready_to_ship");
 
 // Vrátiť sa dá len tovar, ktorý už bol expedovaný
 const canCreateReturn = computed(() => Number(props.order.stock_expedition ?? 0) > 0);
@@ -60,15 +53,11 @@ const dropdownItems = computed(() => {
         .filter(([key, perm]) => perm.allowed && actionMap[key])
         .map(([key, perm]) => ({ label: perm.label, ...actionMap[key] }));
 
-    const readyToShipItem = canMarkReadyToShip.value
-        ? [{ label: "Pripravené na odoslanie", onClick: markReadyToShip }]
-        : [];
-
     const returnItem = canCreateReturn.value
         ? [{ label: "Vrátenie tovaru", to: { name: "orders.returns.create", params: { orderId: props.order.id } } }]
         : [];
 
-    return [...fixed, ...readyToShipItem, ...returnItem, ...permissionItems];
+    return [...fixed, ...returnItem, ...permissionItems];
 });
 </script>
 

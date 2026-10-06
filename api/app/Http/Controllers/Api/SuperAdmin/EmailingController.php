@@ -44,7 +44,8 @@ class EmailingController extends Controller
                 'opened' => (clone $sent)->whereNotNull('opened_at')->count(),
                 'clicked' => (clone $sent)->whereNotNull('clicked_at')->count(),
                 'daily' => (clone $sent)->selectRaw('DATE(sent_at) as day, COUNT(*) as total')->groupByRaw('DATE(sent_at)')->orderBy('day')->get(),
-                'active' => DB::table('mailing_contacts')->whereNull('unsubscribed_at')->count(),
+                'active' => DB::table('mailing_contacts')->whereNull('unsubscribed_at')->whereNull('bounced_at')->count(),
+                'bounced' => DB::table('mailing_contacts')->whereNotNull('bounced_at')->count(),
                 'unsubscribed' => DB::table('mailing_contacts')->whereNotNull('unsubscribed_at')->count(),
                 'pending' => DB::table('mailing_deliveries')->where('status', 'pending')->count(),
                 'failed' => DB::table('mailing_deliveries')->where('status', 'failed')->whereBetween('attempted_at', [$from.' 00:00:00', $to.' 23:59:59'])->count(),
@@ -117,7 +118,7 @@ class EmailingController extends Controller
             $coupon = $campaign->coupon_id ? Coupon::find($campaign->coupon_id) : null;
             abort_if($campaign->coupon_id && (! $coupon || ! $coupon->active || ($coupon->valid_to && $coupon->valid_to->endOfDay()->isPast())), 422, 'Kupón nie je aktívny alebo už vypršal.');
             $total = 0;
-            if (! $campaign->trigger_event) DB::table('mailing_contacts')->whereNull('unsubscribed_at')->orderBy('id')->chunkById(500, function ($contacts) use ($id, &$total) {
+            if (! $campaign->trigger_event) DB::table('mailing_contacts')->whereNull('unsubscribed_at')->whereNull('bounced_at')->orderBy('id')->chunkById(500, function ($contacts) use ($id, &$total) {
                 $rows = $contacts->map(fn ($c) => ['campaign_id' => $id, 'contact_id' => $c->id, 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()])->all();
                 DB::table('mailing_deliveries')->insert($rows);
                 $total += count($rows);
@@ -195,6 +196,27 @@ class EmailingController extends Controller
     {
         abort_unless(DB::table('mailing_contacts')->where('id', $id)->exists(), 404);
         DB::table('mailing_contacts')->where('id', $id)->whereNull('unsubscribed_at')->update(['unsubscribed_at' => now(), 'updated_at' => now()]);
+
+        return response()->noContent();
+    }
+
+    /** Ručné nahlásenie nedoručiteľnej adresy (napr. z doručenej správy o nedoručení). */
+    public function bounce(Request $r, EmailingService $service)
+    {
+        $data = $r->validate(['emails' => 'required|string|max:50000', 'type' => ['required', Rule::in(['hard', 'soft'])], 'reason' => 'nullable|string|max:255']);
+        $suppressed = 0;
+        foreach (preg_split('/[\s,;]+/', trim($data['emails']), -1, PREG_SPLIT_NO_EMPTY) as $email) {
+            $suppressed += (int) $service->recordBounce($email, $data['type'], $data['reason'] ?? 'Nahlásené ručne');
+        }
+
+        return response()->json(['suppressed' => $suppressed]);
+    }
+
+    /** Vráti vylúčenú adresu späť (adresa opravená, schránka uvoľnená). Odhlásených sa netýka. */
+    public function reactivate(int $id)
+    {
+        abort_unless(DB::table('mailing_contacts')->where('id', $id)->exists(), 404);
+        DB::table('mailing_contacts')->where('id', $id)->update(['bounced_at' => null, 'bounce_type' => null, 'bounce_reason' => null, 'soft_bounces' => 0, 'updated_at' => now()]);
 
         return response()->noContent();
     }
