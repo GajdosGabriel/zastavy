@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -49,11 +50,19 @@ class OrderCreated extends Notification implements ShouldQueue
             'paymentMethod',
         ]);
 
-        return (new MailMessage)
+        $message = (new MailMessage)
             ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->subject("Objednávka | ". $this->order->billing->company)
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderConfirmation', ['order' => $this->order]);
+
+        // Kópia pre admina ide cez druhý mailer; zákazník ostáva na hlavnom SMTP.
+        if ($notifiable instanceof User && config('mail.mailers.admin.username')) {
+            $message->mailer('admin')
+                ->from(config('mail.mailers.admin.from_address') ?: config('mail.mailers.admin.username'), 'Gajdoš Gabriel – Reprezent');
+        }
+
+        return $message;
     }
 
     /**
