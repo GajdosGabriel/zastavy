@@ -49,6 +49,19 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        // Druhý SMTP účet (napr. Gmail) pre interné správy adminovi; zákazníci ostávajú na 'smtp'.
+        // Použitie: ->mailer('admin') v notifikácii.
+        'admin' => [
+            'transport' => 'smtp',
+            'scheme' => env('ADMIN_MAIL_SCHEME'),
+            'host' => env('ADMIN_MAIL_HOST', 'smtp.gmail.com'),
+            'port' => env('ADMIN_MAIL_PORT', 587),
+            'username' => env('ADMIN_MAIL_USERNAME'),
+            'password' => env('ADMIN_MAIL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
