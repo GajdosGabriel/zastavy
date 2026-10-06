@@ -29,19 +29,51 @@ class CustomerDuplicateService
      */
     public function groups(int $limit = 100): Collection
     {
-        return $this->byIco($limit)
-            ->concat($this->byNameAndCity($limit))
-            ->take($limit)
-            ->values();
+        return $this->hydrate($this->groupRefs()->take($limit));
+    }
+
+    /**
+     * Jedna stránka skupín. Zoznam odkazov na skupiny je lacný (len IČO
+     * a ID), zákazníci sa dočítavajú iba pre skupiny na požadovanej stránke.
+     *
+     * @return array{groups: Collection<int, array{key: string, reason: string, customers: Collection<int, Customer>}>, total: int}
+     */
+    public function paginate(int $page, int $perPage): array
+    {
+        $refs = $this->groupRefs();
+
+        return [
+            'groups' => $this->hydrate($refs->slice(($page - 1) * $perPage, $perPage)),
+            'total' => $refs->count(),
+        ];
+    }
+
+    /**
+     * Odkazy na všetky skupiny: najprv rovnaké IČO, potom rovnaký názov a mesto.
+     *
+     * @return Collection<int, array{type: string, key: string, ico?: string, ids?: array<int, int>}>
+     */
+    private function groupRefs(): Collection
+    {
+        return $this->icoRefs()->concat($this->nameRefs())->values();
+    }
+
+    /** @param  Collection<int, array{type: string, key: string, ico?: string, ids?: array<int, int>}>  $refs */
+    private function hydrate(Collection $refs): Collection
+    {
+        return $refs->map(fn (array $ref) => $ref['type'] === 'ico'
+            ? $this->icoGroup($ref['ico'])
+            : $this->nameGroup($ref['key'], $ref['ids'])
+        )->filter(fn (array $group) => $group['customers']->count() > 1)->values();
     }
 
     /**
      * Rovnaké IČO. Najistejší znak — IČO je úradný identifikátor subjektu
      * a dva riadky s tým istým sú dva zápisy tej istej organizácie.
      */
-    private function byIco(int $limit): Collection
+    private function icoRefs(): Collection
     {
-        $icos = DB::table('customers')
+        return DB::table('customers')
             ->selectRaw('LPAD(REGEXP_REPLACE(ico, "[^0-9]", ""), 8, "0") as normalized, COUNT(*) as total')
             ->whereNull('deleted_at')
             ->whereNotNull('ico')
@@ -49,22 +81,22 @@ class CustomerDuplicateService
             ->groupBy('normalized')
             ->havingRaw('COUNT(*) > 1')
             ->orderByDesc('total')
-            ->limit($limit)
-            ->pluck('normalized');
+            ->orderBy('normalized')
+            ->pluck('normalized')
+            ->map(fn (string $ico) => ['type' => 'ico', 'key' => 'ico:'.$ico, 'ico' => $ico]);
+    }
 
-        return $icos->map(function (string $ico) {
-            $customers = Customer::query()
+    private function icoGroup(string $ico): array
+    {
+        return [
+            'key' => 'ico:'.$ico,
+            'reason' => __('customer_review.duplicates.reason_ico', ['ico' => $ico]),
+            'customers' => Customer::query()
                 ->withCount('orders')
                 ->whereRaw('LPAD(REGEXP_REPLACE(ico, "[^0-9]", ""), 8, "0") = ?', [$ico])
                 ->orderBy('id')
-                ->get();
-
-            return [
-                'key' => 'ico:'.$ico,
-                'reason' => __('customer_review.duplicates.reason_ico', ['ico' => $ico]),
-                'customers' => $customers,
-            ];
-        })->filter(fn (array $group) => $group['customers']->count() > 1)->values();
+                ->get(),
+        ];
     }
 
     /**
@@ -75,34 +107,36 @@ class CustomerDuplicateService
      * Porovnáva sa bez diakritiky a interpunkcie, lebo „Obec Pruské"
      * a „obec Pruske" sú ten istý zákazník napísaný dvakrát.
      */
-    private function byNameAndCity(int $limit): Collection
+    private function nameRefs(): Collection
     {
-        $rows = Customer::query()
+        return Customer::query()
             ->whereNull('deleted_at')
             ->where(function ($query) {
                 $query->whereNull('ico')->orWhere('ico', '');
             })
-            ->get(['id', 'company', 'city']);
-
-        return $rows
+            ->get(['id', 'company', 'city'])
             ->groupBy(fn (Customer $c) => $this->normalize((string) $c->company).'|'.$this->normalize((string) $c->city))
             ->filter(fn (Collection $group, string $key) => $group->count() > 1 && trim($key, '|') !== '')
-            ->take($limit)
-            ->map(function (Collection $group, string $key) {
-                $customers = Customer::query()
-                    ->with('primaryUser')
-                    ->withCount('orders')
-                    ->whereIn('id', $group->pluck('id'))
-                    ->orderBy('id')
-                    ->get();
-
-                return [
-                    'key' => 'name:'.$key,
-                    'reason' => __('customer_review.duplicates.reason_name'),
-                    'customers' => $customers,
-                ];
-            })
+            ->map(fn (Collection $group, string $key) => [
+                'type' => 'name',
+                'key' => 'name:'.$key,
+                'ids' => $group->pluck('id')->all(),
+            ])
             ->values();
+    }
+
+    private function nameGroup(string $key, array $ids): array
+    {
+        return [
+            'key' => $key,
+            'reason' => __('customer_review.duplicates.reason_name'),
+            'customers' => Customer::query()
+                ->with('primaryUser')
+                ->withCount('orders')
+                ->whereIn('id', $ids)
+                ->orderBy('id')
+                ->get(),
+        ];
     }
 
     /**

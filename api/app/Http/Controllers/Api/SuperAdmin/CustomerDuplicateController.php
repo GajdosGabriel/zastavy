@@ -27,9 +27,19 @@ class CustomerDuplicateController extends Controller
     {
         Gate::authorize('viewAny', Customer::class);
 
-        $groups = $this->service->groups((int) $request->integer('limit', 50));
+        $perPage = min(max($request->integer('per_page', 20), 1), 100);
+        $page = max($request->integer('page', 1), 1);
+
+        $result = $this->service->paginate($page, $perPage);
+        $groups = $result['groups'];
 
         return response()->json([
+            'meta' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $result['total'],
+                'last_page' => max((int) ceil($result['total'] / $perPage), 1),
+            ],
             'data' => $groups->map(fn (array $group) => [
                 'key' => $group['key'],
                 'reason' => $group['reason'],
@@ -59,7 +69,9 @@ class CustomerDuplicateController extends Controller
     public function store(Customer $customer, Request $request)
     {
         Gate::authorize('update', $customer);
-        Gate::authorize('delete', $customer);
+        // Maže sa zlúčený (zdrojový) záznam, nie ten v adrese — preto sa tu
+        // nevolá CustomerPolicy::delete, ktorá zamieta zákazníka s objednávkami.
+        Gate::authorize('customers.delete');
 
         $validated = $request->validate([
             'merge' => 'required|array|min:1',

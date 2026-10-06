@@ -41,6 +41,10 @@ const loading = ref(false);
 const busy = ref<string | null>(null);
 const message = ref("");
 
+const page = ref(1);
+const lastPage = ref(1);
+const total = ref(0);
+
 /** Ktorý záznam v skupine zostáva. Predvolene najstarší, teda prvý. */
 const keepId = ref<Record<string, number>>({});
 
@@ -48,8 +52,19 @@ const load = async () => {
     loading.value = true;
 
     try {
-        const response = await axiosInstance.get("/customers/duplicates?limit=50");
+        const response = await axiosInstance.get("/customers/duplicates", {
+            params: { page: page.value, per_page: 20 },
+        });
         groups.value = response.data.data || [];
+        lastPage.value = response.data.meta?.last_page ?? 1;
+        total.value = response.data.meta?.total ?? groups.value.length;
+
+        // Po zlúčení môže byť aktuálna strana už prázdna — vráť sa na poslednú.
+        if (!groups.value.length && page.value > lastPage.value) {
+            page.value = lastPage.value;
+            return load();
+        }
+
         keepId.value = Object.fromEntries(
             groups.value.map((group) => [group.key, group.customers[0]?.id])
         );
@@ -78,12 +93,19 @@ const onMerge = async (group: DuplicateGroup) => {
     try {
         const response = await axiosInstance.post(`/customers/${keep}/merge`, { merge });
         message.value = response.data.message;
-        groups.value = groups.value.filter((g) => g.key !== group.key);
+        await load();
     } catch (e: any) {
         message.value = e.response?.data?.message || "Zlúčenie zlyhalo.";
     } finally {
         busy.value = null;
     }
+};
+
+const goTo = (target: number) => {
+    if (target < 1 || target > lastPage.value || target === page.value) return;
+    page.value = target;
+    load();
+    window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
 onMounted(load);
@@ -105,6 +127,8 @@ onMounted(load);
 
                 <p v-if="loading" class="mt-6 text-sm text-gray-500">Načítavam…</p>
                 <p v-else-if="!groups.length" class="mt-6 text-sm text-gray-500">Žiadne duplicity.</p>
+
+                <p v-if="total" class="mt-4 text-sm text-gray-600">Skupín s duplicitami: {{ total }}</p>
 
                 <div
                     v-for="group in groups"
@@ -176,6 +200,26 @@ onMounted(load);
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <div v-if="lastPage > 1" class="mt-6 flex items-center justify-center gap-3 text-sm">
+                    <button
+                        type="button"
+                        :disabled="page <= 1 || loading"
+                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-40"
+                        @click="goTo(page - 1)"
+                    >
+                        ← Predošlá
+                    </button>
+                    <span class="text-gray-600">Strana {{ page }} z {{ lastPage }}</span>
+                    <button
+                        type="button"
+                        :disabled="page >= lastPage || loading"
+                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-40"
+                        @click="goTo(page + 1)"
+                    >
+                        Ďalšia →
+                    </button>
                 </div>
             </div>
         </template>

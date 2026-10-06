@@ -1,11 +1,16 @@
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
+import { storeToRefs } from "pinia";
+import { useUsers } from "../../../store/StoreUsers";
 
 defineProps({
     customer: { type: Object, default: () => ({}) },
     user:     { type: Object, default: null },
     order:    { type: Object, default: () => ({}) },
 });
+
+const { getUser } = storeToRefs(useUsers());
+const isSuperAdmin = computed(() => getUser.value?.roles?.includes("super-admin"));
 
 const copied = ref(null);
 
@@ -38,7 +43,12 @@ const copyValue = async (key, value) => {
                 <!-- Ľavá strana: firma, adresa, IČO -->
                 <div class="flex-1 min-w-0">
                     <div class="mb-1 text-base font-bold text-gray-900 truncate">
-                        {{ customer.company || customer.name || '—' }}
+                        <router-link v-if="isSuperAdmin && customer.id"
+                            :to="{ name: 'customers.show', params: { customerId: customer.id } }"
+                            class="cursor-pointer">
+                            {{ customer.company || customer.name || '—' }}
+                        </router-link>
+                        <template v-else>{{ customer.company || customer.name || '—' }}</template>
                     </div>
 
                     <div v-if="customer.street || customer.city" class="mb-2 text-sm text-gray-600 leading-snug">
