@@ -60,6 +60,13 @@ class OrderCreated extends Notification implements ShouldQueue
         if ($notifiable instanceof User && config('mail.mailers.admin.username')) {
             $message->mailer('admin')
                 ->from(config('mail.mailers.admin.from_address') ?: config('mail.mailers.admin.username'), 'Gajdoš Gabriel – Reprezent');
+
+            // Odpoveď na admin kópiu ide zákazníkovi; odpoveď zákazníka na jeho
+            // vlastné potvrdenie ostáva na obchod@zastavy-vlajky.sk.
+            if ($customerEmail = $this->order->routeNotificationForMail()) {
+                $message->replyTo = [];
+                $message->replyTo($customerEmail, $this->order->billing->company ?? '');
+            }
         }
 
         return $message;
