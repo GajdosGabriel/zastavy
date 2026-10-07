@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\MailingTrigger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
@@ -10,17 +11,29 @@ class EmailingService
 {
     public function orderCreated(\App\Models\Order $order): void
     {
-        if (! \Illuminate\Support\Facades\Schema::hasColumn('mailing_campaigns', 'trigger_event')) return;
+        $this->trigger(MailingTrigger::OrderCreated, $order, null, $order->created_at);
+    }
+
+    /**
+     * Zaradí odoslanie všetkým aktívnym kampaniam viazaným na danú udalosť.
+     * Oneskorenie kampane sa počíta od $at (predvolene od tejto chvíle); opakované volanie
+     * pre tú istú objednávku/zásielku je bezpečné (deduplikuje sa v DB).
+     */
+    public function trigger(MailingTrigger $event, \App\Models\Order $order, ?\App\Models\Shipping $shipping = null, ?\Carbon\Carbon $at = null): void
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('mailing_deliveries', 'event_shipping_id')) return;
         $email = mb_strtolower(trim($order->routeNotificationForMail() ?? ''));
         $contact = DB::table('mailing_contacts')->where('email', $email)->whereNull('unsubscribed_at')->whereNull('bounced_at')->first();
         if (! $contact) return;
-        DB::transaction(function () use ($order, $contact) {
-            $campaigns = DB::table('mailing_campaigns')->where('trigger_event', 'order_created')
+        $at ??= now();
+        DB::transaction(function () use ($event, $order, $shipping, $contact, $at) {
+            $campaigns = DB::table('mailing_campaigns')->where('trigger_event', $event->value)
                 ->where('status', 'queued')->orderBy('id')->lockForUpdate()->get();
             foreach ($campaigns as $campaign) {
                 DB::table('mailing_deliveries')->insertOrIgnore([
                     'campaign_id' => $campaign->id, 'contact_id' => $contact->id,
-                    'event_order_id' => $order->id, 'due_at' => $order->created_at->copy()->addHours($campaign->delay_hours),
+                    'event_order_id' => $order->id, 'event_shipping_id' => $shipping?->id ?? 0,
+                    'due_at' => $at->copy()->addHours($campaign->delay_hours),
                     'status' => 'pending', 'created_at' => now(), 'updated_at' => now(),
                 ]);
             }
@@ -29,7 +42,12 @@ class EmailingService
 
     public function ready(): bool
     {
-        return config('emailing.enabled') && in_array(config('mail.default'), ['smtp', 'sendmail', 'ses', 'postmark', 'resend']);
+        return config('emailing.enabled') && ($this->dryRun() || in_array(config('mail.default'), ['smtp', 'sendmail', 'ses', 'postmark', 'resend']));
+    }
+
+    public function dryRun(): bool
+    {
+        return (bool) config('emailing.dry_run');
     }
 
     public function html(object $campaign, ?object $contact = null): string
@@ -63,6 +81,15 @@ class EmailingService
         $html = $this->html($campaign, $test ? null : $contact);
         if (! $test && $delivery) {
             $html = app(EmailingMeasurement::class)->decorate($html, $campaign, $delivery, $this->unsubscribeUrl($contact));
+        }
+        if ($this->dryRun()) {
+            // Všetko vrátane vykreslenia a merania prebehlo; len sa nevolá poštový server.
+            \Illuminate\Support\Facades\Log::info('Emailing dry-run: email sa neodoslal.', [
+                'to' => $contact->email, 'subject' => ($test ? '[TEST] ' : '').$campaign->subject,
+                'campaign_id' => $campaign->id ?? null, 'delivery_id' => $delivery->id ?? null, 'test' => $test,
+            ]);
+
+            return;
         }
         Mail::html($html, function ($message) use ($campaign, $contact, $test) {
             $message->to($contact->email)->subject(($test ? '[TEST] ' : '').$campaign->subject);

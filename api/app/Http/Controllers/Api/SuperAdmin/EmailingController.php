@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\SuperAdmin;
 
+use App\Enums\MailingTrigger;
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\User;
@@ -37,6 +38,8 @@ class EmailingController extends Controller
         return response()->json([
             'campaigns' => DB::table('mailing_campaigns')->orderByDesc('id')->paginate(20),
             'templates' => DB::table('mailing_templates')->orderBy('name')->get(),
+            'triggers' => MailingTrigger::options(),
+            'delays' => MailingTrigger::delayOptions(),
             'coupons' => Coupon::where('active', true)->orderByDesc('id')->get(['id', 'code', 'type', 'value', 'valid_to']),
             'stats' => [
                 'sent' => (clone $sent)->count(),
@@ -50,7 +53,7 @@ class EmailingController extends Controller
                 'pending' => DB::table('mailing_deliveries')->where('status', 'pending')->count(),
                 'failed' => DB::table('mailing_deliveries')->where('status', 'failed')->whereBetween('attempted_at', [$from.' 00:00:00', $to.' 23:59:59'])->count(),
             ],
-            'ready' => $service->ready(), 'hourly_limit' => config('emailing.hourly_limit'),
+            'ready' => $service->ready(), 'dry_run' => $service->dryRun(), 'hourly_limit' => config('emailing.hourly_limit'),
             'timezone' => config('app.timezone'),
         ]);
     }
@@ -58,8 +61,8 @@ class EmailingController extends Controller
     public function save(Request $r, ?int $id = null)
     {
         $data = $this->content($r) + $r->validate([
-            'trigger_event' => ['nullable', Rule::in(['order_created'])],
-            'delay_hours' => 'required_with:trigger_event|integer|min:1|max:8760',
+            'trigger_event' => ['nullable', Rule::in(MailingTrigger::values())],
+            'delay_hours' => ['required_with:trigger_event', Rule::in(array_keys(MailingTrigger::DELAYS))],
             'track_clicks' => 'sometimes|boolean', 'track_opens' => 'sometimes|boolean',
         ]) + ['trigger_event' => null, 'delay_hours' => 24, 'track_clicks' => false, 'track_opens' => false];
         $id = DB::transaction(function () use ($r, $id, $data) {
@@ -103,7 +106,9 @@ class EmailingController extends Controller
         // Test messages go only to the authenticated administrator.
         $service->send((object) ($data + ['button_url' => null, 'button_label' => null]), (object) ['email' => $r->user()->email], true);
 
-        return response()->json(['message' => 'Test bol odoslaný na váš prihlasovací email.']);
+        return response()->json(['message' => $service->dryRun()
+            ? 'Testovací režim: email sa reálne neodoslal.'
+            : 'Test bol odoslaný na váš prihlasovací email.']);
     }
 
     public function queue(Request $r, int $id, EmailingService $service)
@@ -123,7 +128,7 @@ class EmailingController extends Controller
                 DB::table('mailing_deliveries')->insert($rows);
                 $total += count($rows);
             });
-            abort_if($campaign->trigger_event && $r->filled('scheduled_at'), 422, 'Automatizácia sa aktivuje ihneď; oneskorenie sa počíta od objednávky.');
+            abort_if($campaign->trigger_event && $r->filled('scheduled_at'), 422, 'Automatizácia sa aktivuje ihneď; oneskorenie sa počíta od udalosti.');
             abort_unless($campaign->trigger_event || $total > 0, 422, 'Najprv pridajte oprávnených príjemcov.');
             DB::table('mailing_campaigns')->where('id', $id)->update(['status' => 'queued', 'coupon_code' => $coupon?->code, 'scheduled_at' => $r->input('scheduled_at') ? Carbon::parse($r->input('scheduled_at'))->setTimezone(config('app.timezone')) : now(), 'updated_at' => now()]);
 

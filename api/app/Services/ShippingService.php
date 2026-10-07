@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\MailingTrigger;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\ProductVariant;
@@ -88,6 +89,12 @@ class ShippingService
                     ['shipping_id' => $shipping->id, 'items' => $stocks->map(fn (Stock $stock) => [
                         'order_product_id' => $stock->order_product_id, 'quantity' => $stock->quantity,
                     ])->all()], $order);
+
+                $emailing = app(\App\Services\EmailingService::class);
+                $emailing->trigger(MailingTrigger::ShippingDispatched, $order, $shipping, $shipping->dispatched_at);
+                if ($order->refresh()->isFinished()) {
+                    $emailing->trigger(MailingTrigger::OrderCompleted, $order, null, $shipping->dispatched_at);
+                }
             }
 
             return $shipping;

@@ -168,6 +168,48 @@ class EmailingTest extends TestCase
         $this->assertSame(0, app(EmailingService::class)->runBatch());
     }
 
+    public function test_shipping_and_completion_triggers_use_their_own_delay_and_dedupe_per_shipment(): void
+    {
+        $this->admin();
+        $this->contact();
+        $customer = \App\Models\Customer::create(['company' => 'Buyer', 'email' => 'customer@example.test', 'street' => 'Test 1', 'postcode' => '81101', 'city' => 'Bratislava']);
+        $shipped = $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'shipping_dispatched', 'delay_hours' => 48])->assertOk()->json('id');
+        $done = $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'order_completed', 'delay_hours' => 24])->assertOk()->json('id');
+        $this->postJson("/api/emailing/campaigns/$shipped/queue")->assertOk();
+        $this->postJson("/api/emailing/campaigns/$done/queue")->assertOk();
+        $order = \App\Models\Order::create(['customer_id' => $customer->id]);
+        $first = $order->shippings()->create([]);
+        $second = $order->shippings()->create([]);
+        $service = app(EmailingService::class);
+        $service->trigger(\App\Enums\MailingTrigger::ShippingDispatched, $order, $first);
+        $service->trigger(\App\Enums\MailingTrigger::ShippingDispatched, $order, $first);
+        $service->trigger(\App\Enums\MailingTrigger::ShippingDispatched, $order, $second);
+        $service->trigger(\App\Enums\MailingTrigger::OrderCompleted, $order);
+        $this->assertSame(2, DB::table('mailing_deliveries')->where('campaign_id', $shipped)->count());
+        $this->assertSame(1, DB::table('mailing_deliveries')->where('campaign_id', $done)->count());
+        $this->assertEquals(now()->addHours(48)->timestamp, \Illuminate\Support\Carbon::parse(DB::table('mailing_deliveries')->where('campaign_id', $shipped)->value('due_at'))->timestamp, '', 5);
+        $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'shipping_dispatched', 'delay_hours' => 5])->assertUnprocessable();
+        $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'unknown_event', 'delay_hours' => 24])->assertUnprocessable();
+    }
+
+    public function test_dry_run_records_delivery_as_sent_without_sending_mail(): void
+    {
+        $this->admin();
+        $this->contact();
+        config(['emailing.dry_run' => true, 'mail.default' => 'log']);
+        $customer = \App\Models\Customer::create(['company' => 'Buyer', 'email' => 'customer@example.test', 'street' => 'Test 1', 'postcode' => '81101', 'city' => 'Bratislava']);
+        $id = $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'order_created', 'delay_hours' => 24])->assertOk()->json('id');
+        $this->postJson("/api/emailing/campaigns/$id/queue")->assertOk();
+        $order = \App\Models\Order::create(['customer_id' => $customer->id]);
+        Mail::shouldReceive('html')->never();
+        $this->travel(24)->hours();
+        $this->assertSame(1, app(EmailingService::class)->runBatch());
+        $this->assertDatabaseHas('mailing_deliveries', ['event_order_id' => $order->id, 'status' => 'sent']);
+        $this->assertNotNull(DB::table('mailing_deliveries')->where('event_order_id', $order->id)->value('sent_at'));
+        $this->postJson('/api/emailing/test', $this->content())->assertOk()->assertJsonPath('message', 'Testovací režim: email sa reálne neodoslal.');
+        $this->getJson('/api/emailing')->assertJsonPath('dry_run', true);
+    }
+
     public function test_order_trigger_skips_cancelled_orders_and_unsubscribed_contacts(): void
     {
         $this->admin();
