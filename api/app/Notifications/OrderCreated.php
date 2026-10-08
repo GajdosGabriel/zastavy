@@ -56,17 +56,11 @@ class OrderCreated extends Notification implements ShouldQueue
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderConfirmation', ['order' => $this->order]);
 
-        // Kópia pre admina ide cez druhý mailer; zákazník ostáva na hlavnom SMTP.
-        if ($notifiable instanceof User && config('mail.mailers.admin.username')) {
-            $message->mailer('admin')
-                ->from(config('mail.mailers.admin.from_address') ?: config('mail.mailers.admin.username'), 'Gajdoš Gabriel – Reprezent');
-
-            // Odpoveď na admin kópiu ide zákazníkovi; odpoveď zákazníka na jeho
-            // vlastné potvrdenie ostáva na obchod@zastavy-vlajky.sk.
-            if ($customerEmail = $this->order->routeNotificationForMail()) {
-                $message->replyTo = [];
-                $message->replyTo($customerEmail, $this->order->billing->company ?? '');
-            }
+        // Odpoveď na admin kópiu ide zákazníkovi; odpoveď zákazníka na jeho
+        // vlastné potvrdenie ostáva na obchod@zastavy-vlajky.sk.
+        if ($notifiable instanceof User && ($customerEmail = $this->order->routeNotificationForMail())) {
+            $message->replyTo = [];
+            $message->replyTo($customerEmail, $this->order->billing->company ?? '');
         }
 
         return $message;
