@@ -4,7 +4,7 @@ import OrderPriceAdjustment from '../forms/OrderPriceAdjustment.vue';
 import { adjustmentAmount } from '../../models/orderPricing';
 import useCheckoutOptions from '../../store/StoreCheckoutOptions';
 import BaseLayout from "../layout/BaseLayout.vue";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import useCheckouts, { CUSTOMER_STORAGE_KEY } from "../../store/StoreCheckouts";
 import useCustomers from "../../store/StoreCustomers";
@@ -19,7 +19,7 @@ import ShippingPaymentSelector from "../forms/ShippingPaymentSelector.vue";
 import EmailOrderImport from "./EmailOrderImport.vue";
 
 const checkoutsStore = useCheckouts();
-const { getCarts, getCheckout, note, attachments, delivery, deliverToOtherAddress } = storeToRefs(checkoutsStore);
+const { getCarts, getCheckout, note, attachments, delivery, deliverToOtherAddress, customerDraft } = storeToRefs(checkoutsStore);
 const {
       removeCart,
       storeCheckout,
@@ -85,9 +85,18 @@ const productTotal = (product) => formatPrice(Number(product.active_price || 0) 
 
 onMounted(() => {
       getlocalStorage();
-      if (getCarts.value.length) {
+      // Návrat do košíka v tej istej relácii: rozpísané údaje (aj doplnené z e-mailu)
+      // majú prednosť pred localStorage, kam sa údaje obsluhy vôbec nezapisujú.
+      if (customerDraft.value && Object.keys(customerDraft.value.customer).length) {
+            setCustomer({ ...customerDraft.value.customer });
+            isPrivatePerson.value = customerDraft.value.isPrivatePerson;
+      } else if (getCarts.value.length) {
             setCustomer(parseStoredCustomer());
       }
+});
+
+onBeforeUnmount(() => {
+      customerDraft.value = { customer: { ...getCustomer.value }, isPrivatePerson: isPrivatePerson.value };
 });
 
 const clickEmptyBasket = () => {

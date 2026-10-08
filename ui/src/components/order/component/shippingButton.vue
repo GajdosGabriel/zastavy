@@ -17,6 +17,8 @@ const props = defineProps({
 });
 
 const shippingPercentage = computed(() => Number(props.order.shipping_percentage ?? 0));
+// Expedovať sa dá až vystavený dodací list (dispatched_at = null), dovtedy ho treba najprv vystaviť.
+const hasPendingShipping = computed(() => (props.order.shippings ?? []).some(shipping => shipping.is_preparing));
 </script>
 
 <template>
@@ -56,11 +58,12 @@ const shippingPercentage = computed(() => Number(props.order.shipping_percentage
             {{ order.shippintPercentageCalculator }}
         </span>
 
-        <!-- Tlačidlo Expedovať -->
+        <!-- Tlačidlo Vystaviť dodací list / Expedovať -->
         <router-link v-if="showShippingAction && order.permissions?.ship?.allowed && !order.isFinished && !order.isStorned"
             :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }"
-            class="inline-flex min-w-24 items-center justify-center rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-blue-700">
-            Expedovať
+            class="inline-flex min-w-24 items-center justify-center rounded px-3 py-1 text-xs font-semibold text-white transition"
+            :class="hasPendingShipping ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-600 hover:bg-slate-700'">
+            {{ hasPendingShipping ? 'Expedovať' : 'Vystaviť dodací list' }}
         </router-link>
 
         <span v-if="showPackStatus && order.isDeleted"

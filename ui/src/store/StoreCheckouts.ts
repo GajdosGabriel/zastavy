@@ -133,6 +133,9 @@ export const useCheckouts = defineStore("checkouts", () => {
     const priceAdjustment = ref<any>(null);
     // Prílohy zámerne neputujú do localStorage — File objekty sa serializovať nedajú.
     const attachments = ref<File[]>([]);
+    // Rozpísané fakturačné údaje obsluhy. Do localStorage sa jej údaje nezapisujú,
+    // takže bez tohto by ich odchod z košíka („Pokračovať v nákupe") zahodil.
+    const customerDraft = ref<{ customer: Record<string, any>; isPrivatePerson: boolean } | null>(null);
 
     // Doručovacia adresa. Kým je `deliverToOtherAddress` vypnuté, tovar ide na
     // fakturačnú adresu a do requestu sa `delivery` vôbec nepridáva.
@@ -360,6 +363,7 @@ export const useCheckouts = defineStore("checkouts", () => {
             note.value = "";
             resetDelivery();
             useCustomer().resetCustomer();
+            customerDraft.value = null;
             options.reset();
             return response.data?.uuid ?? true;
         } catch (e) {
@@ -389,6 +393,7 @@ export const useCheckouts = defineStore("checkouts", () => {
         priceAdjustment,
         note,
         attachments,
+        customerDraft,
         delivery,
         deliverToOtherAddress,
         deliveryAddressId,
