@@ -34,6 +34,14 @@ export const PAGE_CUSTOMER: Page = {
     ICON: ''
 }
 
+// Druhy zákazníka — zrkadlo App\Enums\CustomerType na serveri.
+export const CUSTOMER_TYPES: { value: string; label: string }[] = [
+    { value: 'municipality', label: 'Obec' },
+    { value: 'school', label: 'Škola' },
+    { value: 'company', label: 'Firma' },
+    { value: 'person', label: 'Osoba' },
+]
+
 export const PAGE_USER: Page = {
     NAME: 'Používatelia',
     URL: URL_BASE_API + '/users',

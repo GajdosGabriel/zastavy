@@ -32,26 +32,17 @@ class SystemLogController extends Controller
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
+        // Telá mailov sa v zozname neťahajú, stačí vedieť, či nejaké je.
         $logs = SystemLog::query()
+            ->select(['id', 'created_at', 'level', 'channel', 'event', 'status', 'message', 'recipient', 'user_id', 'ip', 'context'])
+            ->selectRaw('body IS NOT NULL as has_body')
             ->with('user:id,email')
             ->tap(fn (Builder $query) => $this->filter($query, $validated))
             ->orderByDesc('id')
             ->paginate($validated['per_page'] ?? 50);
 
         return response()->json([
-            'data' => $logs->getCollection()->map(fn (SystemLog $log) => [
-                'id' => $log->id,
-                'createdAt' => $log->created_at?->toIso8601String(),
-                'level' => $log->level,
-                'channel' => $log->channel,
-                'event' => $log->event,
-                'status' => $log->status,
-                'message' => $log->message,
-                'recipient' => $log->recipient,
-                'user' => $log->user_id ? ['id' => $log->user_id, 'email' => $log->user?->email] : null,
-                'ip' => $log->ip,
-                'context' => $log->context,
-            ])->values(),
+            'data' => $logs->getCollection()->map(fn (SystemLog $log) => $this->row($log, (bool) $log->has_body))->values(),
             'meta' => [
                 'currentPage' => $logs->currentPage(),
                 'lastPage' => $logs->lastPage(),
@@ -61,6 +52,37 @@ class SystemLogController extends Controller
             'channels' => DB::table('system_logs')->distinct()->orderBy('channel')->pluck('channel'),
             'retention' => ['days' => (int) config('logging.system_log.days')],
         ]);
+    }
+
+    /** Detail záznamu aj s telom odoslaného e-mailu. */
+    public function show(Request $request, SystemLog $systemLog): JsonResponse
+    {
+        abort_unless($request->user()?->hasRole('super-admin'), 403, 'Denník je dostupný iba pre super-admina.');
+
+        $systemLog->load('user:id,email');
+
+        return response()->json([
+            'data' => $this->row($systemLog, $systemLog->body !== null) + ['body' => $systemLog->body],
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function row(SystemLog $log, bool $hasBody): array
+    {
+        return [
+            'id' => $log->id,
+            'createdAt' => $log->created_at?->toIso8601String(),
+            'level' => $log->level,
+            'channel' => $log->channel,
+            'event' => $log->event,
+            'status' => $log->status,
+            'message' => $log->message,
+            'recipient' => $log->recipient,
+            'user' => $log->user_id ? ['id' => $log->user_id, 'email' => $log->user?->email] : null,
+            'ip' => $log->ip,
+            'context' => $log->context,
+            'hasBody' => $hasBody,
+        ];
     }
 
     /** @param array<string, mixed> $filters */

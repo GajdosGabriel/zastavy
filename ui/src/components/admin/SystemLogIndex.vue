@@ -3,12 +3,13 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import BaseLayout from '../layout/BaseLayout.vue';
 import axiosInstance from '../../axiosInstance';
 import useErrors from '../../store/StoreErrors';
-import { eventLabel } from '../../systemLogLabels';
+import { eventLabel, mailTemplate } from '../../systemLogLabels';
 
 type Row = {
       id: number; createdAt: string | null; level: 'info' | 'warning' | 'error'; channel: string; event: string;
       status: string | null; message: string; recipient: string | null;
       user: { id: number; email: string | null } | null; ip: string | null; context: Record<string, any> | null;
+      hasBody: boolean; body?: string | null;
 };
 
 const page = ref<{ data: Row[]; meta: any; summary: Record<string, number>; channels: string[]; retention: { days: number } } | null>(null);
@@ -44,6 +45,47 @@ const reset = () => { Object.keys(filters).forEach((key) => ((filters as any)[ke
 const filterRecipient = (email: string) => { filters.recipient = email; apply(); };
 const go = (n: number) => { currentPage.value = n; load(); };
 const anyFilter = computed(() => Object.values(filters).some(Boolean));
+
+// Náhľad odoslaného e-mailu. Telo sa dotiahne až po kliknutí, zoznam ho nenesie.
+const mail = ref<Row | null>(null);
+const mailLoading = ref(false);
+const openMail = async (row: Row) => {
+      mail.value = row;
+      if (!row.hasBody) return;
+      mailLoading.value = true;
+      try {
+            const { data } = await axiosInstance.get(`/admin/system-logs/${row.id}`);
+            if (mail.value?.id === row.id) mail.value = data.data;
+      } catch (e) {
+            useErrors().setErrors(e);
+      } finally {
+            mailLoading.value = false;
+      }
+};
+const mailFields = computed(() => {
+      const row = mail.value;
+      if (!row) return [];
+      const c = row.context ?? {};
+      return [
+            ['Predmet', row.message],
+            ['Od', c.from],
+            ['Komu', row.recipient],
+            ['Kópia', c.cc],
+            ['Skrytá kópia', c.bcc],
+            ['Odpoveď na', c.reply_to],
+            ['Prílohy', Array.isArray(c.attachments) ? c.attachments.join(', ') : c.attachments],
+            ['Čas', formatDate(row.createdAt)],
+            ['Chyba', c.error],
+      ].filter(([, value]) => value);
+});
+const omittedNotes: Record<string, string> = {
+      sensitive: 'Obsah tohto e-mailu sa neukladá, lebo obsahuje heslo alebo odkaz na zmenu hesla.',
+      bulk: 'Obsah hromadnej kampane sa do denníka neukladá — nájdete ho v Emailingu.',
+};
+const mailNote = computed(() => omittedNotes[mail.value?.context?.body_omitted]
+      ?? 'Obsah tohto e-mailu nie je uložený (starší záznam alebo e-mail zlyhal ešte pred vykreslením).');
+// Odkazy v náhľade otvárame v novom okne, skripty sandbox nepustí.
+const mailDoc = computed(() => `<base target="_blank">${mail.value?.body ?? ''}`);
 
 const formatDate = (value: string | null) => value
       ? new Date(value).toLocaleString('sk-SK', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -146,6 +188,7 @@ onMounted(() => { document.title = 'Denník udalostí'; load(); });
                                                 <router-link v-if="row.context?.order_id" :to="{ name: 'orders.show', params: { orderId: row.context.order_id } }" class="underline decoration-dotted hover:text-slate-900">Objednávka {{ row.context.serial_number || '#' + row.context.order_id }}</router-link>
                                                 <span v-if="row.user">Vykonal: {{ row.user.email || '#' + row.user.id }}</span>
                                                 <span v-if="row.ip">🌐 {{ row.ip }}</span>
+                                                <button v-if="row.channel === 'mail'" type="button" class="font-medium text-blue-700 hover:underline" @click="openMail(row)">Zobraziť e-mail</button>
                                           </div>
                                           <details v-if="row.context" class="mt-2 text-xs">
                                                 <summary class="cursor-pointer text-slate-500 hover:text-slate-900">Podrobnosti</summary>
@@ -161,6 +204,33 @@ onMounted(() => { document.title = 'Denník udalostí'; load(); });
                               </div>
                         </div>
                   </section>
+
+                  <Teleport to="body">
+                        <div v-if="mail" class="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-40 p-4" @click.self="mail = null">
+                              <div class="flex max-h-full w-full max-w-4xl flex-col rounded-lg bg-white shadow-xl" role="dialog" aria-modal="true">
+                                    <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-4">
+                                          <div>
+                                                <h3 class="text-lg font-semibold text-slate-900">{{ mailTemplate(mail.context?.class).label }}</h3>
+                                                <p v-if="mailTemplate(mail.context?.class).description" class="text-sm text-slate-600">{{ mailTemplate(mail.context?.class).description }}</p>
+                                          </div>
+                                          <button type="button" class="rounded bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-200" @click="mail = null">Zavrieť</button>
+                                    </div>
+                                    <div class="overflow-y-auto p-4">
+                                          <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                                                <template v-for="[label, value] in mailFields" :key="label">
+                                                      <dt class="text-slate-500">{{ label }}</dt>
+                                                      <dd class="break-words text-slate-900">{{ value }}</dd>
+                                                </template>
+                                                <dt class="text-slate-500">Stav</dt>
+                                                <dd><span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusClass[mail.status ?? '']">{{ statusLabels[mail.status ?? ''] ?? mail.status }}</span></dd>
+                                          </dl>
+                                          <p v-if="mailLoading" class="mt-4 text-sm text-slate-600">Načítavam obsah…</p>
+                                          <iframe v-else-if="mail.body" :srcdoc="mailDoc" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Obsah e-mailu" class="mt-4 h-[60vh] w-full rounded border border-slate-200 bg-white"></iframe>
+                                          <p v-else class="mt-4 rounded bg-slate-50 p-3 text-sm text-slate-600">{{ mailNote }}</p>
+                                    </div>
+                              </div>
+                        </div>
+                  </Teleport>
             </template>
       </BaseLayout>
 </template>

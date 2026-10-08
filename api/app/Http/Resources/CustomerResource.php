@@ -63,6 +63,8 @@ class CustomerResource extends JsonResource
             'created_at' => $this->created_at,
             'phone' => $contact?->phone ?? $this->phone,
             'status' => $this->statusData(),
+            'type' => $this->type?->value,
+            'type_label' => $this->type?->label(),
             'primary_user' => $contact ? new UserResource($contact) : null,
             'users' => UserResource::collection($this->whenLoaded('users')),
 

@@ -67,7 +67,7 @@ const dropdownItems = computed(() => {
 
                         <!-- Firma -->
                         <div class="py-3 sm:pr-5">
-                            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Firma</p>
+                            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{{ getCustomer.type_label || 'Firma' }}</p>
                             <p class="text-sm font-semibold text-gray-900">{{ getCustomer.company || '—' }}</p>
                             <p class="text-sm text-gray-600">{{ getCustomer.street }}</p>
                             <p class="text-sm text-gray-600">{{ getCustomer.postcode }} {{ getCustomer.city }}</p>

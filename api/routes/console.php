@@ -17,10 +17,13 @@ Artisan::command('inspire', function () {
  * sekvenčne v jednom HTTP requeste.
  *
  * Na hostingu musí byť naplánované `php artisan schedule:run` každú minútu.
+ *
+ * Zámky `withoutOverlapping` majú expiráciu 10 minút: keď DB vypadne pri ich
+ * uvoľňovaní, zaseknutý zámok neblokuje úlohu predvolených 24 hodín.
  */
 Schedule::command('app:customer-reviews-run --time-budget=25')
     ->everyFiveMinutes()
-    ->withoutOverlapping();
+    ->withoutOverlapping(10);
 
 
 if (config('operations.enabled')) {
@@ -30,8 +33,8 @@ if (config('operations.enabled')) {
         if (\Illuminate\Support\Facades\Cache::add('ops:probe-dispatched', true, 290)) {
             \App\Jobs\QueueHeartbeat::dispatch();
         }
-    })->name('operations-heartbeats')->everyFiveMinutes()->withoutOverlapping();
-    Schedule::command('ops:check')->everyFiveMinutes()->withoutOverlapping();
+    })->name('operations-heartbeats')->everyFiveMinutes()->withoutOverlapping(10);
+    Schedule::command('ops:check')->everyFiveMinutes()->withoutOverlapping(10);
 }
 
 // Denník udalostí drží len posledných 30 dní (config/logging.php).
@@ -40,4 +43,4 @@ Schedule::command('model:prune', ['--model' => \App\Models\SystemLog::class])->d
 Artisan::command('emailing:send', function (\App\Services\EmailingService $service) {
     $this->info('Spracované: '.$service->runBatch());
 })->purpose('Odoslanie obmedzenej dávky marketingových emailov');
-Schedule::command('emailing:send')->everyMinute()->withoutOverlapping();
+Schedule::command('emailing:send')->everyMinute()->withoutOverlapping(10);

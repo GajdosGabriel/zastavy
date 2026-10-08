@@ -46,6 +46,7 @@ class Recorder
         ?int $userId = null,
         array $context = [],
         ?string $ip = null,
+        ?string $body = null,
     ): ?SystemLog {
         try {
             return SystemLog::create([
@@ -57,6 +58,7 @@ class Recorder
                 'recipient' => $recipient !== null ? Str::limit($recipient, 191, '') : null,
                 'user_id' => $userId,
                 'context' => static::context($context),
+                'body' => $body !== null && $body !== '' ? $body : null,
                 'ip' => $ip,
             ]);
         } catch (Throwable $e) {

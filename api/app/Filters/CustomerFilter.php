@@ -2,6 +2,7 @@
 
 namespace App\Filters;
 
+use App\Enums\CustomerType;
 use App\Enums\ModelStatus;
 use App\Models\Order;
 use App\Models\Customer;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 class CustomerFilter extends Filters
 {
 
-    protected $filters = ['sortByOrders', 'bySearchInput', 'sortById', 'isMarked', 'withoutOrder', 'status', 'review'];
+    protected $filters = ['sortByOrders', 'bySearchInput', 'sortById', 'isMarked', 'withoutOrder', 'status', 'type', 'review'];
 
     /**
      * Zákazníci, na ktorých post-kontrola niečo našla.
@@ -42,6 +43,17 @@ class CustomerFilter extends Filters
         }
 
         return $this->builder->where('status', $status->value);
+    }
+
+    public function type($value)
+    {
+        $type = CustomerType::tryFrom((string) $value);
+
+        if (! $type) {
+            return $this->builder;
+        }
+
+        return $this->builder->where('type', $type->value);
     }
 
     public function bySearchInput($company)

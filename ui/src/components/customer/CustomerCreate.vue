@@ -42,7 +42,7 @@ const requiredFields = ["company", "email", "postcode", "city"];
                         <h2 class="text-base font-semibold text-gray-800">Údaje zákazníka</h2>
                     </div>
                     <div class="px-6 py-5">
-                        <CustomerFormFields :requiredFields="requiredFields" :fieldErrors="getFieldErrors" errorPrefix="" :withNote="true" />
+                        <CustomerFormFields :requiredFields="requiredFields" :fieldErrors="getFieldErrors" errorPrefix="" :withNote="true" :withType="true" />
                         <div class="mt-6 flex justify-end">
                             <buttonSubmitComponent :item="{ name: 'Uložiť zákazníka', spinner: true }" />
                         </div>

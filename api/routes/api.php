@@ -196,6 +196,7 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
     Route::prefix('admin')->group(function () {
         Route::get('system-logs', [SystemLogController::class, 'index'])->name('admin.system-logs.index');
+        Route::get('system-logs/{systemLog}', [SystemLogController::class, 'show'])->whereNumber('systemLog')->name('admin.system-logs.show');
         Route::apiResource('shipping-methods', AdminShippingMethodController::class)->except(['show', 'create', 'edit'])->names('admin.shipping-methods');
         Route::post('shipping-methods/{id}/restore', [AdminShippingMethodController::class, 'restore'])->name('admin.shipping-methods.restore');
         Route::apiResource('payment-methods', AdminPaymentMethodController::class)->except(['show', 'create', 'edit'])->names('admin.payment-methods');

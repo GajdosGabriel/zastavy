@@ -42,4 +42,24 @@ const eventLabels: Record<string, string> = {
       'scheduler.failed': 'Zlyhanie plánovača',
 };
 
-export const eventLabel = (event: string): string => eventLabels[event] ?? event;
+// Šablóny e-mailov podľa triedy notifikácie (context.class).
+const mailTemplates: Record<string, { label: string; description: string }> = {
+      OrderCreated: { label: 'Potvrdenie objednávky', description: 'Odchádza zákazníkovi aj obchodu hneď po vytvorení objednávky.' },
+      OrderUpdated: { label: 'Zmena objednávky', description: 'Odchádza po úprave položiek alebo údajov objednávky.' },
+      OrderCancelled: { label: 'Storno objednávky', description: 'Odchádza zákazníkovi po stornovaní objednávky.' },
+      OrderDeliveryAddressChanged: { label: 'Zmena adresy doručenia', description: 'Odchádza po zmene doručovacej adresy objednávky.' },
+      OrderPreparing: { label: 'Objednávka sa pripravuje', description: 'Odchádza zákazníkovi, keď sklad začne pripravovať zásielku.' },
+      OrderExpedition: { label: 'Expedícia objednávky', description: 'Odchádza po odoslaní zásielky (aj čiastočnej).' },
+      OrderReturnProcessed: { label: 'Vybavenie vratky', description: 'Odchádza zákazníkovi po vybavení vratky.' },
+      CouponIssued: { label: 'Zľavový kupón', description: 'Odchádza zákazníkovi s kupónom na ďalší nákup.' },
+      CustomerReviewDigest: { label: 'Prehľad zákazníkov na kontrolu', description: 'Súhrnný e-mail pre obchod.' },
+      ResetPassword: { label: 'Obnovenie hesla', description: 'Odkaz na nastavenie nového hesla.' },
+      UserInvited: { label: 'Pozvánka používateľa', description: 'Prístupové údaje k novému účtu.' },
+};
+
+export const mailTemplate = (className?: string | null): { label: string; description: string } => {
+      const name = (className ?? '').split('\\').pop() ?? '';
+      return mailTemplates[name] ?? { label: name || 'Vlastný e-mail', description: name ? '' : 'E-mail bez šablóny notifikácie (napr. kampaň alebo testovací e-mail).' };
+};
+
+export const eventLabel =(event: string): string => eventLabels[event] ?? event;

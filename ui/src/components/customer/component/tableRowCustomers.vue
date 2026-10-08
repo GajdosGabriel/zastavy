@@ -72,6 +72,7 @@ const dropdownItems = computed(() => {
                                 {{ review.count }}×
                             </router-link>
                             <div class="text-sm text-gray-500">
+                                <span v-if="customer.type_label" class="mr-1 rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600">{{ customer.type_label }}</span>
                                 {{ customer.name }}
                                 {{ customer.phone }}
                             </div>

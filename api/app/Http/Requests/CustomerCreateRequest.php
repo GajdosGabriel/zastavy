@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CustomerType;
 use App\Rules\CustomerPhone;
 use App\Rules\CustomerTaxId;
 use App\Rules\IcoRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use App\Http\Requests\CustomerUpdateRequest;
 
 class CustomerCreateRequest extends CustomerUpdateRequest
@@ -44,6 +46,8 @@ class CustomerCreateRequest extends CustomerUpdateRequest
             'ico' => ['nullable', new IcoRule(), new CustomerTaxId('ico')],
             'dic' => ['nullable', new CustomerTaxId('dic')],
             'ic_dic' => ['nullable', new CustomerTaxId('ic_dic')],
+            // Prázdny typ = určí ho klasifikátor podľa názvu a IČO.
+            'type' => ['nullable', Rule::enum(CustomerType::class)],
         ];
     }
 

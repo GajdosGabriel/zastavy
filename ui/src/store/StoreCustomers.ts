@@ -25,6 +25,8 @@ interface Customer {
     updated_at: string;
     deleted_at: string | null;
     status: any;
+    type?: string | null;
+    type_label?: string | null;
     permissions?: Record<string, { allowed: boolean; label: string }>;
     [key: string]: any;
 }

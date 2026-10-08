@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\CustomerType;
 use App\Enums\ModelStatus;
 use App\Models\Mark;
+use App\Services\Customers\CustomerTypeClassifier;
 use App\Casts\IcoFormater;
 use App\Casts\DicFormater;
 use Illuminate\Support\Str;
@@ -31,7 +33,25 @@ class Customer extends Model
         'phone'         => PhoneFormater::class,
         'created_at'    => DateTimeFormater::class,
         'status'        => ModelStatus::class,
+        'type'          => CustomerType::class,
     ];
+
+    /**
+     * Zákazník bez typu ho dostane pri založení — nech vznikne ktoroukoľvek
+     * cestou. CustomerService typ posiela sám, lebo pozná aj meno kontaktnej
+     * osoby (podľa neho sa spozná súkromná osoba); toto je poistka pre zvyšok.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Customer $customer) {
+            if (($customer->attributes['type'] ?? null) === null) {
+                $customer->type = app(CustomerTypeClassifier::class)->classify(
+                    $customer->attributes['company'] ?? null,
+                    $customer->attributes['ico'] ?? null,
+                );
+            }
+        });
+    }
 
     public function orders()
     {

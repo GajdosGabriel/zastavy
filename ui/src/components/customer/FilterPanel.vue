@@ -4,6 +4,7 @@ import { ref, watch, reactive } from "vue";
 import { storeToRefs } from "pinia";
 import useQuery from "../../store/StoreQuery";
 import useCustomers from "../../store/StoreCustomers";
+import { CUSTOMER_TYPES } from "../../constants";
 
 const isName = reactive({
     name: 'Meno',
@@ -16,6 +17,7 @@ const { setQuery, removeQuery } = useQuery();
 const { getStatuses } = storeToRefs(useCustomers());
 const withoutOrder = ref<string>("");
 const status = ref<string>("");
+const type = ref<string>("");
 
 watch(isName, () => {
     setQuery("bySearchInput=" + isName.value);
@@ -33,6 +35,12 @@ watch(status, () => {
         : removeQuery("status=");
 });
 
+watch(type, () => {
+    type.value
+        ? setQuery("type=" + type.value)
+        : removeQuery("type=");
+});
+
 const clearInput = () => {
     removeQuery("bySearchInput=" + isName.value);
     isName.value = "";
@@ -41,7 +49,7 @@ const clearInput = () => {
 
 <template>
     <CollapsibleFilterPanel id="customer-filters">
-        <div class="grid gap-4 md:grid-cols-4">
+        <div class="grid gap-4 md:grid-cols-5">
             <div class="filter-field md:col-span-2">
                 <label class="filter-label" for="customer-search">Hľadanie zákazníka</label>
                 <div class="filter-control">
@@ -52,6 +60,16 @@ const clearInput = () => {
                         ×
                     </button>
                 </div>
+            </div>
+
+            <div class="filter-field">
+                <label class="filter-label" for="customer-type">Typ</label>
+                <select id="customer-type" v-model="type" class="filter-select">
+                    <option value="">Všetky typy</option>
+                    <option v-for="item in CUSTOMER_TYPES" :key="item.value" :value="item.value">
+                        {{ item.label }}
+                    </option>
+                </select>
             </div>
 
             <div v-if="getStatuses.length" class="filter-field">

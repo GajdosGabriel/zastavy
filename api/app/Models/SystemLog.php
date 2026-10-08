@@ -22,8 +22,11 @@ class SystemLog extends Model
 
     protected $fillable = [
         'level', 'channel', 'event', 'status', 'message', 'recipient',
-        'user_id', 'context', 'ip',
+        'user_id', 'context', 'body', 'ip',
     ];
+
+    /** Telo mailu ide von len cez detail (SystemLogController::show). */
+    protected $hidden = ['body'];
 
     protected $casts = [
         'context' => 'array',

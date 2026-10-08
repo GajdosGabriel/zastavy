@@ -126,7 +126,7 @@ class ImportGmailOrders extends Command
             $date = (new DateTimeImmutable($r['source_date']))->setTimezone(new DateTimeZone(config('app.timezone')))->format('Y-m-d H:i:s');
             if (! $customer) {
                 $customer = [
-                    'status' => 'active', 'company' => $r['company'], 'slug' => Str::slug($r['company']).'-gmail-'.$r['source_id'],
+                    'status' => 'active', 'type' => app(\App\Services\Customers\CustomerTypeClassifier::class)->classify($r['company'], $ico, $r['name'] ?? null)->value, 'company' => $r['company'], 'slug' => Str::slug($r['company']).'-gmail-'.$r['source_id'],
                     'email' => $email, 'phone' => $r['phone'], 'street' => $r['street'],
                     'postcode' => $r['postcode'] ?? '', 'city' => $r['city'] ?? '', 'ico' => $ico, 'dic' => $r['dic'],
                     'note' => 'Historický kontakt z priamej e-mailovej objednávky; neúplné údaje sú označené v objednávke.',

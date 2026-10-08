@@ -51,7 +51,7 @@ const requiredFields = ["company", "city", "postcode", "email", "name"];
                     </div>
                     <div class="px-6 py-5">
                         <CustomerReviewPanel :customerId="customerId as string" />
-                        <CustomerFormFields :requiredFields="requiredFields" :fieldErrors="getFieldErrors" errorPrefix="" :withNote="true" :withStatus="true" />
+                        <CustomerFormFields :requiredFields="requiredFields" :fieldErrors="getFieldErrors" errorPrefix="" :withNote="true" :withType="true" :withStatus="true" />
                         <div class="mt-6 flex justify-end">
                             <buttonSubmitComponent :item="{ name: 'Uložiť zmeny', spinner: true }" />
                         </div>

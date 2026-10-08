@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CustomerType;
 use App\Enums\ModelStatus;
 use App\Rules\CustomerTaxId;
 use Illuminate\Foundation\Http\FormRequest;
@@ -43,6 +44,8 @@ class CustomerUpdateRequest extends FormRequest
             'dic' => $this->taxRules('dic'),
             'ic_dic' => $this->taxRules('ic_dic'),
             'status' => ['required', Rule::in(ModelStatus::allowedValuesForUser($this->user()))],
+            // Nepovinný — bez neho typ ostáva, aký bol.
+            'type' => ['nullable', Rule::enum(CustomerType::class)],
         ];
     }
 
@@ -58,6 +61,7 @@ class CustomerUpdateRequest extends FormRequest
         // Všeobecný preklad `name` je „názov" — tu ide o človeka.
         return [
             'name' => 'kontaktné meno',
+            'type' => 'typ zákazníka',
             'note' => 'poznámka',
         ];
     }

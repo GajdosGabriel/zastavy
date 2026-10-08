@@ -30,6 +30,7 @@ class CustomerExportController extends Controller
         'dic'               => 'DIČ',
         'ic_dic'            => 'IČ DPH',
         'status'            => 'Status',
+        'type'              => 'Typ',
         'note'              => 'Poznámka',
         'orders_count'      => 'Počet objednávok',
         'orders_total'      => 'Objednané spolu (€)',
@@ -130,6 +131,7 @@ class CustomerExportController extends Controller
             'dic'               => (string) $customer->dic,
             'ic_dic'            => (string) $customer->ic_dic,
             'status'            => (string) ($customer->status?->value ?? ''),
+            'type'              => (string) ($customer->type?->label() ?? ''),
             'note'              => (string) $customer->note,
             'orders_count'      => (string) ($customer->orders_count ?? 0),
             // Desatinná čiarka — slovenský Excel inak číslo berie ako text.

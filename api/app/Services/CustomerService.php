@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Enums\CustomerType;
 use App\Models\Customer;
 use App\Models\User;
+use App\Services\Customers\CustomerTypeClassifier;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -13,7 +15,7 @@ class CustomerService
     {
         $request = $this->normalizeRequest($request);
 
-        return Customer::create($this->customerData($request));
+        return Customer::create($this->newCustomerData($request));
     }
 
     public function handleCheckout($request, ?User $actor = null): array
@@ -24,7 +26,7 @@ class CustomerService
             // Opakovaná objednávka toho istého kontaktu sa viaže na už existujúceho
             // zákazníka (podľa IČO + e-mailu), údaje firmy sa pritom nemenia.
             $customer = $this->findReturningCustomer($request)
-                ?? Customer::create($this->customerData($request));
+                ?? Customer::create($this->newCustomerData($request));
             $contact = $this->storeUser($customer, $request);
 
             return [$customer, $actor ?? $contact];
@@ -47,7 +49,7 @@ class CustomerService
             }
             $customer->update($updateData);
         } else {
-            $customer = Customer::create($customerData);
+            $customer = Customer::create($this->newCustomerData($request));
         }
 
         $user = $this->storeUser($customer, $request);
@@ -197,7 +199,11 @@ class CustomerService
         // nepozná a jeho uloženie by ju inak zakaždým vymazalo.
         $note = array_key_exists('note', $request) ? ['note' => $request['note'] ?: null] : [];
 
-        return $note + [
+        // Typ rovnako: mení ho len formulár, ktorý ho naozaj poslal (administrácia).
+        $type = CustomerType::tryFrom((string) ($request['type'] ?? ''));
+        $type = $type ? ['type' => $type->value] : [];
+
+        return $note + $type + [
             'company' => $company,
             'email' => $request['email'] ?? null,
             'phone' => $request['phone'] ?? null,
@@ -209,6 +215,23 @@ class CustomerService
             'dic' => $request['dic'] ?? null,
             'ic_dic' => $request['ic_dic'] ?? null,
         ];
+    }
+
+    /**
+     * Údaje nového zákazníka — navyše s typom, keď ho formulár neurčil.
+     *
+     * Klasifikuje sa tu, nie až v modeli: súkromná osoba sa spozná podľa
+     * toho, že názov je meno kontaktu, a to meno pozná len požiadavka.
+     */
+    private function newCustomerData(array $request): array
+    {
+        $data = $this->customerData($request);
+
+        return $data + ['type' => app(CustomerTypeClassifier::class)->classify(
+            $data['company'],
+            $data['ico'],
+            $this->contactName($request),
+        )->value];
     }
 
     private function contactName(array $request): string

@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount, getCurrentInstance } from "vue";
+import { ref, computed, watch, onBeforeUnmount, getCurrentInstance } from "vue";
 import { storeToRefs } from "pinia";
 import axiosInstance from "../../axiosInstance";
 import useCustomers from "../../store/StoreCustomers";
 import FormInput from "./FormInput.vue";
 import RequiredMark from "./RequiredMark.vue";
 import FieldHint from "./FieldHint.vue";
+import { CUSTOMER_TYPES } from "../../constants";
 
 const props = withDefaults(defineProps<{
     fieldErrors?: Record<string, string>;
     highlightRequired?: boolean;
     requiredFields?: string[];
     withStatus?: boolean;
+    // Typ zákazníka (obec, škola, firma, osoba) — len v administrácii.
+    withType?: boolean;
     hideCompany?: boolean;
     // Interná poznámka — len v administrácii, checkout ju neukazuje.
     withNote?: boolean;
@@ -25,12 +28,19 @@ const props = withDefaults(defineProps<{
     highlightRequired: false,
     requiredFields: () => [],
     withStatus: false,
+    withType: false,
     hideCompany: false,
 });
 
 const customersStore = useCustomers();
 const { getCustomer, getStatuses } = storeToRefs(customersStore);
 const { findCustomerByIco } = customersStore;
+
+// Nový zákazník typ ešte nemá — prázdna voľba ho nechá určiť serveru.
+const customerType = computed({
+    get: () => getCustomer.value?.type ?? "",
+    set: (value: string) => { getCustomer.value.type = value || null; },
+});
 
 const isSearchingCompany = ref(false);
 const icoSearchMessage = ref("");
@@ -259,6 +269,25 @@ const onClickIco = async () => {
         <div v-if="withNote" class="sm:col-span-2 lg:col-span-3">
             <label :for="fid('note')" class="mb-1.5 block text-sm font-semibold text-gray-700">Interná poznámka</label>
             <FormInput v-model="getCustomer.note" :id="fid('note')" autocomplete="off" maxlength="255" :invalid="!!fieldError('note')" :error="fieldError('note')" placeholder="Vidí ju len personál — napr. fakturovať až po dodaní" :field-key="errorKey('note')" />
+        </div>
+
+        <div v-if="withType" class="sm:col-span-2 lg:col-span-3">
+            <label :for="fid('type')" class="mb-1.5 block text-sm font-semibold text-gray-700">Typ zákazníka</label>
+            <select
+                v-model="customerType"
+                :id="fid('type')"
+                class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1"
+                :class="fieldError('type')
+                    ? 'border-red-500 bg-red-50 ring-1 ring-red-500'
+                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'"
+            >
+                <!-- Prázdna voľba = typ určí server podľa názvu a IČO. -->
+                <option v-if="!getCustomer.id || !getCustomer.type" value="">Určiť automaticky</option>
+                <option v-for="type in CUSTOMER_TYPES" :key="type.value" :value="type.value">
+                    {{ type.label }}
+                </option>
+            </select>
+            <p v-if="fieldError('type')" class="mt-1 text-xs font-semibold text-red-600">{{ fieldError('type') }}</p>
         </div>
 
         <div v-if="withStatus && getCustomer.status" class="sm:col-span-2 lg:col-span-3">
