@@ -39,6 +39,7 @@
     // Items sent in THIS shipment
     $sentItems = $shipping
         ? $shipping->stocks->map(fn($s) => [
+            'item'     => $s->orderProduct,
             'name'     => $s->orderProduct?->product_details?->name ?? '—',
             'quantity' => $s->quantity,
             'unit'     => $s->orderProduct?->product_details?->unit_value ?? 'ks',
@@ -49,6 +50,7 @@
     $remainingItems = $order->orderProducts->map(function ($item) {
         $remaining = max(0, $item->quantity - ($item->storno ?? 0) - $item->stockSum);
         return $remaining > 0 ? [
+            'item'      => $item,
             'name'      => $item->product_details?->name ?? '—',
             'remaining' => $remaining,
             'unit'      => $item->product_details->unit_value ?? 'ks',
@@ -99,7 +101,7 @@
                 <tbody>
                     @foreach($sentItems as $item)
                     <tr>
-                        <td>{{ $item['name'] }}</td>
+                        <td>@if($item['item'])<x-email.order-item :item="$item['item']" />@else{{ $item['name'] }}@endif</td>
                         <td style="text-align:right">{{ $item['quantity'] }} {{ $item['unit'] }}</td>
                     </tr>
                     @endforeach
@@ -141,7 +143,7 @@
                 <tbody>
                     @foreach($remainingItems as $item)
                     <tr>
-                        <td>{{ $item['name'] }}</td>
+                        <td>@if($item['item'])<x-email.order-item :item="$item['item']" />@else{{ $item['name'] }}@endif</td>
                         <td style="text-align:right">{{ $item['remaining'] }} {{ $item['unit'] }}</td>
                     </tr>
                     @endforeach
