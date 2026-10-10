@@ -5,7 +5,7 @@ import gabrielImage from "../../assets/images/gabriel.jpg";
 
 <template>
     <section class="mb-6 bg-slate-200 px-3">
-        <div class="container mx-auto border-x border-b border-slate-300 bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto border-x border-b border-slate-300 bg-white shadow-sm">
             <div class="grid items-center gap-6 px-3 py-6 md:px-6 lg:grid-cols-12">
                 <div class="lg:col-span-8">
                     <img

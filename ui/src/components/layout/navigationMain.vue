@@ -12,6 +12,7 @@ import useNavigation from "../../store/StoreNavigation";
 import { hasSessionHint } from "../../authSession";
 import mainNavigationDropdown from "./navigationMainDropdown.vue";
 import NavKosikLink from "../checkout/NavKosikLink.vue";
+import NotificationBell from "./NotificationBell.vue";
 import badge from "../plugins/badge.vue";
 import { APP_NAME, Page } from "../../constants";
 import useOrder from "../../store/StoreOrders";
@@ -64,7 +65,7 @@ onMounted(() => {
 
 <template>
       <nav class="bg-gray-300 border-b border-gray-100">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-7">
                   <div class="flex justify-between h-16">
                         <div class="flex">
                               <div class="shrink-0 flex items-center">
@@ -90,6 +91,8 @@ onMounted(() => {
                         </div>
 
                         <div class="flex items-center gap-1 sm:ml-6">
+                              <NotificationBell />
+
                               <main-navigation-dropdown />
 
                               <NavKosikLink />

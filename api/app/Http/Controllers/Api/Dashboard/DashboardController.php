@@ -15,4 +15,11 @@ class DashboardController extends Controller
 
         return response()->json(['data' => $dashboard->handle(request()->user())]);
     }
+
+    public function notifications(DashboardService $dashboard)
+    {
+        Gate::authorize('viewAny', Order::class);
+
+        return response()->json(['data' => $dashboard->notifications(request()->user())]);
+    }
 }

@@ -16,7 +16,7 @@ const playVideo = ref(false);
 
 <template>
   <div class="w-full bg-gray-800 text-gray-300 pt-2">
-    <div class="md:flex justify-between container mx-auto max-w-6xl">
+    <div class="md:flex justify-between max-w-7xl mx-auto">
       <div class="m-4 w-auto md:w-[356px] md:shrink-0">
         <h3 class="font-semibold text-lg">Video o nás</h3>
         <!-- Prehrávač sa načíta až po kliknutí, inak Vimeo spomaľuje každú stránku. -->

@@ -18,7 +18,7 @@ Sekcia **Emailing** je dostupná administrátorom na `/admin/emailing`.
 
 ### Automatizácia po objednávke
 
-V editore kampane vyberte **Spôsob spustenia → Po vytvorení objednávky**, nastavte oneskorenie v hodinách (predvolene 24), pripravte obsah a potvrďte aktiváciu. Existujúce objednávky sa spätne nespracujú. Každá nová objednávka, vrátane ručne vytvorenej alebo importovanej cez model objednávky, naplánuje jednu ponuku pre zodpovedajúci aktívny kontakt v adresári. Objednávka sama nepridáva kontakt ani neobnovuje odhlásenie. Viac objednávok jedného kontaktu znamená viac ponúk; viac aktívnych automatizácií sa spúšťa nezávisle.
+V editore kampane vyberte **Spôsob spustenia → Po vytvorení objednávky**, nastavte oneskorenie v hodinách alebo dňoch (predvolene 24 hodín; voľba **Žiadne oneskorenie** odošle ponuku pri najbližšom behu plánovača), pripravte obsah a potvrďte aktiváciu. Existujúce objednávky sa spätne nespracujú. Každá nová objednávka, vrátane ručne vytvorenej alebo importovanej cez model objednávky, naplánuje jednu ponuku pre zodpovedajúci aktívny kontakt v adresári. Objednávka sama nepridáva kontakt ani neobnovuje odhlásenie. Viac objednávok jedného kontaktu znamená viac ponúk; viac aktívnych automatizácií sa spúšťa nezávisle.
 
 Čas sa počíta od vytvorenia objednávky, nie od doručenia potvrdenia. Správa sa odošle najskôr po uplynutí oneskorenia pri najbližšom behu plánovača v rámci spoločného limitu. Záznam uvádza číslo objednávky a plánovaný čas. Automatizácia zostáva aktívna aj po vyprázdnení fronty. Zastavenie zruší čakajúce ponuky aj prijímanie nových udalostí; pre zmenu obsahu alebo opätovné spustenie vytvorte kópiu.
 

@@ -37,7 +37,7 @@ const showHeaderContactStrip = computed(() => ['public.index', 'public.contactUs
       <NavBarBottom v-if="showAnnouncements" />
 
 
-      <div class="container mx-auto bg-slate-100 min-h-screen relative">
+      <div class="max-w-7xl mx-auto bg-slate-100 min-h-screen relative">
         <MainBar />
 
 

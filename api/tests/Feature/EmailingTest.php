@@ -253,7 +253,20 @@ class EmailingTest extends TestCase
         $this->assertDatabaseHas('mailing_deliveries', ['event_order_id' => $second->id, 'status' => 'skipped']);
         \App\Models\Order::create(['customer_id' => $customer->id]);
         $this->assertDatabaseCount('mailing_deliveries', 2);
-        $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'order_created', 'delay_hours' => 0])->assertUnprocessable();
+        $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'order_created', 'delay_hours' => -1])->assertUnprocessable();
+    }
+
+    public function test_order_trigger_without_delay_sends_on_next_batch(): void
+    {
+        $this->admin();
+        $this->contact();
+        $customer = \App\Models\Customer::create(['company' => 'Buyer', 'email' => 'customer@example.test', 'street' => 'Test 1', 'postcode' => '81101', 'city' => 'Bratislava']);
+        $id = $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'order_created', 'delay_hours' => 0])->assertOk()->assertJsonPath('delay_hours', 0)->json('id');
+        $this->postJson("/api/emailing/campaigns/$id/queue")->assertOk();
+        $order = \App\Models\Order::create(['customer_id' => $customer->id]);
+        Mail::shouldReceive('html')->once();
+        $this->assertSame(1, app(EmailingService::class)->runBatch());
+        $this->assertDatabaseHas('mailing_deliveries', ['event_order_id' => $order->id, 'status' => 'sent']);
     }
 
     public function test_admin_authorization_and_validation(): void

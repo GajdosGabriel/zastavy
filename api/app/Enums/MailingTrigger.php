@@ -39,8 +39,9 @@ enum MailingTrigger: string
     /** Najdlhšie povolené oneskorenie (365 dní). */
     public const MAX_DELAY_HOURS = 8760;
 
-    /** Rýchle voľby oneskorenia v hodinách => popis; zadať sa dá aj vlastná hodnota. Každý trigger je vždy oneskorený. */
+    /** Rýchle voľby oneskorenia v hodinách => popis; zadať sa dá aj vlastná hodnota. 0 = odoslať pri najbližšom behu plánovača. */
     public const DELAYS = [
+        0 => 'Žiadne oneskorenie',
         1 => '1 hodina',
         6 => '6 hodín',
         24 => '1 deň',

@@ -15,7 +15,7 @@ onMounted(() => {
 
 <template>
     <section v-if="getActiveBottomAnnouncements.length" class="bg-slate-200 px-3 pb-3">
-        <div class="container mx-auto">
+        <div class="max-w-7xl mx-auto">
             <div
                 v-for="announcement in getActiveBottomAnnouncements"
                 :key="announcement.id"

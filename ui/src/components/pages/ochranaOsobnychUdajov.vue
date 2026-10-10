@@ -7,7 +7,7 @@ import BaseLayout from '../layout/BaseLayout.vue';
         <template #main>
 
             <div class="col-span-12">
-                <div class="container mx-auto border-x border-b border-slate-300 bg-white shadow-sm">
+                <div class="max-w-7xl mx-auto border-x border-b border-slate-300 bg-white shadow-sm">
                     <div class="grid items-center gap-5 px-3 py-4 md:grid-cols-12 md:px-6">
                         <div class="md:col-span-8">
                             <img

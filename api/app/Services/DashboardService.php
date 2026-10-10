@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Filters\OrderFilter;
+use App\Models\OrderProduction;
+use App\Models\SalesQuote;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -77,6 +79,44 @@ class DashboardService
                 ->where('orders.created_at', '<', now()->subDays(7)->startOfDay())
                 ->count(),
         ];
+    }
+
+    /**
+     * Počty pre zvonček v hlavnej navigácii. Ponuky a výroba sú len pre obsluhu
+     * (rovnaká podmienka ako SalesAccess::staff), inak ostávajú null.
+     */
+    public function notifications(User $user): array
+    {
+        $count = fn (array $filters) => $this->base($user, $filters)->count();
+        $sales = $user->isStaff() && $user->can('orders.create') && $user->can('orders.viewAny');
+
+        return [
+            'unopened'     => $count(['isOpened' => true]),
+            'not_notified' => $count(['isNotificated' => true]),
+            'overdue'      => $this->open($this->base($user))
+                ->where('orders.created_at', '<', now()->subDays(7)->startOfDay())
+                ->count(),
+            'quotes_requested'   => $sales ? SalesQuote::where('status', 'requested')->count() : null,
+            'production_overdue' => $sales ? $this->overdueProduction($user) : null,
+        ];
+    }
+
+    /** Rozsah viditeľnosti zodpovedá ProductionController::index. */
+    private function overdueProduction(User $user): int
+    {
+        return OrderProduction::where('status', '!=', 'completed')
+            ->where(fn ($q) => $q->whereDate('production_due_at', '<', today())->orWhereDate('delivery_due_at', '<', today()))
+            ->whereHas('order', function ($q) use ($user) {
+                if (! $user->hasRole('super-admin')) {
+                    $q->where(function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                        if ($user->customer_id) {
+                            $q->orWhere('customer_id', $user->customer_id);
+                        }
+                    });
+                }
+            })
+            ->count();
     }
 
     private function sales(User $user): array

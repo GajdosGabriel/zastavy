@@ -109,6 +109,7 @@ Route::post('/coupons/validate', [CouponController::class, 'validate'])
 
 Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/dashboard/notifications', [DashboardController::class, 'notifications'])->name('dashboard.notifications');
     Route::get('/orders/statistics', [OrderController::class, 'statistics'])->name('orders.statistics');
 
     Route::post('orders/{order}/shippings/preview', [OrderShippingController::class, 'preview']);

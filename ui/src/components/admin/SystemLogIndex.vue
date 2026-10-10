@@ -108,7 +108,7 @@ onMounted(() => { document.title = 'Denník udalostí'; load(); });
 <template>
       <BaseLayout>
             <template #main>
-                  <section class="col-span-12 space-y-5 px-4 pb-10 sm:px-7">
+                  <section class="col-span-12 space-y-5 px-4 pb-10 pt-7 sm:px-7">
                         <div>
                               <h1 class="text-2xl font-semibold text-slate-900">Denník udalostí</h1>
                               <p class="text-sm text-slate-600">

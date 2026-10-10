@@ -6,6 +6,7 @@ use App\Enums\ModelStatus;
 use App\Enums\OrderStatus;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\OrderProduction;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -105,6 +106,21 @@ class DashboardTest extends TestCase
         // Chýba 5 + 3 + 1 ks z otvorených objednávok.
         $response->assertJsonPath('data.missing_products.0.remaining_quantity', 9)
             ->assertJsonPath('data.missing_products.0.order_count', 3);
+    }
+
+    public function test_notifications_count_what_needs_attention(): void
+    {
+        $this->makeOrder(['isOpened' => 0], 5);
+        $old = $this->makeOrder([], 1);
+        $old->forceFill(['created_at' => now()->subDays(10)])->save();
+        OrderProduction::create(['order_id' => $old->id, 'status' => 'ready', 'production_due_at' => now()->subDay()]);
+        OrderProduction::create(['order_id' => $this->makeOrder([], 1)->id, 'status' => 'completed', 'production_due_at' => now()->subDay()]);
+
+        $this->getJson('/api/dashboard/notifications')->assertOk()
+            ->assertJsonPath('data.unopened', 1)
+            ->assertJsonPath('data.overdue', 1)
+            ->assertJsonPath('data.production_overdue', 1)
+            ->assertJsonPath('data.quotes_requested', 0);
     }
 
     public function test_dashboard_requires_dashboard_access(): void

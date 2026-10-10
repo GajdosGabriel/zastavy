@@ -115,7 +115,6 @@ const queueTiles = [
 ];
 
 const queue = computed(() => data.value?.queue || {});
-const allClear = computed(() => data.value && Number(queue.value.open || 0) === 0 && Number(queue.value.unopened || 0) === 0);
 
 // ── Tržby ────────────────────────────────────────────────────
 const salesCards = computed(() => {
@@ -196,27 +195,14 @@ const adminLinks = computed(() => [
 <template>
       <BaseLayout>
             <template #main>
-<router-link v-if="canCreateOrder && getUser.roles?.some(role => ['super-admin','admin','manager','sales'].includes(role))" to="/predaj" class="col-span-12 rounded bg-blue-50 text-blue-800 p-4 font-semibold">Ponuky a plán výroby →</router-link>
-                  <section class="col-span-12 space-y-6 px-4 pb-10 sm:px-7">
+                  <section class="col-span-12 space-y-6 px-4 pb-10 pt-7 sm:px-7">
 
                         <!-- Hlavička -->
                         <header class="flex flex-wrap items-end justify-between gap-4">
-                              <div>
-                                    <p class="text-sm text-slate-500">{{ todayLabel }}</p>
-                                    <h1 class="mt-1 text-3xl font-semibold text-slate-900">
-                                          {{ greeting }}<template v-if="getUser?.firstName">, {{ getUser.firstName }}</template>
-                                    </h1>
-                                    <p v-if="data" class="mt-1 text-slate-600">
-                                          <template v-if="allClear">Všetko je vybavené. Pekná práca! 🎉</template>
-                                          <template v-else>
-                                                Otvorených objednávok: <strong class="text-slate-900">{{ number(queue.open) }}</strong>
-                                                <template v-if="queue.overdue">
-                                                      · <span class="font-semibold text-red-700">{{ number(queue.overdue) }} čaká viac ako týždeň</span>
-                                                </template>
-                                          </template>
-                                    </p>
-                              </div>
-                              <div class="flex items-center gap-3">
+                              <h1 class="text-3xl font-semibold text-slate-900">
+                                    {{ greeting }}<template v-if="getUser?.firstName">, {{ getUser.firstName }}</template>
+                              </h1>
+                              <div class="flex flex-wrap items-center gap-3">
                                     <button type="button"
                                           class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 shadow-sm transition hover:bg-slate-50"
                                           :disabled="isLoading" @click="fetchDashboard">
@@ -236,7 +222,10 @@ const adminLinks = computed(() => [
 
                         <!-- Čo treba riešiť -->
                         <div>
-                              <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Čo treba riešiť</h2>
+                              <div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Čo treba riešiť</h2>
+                                    <p class="text-sm text-slate-500">{{ todayLabel }}</p>
+                              </div>
                               <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
                                     <router-link v-for="tile in queueTiles" :key="tile.key" :to="ordersLink(tile.query)"
                                           class="group relative rounded-lg border border-l-4 border-slate-200 bg-white p-4 shadow-sm ring-2 ring-transparent transition hover:-translate-y-0.5 hover:shadow-md"
@@ -255,7 +244,7 @@ const adminLinks = computed(() => [
                                     </router-link>
                               </div>
                               <p class="mt-2 text-xs text-slate-500">
-                                    Karty sa môžu prekrývať – tá istá objednávka môže byť napríklad aj „Čakajú na expedíciu“, aj „Pripravené na odoslanie“. Počet otvorených objednávok je preto menší než súčet kariet.
+                                    Karty sa môžu prekrývať – tá istá objednávka môže byť napríklad aj „Čakajú na expedíciu“, aj „Pripravené na odoslanie“.
                               </p>
                         </div>
 

@@ -62,7 +62,7 @@ class EmailingController extends Controller
     {
         $data = $this->content($r) + $r->validate([
             'trigger_event' => ['nullable', Rule::in(MailingTrigger::values())],
-            'delay_hours' => ['required_with:trigger_event', 'integer', 'min:1', 'max:'.MailingTrigger::MAX_DELAY_HOURS],
+            'delay_hours' => ['required_with:trigger_event', 'integer', 'min:0', 'max:'.MailingTrigger::MAX_DELAY_HOURS],
             'track_clicks' => 'sometimes|boolean', 'track_opens' => 'sometimes|boolean',
         ]) + ['trigger_event' => null, 'delay_hours' => 24, 'track_clicks' => false, 'track_opens' => false];
         $id = DB::transaction(function () use ($r, $id, $data) {
