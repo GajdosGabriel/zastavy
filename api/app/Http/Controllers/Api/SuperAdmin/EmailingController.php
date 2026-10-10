@@ -62,7 +62,7 @@ class EmailingController extends Controller
     {
         $data = $this->content($r) + $r->validate([
             'trigger_event' => ['nullable', Rule::in(MailingTrigger::values())],
-            'delay_hours' => ['required_with:trigger_event', Rule::in(array_keys(MailingTrigger::DELAYS))],
+            'delay_hours' => ['required_with:trigger_event', 'integer', 'min:1', 'max:'.MailingTrigger::MAX_DELAY_HOURS],
             'track_clicks' => 'sometimes|boolean', 'track_opens' => 'sometimes|boolean',
         ]) + ['trigger_event' => null, 'delay_hours' => 24, 'track_clicks' => false, 'track_opens' => false];
         $id = DB::transaction(function () use ($r, $id, $data) {
@@ -81,11 +81,16 @@ class EmailingController extends Controller
         return DB::table('mailing_campaigns')->find($id);
     }
 
-    public function template(Request $r)
+    public function template(Request $r, ?int $id = null)
     {
         $data = $this->content($r);
         unset($data['coupon_id']);
-        $id = DB::table('mailing_templates')->insertGetId($data + ['created_at' => now(), 'updated_at' => now()]);
+        if ($id) {
+            abort_unless(DB::table('mailing_templates')->where('id', $id)->exists(), 404);
+            DB::table('mailing_templates')->where('id', $id)->update($data + ['updated_at' => now()]);
+        } else {
+            $id = DB::table('mailing_templates')->insertGetId($data + ['created_at' => now(), 'updated_at' => now()]);
+        }
 
         return DB::table('mailing_templates')->find($id);
     }
@@ -144,6 +149,22 @@ class EmailingController extends Controller
             abort_unless($campaign->status === 'queued', 422, 'Kampaň už nie je vo fronte.');
             DB::table('mailing_campaigns')->where('id', $id)->update(['status' => 'cancelled', 'updated_at' => now()]);
             DB::table('mailing_deliveries')->where('campaign_id', $id)->where('status', 'pending')->update(['status' => 'skipped', 'updated_at' => now()]);
+        });
+
+        return response()->noContent();
+    }
+
+    /** Zmaže kampaň aj so záznamami odosielania; aktívnu treba najprv zastaviť. */
+    public function destroy(int $id)
+    {
+        DB::transaction(function () use ($id) {
+            $campaign = DB::table('mailing_campaigns')->where('id', $id)->lockForUpdate()->first();
+            abort_unless($campaign, 404);
+            abort_if($campaign->status === 'queued', 422, 'Aktívnu kampaň najprv zastavte.');
+            $deliveries = DB::table('mailing_deliveries')->where('campaign_id', $id);
+            DB::table('mailing_links')->whereIn('delivery_id', (clone $deliveries)->select('id'))->delete();
+            $deliveries->delete();
+            DB::table('mailing_campaigns')->where('id', $id)->delete();
         });
 
         return response()->noContent();

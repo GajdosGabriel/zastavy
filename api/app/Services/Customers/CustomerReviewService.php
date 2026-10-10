@@ -488,6 +488,48 @@ class CustomerReviewService
     }
 
     /**
+     * Doplní chýbajúce DIČ / IČ DPH z registra hneď, bez čakania na beh kontroly.
+     *
+     * Expedícia potrebuje DIČ vo chvíli, keď objednávku otvorí — odklad
+     * post-kontroly je pre ňu neskoro. Platia tie isté pravidlá ako v behu:
+     * len prázdne polia, len keď je `registry_tax_ids` povolené.
+     *
+     * @return array<int, array<string, mixed>>  čo sa doplnilo
+     */
+    public function fillMissingTaxIds(Customer $customer): array
+    {
+        if ($this->rules->isBlank($this->rules->raw($customer, 'ico'))
+            || ! $this->rules->isBlank($this->rules->raw($customer, 'dic'))) {
+            return [];
+        }
+
+        $changes = $this->fillTaxIdsFromRegistry(
+            $customer,
+            $this->registryData($customer),
+            (array) config('customer_review.autofix', []),
+        );
+
+        if ($changes === []) {
+            return [];
+        }
+
+        $this->persist($customer);
+
+        // Hotový posudok dostane zmenu do `applied`, aby sa dala v detaile
+        // zákazníka vrátiť. Čakajúci si ju pri behu už nájde vyplnenú.
+        $review = $this->reviewFor($customer);
+
+        if ($review !== null && $review->reviewed_at !== null) {
+            $review->forceFill([
+                'applied' => array_merge((array) ($review->applied ?? []), $changes),
+                'fingerprint' => $this->rules->fingerprint($customer),
+            ])->save();
+        }
+
+        return $changes;
+    }
+
+    /**
      * Zápis do stĺpca s obídením castov.
      *
      * Casty na `customers` sú písané pre formulár: PhoneFormater z null spraví

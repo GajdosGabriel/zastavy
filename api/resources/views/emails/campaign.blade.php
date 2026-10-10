@@ -9,7 +9,7 @@
 <p style="color:#628078;font-size:13px">PONUKA PRE NAŠICH ZÁKAZNÍKOV</p>
 <h1 style="font-size:30px;line-height:1.2">{{ $campaign->heading }}</h1>
 @if($contact && $contact->name)<p>Dobrý deň, {{ $contact->name }},</p>@endif
-<div style="font-size:16px;line-height:1.8;white-space:pre-line">{{ $campaign->body }}</div>
+<div style="font-size:16px;line-height:1.8">{!! \App\Services\EmailingService::bodyHtml($campaign->body, 'margin:0 0 16px') !!}</div>
 @if($campaign->coupon_code ?? null)<div style="margin:24px 0;padding:22px;background:#ecf8f1;border:1px dashed #57a389;text-align:center">Váš zľavový kód<br><strong style="font-size:26px;letter-spacing:3px">{{ $campaign->coupon_code }}</strong><br><small>Platnosť a podmienky kupóna sa overia v košíku.</small></div>@endif
 @if($campaign->button_url)<p style="margin-top:30px"><a href="{{ $campaign->button_url }}" style="display:inline-block;padding:15px 24px;background:#117866;color:white;border-radius:8px;text-decoration:none">{{ $campaign->button_label ?: 'Pozrieť ponuku' }}</a></p>@endif
 </td></tr>

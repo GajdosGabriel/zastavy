@@ -20,6 +20,8 @@ class OrderResource extends JsonResource
     {
         $user = $request->user();
         $status = OrderStatus::fromOrder($this->resource);
+        $customer = (new CustomerResource($this->customer))->resolve($request);
+        $billing = $this->billingSnapshot();
 
         return [
             'id'                => $this->id,
@@ -33,7 +35,14 @@ class OrderResource extends JsonResource
             'phone' => $this->phone,
             'created_at' => $this->created_at->format('d.m.Y H:i:s'),
             'created_at_human' => Carbon::parse($this->created_at)->diffForhumans(),
-            'customer' => array_replace((new CustomerResource($this->customer))->resolve($request), $this->billingSnapshot()),
+            'customer' => array_replace($customer, $billing),
+
+            // Tie isté údaje oddelene: `billing` je odtlačok z času objednávky,
+            // `customer_current` dnešný riadok z `customers`. Post-kontrola
+            // dopĺňa DIČ z registra len zákazníkovi — v zlúčenom `customer`
+            // ho prázdny odtlačok prekryje a expedícia ho potom hľadá ručne.
+            'billing' => $billing,
+            'customer_current' => $customer,
             'snapshot_source' => $this->snapshot_source ?? 'legacy',
 
             // Doručovacia adresa objednávky. `is_custom = false` znamená, že sa

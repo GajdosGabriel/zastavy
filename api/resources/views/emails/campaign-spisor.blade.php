@@ -22,9 +22,7 @@
 <tr>
 <td style="padding: 30px 32px 12px; font-size: 16px; line-height: 1.7;">
 <p style="margin: 0 0 16px;">Dobrý deň@if($contact && $contact->name), {{ $contact->name }}@endif,</p>
-@foreach(preg_split("/\r?\n\s*\r?\n/", $campaign->body) as $paragraph)
-<p style="margin: 0 0 18px;">{!! nl2br(e($paragraph)) !!}</p>
-@endforeach
+{!! \App\Services\EmailingService::bodyHtml($campaign->body, 'margin: 0 0 18px;') !!}
 @if($campaign->coupon_code ?? null)<p style="padding:18px;background:#eff6ff;text-align:center">Váš zľavový kód: <strong>{{ $campaign->coupon_code }}</strong><br><small>Platnosť a podmienky kupóna sa overia v košíku.</small></p>@endif
 </td>
 </tr>

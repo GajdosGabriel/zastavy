@@ -51,6 +51,28 @@ class EmailingTest extends TestCase
         return $this->postJson('/api/emailing/campaigns', $this->content())->assertOk()->json('id');
     }
 
+    public function test_campaign_can_be_deleted_only_when_not_active(): void
+    {
+        $this->admin();
+        $this->contact();
+        $draft = $this->campaign();
+        $this->deleteJson("/api/emailing/campaigns/$draft")->assertNoContent();
+        $this->assertDatabaseMissing('mailing_campaigns', ['id' => $draft]);
+
+        $id = $this->campaign();
+        $this->postJson("/api/emailing/campaigns/$id/queue")->assertOk();
+        $delivery = DB::table('mailing_deliveries')->where('campaign_id', $id)->value('id');
+        DB::table('mailing_links')->insert(['delivery_id' => $delivery, 'token' => str_repeat('a', 64), 'url' => 'https://example.test', 'position' => 0, 'label' => 'Tlačidlo']);
+        $this->deleteJson("/api/emailing/campaigns/$id")->assertUnprocessable();
+        $this->postJson("/api/emailing/campaigns/$id/cancel")->assertNoContent();
+        $this->deleteJson("/api/emailing/campaigns/$id")->assertNoContent();
+        $this->assertDatabaseCount('mailing_campaigns', 0);
+        $this->assertDatabaseCount('mailing_deliveries', 0);
+        $this->assertDatabaseCount('mailing_links', 0);
+        $this->assertDatabaseCount('mailing_contacts', 1);
+        $this->deleteJson("/api/emailing/campaigns/$id")->assertNotFound();
+    }
+
     public function test_measurement_links_and_pixel_are_first_party_and_report_product_engagement(): void
     {
         $this->admin();
@@ -188,7 +210,8 @@ class EmailingTest extends TestCase
         $this->assertSame(2, DB::table('mailing_deliveries')->where('campaign_id', $shipped)->count());
         $this->assertSame(1, DB::table('mailing_deliveries')->where('campaign_id', $done)->count());
         $this->assertEquals(now()->addHours(48)->timestamp, \Illuminate\Support\Carbon::parse(DB::table('mailing_deliveries')->where('campaign_id', $shipped)->value('due_at'))->timestamp, '', 5);
-        $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'shipping_dispatched', 'delay_hours' => 5])->assertUnprocessable();
+        $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'shipping_dispatched', 'delay_hours' => 5])->assertOk()->assertJsonPath('delay_hours', 5);
+        $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'shipping_dispatched', 'delay_hours' => 8761])->assertUnprocessable();
         $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'unknown_event', 'delay_hours' => 24])->assertUnprocessable();
     }
 
@@ -398,8 +421,15 @@ class EmailingTest extends TestCase
         $this->postJson("/api/emailing/campaigns/$id/queue")->assertUnprocessable();
         Mail::shouldReceive('html')->never();
         $this->assertSame(0, app(EmailingService::class)->runBatch());
-        $this->postJson('/api/emailing/templates', $this->content())->assertOk();
-        $this->getJson('/api/emailing')->assertOk()->assertJsonCount(1, 'templates');
+        $template = $this->postJson('/api/emailing/templates', $this->content())->assertOk()->json('id');
+        $this->putJson("/api/emailing/templates/$template", array_replace($this->content(), ['heading' => 'Upravený nadpis']))->assertOk()->assertJsonPath('heading', 'Upravený nadpis');
+        $this->putJson('/api/emailing/templates/999999', $this->content())->assertNotFound();
+        $html = $this->postJson('/api/emailing/preview', array_replace($this->content(), ['body' => '<p onclick="x()">Ahoj <strong>svet</strong></p><script>alert(1)</script><a href="javascript:alert(1)">odkaz</a>']))->assertOk()->json('html');
+        $this->assertStringContainsString('<p style="margin:0 0 16px">Ahoj <strong>svet</strong></p>', $html);
+        $this->assertStringNotContainsString('<script', $html);
+        $this->assertStringNotContainsString('onclick', $html);
+        $this->assertStringNotContainsString('javascript:', $html);
+        $this->getJson('/api/emailing')->assertOk()->assertJsonCount(1, 'templates')->assertJsonPath('templates.0.heading', 'Upravený nadpis');
     }
 
     public function test_spisor_layout_survives_save_and_uses_personal_unsubscribe(): void

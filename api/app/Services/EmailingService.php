@@ -50,6 +50,21 @@ class EmailingService
         return (bool) config('emailing.dry_run');
     }
 
+    /**
+     * Telo ponuky pre e-mail. Text z HTML editora prejde bielou listinou značiek;
+     * staršie kampane a vstavané šablóny sú čistý text s odsekmi oddelenými prázdnym riadkom.
+     */
+    public static function bodyHtml(?string $body, string $paragraphStyle): string
+    {
+        $body = trim((string) $body);
+        $html = preg_match('/<(p|br|h2|h3|ul|ol|li|strong|b|em|i|u|a)\b/i', $body)
+            ? HtmlSanitizer::sanitize($body)
+            : collect(preg_split("/\r?\n\s*\r?\n/", $body))->map(fn ($p) => '<p>'.nl2br(e($p)).'</p>')->implode("\n");
+
+        // Sanitizer aj vetva vyššie vracajú <p> bez atribútov; e-mailoví klienti potrebujú štýl priamo v značke.
+        return str_replace('<p>', '<p style="'.$paragraphStyle.'">', $html);
+    }
+
     public function html(object $campaign, ?object $contact = null): string
     {
         $view = match ($campaign->layout ?? 'default') {

@@ -112,6 +112,9 @@ Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function 
     Route::get('/orders/statistics', [OrderController::class, 'statistics'])->name('orders.statistics');
 
     Route::post('orders/{order}/shippings/preview', [OrderShippingController::class, 'preview']);
+    Route::post('orders/{order}/customer-tax-ids', \App\Http\Controllers\Api\Dashboard\OrderCustomerTaxIdController::class)
+        ->middleware('throttle:30,1')
+        ->name('orders.customer-tax-ids');
     Route::apiResources([
         'orders' => OrderController::class,
         'orders.shippings' => OrderShippingController::class,
@@ -248,10 +251,12 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->prefix('emailing')-
     Route::post('/contacts/{id}/reactivate', 'reactivate')->whereNumber('id');
     Route::post('/bounces', 'bounce');
     Route::post('/templates', 'template');
+    Route::put('/templates/{id}', 'template')->whereNumber('id');
     Route::post('/preview', 'preview');
     Route::post('/test', 'test')->middleware('throttle:5,1');
     Route::post('/campaigns', 'save');
     Route::put('/campaigns/{id}', 'save')->whereNumber('id');
+    Route::delete('/campaigns/{id}', 'destroy')->whereNumber('id');
     Route::post('/campaigns/{id}/queue', 'queue')->whereNumber('id');
     Route::post('/campaigns/{id}/cancel', 'cancel')->whereNumber('id');
     Route::get('/campaigns/{id}/deliveries', 'deliveries')->whereNumber('id');
