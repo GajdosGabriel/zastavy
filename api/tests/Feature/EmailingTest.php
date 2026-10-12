@@ -209,7 +209,7 @@ class EmailingTest extends TestCase
         $service->trigger(\App\Enums\MailingTrigger::OrderCompleted, $order);
         $this->assertSame(2, DB::table('mailing_deliveries')->where('campaign_id', $shipped)->count());
         $this->assertSame(1, DB::table('mailing_deliveries')->where('campaign_id', $done)->count());
-        $this->assertEquals(now()->addHours(48)->timestamp, \Illuminate\Support\Carbon::parse(DB::table('mailing_deliveries')->where('campaign_id', $shipped)->value('due_at'))->timestamp, '', 5);
+        $this->assertEqualsWithDelta(now()->addHours(48)->timestamp, \Illuminate\Support\Carbon::parse(DB::table('mailing_deliveries')->where('campaign_id', $shipped)->value('due_at'))->timestamp, 5);
         $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'shipping_dispatched', 'delay_hours' => 5])->assertOk()->assertJsonPath('delay_hours', 5);
         $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'shipping_dispatched', 'delay_hours' => 8761])->assertUnprocessable();
         $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'unknown_event', 'delay_hours' => 24])->assertUnprocessable();

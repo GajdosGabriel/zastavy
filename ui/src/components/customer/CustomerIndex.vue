@@ -34,6 +34,8 @@ const sortByOrders = ref<boolean>(false);
 const iconStatus = ref<boolean>(false);
 
 watch(getQueryStringUrl, () => {
+    // Zmena filtra začína od prvej strany — stará ?page=N by mohla byť mimo rozsahu.
+    customersStore.resetUrl();
     fetchCustomers();
 });
 

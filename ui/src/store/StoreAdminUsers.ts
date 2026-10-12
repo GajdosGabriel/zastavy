@@ -61,7 +61,7 @@ export const useAdminUsers = defineStore('adminUsers', {
         async fetchUsers(): Promise<void> {
             try {
                 const paginator = usePaginator();
-                const response = await axiosInstance.get(this.url + useQuery().getQueryStringUrl);
+                const response = await axiosInstance.get(useQuery().urlWithQuery(this.url));
 
                 this.users = response.data.data;
                 this.statuses = response.data.meta?.statuses || this.statuses;

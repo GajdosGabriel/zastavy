@@ -108,7 +108,7 @@ export const useCustomers = defineStore("customers", {
 
             try {
                 const response = await axiosInstance.get<ApiResponse<Customer[]>>(
-                    this.url + q.getQueryStringUrl
+                    q.urlWithQuery(this.url)
                 );
 
                 this.customers = response.data.data;
@@ -322,6 +322,10 @@ export const useCustomers = defineStore("customers", {
         setPaginator(data: string): void {
             this.url = data;
             this.fetchCustomers();
+        },
+
+        resetUrl(): void {
+            this.url = PAGE_CUSTOMER.URL;
         },
 
         async clickToMark(val: string): Promise<void> {

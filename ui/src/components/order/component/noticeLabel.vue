@@ -17,6 +17,17 @@ const notices = computed(() => props.shipping?.notices ?? []);
 const emailNotice = computed(() => notices.value.find((notice) => notice.notice === (props.shipping?.is_preparing ? "preparation_email" : "email")) ?? null);
 const lastNotice = computed(() => notices.value.filter(n => props.shipping?.is_preparing || n.notice !== "preparation_email").at(-1) ?? null);
 
+const stateTitle = computed(() => {
+    const shipping = props.shipping;
+    const state = shipping.is_preparing
+        ? `DL #${shipping.id} vystavený ${shipping.created_at}, odoslanie ešte nebolo potvrdené`
+        : `DL #${shipping.id} odoslaný ${shipping.dispatched_at}`;
+    const mail = shipping.is_preparing ? "e-mail o príprave" : "e-mail o odoslaní";
+    return emailNotice.value
+        ? `${state} – ${mail} odoslaný ${emailNotice.value.created_at_human}`
+        : `${state} – ${mail} neodoslaný`;
+});
+
 const onClickShipping = () => {
     notifyCustomer.value = !emailNotice.value;
     showNoticeModal.value = true;
@@ -38,12 +49,10 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
 
         <!-- Ikona dodacieho listu + ID v title -->
         <button @click="onClickShipping"
-            :title="emailNotice
-                ? `DL #${shipping.id} – notifikácia odoslaná`
-                : (lastNotice ? `DL #${shipping.id} – ${shipping.is_preparing ? 'príprava' : 'odoslanie'} bez emailu` : `DL #${shipping.id}`)"
-            :class="emailNotice
-                ? 'text-green-700 hover:text-green-900'
-                : (lastNotice ? 'text-gray-500 hover:text-gray-700' : 'text-blue-700 hover:text-blue-900')"
+            :title="stateTitle"
+            :class="shipping.is_preparing
+                ? 'text-indigo-700 hover:text-indigo-900'
+                : (emailNotice ? 'text-green-700 hover:text-green-900' : 'text-gray-500 hover:text-gray-700')"
             class="flex cursor-pointer items-center gap-1">
             <!-- package with ribbon icon (tovar zabalený/expedovaný, prepravca ešte neprevzal) -->
             <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -54,18 +63,20 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
                 <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
                 <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
             </svg>
-            <span v-if="lastNotice" class="text-xs">{{ (emailNotice ?? lastNotice).created_at_human }}</span>
+            <!-- Stav dodacieho listu vždy slovom — samotný čas notifikácie vyzeral ako čas odoslania zásielky. -->
+            <span class="text-xs font-semibold">{{ shipping.is_preparing ? "Čaká na odoslanie" : "Odoslané" }}</span>
+            <span v-if="!shipping.is_preparing" class="text-xs">{{ shipping.dispatched_at }}</span>
         </button>
     </div>
 
     <Teleport to="body">
         <div v-if="showNoticeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <div class="w-full max-w-sm rounded bg-white p-5 shadow-lg">
-                <h3 class="mb-3 text-lg font-semibold text-gray-800">{{ shipping.is_preparing ? "Notifikácia prípravy v sklade" : "Notifikácia odoslania" }}</h3>
+                <h3 class="mb-3 text-lg font-semibold text-gray-800">{{ shipping.is_preparing ? "Notifikácia prípravy zásielky" : "Notifikácia odoslania" }}</h3>
 
                 <template v-if="emailNotice">
                     <p class="mb-5 text-sm text-gray-600">
-                        {{ shipping.is_preparing ? "Informácia o príprave v sklade" : "Informácia o odoslaní" }} už bola zákazníkovi odoslaná
+                        {{ shipping.is_preparing ? "Informácia o príprave zásielky" : "Informácia o odoslaní" }} už bola zákazníkovi odoslaná
                         <span class="font-semibold">{{ emailNotice.created_at_human }}</span>.
                     </p>
                     <div class="flex justify-end">
@@ -78,7 +89,7 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
 
                 <template v-else-if="lastNotice">
                     <p class="mb-5 text-sm text-gray-600">
-                        {{ shipping.is_preparing ? "Príprava bola zaznamenaná" : "Odoslanie bolo zaznamenané" }} <span class="font-semibold">{{ lastNotice.created_at_human }}</span>
+                        {{ shipping.is_preparing ? "Príprava zásielky bola zaznamenaná" : "Odoslanie bolo zaznamenané" }} <span class="font-semibold">{{ lastNotice.created_at_human }}</span>
                         bez emailu zákazníkovi.
                     </p>
                     <div class="flex justify-end gap-2">
@@ -97,7 +108,7 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
 
                 <template v-else>
                     <p class="mb-4 text-sm text-gray-600">
-                        {{ shipping.is_preparing ? "Objednávka sa pripravuje v sklade. Odoslať zákazníkovi e-mail o príprave?" : "Zásielka bola odoslaná. Odoslať zákazníkovi potvrdenie?" }}
+                        {{ shipping.is_preparing ? "Dodací list je vystavený, zásielka čaká na odoslanie. Odoslať zákazníkovi e-mail o príprave zásielky?" : "Zásielka bola odoslaná. Odoslať zákazníkovi potvrdenie?" }}
                     </p>
                     <label class="mb-5 flex items-center gap-2 text-sm text-gray-700">
                         <input type="checkbox" v-model="notifyCustomer" class="rounded" />

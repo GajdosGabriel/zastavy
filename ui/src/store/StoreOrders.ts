@@ -61,7 +61,7 @@ export const useOrders = defineStore("orders", {
             this.isLoading = true;
 
             try {
-                const response = await axiosInstance.get(this.url + q.stringForUrl);
+                const response = await axiosInstance.get(q.urlWithQuery(this.url));
 
                 if (requestId !== ordersRequestId) {
                     return;
@@ -256,6 +256,7 @@ export const useOrders = defineStore("orders", {
                 this.statement.markSelected = true;
             }
 
+            this.resetUrl();
             this.fetchOrders();
         },
     },

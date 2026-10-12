@@ -164,7 +164,7 @@ export const useProducts = defineStore('products', () => {
         try {
             const q = useQuery();
             const paginator = usePaginator();
-            const response = await axiosInstance.get(url.value + q.stringForUrl);
+            const response = await axiosInstance.get(q.urlWithQuery(url.value));
             products.value = await response.data.data;
             paginator.setPaginator(response.data.meta);
             paginator.setLinks(response.data.links);
@@ -355,6 +355,10 @@ export const useProducts = defineStore('products', () => {
         fetchProducts();
     };
 
+    const resetUrl = (): void => {
+        url.value = PAGE_PRODUCT.URL;
+    };
+
     const setProduct = (data: Product): void => {
         product.value = data;
     };
@@ -388,6 +392,7 @@ export const useProducts = defineStore('products', () => {
         setPaginator,
         // Alias pre stránkovanie v zozname produktov.
         setUrl: setPaginator,
+        resetUrl,
         setProduct,
         resetProduct,
     };

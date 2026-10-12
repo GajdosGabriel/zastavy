@@ -9,7 +9,7 @@ import FilterSearch from "../plugins/filterSearch.vue";
 import FilterLabel from "../plugins/filterLabel.vue";
 import { resetFilter } from "../../models/filterLabels";
 
-const { fetchProducts } = useProducts();
+const { fetchProducts, resetUrl } = useProducts();
 const categoriesStore = useCategories();
 const { categories } = storeToRefs(categoriesStore);
 const { fetchCategories } = categoriesStore;
@@ -51,6 +51,8 @@ const onClearQuery = () => {
 
 // ── Watchers ─────────────────────────────────────────────────
 watch(getQuery, () => {
+    // Zmena filtra začína od prvej strany — stará ?page=N by mohla byť mimo rozsahu.
+    resetUrl();
     fetchProducts();
 }, { deep: true });
 

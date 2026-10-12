@@ -40,6 +40,25 @@ export const useQuery = defineStore("query", {
                 this.query.length > 0 ? `?${this.query.join("&")}` : "";
         },
 
+        /**
+         * Pripojí filtre k URL zoznamu. URL z paginátora už nesie `?page=N`
+         * (prípadne aj staré filtre), takže obyčajné zlepenie by dalo druhý `?`
+         * a server by filter vôbec nevidel.
+         */
+        urlWithQuery(url: string): string {
+            if (this.query.length === 0) {
+                return url;
+            }
+
+            const [base, existing = ""] = url.split("?");
+            const keys = new Set(this.query.map(normalizeQueryKey));
+            const kept = existing
+                .split("&")
+                .filter((item) => item && !keys.has(normalizeQueryKey(item)));
+
+            return `${base}?${[...kept, ...this.query].join("&")}`;
+        },
+
         setQuery(data: QueryInput): void {
             const query = normalizeQuery(data);
             const key = normalizeQueryKey(data);

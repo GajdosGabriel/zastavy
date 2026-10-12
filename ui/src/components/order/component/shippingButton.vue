@@ -58,12 +58,12 @@ const hasPendingShipping = computed(() => (props.order.shippings ?? []).some(shi
             {{ order.shippintPercentageCalculator }}
         </span>
 
-        <!-- Tlačidlo Vystaviť dodací list / Expedovať -->
+        <!-- Tlačidlo Vystaviť dodací list / Potvrdiť odoslanie -->
         <router-link v-if="showShippingAction && order.permissions?.ship?.allowed && !order.isFinished && !order.isStorned"
             :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }"
             class="inline-flex min-w-24 items-center justify-center rounded px-3 py-1 text-xs font-semibold text-white transition"
             :class="hasPendingShipping ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-600 hover:bg-slate-700'">
-            {{ hasPendingShipping ? 'Expedovať' : 'Vystaviť dodací list' }}
+            {{ hasPendingShipping ? 'Potvrdiť odoslanie' : 'Vystaviť dodací list' }}
         </router-link>
 
         <span v-if="showPackStatus && order.isDeleted"

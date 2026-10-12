@@ -104,6 +104,8 @@ applyRouteQuery();
 
 // ── Watchers ─────────────────────────────────────────────────
 watch(getQuery, () => {
+    // Zmena filtra začína od prvej strany — stará ?page=N by mohla byť mimo rozsahu.
+    ordersStore.resetUrl();
     fetchOrders();
 
     if (getQuery.value.some((item) => item.startsWith('shippedAt='))) {

@@ -45,7 +45,7 @@ export const useHome = defineStore('home', {
             this.loadError = false;
             this.loading = true;
             await this.listRequests.run(
-                () => axiosInstance.get(this.url + q.stringForUrl),
+                () => axiosInstance.get(q.urlWithQuery(this.url)),
                 (response: { data: any }) => {
                     this.products = response.data.data;
                     paginator.setPaginator(response.data.meta);
