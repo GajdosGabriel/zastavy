@@ -135,7 +135,7 @@ export const useCheckouts = defineStore("checkouts", () => {
     const attachments = ref<File[]>([]);
     // Rozpísané fakturačné údaje obsluhy. Do localStorage sa jej údaje nezapisujú,
     // takže bez tohto by ich odchod z košíka („Pokračovať v nákupe") zahodil.
-    const customerDraft = ref<{ customer: Record<string, any>; isPrivatePerson: boolean } | null>(null);
+    const customerDraft = ref<{ customer: Record<string, any>; isPrivatePerson: boolean; fromEmail?: boolean } | null>(null);
 
     // Doručovacia adresa. Kým je `deliverToOtherAddress` vypnuté, tovar ide na
     // fakturačnú adresu a do requestu sa `delivery` vôbec nepridáva.

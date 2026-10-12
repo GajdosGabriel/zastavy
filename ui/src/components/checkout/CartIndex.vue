@@ -47,6 +47,14 @@ const isSuperAdmin = computed(() => Boolean(getUser.value?.roles?.includes("supe
 const notifyCustomer = ref(true);
 const showSubmitModal = ref(false);
 const emailImport = ref(null);
+// Zákazník doplnený z e-mailu bez rozpoznaných položiek: formulár sa musí
+// zobraziť aj pri prázdnom košíku, inak by doplnené údaje nebolo vidno.
+const customerFromEmail = ref(false);
+const showCheckout = computed(() => getCarts.value.length > 0 || customerFromEmail.value);
+const onEmailApplied = (customer) => {
+      isPrivatePerson.value = !customer.company;
+      customerFromEmail.value = true;
+};
 
 const parseStoredCustomer = () => {
       try {
@@ -90,13 +98,14 @@ onMounted(() => {
       if (customerDraft.value && Object.keys(customerDraft.value.customer).length) {
             setCustomer({ ...customerDraft.value.customer });
             isPrivatePerson.value = customerDraft.value.isPrivatePerson;
+            customerFromEmail.value = Boolean(customerDraft.value.fromEmail);
       } else if (getCarts.value.length) {
             setCustomer(parseStoredCustomer());
       }
 });
 
 onBeforeUnmount(() => {
-      customerDraft.value = { customer: { ...getCustomer.value }, isPrivatePerson: isPrivatePerson.value };
+      customerDraft.value = { customer: { ...getCustomer.value }, isPrivatePerson: isPrivatePerson.value, fromEmail: customerFromEmail.value };
 });
 
 const clickEmptyBasket = () => {
@@ -165,13 +174,13 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                 </div>
 
                 <CustomOrderItem v-if="isStaff" @add="checkoutsStore.submitCartToIndex($event)" />
-                <EmailOrderImport v-if="isSuperAdmin" ref="emailImport" @applied="isPrivatePerson = !$event.company" />
-                <div v-if="isSuperAdmin && !getCarts.length" class="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
+                <EmailOrderImport v-if="isSuperAdmin" ref="emailImport" @applied="onEmailApplied" />
+                <div v-if="isSuperAdmin && !showCheckout" class="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
                     <button type="button" class="text-sm font-semibold text-blue-800 underline" @click="emailImport?.open()">Doplniť z e-mailu pomocou AI</button>
                 </div>
                 <OrderPriceAdjustment v-if="isStaff && getCarts.length" v-model="priceAdjustment" :subtotal="getCheckout.grandTotal" :coupon="checkoutOptions.discountAmount" />
                 <!-- Prázdny košík -->
-                <div v-if="!getCarts.length" class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center shadow-sm">
+                <div v-if="!showCheckout" class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-4 h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
@@ -202,8 +211,12 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                             </template>
                         </div>
 
+                        <p v-if="!getCarts.length" class="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center text-sm text-gray-500">
+                            Košík je zatiaľ prázdny — pridajte položky objednávky.
+                        </p>
+
                         <!-- Tabuľka produktov -->
-                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <div v-else class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
@@ -377,7 +390,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                     <aside class="space-y-4">
                         <div class="sticky top-4 space-y-4">
                             <!-- Zoznam produktov v súhrne -->
-                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <div v-if="getCarts.length" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                                 <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
                                     <h2 class="text-sm font-semibold text-gray-700">
                                         Produkty ({{ getCarts.length }})
