@@ -4,6 +4,8 @@ namespace App\Notifications;
 
 use App\Models\Order;
 use App\Models\Shipping;
+use App\Models\User;
+use App\Support\OrderThread;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -50,16 +52,14 @@ class OrderExpedition extends Notification implements ShouldQueue
         if ($this->shipping?->prepared_items) {
             return (new MailMessage)->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
                 ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-                ->subject('Potvrdenie odoslania objednávky č. '.$this->order->serial_number)
+                ->subject(OrderThread::replySubject($this->order))
+                ->withSymfonyMessage(fn ($m) => OrderThread::reply($m, $this->order, $notifiable instanceof User))
                 ->view('emails.orderDispatched', ['order' => $this->order, 'shipping' => $this->shipping]);
         }
-        $isPartial = !$this->order->isFinished();
-
         return (new MailMessage)
             ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-            ->subject($isPartial
-                ? 'Čiastočná expedícia objednávky č. ' . $this->order->serial_number
-                : 'Vaša objednávka bola odoslaná – č. ' . $this->order->serial_number)
+            ->subject(OrderThread::replySubject($this->order))
+            ->withSymfonyMessage(fn ($m) => OrderThread::reply($m, $this->order, $notifiable instanceof User))
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderExpedition', [
                 'order'    => $this->order,

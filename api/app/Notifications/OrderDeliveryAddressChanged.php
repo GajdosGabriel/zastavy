@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Models\Order;
+use App\Models\User;
+use App\Support\OrderThread;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -33,7 +35,8 @@ class OrderDeliveryAddressChanged extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-            ->subject('Zmena adresy doručenia | '.($this->order->serial_number ?: $this->order->billing?->company))
+            ->subject(OrderThread::replySubject($this->order))
+            ->withSymfonyMessage(fn ($m) => OrderThread::reply($m, $this->order, $notifiable instanceof User))
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderDeliveryAddressChanged', [
                 'order' => $this->order,

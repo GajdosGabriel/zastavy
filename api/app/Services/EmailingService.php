@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\MailingTrigger;
+use App\Support\OrderThread;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
@@ -23,19 +24,30 @@ class EmailingService
     {
         if (! \Illuminate\Support\Facades\Schema::hasColumn('mailing_deliveries', 'event_shipping_id')) return;
         $email = mb_strtolower(trim($order->routeNotificationForMail() ?? ''));
+        if ($email === '') return;
         $contact = DB::table('mailing_contacts')->where('email', $email)->whereNull('unsubscribed_at')->whereNull('bounced_at')->first();
-        if (! $contact) return;
         $at ??= now();
-        DB::transaction(function () use ($event, $order, $shipping, $contact, $at) {
+        DB::transaction(function () use ($event, $order, $shipping, $contact, $email, $at) {
             $campaigns = DB::table('mailing_campaigns')->where('trigger_event', $event->value)
                 ->where('status', 'queued')->orderBy('id')->lockForUpdate()->get();
             foreach ($campaigns as $campaign) {
-                DB::table('mailing_deliveries')->insertOrIgnore([
-                    'campaign_id' => $campaign->id, 'contact_id' => $contact->id,
+                $row = [
+                    'campaign_id' => $campaign->id,
                     'event_order_id' => $order->id, 'event_shipping_id' => $shipping?->id ?? 0,
                     'due_at' => $at->copy()->addHours($campaign->delay_hours),
                     'status' => 'pending', 'created_at' => now(), 'updated_at' => now(),
-                ]);
+                ];
+                if ($campaign->reply_to_order ?? false) {
+                    // Servisná odpoveď ide každému zákazníkovi objednávky, aj mimo adresára príjemcov.
+                    // Unikátny index s NULL kontaktom nededuplikuje; zámok kampane vyššie udalosti radí za sebou.
+                    $exists = DB::table('mailing_deliveries')->where('campaign_id', $campaign->id)
+                        ->where('event_order_id', $row['event_order_id'])->where('event_shipping_id', $row['event_shipping_id'])->exists();
+                    if (! $exists) {
+                        DB::table('mailing_deliveries')->insert($row + ['contact_id' => null, 'email' => $email]);
+                    }
+                } elseif ($contact) {
+                    DB::table('mailing_deliveries')->insertOrIgnore($row + ['contact_id' => $contact->id]);
+                }
             }
         });
     }
@@ -65,8 +77,46 @@ class EmailingService
         return str_replace('<p>', '<p style="'.$paragraphStyle.'">', $html);
     }
 
-    public function html(object $campaign, ?object $contact = null): string
+    /**
+     * Text odpovede vo vlákne objednávky; značky v zložených zátvorkách sa nahradia údajmi objednávky.
+     * Bez objednávky (náhľad v prázdnom systéme) značky zostanú viditeľné.
+     */
+    public static function orderReplyBody(?string $body, ?\App\Models\Order $order): string
     {
+        $html = self::bodyHtml($body, 'margin:0 0 12px');
+
+        return $order ? strtr($html, [
+            '{cislo_objednavky}' => e($order->serial_number),
+            '{firma}' => e($order->billing->company),
+            '{odkaz_objednavky}' => e($order->publicUrl()),
+        ]) : $html;
+    }
+
+    /**
+     * @param  \Carbon\Carbon|null  $eventAt  kedy udalosť nastala (čas pôvodnej správy v citáte)
+     */
+    public function html(object $campaign, ?object $contact = null, ?\App\Models\Order $order = null, ?\App\Models\Shipping $shipping = null, ?\Carbon\Carbon $eventAt = null): string
+    {
+        if ($campaign->reply_to_order ?? false) {
+            $quote = [];
+            $event = MailingTrigger::tryFrom($campaign->trigger_event ?? '');
+            if ($order && $event && ($campaign->quote_event ?? true)) {
+                // Citát je systémový e-mail danej udalosti (potvrdenie, expedícia, storno…).
+                $mail = $event->officialNotification($order, $shipping)->toMail($order);
+                $original = view($mail->view, $mail->viewData)->render();
+                preg_match('~<style[^>]*>(.*?)</style>~is', $original, $style);
+                preg_match('~<body[^>]*>(.*)</body>~is', $original, $body);
+                $quote = [
+                    // Pravidlo pre body by prefarbilo aj samotnú odpoveď nad citátom.
+                    'quoteStyle' => preg_replace('~\bbody\s*\{[^}]*\}~i', '', $style[1] ?? ''),
+                    'quoteHtml' => $body[1] ?? $original,
+                    'quotedAt' => $eventAt ?? ($event === MailingTrigger::OrderCreated ? $order->created_at : now()),
+                ];
+            }
+
+            return view('emails.campaign-order-reply', ['campaign' => $campaign, 'order' => $order] + $quote)->render();
+        }
+
         $view = match ($campaign->layout ?? 'default') {
             'spisor' => 'emails.campaign-spisor',
             'flags-catalog' => 'emails.campaign-flags-catalog',
@@ -91,24 +141,36 @@ class EmailingService
         ])->render();
     }
 
-    public function send(object $campaign, object $contact, bool $test = false, ?object $delivery = null): void
+    public function send(object $campaign, object $contact, bool $test = false, ?object $delivery = null, ?\App\Models\Order $order = null): void
     {
-        $html = $this->html($campaign, $test ? null : $contact);
-        if (! $test && $delivery) {
+        // Odpoveď vo vlákne objednávky je servisná správa: bez odhlásenia a bez merania.
+        $reply = ($campaign->reply_to_order ?? false) && $order;
+        $shipping = ($delivery->event_shipping_id ?? 0) ? \App\Models\Shipping::find($delivery->event_shipping_id) : null;
+        // Udalosť nastala o oneskorenie kampane skôr, než je termín odoslania.
+        $eventAt = ($delivery->due_at ?? null) ? \Carbon\Carbon::parse($delivery->due_at)->subHours($campaign->delay_hours ?? 0) : null;
+        $html = $this->html($campaign, $test ? null : $contact, $order, $shipping, $eventAt);
+        if (! $test && $delivery && ! $reply) {
             $html = app(EmailingMeasurement::class)->decorate($html, $campaign, $delivery, $this->unsubscribeUrl($contact));
         }
+        $subject = ($test ? '[TEST] ' : '').($reply ? OrderThread::replySubject($order) : $campaign->subject);
         if ($this->dryRun()) {
             // Všetko vrátane vykreslenia a merania prebehlo; len sa nevolá poštový server.
             \Illuminate\Support\Facades\Log::info('Emailing dry-run: email sa neodoslal.', [
-                'to' => $contact->email, 'subject' => ($test ? '[TEST] ' : '').$campaign->subject,
+                'to' => $contact->email, 'subject' => $subject,
                 'campaign_id' => $campaign->id ?? null, 'delivery_id' => $delivery->id ?? null, 'test' => $test,
             ]);
 
             return;
         }
-        Mail::html($html, function ($message) use ($campaign, $contact, $test) {
-            $message->to($contact->email)->subject(($test ? '[TEST] ' : '').$campaign->subject);
-            if (! $test) {
+        Mail::html($html, function ($message) use ($contact, $test, $reply, $order, $subject) {
+            $message->to($contact->email)->subject($subject);
+            if ($reply) {
+                // Rovnaký odosielateľ ako potvrdenie objednávky, inak klient správy nespojí.
+                $message->from(OrderThread::FROM, OrderThread::FROM_NAME)->replyTo(OrderThread::FROM, OrderThread::FROM_NAME);
+                if (! $test) {
+                    OrderThread::reply($message->getSymfonyMessage(), $order);
+                }
+            } elseif (! $test) {
                 $url = $this->unsubscribeUrl($contact);
                 $headers = $message->getSymfonyMessage()->getHeaders();
                 $headers->addTextHeader('List-Unsubscribe', '<'.$url.'>');
@@ -193,20 +255,32 @@ class EmailingService
             if (! $delivery) {
                 break;
             }
-            $contact = DB::table('mailing_contacts')->find($delivery->contact_id);
+            $contact = $delivery->contact_id ? DB::table('mailing_contacts')->find($delivery->contact_id) : null;
             $campaign = DB::table('mailing_campaigns')->find($delivery->campaign_id);
             $result = ['status' => 'skipped'];
             $order = $delivery->event_order_id ? \App\Models\Order::find($delivery->event_order_id) : null;
-            $orderEligible = ! $delivery->event_order_id || ($order && $order->status !== \App\Enums\OrderStatus::Cancelled
-                && mb_strtolower(trim($order->routeNotificationForMail() ?? '')) === $contact?->email);
-            $coupon = $campaign->coupon_id ? \App\Models\Coupon::find($campaign->coupon_id) : null;
-            $couponEligible = ! $campaign->trigger_event || ! $campaign->coupon_code || ($coupon && $coupon->active
-                && (! $coupon->valid_to || ! $coupon->valid_to->copy()->endOfDay()->isPast()));
-            if ($contact && ! $contact->unsubscribed_at && ! $contact->bounced_at && $campaign->status === 'queued' && $orderEligible && $couponEligible) {
+            $orderEmail = mb_strtolower(trim($order?->routeNotificationForMail() ?? ''));
+            // Stornovaná objednávka už nič nedostane — okrem kampane viazanej práve na storno.
+            $orderActive = $order && ($order->status !== \App\Enums\OrderStatus::Cancelled || $campaign->trigger_event === MailingTrigger::OrderCancelled->value);
+            if (! $delivery->contact_id) {
+                // Odpoveď vo vlákne: príjemca je aktuálny email objednávky. Marketingové odhlásenie
+                // sa neuplatňuje, nedoručiteľná adresa áno.
+                $eligible = $orderActive && $orderEmail !== ''
+                    && ! DB::table('mailing_contacts')->where('email', $orderEmail)->whereNotNull('bounced_at')->exists();
+                $recipient = (object) ['email' => $orderEmail, 'name' => null];
+            } else {
+                $orderEligible = ! $delivery->event_order_id || ($orderActive && $orderEmail === $contact?->email);
+                $coupon = $campaign->coupon_id ? \App\Models\Coupon::find($campaign->coupon_id) : null;
+                $couponEligible = ! $campaign->trigger_event || ! $campaign->coupon_code || ($coupon && $coupon->active
+                    && (! $coupon->valid_to || ! $coupon->valid_to->copy()->endOfDay()->isPast()));
+                $eligible = $contact && ! $contact->unsubscribed_at && ! $contact->bounced_at && $orderEligible && $couponEligible;
+                $recipient = $contact;
+            }
+            if ($eligible && $campaign->status === 'queued') {
                 try {
-                    $this->send($campaign, $contact, false, $delivery);
+                    $this->send($campaign, $recipient, false, $delivery, $order);
                     $result = ['status' => 'sent', 'sent_at' => now()];
-                    if ($contact->soft_bounces) {
+                    if ($contact?->soft_bounces) {
                         DB::table('mailing_contacts')->where('id', $contact->id)->update(['soft_bounces' => 0]);
                     }
                 } catch (\Throwable $e) {
@@ -214,7 +288,7 @@ class EmailingService
                     $bounce = app(EmailBounceClassifier::class)->classify($e->getMessage());
                     $result = ['status' => 'failed', 'error' => 'Odoslanie zlyhalo. Podrobnosti sú v serverovom denníku.'];
                     if ($bounce['type'] !== EmailBounceClassifier::NONE) {
-                        $result = ['status' => $this->recordBounce($contact->email, $bounce['type'], $bounce['reason']) ? 'bounced' : 'failed', 'error' => $bounce['reason']];
+                        $result = ['status' => $this->recordBounce($recipient->email, $bounce['type'], $bounce['reason']) ? 'bounced' : 'failed', 'error' => $bounce['reason']];
                     }
                 }
             }

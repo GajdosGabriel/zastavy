@@ -4,6 +4,8 @@ namespace App\Notifications;
 
 use App\Models\Order;
 use App\Models\OrderReturn;
+use App\Models\User;
+use App\Support\OrderThread;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -28,18 +30,10 @@ class OrderReturnProcessed extends Notification implements ShouldQueue
         $this->order->load(['customer', 'orderProducts.product']);
         $this->orderReturn->load(['items.orderProduct.product']);
 
-        $subjects = [
-            'not_accepted' => 'Vrátená zásielka – objednávka č. ' . $this->order->serial_number,
-            'damaged'      => 'Vrátenie poškodeného tovaru – objednávka č. ' . $this->order->serial_number,
-            'wrong_item'   => 'Vrátenie tovaru – objednávka č. ' . $this->order->serial_number,
-            'other'        => 'Vrátenie tovaru – objednávka č. ' . $this->order->serial_number,
-        ];
-
-        $subject = $subjects[$this->orderReturn->reason] ?? ('Vrátenie tovaru – objednávka č. ' . $this->order->serial_number);
-
         return (new MailMessage)
             ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-            ->subject($subject)
+            ->subject(OrderThread::replySubject($this->order))
+            ->withSymfonyMessage(fn ($m) => OrderThread::reply($m, $this->order, $notifiable instanceof User))
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderReturn', [
                 'order'       => $this->order,

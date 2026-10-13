@@ -24,6 +24,16 @@ V editore kampane vyberte **Spôsob spustenia → Po vytvorení objednávky**, n
 
 Pred odoslaním sa kontroluje odhlásenie, existencia a storno objednávky, zhoda emailu a platnosť pripojeného kupóna. Nevyhovujúce pokusy sa označia ako preskočené. Prerušené ani zlyhané SMTP pokusy sa automaticky neopakujú. Identifikátor objednávky zabraňuje duplicitnému naplánovaniu tej istej udalosti.
 
+### Odpoveď vo vlákne objednávky
+
+Pri každom spôsobe spustenia viazanom na udalosť možno zaškrtnúť **Poslať ako odpoveď vo vlákne objednávky**. Email potom neodíde ako ponuka v šablóne, ale ako obyčajná správa s predmetom `Re: Objednávka | firma`, od rovnakého odosielateľa ako potvrdenie objednávky a pod vaším textom je riadok „… napísal(a):“ s citovaným systémovým emailom danej udalosti – rovnako, ako keby ste naň odpovedali ručne. Pri „Po vytvorení objednávky“ sa cituje potvrdenie, pri expedícii a vybavení email o odoslaní, pri „Po oznámení storna objednávky“ oznámenie o storne (tento spúšťač sa aktivuje len vtedy, keď sa pri storne zákazníkovi posiela oznámenie). Citát možno vypnúť voľbou **Zahrnúť pod text email udalosti, na ktorý sa odpovedá** – potom odíde len váš text. Zákazník správu v oboch prípadoch nájde v tej istej konverzácii ako potvrdenie. Bez zaškrtnutia sa automatizácia správa ako doteraz – ponuka v šablóne. V texte fungujú značky `{cislo_objednavky}`, `{firma}` a `{odkaz_objednavky}`.
+
+Ide o servisnú správu, preto platia iné pravidlá než pre ponuky: dostane ju každý zákazník objednávky (aj mimo adresára Príjemcov a aj odhlásený z ponúk), nemá odhlasovací odkaz, kupón, tlačidlo ani meranie. Obsah má byť informačný – stav objednávky a ďalší postup, nie reklama. Preskočí sa pri zmazanej alebo stornovanej objednávke (okrem spúšťača storna) a pri adrese označenej ako nedoručiteľná. Odchádza cez spoločnú frontu, takže platí `EMAILING_ENABLED`, hodinový limit a beh plánovača.
+
+Do rovnakého vlákna patria aj systémové emaily objednávky (zmena, príprava, expedícia, zmena adresy, vrátenie, storno): majú predmet `Re: Objednávka | firma` a hlavičky `In-Reply-To`/`References` na potvrdenie, ktorého `Message-ID` je odvodené z identifikátora objednávky (`App\Support\OrderThread`). Kópie pre administrátorov tvoria vlastné vlákno. Kupón po objednávke zostáva samostatným emailom.
+
+Spájanie do konverzácie robí poštový klient zákazníka. Gmail vyžaduje zhodný predmet aj hlavičky, Outlook sa riadi najmä predmetom. Niektorí poskytovatelia (napr. Amazon SES) prepisujú `Message-ID`; vtedy sa následné správy spoja medzi sebou, ale nie s potvrdením – po nasadení overte na vlastnej schránke cez „Zobraziť originál“.
+
 Transakčné notifikácie ostávajú vo svojej existujúcej ceste. Spoločný `SystemLogSubscriber` už zachytáva odoslané transakčné aj marketingové emaily. Odporúčaný ďalší krok je spoločný prehľad s filtrami podľa typu, príjemcu a objednávky; potvrdenia nemajú závisieť od marketingového odhlásenia, vypnutia emailingu alebo jeho hodinového limitu.
 
 Nová migrácia vytvorí štyri tabuľky, existujúcich zákazníkov nemení:
@@ -33,6 +43,7 @@ php artisan migrate --path=database/migrations/2026_10_05_160000_create_emailing
 php artisan migrate --path=database/migrations/2026_10_05_170000_add_emailing_layout.php --force
 php artisan migrate --path=database/migrations/2026_10_05_180000_add_emailing_triggers.php --force
 php artisan migrate --path=database/migrations/2026_10_05_190000_add_emailing_measurement.php --force
+php artisan migrate --path=database/migrations/2026_10_13_100000_add_order_reply_to_emailing.php --force
 ```
 
 Nastavenie prostredia (heslá zostávajú len v konfigurácii servera):

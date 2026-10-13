@@ -17,15 +17,27 @@ class EmailingController extends Controller
 {
     private function content(Request $r): array
     {
+        // Odpoveď vo vlákne objednávky preberá predmet z potvrdenia a nemá nadpis, tlačidlo ani kupón.
+        $reply = $r->boolean('reply_to_order') && $r->filled('trigger_event');
+        $text = $reply ? 'nullable' : 'required';
         $data = $r->validate([
             'layout' => ['sometimes', 'required', Rule::in(['default', 'spisor', 'flags-catalog'])],
-            'name' => 'required|string|max:255', 'subject' => 'required|string|max:200|not_regex:/[\r\n]/',
-            'heading' => 'required|string|max:200', 'body' => 'required|string|max:20000',
+            'name' => 'required|string|max:255', 'subject' => $text.'|string|max:200|not_regex:/[\r\n]/',
+            'heading' => $text.'|string|max:200', 'body' => 'required|string|max:20000',
             'button_label' => 'nullable|string|max:80', 'button_url' => 'nullable|url:http,https|max:2048',
             'coupon_id' => ['nullable', Rule::exists('coupons', 'id')->whereNull('deleted_at')],
         ]);
+        if ($reply) {
+            $data = ['subject' => 'Re: Objednávka | …', 'heading' => '', 'button_label' => null, 'button_url' => null, 'coupon_id' => null] + $data;
+        }
 
         return $data + ['layout' => 'default'];
+    }
+
+    /** Vzorová objednávka pre náhľad a test odpovede vo vlákne. */
+    private function sampleOrder(Request $r): ?\App\Models\Order
+    {
+        return $r->boolean('reply_to_order') && in_array($r->input('trigger_event'), MailingTrigger::values(), true) ? \App\Models\Order::latest('id')->first() : null;
     }
 
     public function index(Request $r, EmailingService $service)
@@ -64,7 +76,13 @@ class EmailingController extends Controller
             'trigger_event' => ['nullable', Rule::in(MailingTrigger::values())],
             'delay_hours' => ['required_with:trigger_event', 'integer', 'min:0', 'max:'.MailingTrigger::MAX_DELAY_HOURS],
             'track_clicks' => 'sometimes|boolean', 'track_opens' => 'sometimes|boolean',
+            'reply_to_order' => 'sometimes|boolean', 'quote_event' => 'sometimes|boolean',
         ]) + ['trigger_event' => null, 'delay_hours' => 24, 'track_clicks' => false, 'track_opens' => false];
+        $data['reply_to_order'] = $r->boolean('reply_to_order') && $data['trigger_event'];
+        $data['quote_event'] = $r->boolean('quote_event', true);
+        if ($data['reply_to_order']) {
+            $data = ['track_clicks' => false, 'track_opens' => false] + $data;
+        }
         $id = DB::transaction(function () use ($r, $id, $data) {
             if ($id) {
                 $campaign = DB::table('mailing_campaigns')->where('id', $id)->lockForUpdate()->first();
@@ -100,7 +118,9 @@ class EmailingController extends Controller
         $data = $this->content($r);
         $data['coupon_code'] = isset($data['coupon_id']) ? Coupon::find($data['coupon_id'])?->code : null;
 
-        return response()->json(['html' => $service->html((object) ($data + ['button_url' => null, 'button_label' => null]))]);
+        $order = $this->sampleOrder($r);
+
+        return response()->json(['html' => $service->html((object) ($data + ['button_url' => null, 'button_label' => null, 'trigger_event' => $r->input('trigger_event'), 'quote_event' => $r->boolean('quote_event', true), 'reply_to_order' => $r->boolean('reply_to_order') && $r->filled('trigger_event')]), null, $order)]);
     }
 
     public function test(Request $r, EmailingService $service)
@@ -109,7 +129,8 @@ class EmailingController extends Controller
         $data = $this->content($r);
         $data['coupon_code'] = isset($data['coupon_id']) ? Coupon::find($data['coupon_id'])?->code : null;
         // Test messages go only to the authenticated administrator.
-        $service->send((object) ($data + ['button_url' => null, 'button_label' => null]), (object) ['email' => $r->user()->email], true);
+        $order = $this->sampleOrder($r);
+        $service->send((object) ($data + ['button_url' => null, 'button_label' => null, 'trigger_event' => $r->input('trigger_event'), 'quote_event' => $r->boolean('quote_event', true), 'reply_to_order' => $r->boolean('reply_to_order') && $r->filled('trigger_event')]), (object) ['email' => $r->user()->email], true, null, $order);
 
         return response()->json(['message' => $service->dryRun()
             ? 'Testovací režim: email sa reálne neodoslal.'
@@ -183,7 +204,7 @@ class EmailingController extends Controller
                 ->where('d.campaign_id', $id)->selectRaw('l.url, SUM(l.click_count) as clicks, COUNT(DISTINCT CASE WHEN l.clicked_at IS NOT NULL THEN d.id END) as messages')
                 ->groupBy('l.url')->orderByDesc('clicks')->get(),
             'counts' => DB::table('mailing_deliveries')->where('campaign_id', $id)->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status'),
-            'deliveries' => DB::table('mailing_deliveries as d')->join('mailing_contacts as c', 'c.id', '=', 'd.contact_id')->where('d.campaign_id', $id)->orderByDesc('d.id')->select('d.*', 'c.email', 'c.name')->paginate(50),
+            'deliveries' => DB::table('mailing_deliveries as d')->leftJoin('mailing_contacts as c', 'c.id', '=', 'd.contact_id')->where('d.campaign_id', $id)->orderByDesc('d.id')->select('d.*', 'c.name')->selectRaw('COALESCE(c.email, d.email) as email')->paginate(50),
         ]);
     }
 

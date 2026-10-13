@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Support\OrderThread;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -52,9 +53,11 @@ class OrderCreated extends Notification implements ShouldQueue
 
         $message = (new MailMessage)
             ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-            ->subject("Objednávka | ". $this->order->billing->company)
+            ->subject(OrderThread::subject($this->order))
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-            ->view('emails.orderConfirmation', ['order' => $this->order]);
+            ->view('emails.orderConfirmation', ['order' => $this->order])
+            // Koreň vlákna objednávky: ďalšie e-maily k objednávke sa zaradia pod túto správu.
+            ->withSymfonyMessage(fn ($m) => OrderThread::root($m, $this->order, $notifiable instanceof User));
 
         // Odpoveď na admin kópiu ide zákazníkovi; odpoveď zákazníka na jeho
         // vlastné potvrdenie ostáva na obchod@zastavy-vlajky.sk.

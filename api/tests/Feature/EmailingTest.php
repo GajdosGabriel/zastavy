@@ -269,6 +269,95 @@ class EmailingTest extends TestCase
         $this->assertDatabaseHas('mailing_deliveries', ['event_order_id' => $order->id, 'status' => 'sent']);
     }
 
+    public function test_order_reply_goes_to_every_customer_in_the_order_thread(): void
+    {
+        $this->admin();
+        config(['mail.mailers.smtp' => ['transport' => 'array']]);
+        $customer = \App\Models\Customer::create(['company' => 'Buyer', 'email' => 'buyer@example.test', 'street' => 'Test 1', 'postcode' => '81101', 'city' => 'Bratislava']);
+        // Odhlásenie z ponúk sa servisnej odpovede netýka.
+        $this->contact('buyer@example.test');
+        DB::table('mailing_contacts')->update(['unsubscribed_at' => now()]);
+        $reply = ['name' => 'Stav objednávky', 'body' => 'Objednávku pre {firma} už vyrábame.', 'trigger_event' => 'order_created', 'delay_hours' => 0, 'reply_to_order' => true, 'track_clicks' => true];
+        $id = $this->postJson('/api/emailing/campaigns', $reply)->assertOk()->json('id');
+        $this->assertDatabaseHas('mailing_campaigns', ['id' => $id, 'reply_to_order' => true, 'track_clicks' => false, 'heading' => '']);
+        $this->postJson('/api/emailing/preview', $reply)->assertOk();
+        $this->postJson("/api/emailing/campaigns/$id/queue")->assertOk();
+        // Ponuka pre ten istý trigger zostáva viazaná na aktívny kontakt.
+        $offer = $this->postJson('/api/emailing/campaigns', $this->content() + ['trigger_event' => 'order_created', 'delay_hours' => 0])->assertOk()->json('id');
+        $this->postJson("/api/emailing/campaigns/$offer/queue")->assertOk();
+
+        $order = \App\Models\Order::create(['customer_id' => $customer->id]);
+        app(EmailingService::class)->orderCreated($order);
+        $this->assertDatabaseCount('mailing_deliveries', 1);
+        $this->assertDatabaseHas('mailing_deliveries', ['campaign_id' => $id, 'contact_id' => null, 'email' => 'buyer@example.test', 'event_order_id' => $order->id]);
+        $this->assertSame(1, app(EmailingService::class)->runBatch());
+        $this->assertDatabaseHas('mailing_deliveries', ['campaign_id' => $id, 'status' => 'sent']);
+
+        $message = Mail::mailer()->getSymfonyTransport()->messages()->last()->getOriginalMessage();
+        $thread = '<'.\App\Support\OrderThread::id($order->fresh()).'>';
+        $this->assertSame('buyer@example.test', $message->getTo()[0]->getAddress());
+        $this->assertSame('Re: Objednávka | Buyer', $message->getSubject());
+        $this->assertSame($thread, $message->getHeaders()->get('In-Reply-To')->getBodyAsString());
+        $this->assertSame($thread, $message->getHeaders()->get('References')->getBodyAsString());
+        $this->assertSame(\App\Support\OrderThread::FROM, $message->getFrom()[0]->getAddress());
+        $this->assertNull($message->getHeaders()->get('List-Unsubscribe'));
+        $this->assertStringContainsString('Objednávku pre Buyer už vyrábame.', $message->getHtmlBody());
+        $this->assertStringNotContainsString('Zrušiť odber', $message->getHtmlBody());
+        // Pod textom je citovaný systémový e-mail udalosti, ako pri ručnej odpovedi.
+        $this->assertMatchesRegularExpression('~už vyrábame\..*napísal\(a\):.*<blockquote.*Potvrdenie objednávky~s', $message->getHtmlBody());
+
+        // Storno: odpoveď cituje oznámenie o storne a odíde aj pri stornovanej objednávke.
+        $cancel = $this->postJson('/api/emailing/campaigns', ['trigger_event' => 'order_cancelled', 'body' => 'Ak by ste si to rozmysleli, stačí odpovedať.'] + $reply)->assertOk()->json('id');
+        $this->postJson("/api/emailing/campaigns/$cancel/queue")->assertOk();
+        $order->update(['status' => 'cancelled']);
+        app(EmailingService::class)->trigger(\App\Enums\MailingTrigger::OrderCancelled, $order);
+        $this->assertSame(1, app(EmailingService::class)->runBatch());
+        $this->assertDatabaseHas('mailing_deliveries', ['campaign_id' => $cancel, 'status' => 'sent']);
+        $cancelled = Mail::mailer()->getSymfonyTransport()->messages()->last()->getOriginalMessage();
+        $this->assertSame($thread, $cancelled->getHeaders()->get('In-Reply-To')->getBodyAsString());
+        $this->assertMatchesRegularExpression('~Ak by ste si to rozmysleli.*<blockquote.*Objednávka stornovaná~s', $cancelled->getHtmlBody());
+
+        // Citát udalosti je voliteľný; bez neho odíde len text, stále vo vlákne.
+        $this->assertDatabaseHas('mailing_campaigns', ['id' => $cancel, 'quote_event' => true]);
+        $bare = $this->postJson('/api/emailing/preview', ['quote_event' => false] + $reply)->assertOk()->json('html');
+        $this->assertStringContainsString('už vyrábame.', $bare);
+        $this->assertStringNotContainsString('<blockquote', $bare);
+        $this->assertStringNotContainsString('napísal(a)', $bare);
+        $this->getJson("/api/emailing/campaigns/$id/deliveries")->assertOk()->assertJsonPath('deliveries.data.0.email', 'buyer@example.test');
+
+        // Bez triggera voľba nemá zmysel a neuloží sa.
+        $plain = $this->postJson('/api/emailing/campaigns', $this->content() + ['reply_to_order' => true])->assertOk()->json('id');
+        $this->assertDatabaseHas('mailing_campaigns', ['id' => $plain, 'reply_to_order' => false, 'subject' => 'Ponuka']);
+    }
+
+    public function test_order_notifications_share_one_thread(): void
+    {
+        $customer = \App\Models\Customer::create(['company' => 'Buyer', 'email' => 'buyer@example.test', 'street' => 'Test 1', 'postcode' => '81101', 'city' => 'Bratislava']);
+        $order = \App\Models\Order::create(['customer_id' => $customer->id])->fresh();
+        $admin = User::factory()->create();
+        $headers = function ($notification, $notifiable) {
+            $mail = $notification->toMail($notifiable);
+            $message = new \Symfony\Component\Mime\Email;
+            foreach ($mail->callbacks as $callback) {
+                $callback($message);
+            }
+
+            return [$mail->subject, $message->getHeaders()];
+        };
+
+        [$subject, $root] = $headers(new \App\Notifications\OrderCreated($order), $order);
+        $this->assertSame('Objednávka | Buyer', $subject);
+        $this->assertSame('<order-'.$order->uuid.'@zastavy-vlajky.sk>', $root->get('Message-ID')->getBodyAsString());
+
+        [$subject, $reply] = $headers(new \App\Notifications\OrderCancelled($order), $order);
+        $this->assertSame('Re: Objednávka | Buyer', $subject);
+        $this->assertSame($root->get('Message-ID')->getBodyAsString(), $reply->get('In-Reply-To')->getBodyAsString());
+        $this->assertSame($root->get('Message-ID')->getBodyAsString(), $reply->get('References')->getBodyAsString());
+
+        [, $adminRoot] = $headers(new \App\Notifications\OrderCreated($order), $admin);
+        $this->assertSame('<order-'.$order->uuid.'-admin@zastavy-vlajky.sk>', $adminRoot->get('Message-ID')->getBodyAsString());
+    }
+
     public function test_admin_authorization_and_validation(): void
     {
         $this->getJson('/api/emailing')->assertUnauthorized();

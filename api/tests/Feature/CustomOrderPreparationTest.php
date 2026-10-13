@@ -69,7 +69,7 @@ class CustomOrderPreparationTest extends TestCase
         $request = ['idempotency_key' => (string) Str::uuid(), 'items' => $rows, 'notify_customer' => true];
         $url = '/api/orders/'.$id.'/shippings';
         $preview = $this->postJson($url.'/preview', $request)->assertOk()->json();
-        $this->assertStringContainsString('pripravujeme v sklade', $preview['subject']);
+        $this->assertStringStartsWith('Re: Objednávka | ', $preview['subject']);
         $this->assertDatabaseCount('shippings', 0);
         $shippingId = $this->postJson($url, $request)->assertSuccessful()->assertJsonPath('data.is_preparing', true)->json('data.id');
         $this->postJson($url, $request)->assertSuccessful()->assertJsonPath('data.id', $shippingId);

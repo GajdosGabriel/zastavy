@@ -17,12 +17,16 @@ enum MailingTrigger: string
     /** Objednávka plne expedovaná (poslednú zásielku odovzdali prepravcovi) */
     case OrderCompleted = 'order_completed';
 
+    /** Objednávka stornovaná a zákazník o tom dostal oznámenie */
+    case OrderCancelled = 'order_cancelled';
+
     public function label(): string
     {
         return match ($this) {
             self::OrderCreated       => 'Po vytvorení objednávky',
             self::ShippingDispatched => 'Po odovzdaní zásielky prepravcovi',
             self::OrderCompleted     => 'Po plnom vybavení objednávky',
+            self::OrderCancelled     => 'Po oznámení storna objednávky',
         };
     }
 
@@ -33,6 +37,21 @@ enum MailingTrigger: string
             self::OrderCreated       => 'Po objednávke',
             self::ShippingDispatched => 'Po expedícii',
             self::OrderCompleted     => 'Po vybavení objednávky',
+            self::OrderCancelled     => 'Po storne',
+        };
+    }
+
+    /**
+     * Systémový e-mail, ktorý zákazník pri tejto udalosti dostáva. Kampaň v režime
+     * „odpoveď“ ho cituje pod svojím textom, ako keby naň niekto odpovedal.
+     */
+    public function officialNotification(\App\Models\Order $order, ?\App\Models\Shipping $shipping = null): \Illuminate\Notifications\Notification
+    {
+        return match ($this) {
+            self::OrderCreated => new \App\Notifications\OrderCreated($order),
+            self::ShippingDispatched, self::OrderCompleted => new \App\Notifications\OrderExpedition(
+                $order, $shipping ?? $order->shippings()->whereNotNull('dispatched_at')->latest('dispatched_at')->first()),
+            self::OrderCancelled => new \App\Notifications\OrderCancelled($order),
         };
     }
 

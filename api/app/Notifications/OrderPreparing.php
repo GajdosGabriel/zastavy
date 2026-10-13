@@ -4,6 +4,8 @@ namespace App\Notifications;
 
 use App\Models\Order;
 use App\Models\Shipping;
+use App\Models\User;
+use App\Support\OrderThread;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -24,7 +26,8 @@ class OrderPreparing extends Notification implements ShouldQueue
     {
         return (new MailMessage)->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-            ->subject('Vašu objednávku pripravujeme v sklade – č. '.$this->order->serial_number)
+            ->subject(OrderThread::replySubject($this->order))
+            ->withSymfonyMessage(fn ($m) => OrderThread::reply($m, $this->order, $notifiable instanceof User))
             ->view('emails.orderPreparing', ['order' => $this->order, 'shipping' => $this->shipping]);
     }
 }

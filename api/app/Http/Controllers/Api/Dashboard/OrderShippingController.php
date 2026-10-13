@@ -47,12 +47,12 @@ class OrderShippingController extends Controller
         if ($request->filled('shipping_id')) {
             $shipping = $order->shippings()->findOrFail($request->integer('shipping_id'));
 
-            return response()->json(['subject' => 'Potvrdenie odoslania objednávky č. '.$order->serial_number,
+            return response()->json(['subject' => \App\Support\OrderThread::replySubject($order),
                 'html' => view('emails.orderDispatched', compact('order', 'shipping'))->render()]);
         }
         $shipping = new Shipping(['prepared_items' => $this->selection($order, $request)]);
 
-        return response()->json(['subject' => 'Vašu objednávku pripravujeme v sklade – č. '.$order->serial_number,
+        return response()->json(['subject' => \App\Support\OrderThread::replySubject($order),
             'html' => view('emails.orderPreparing', compact('order', 'shipping'))->render()]);
     }
 
