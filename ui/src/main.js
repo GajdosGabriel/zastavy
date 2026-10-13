@@ -5,8 +5,10 @@ import App from './App.vue'
 
 import router from "./router";
 import { purgeLegacyStorage } from "./authSession";
+import { installStaleChunkReload } from "./staleChunkReload";
 
 purgeLegacyStorage();
+installStaleChunkReload(router);
 
 const app = createApp(App)
 const pinia = createPinia()

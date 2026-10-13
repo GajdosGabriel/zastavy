@@ -12,6 +12,18 @@
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
+    # Chýbajúci hashovaný súbor (starý build) musí skončiť 404, nie index.html
+    # s typom text/html — inak prehliadač hlási chybu MIME namiesto 404.
+    RewriteRule ^assets/ - [R=404,L]
+
     # Všetko ostatné presmeruj na index.html (Vue Router)
     RewriteRule ^ index.html [L]
+</IfModule>
+
+# index.html odkazuje na hashované chunky aktuálneho buildu, preto sa nesmie
+# držať v cache — inak prehliadač pýta chunky, ktoré už na serveri nie sú.
+<IfModule mod_headers.c>
+    <FilesMatch "^index\.html$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
 </IfModule>
