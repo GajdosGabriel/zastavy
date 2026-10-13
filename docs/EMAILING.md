@@ -32,6 +32,12 @@ Ide o servisnú správu, preto platia iné pravidlá než pre ponuky: dostane ju
 
 Do rovnakého vlákna patria aj systémové emaily objednávky (zmena, príprava, expedícia, zmena adresy, vrátenie, storno): majú predmet `Re: Objednávka | firma` a hlavičky `In-Reply-To`/`References` na potvrdenie, ktorého `Message-ID` je odvodené z identifikátora objednávky (`App\Support\OrderThread`). Kópie pre administrátorov tvoria vlastné vlákno. Kupón po objednávke zostáva samostatným emailom.
 
+### Správy k objednávke
+
+V detaile objednávky pod **Komunikácia, grafika a výroba** si obsluha so zákazníkom píše k čomukoľvek v objednávke, nielen ku grafike. Správa obsluhy (voliteľne s prílohami) odíde zákazníkovi do toho istého vlákna s tlačidlom **Zobraziť a odpovedať**; odpoveď, pripomienky ku grafike aj schválenie sa uložia ku konverzácii a obsluhe príde upozornenie e-mailom, do zvončeka a k objednávke. Nahratá verzia grafiky sa zákazníkovi pošle až tlačidlom **Odoslať návrh zákazníkovi**. Zákazník môže začať aj sám: potvrdenie objednávky, zmena, príprava a odoslanie obsahujú tlačidlo **Napísať k objednávke**.
+
+Odpoveď napísaná priamo na e-mail sa do systému nenačíta – príde do schránky odosielateľa ako doteraz. Súkromný odkaz (`/objednavka/{uuid}/spravy#token=…`) je pre objednávku jeden, každé použitie mu predĺži platnosť na 90 dní a nová verzia grafiky ho nemení; zneplatní ho len **Vytvoriť nový odkaz pre zákazníka**. Konverzácia objednávku sama nemení – položky a cenu upraví obsluha v úprave objednávky. Migrácia: `2026_10_13_110000_create_order_messages.php`.
+
 Spájanie do konverzácie robí poštový klient zákazníka. Gmail vyžaduje zhodný predmet aj hlavičky, Outlook sa riadi najmä predmetom. Niektorí poskytovatelia (napr. Amazon SES) prepisujú `Message-ID`; vtedy sa následné správy spoja medzi sebou, ale nie s potvrdením – po nasadení overte na vlastnej schránke cez „Zobraziť originál“.
 
 Transakčné notifikácie ostávajú vo svojej existujúcej ceste. Spoločný `SystemLogSubscriber` už zachytáva odoslané transakčné aj marketingové emaily. Odporúčaný ďalší krok je spoločný prehľad s filtrami podľa typu, príjemcu a objednávky; potvrdenia nemajú závisieť od marketingového odhlásenia, vypnutia emailingu alebo jeho hodinového limitu.

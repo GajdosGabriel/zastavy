@@ -17,10 +17,12 @@ import { applyRouteSeo, DEFAULT_TITLE, DEFAULT_DESCRIPTION } from '../models/seo
 const routes = [
     {path:'/dopyt',name:'sales.request',component:()=>import('../components/sales/QuoteRequest.vue'),meta:{title:'Cenová ponuka'}},
     {path:'/ponuka/:uuid',name:'sales.quote.public',component:()=>import('../components/sales/QuoteView.vue'),meta:{title:'Cenová ponuka'}},
-    {path:'/predaj',name:'sales.index',component:()=>import('../components/sales/SalesDashboard.vue'),meta:{title:'Ponuky a výroba'}},
-    {path:'/predaj/ponuky/:id',name:'sales.quote',component:()=>import('../components/sales/QuoteView.vue'),meta:{title:'Nacenenie ponuky'}},
-    {path:'/vyroba/:orderId',name:'production.show',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Plán výroby'}},
+    {path:'/predaj',name:'sales.index',component:()=>import('../components/sales/SalesDashboard.vue'),meta:{title:'Ponuky a výroba',requiresAuth:true}},
+    {path:'/predaj/ponuky/:id',name:'sales.quote',component:()=>import('../components/sales/QuoteView.vue'),meta:{title:'Nacenenie ponuky',requiresAuth:true}},
+    {path:'/vyroba/:orderId',name:'production.show',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Plán výroby',requiresAuth:true}},
     {path:'/grafika/:uuid',name:'artwork.public',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Schválenie grafiky'}},
+    // Odkaz z e-mailov objednávky; /grafika/:uuid ostáva pre už rozoslané odkazy.
+    {path:'/objednavka/:uuid/spravy',name:'order.messages.public',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Správy k objednávke'}},
     ...product,
     ...order,
     ...customer,
@@ -47,7 +49,8 @@ const routes = [
             default: () => import('../components/pages/dashboard.vue'),
         },
         meta: {
-            title: 'Dashboard'
+            title: 'Dashboard',
+            requiresAuth: true,
         }
     },
     {
@@ -238,7 +241,12 @@ router.beforeResolve(async (to, from, next) => {
         return;
     }
 
-    if (to.meta.superAdminOnly && !usersStore.getUser?.roles?.some((role) => ['super-admin', 'admin'].includes(role))) {
+    if (to.meta.requiresAuth && !usersStore.getUser?.isAuth) {
+        next({ name: 'public.login.index' });
+        return;
+    }
+
+    if (to.meta.superAdminOnly &&!usersStore.getUser?.roles?.some((role) => ['super-admin', 'admin'].includes(role))) {
         next({
             name: usersStore.getUser?.isAuth ? 'dashboard.index' : 'public.login.index'
         });

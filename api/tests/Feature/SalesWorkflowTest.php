@@ -180,15 +180,18 @@ class SalesWorkflowTest extends TestCase
         $this->putJson('/api/orders/'.$o->id.'/production', ['status' => 'ready'])->assertConflict();
     }
 
-    public function test_new_artwork_invalidates_ready_status_and_old_token(): void
+    public function test_new_artwork_invalidates_ready_status_but_keeps_link_until_rotated(): void
     {
         $o = $this->order();
         $this->staff();
         $link = $this->upload($o);
         $this->postJson('/api/public-artworks/'.$o->uuid.'/decision', ['action' => 'approve', 'version' => 1, 'name' => 'Buyer', 'confirm' => true], ['X-Sales-Token' => $link['token']])->assertOk();
-        $this->upload($o);
+        $this->assertSame($link['token'], $this->upload($o)['token']);
         $this->assertDatabaseHas('order_productions', ['order_id' => $o->id, 'status' => 'awaiting_artwork']);
+        $this->getJson('/api/public-artworks/'.$o->uuid, ['X-Sales-Token' => $link['token']])->assertOk();
+        $new = $this->postJson('/api/orders/'.$o->id.'/artworks/share')->assertOk()->json();
         $this->getJson('/api/public-artworks/'.$o->uuid, ['X-Sales-Token' => $link['token']])->assertNotFound();
+        $this->getJson('/api/public-artworks/'.$o->uuid, ['X-Sales-Token' => $new['token']])->assertOk();
     }
 
     public function test_production_hides_internal_notes_and_filters_overdue(): void

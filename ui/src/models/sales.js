@@ -16,6 +16,8 @@ export function shareUrl(kind,data){
  }
  return location.origin+'/'+kind+'/'+data.uuid+'#token='+encodeURIComponent(data.token);
 }
+// Súkromná stránka správ a schvaľovania grafiky; rovnaký tvar generuje API (OrderProduction::shareUrl).
+export const messagesUrl=data=>shareUrl('objednavka',data).replace('#token=','/spravy#token=');
 export async function downloadSales(url,name,token=''){
  const {data}=await axios.get(url,{headers:tokenHeaders(token),responseType:'blob'});
  const href=URL.createObjectURL(data),a=document.createElement('a');a.href=href;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(href),1000);

@@ -10,7 +10,7 @@ const props = defineProps(['item']);
     <div>
         <router-link
             :to="typeof props.item.link === 'string' && !props.item.link.startsWith('/') ? { name: props.item.link } : props.item.link"
-            v-if="(typeof props.item !== 'undefined' && Object.keys(props.item).length)"
+            v-if="props.item && Object.keys(props.item).length"
             class="bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center">
             <plus v-if="props.item.icon == 'plus'" class="mr-1" />
             <arrow v-if="props.item.icon == 'arrow-left'" class="mr-1" />

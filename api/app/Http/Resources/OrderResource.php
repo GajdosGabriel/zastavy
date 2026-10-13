@@ -74,6 +74,7 @@ class OrderResource extends JsonResource
             ] : null,
             'orderProducts' => OrderProductResource::collection($this->orderProducts),
             'attachments' => AttachmentResource::collection($this->whenLoaded('attachments')),
+            'unread_messages' => $this->messages()->where('direction', 'customer')->whereNull('read_at')->count(),
             'stock_expedition' => $this->stockExpedition,
             'product_order_sum' => $this->productOrderSum,
             'product_storno_sum' => $this->productStornoSum(),

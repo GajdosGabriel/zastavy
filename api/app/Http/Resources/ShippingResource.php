@@ -22,6 +22,7 @@ class ShippingResource extends JsonResource
             'is_preparing' => $this->dispatched_at === null,
             'status' => $this->statusData(),
             'created_at' => $this->created_at->format('d.m.Y H:i:s'),
+            'state_at_human' => ($this->dispatched_at ?? $this->created_at)->diffForHumans(),
             'quantity_sum' => $this->dispatched_at ? $this->stocks->sum('quantity') : collect($this->prepared_items)->sum('quantity'),
             'items_count' => $this->dispatched_at ? $this->stocks->count() : count($this->prepared_items ?? []),
             'stocks' => StockResource::collection($this->stocks),

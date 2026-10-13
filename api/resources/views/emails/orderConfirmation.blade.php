@@ -148,6 +148,8 @@
         </div>
         @endif
 
+        <x-email.messages-link :order="$order" />
+
         <div class="info-block" style="margin-top:24px; text-align:center;">
             {{-- S tokenom sa na detaile ukáže aj odkaz na zmenu adresy. --}}
             <a href="{{ $order->publicUrl() }}{{ $order->delivery_token ? '?token='.$order->delivery_token : '' }}"

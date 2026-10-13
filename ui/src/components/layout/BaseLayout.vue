@@ -14,7 +14,7 @@ import FlashPanel from '../plugins/FlashPanel.vue';
 
 const route = useRoute();
 // Oznamy (banner hore/dole) patria zákazníkom, v administrácii by len zavadzali.
-const PUBLIC_ROUTE_NAMES = ['sales.request', 'sales.quote.public', 'artwork.public', 'Stranka-sa-nenasla'];
+const PUBLIC_ROUTE_NAMES = ['sales.request', 'sales.quote.public', 'artwork.public', 'order.messages.public', 'Stranka-sa-nenasla'];
 const showAnnouncements = computed(() => {
   const name = String(route.name ?? '');
   return name.startsWith('public.') || PUBLIC_ROUTE_NAMES.includes(name);

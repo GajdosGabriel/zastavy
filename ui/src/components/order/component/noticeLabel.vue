@@ -45,7 +45,8 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
 </script>
 
 <template>
-    <div v-if="shipping" class="inline-flex items-center gap-1.5 rounded border border-gray-200 bg-white px-2 py-1 shadow-sm">
+    <div v-if="shipping">
+        <div class="inline-flex items-center gap-1.5 rounded border border-gray-200 bg-white px-2 py-1 shadow-sm">
 
         <!-- Ikona dodacieho listu + ID v title -->
         <button @click="onClickShipping"
@@ -65,8 +66,10 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
             </svg>
             <!-- Stav dodacieho listu vždy slovom — samotný čas notifikácie vyzeral ako čas odoslania zásielky. -->
             <span class="text-xs font-semibold">{{ shipping.is_preparing ? "Čaká na odoslanie" : "Odoslané" }}</span>
-            <span v-if="!shipping.is_preparing" class="text-xs">{{ shipping.dispatched_at }}</span>
         </button>
+        </div>
+        <!-- Čas vystavenia DL, po potvrdení čas odoslania — rovnako ako čas pod stavom objednávky. -->
+        <div class="mt-2 text-xs text-gray-500">{{ shipping.state_at_human }}</div>
     </div>
 
     <Teleport to="body">

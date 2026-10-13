@@ -105,13 +105,12 @@ const dropdownItems = computed(() => {
         </td>
 
         <td class="tbody_td min-w-36">
-            <div class="mb-2 text-xs text-gray-500">{{ order.created_at_human }}</div>
             <shipping-button :order="order" :show-shipping-action="false" />
+            <div class="mt-2 text-xs text-gray-500">{{ order.created_at_human }}</div>
         </td>
 
         <td class="tbody_td min-w-44" title="zoznam expedícií">
             <div class="flex flex-col gap-2">
-                <shipping-button :order="order" :show-pack-status="false" />
                 <div v-if="order.shippings.length" class="flex flex-wrap gap-2">
                     <notice-label v-for="shipping in order.shippings" :key="shipping.id" :shipping="shipping" />
                 </div>

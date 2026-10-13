@@ -90,6 +90,8 @@
             </tbody>
         </table>
 
+        <x-email.messages-link :order="$order" />
+
         <x-email.contact-block />
     </div>
 

@@ -226,6 +226,8 @@ Route::middleware('throttle:30,1,sales-public:')->group(function(){
  Route::get('public-artworks/{uuid}',[\App\Http\Controllers\Api\ProductionController::class,'publicShow']);
  Route::post('public-artworks/{uuid}/decision',[\App\Http\Controllers\Api\ProductionController::class,'decision']);
  Route::get('public-artworks/{uuid}/files/{version}',[\App\Http\Controllers\Api\ProductionController::class,'file']);
+ Route::post('public-artworks/{uuid}/messages',[\App\Http\Controllers\Api\ProductionController::class,'publicMessage'])->middleware('throttle:5,1,order-messages:');
+ Route::get('public-artworks/{uuid}/messages/{message}/files/{attachment}',[\App\Http\Controllers\Api\ProductionController::class,'messageFile'])->whereNumber(['message','attachment']);
 });
 Route::middleware(['auth:sanctum',DashboardMiddleware::class])->group(function(){
  Route::get('orders/{order}/reorder',[\App\Http\Controllers\Api\ReorderController::class,'show']);
@@ -239,6 +241,8 @@ Route::middleware(['auth:sanctum',DashboardMiddleware::class])->group(function()
  Route::put('orders/{order}/production',[\App\Http\Controllers\Api\ProductionController::class,'update']);
  Route::post('orders/{order}/artworks',[\App\Http\Controllers\Api\ProductionController::class,'upload']);
  Route::post('orders/{order}/artworks/share',[\App\Http\Controllers\Api\ProductionController::class,'share']);
+ Route::post('orders/{order}/messages',[\App\Http\Controllers\Api\ProductionController::class,'message']);
+ Route::get('order-messages/unread',[\App\Http\Controllers\Api\ProductionController::class,'unread']);
 });
 
 Route::match(['get', 'post'], 'emailing/unsubscribe/{token}', [\App\Http\Controllers\Api\SuperAdmin\EmailingController::class, 'unsubscribe'])->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:60,1')->withoutMiddleware([\App\Http\Middleware\EnsureAccountIsActive::class])->name('emailing.unsubscribe');

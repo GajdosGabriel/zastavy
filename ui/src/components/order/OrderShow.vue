@@ -98,7 +98,7 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
             <div v-else class="page-body col-span-12">
 
 <ReorderButton :endpoint="'/orders/'+orderId+'/reorder'" />
-<router-link v-if="getOrder.permissions?.update?.allowed" :to="'/vyroba/'+orderId" class="text-blue-700 underline">Grafika a plán výroby</router-link>
+<router-link v-if="getOrder.permissions?.update?.allowed" :to="'/vyroba/'+orderId" class="text-blue-700 underline">Komunikácia, grafika a výroba<span v-if="getOrder.unread_messages" class="ml-1 rounded-full bg-red-600 px-2 text-xs font-bold text-white no-underline" :title="'Neprečítané správy zákazníka: '+getOrder.unread_messages">{{ getOrder.unread_messages }}</span></router-link>
                 <div class="mb-4">
                     <OrderCustomerCard :customer="customer" :user="getOrder.user" :order="getOrder" />
                 </div>

@@ -32,4 +32,6 @@
     <div class="note-box">
         Tento e-mail potvrdzuje prípravu v sklade. Zásielka zatiaľ nebola odoslaná — po jej odoslaní Vás budeme informovať samostatným e-mailom.
     </div>
+
+    <x-email.messages-link :order="$order" />
 </x-email.layout>

@@ -175,6 +175,30 @@ class Order extends Model
         return $this->morphMany(Attachment::class, 'attachable');
     }
 
+    public function production()
+    {
+        return $this->hasOne(OrderProduction::class);
+    }
+
+    /** Konverzácia so zákazníkom vrátane udalostí grafiky. */
+    public function messages()
+    {
+        return $this->hasMany(OrderMessage::class);
+    }
+
+    /**
+     * Súkromný odkaz, cez ktorý zákazník píše k objednávke a schvaľuje grafiku.
+     *
+     * Token vzniká až pri prvom použití, takže odkaz funguje aj pre staršie
+     * objednávky; záznam bez plánu sa v pláne výroby nezobrazuje.
+     */
+    public function messagesUrl(): string
+    {
+        $production = OrderProduction::firstOrCreate(['order_id' => $this->id], ['planned' => false]);
+
+        return $production->setRelation('order', $this)->shareUrl();
+    }
+
     /**
      * Má objednávka vlastnú doručovaciu adresu, inú než sídlo zákazníka?
      *

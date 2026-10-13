@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Filters\OrderFilter;
+use App\Models\OrderMessage;
 use App\Models\OrderProduction;
 use App\Models\SalesQuote;
 use App\Models\User;
@@ -98,6 +99,7 @@ class DashboardService
                 ->count(),
             'quotes_requested'   => $sales ? SalesQuote::where('status', 'requested')->count() : null,
             'production_overdue' => $sales ? $this->overdueProduction($user) : null,
+            'messages_unread'    => $sales ? OrderMessage::unreadFor($user)->count() : null,
         ];
     }
 
