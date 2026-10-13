@@ -277,7 +277,7 @@ class EmailingTest extends TestCase
         // Odhlásenie z ponúk sa servisnej odpovede netýka.
         $this->contact('buyer@example.test');
         DB::table('mailing_contacts')->update(['unsubscribed_at' => now()]);
-        $reply = ['name' => 'Stav objednávky', 'body' => 'Objednávku pre {firma} už vyrábame.', 'trigger_event' => 'order_created', 'delay_hours' => 0, 'reply_to_order' => true, 'track_clicks' => true];
+        $reply = ['name' => 'Stav objednávky', 'body' => '<p>Objednávku pre {firma} už vyrábame. Viac na https://example.test/info. Alebo <a href="https://example.test/a">https://example.test/a</a></p>', 'trigger_event' => 'order_created', 'delay_hours' => 0, 'reply_to_order' => true, 'track_clicks' => true];
         $id = $this->postJson('/api/emailing/campaigns', $reply)->assertOk()->json('id');
         $this->assertDatabaseHas('mailing_campaigns', ['id' => $id, 'reply_to_order' => true, 'track_clicks' => false, 'heading' => '']);
         $this->postJson('/api/emailing/preview', $reply)->assertOk();
@@ -303,8 +303,15 @@ class EmailingTest extends TestCase
         $this->assertNull($message->getHeaders()->get('List-Unsubscribe'));
         $this->assertStringContainsString('Objednávku pre Buyer už vyrábame.', $message->getHtmlBody());
         $this->assertStringNotContainsString('Zrušiť odber', $message->getHtmlBody());
+        // Adresa napísaná ako text sa stane odkazom (bez bodky za vetou); hotový odkaz sa nezdvojí.
+        $this->assertStringContainsString('<a href="https://example.test/info" style="color:#1155cc">https://example.test/info</a>.', $message->getHtmlBody());
+        $this->assertSame(1, substr_count($message->getHtmlBody(), 'href="https://example.test/a"'));
         // Pod textom je citovaný systémový e-mail udalosti, ako pri ručnej odpovedi.
         $this->assertMatchesRegularExpression('~už vyrábame\..*napísal\(a\):.*<blockquote.*Potvrdenie objednávky~s', $message->getHtmlBody());
+
+        // Štýly citátu ostanú celé: odstráni sa len pravidlo pre <body>, nie trieda .body.
+        $this->assertStringContainsString('.body { padding: 32px; }', $message->getHtmlBody());
+        $this->assertStringNotContainsString('background: #f5f5f5', $message->getHtmlBody());
 
         // Storno: odpoveď cituje oznámenie o storne a odíde aj pri stornovanej objednávke.
         $cancel = $this->postJson('/api/emailing/campaigns', ['trigger_event' => 'order_cancelled', 'body' => 'Ak by ste si to rozmysleli, stačí odpovedať.'] + $reply)->assertOk()->json('id');

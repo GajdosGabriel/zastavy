@@ -51,7 +51,7 @@ class RegisteredUserController extends Controller
 
         // Ak vraciaš len potvrdenie o úspechu bez tokenu:
         return response()->json([
-            'message' => 'Registration successful.',
+            'message' => 'Registrácia bola úspešná.',
             // 'user' => $user,
             // 'token' => $user->createToken('auth_token')->plainTextToken,
         ]);

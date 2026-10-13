@@ -84,12 +84,32 @@ class EmailingService
     public static function orderReplyBody(?string $body, ?\App\Models\Order $order): string
     {
         $html = self::bodyHtml($body, 'margin:0 0 12px');
+        if ($order) {
+            $html = strtr($html, [
+                '{cislo_objednavky}' => e($order->serial_number),
+                '{firma}' => e($order->billing->company),
+                '{odkaz_objednavky}' => e($order->publicUrl()),
+            ]);
+        }
 
-        return $order ? strtr($html, [
-            '{cislo_objednavky}' => e($order->serial_number),
-            '{firma}' => e($order->billing->company),
-            '{odkaz_objednavky}' => e($order->publicUrl()),
-        ]) : $html;
+        return self::autolink($html);
+    }
+
+    /** Webové adresy napísané ako obyčajný text zmení na odkazy; existujúce odkazy nechá tak. */
+    private static function autolink(string $html): string
+    {
+        $inLink = false;
+
+        return implode('', array_map(function ($part) use (&$inLink) {
+            if (str_starts_with($part, '<')) {
+                $inLink = preg_match('~^<a\b~i', $part) ? true : (preg_match('~^</a\b~i', $part) ? false : $inLink);
+
+                return $part;
+            }
+
+            // Interpunkcia na konci vety do adresy nepatrí.
+            return $inLink ? $part : preg_replace('~\bhttps?://[^\s<>"\']*[^\s<>"\'.,;:!?)]~iu', '<a href="$0" style="color:#1155cc">$0</a>', $part);
+        }, preg_split('~(<[^>]+>)~', $html, -1, PREG_SPLIT_DELIM_CAPTURE)));
     }
 
     /**
@@ -108,7 +128,7 @@ class EmailingService
                 preg_match('~<body[^>]*>(.*)</body>~is', $original, $body);
                 $quote = [
                     // Pravidlo pre body by prefarbilo aj samotnú odpoveď nad citátom.
-                    'quoteStyle' => preg_replace('~\bbody\s*\{[^}]*\}~i', '', $style[1] ?? ''),
+                    'quoteStyle' => preg_replace('~(?<![.#\w-])body\s*\{[^}]*\}~i', '', $style[1] ?? ''),
                     'quoteHtml' => $body[1] ?? $original,
                     'quotedAt' => $eventAt ?? ($event === MailingTrigger::OrderCreated ? $order->created_at : now()),
                 ];

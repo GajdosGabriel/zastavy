@@ -17,6 +17,10 @@ export const sanitizeHtml = (html) => {
             walk(child);
 
             if (!ALLOWED_TAGS.includes(child.tagName)) {
+                // Editor nový riadok niekedy obalí do <div>; bez zalomenia by sa zlial s predošlým.
+                if (child.tagName === 'DIV' && child.previousSibling && child.previousSibling.nodeName !== 'BR') {
+                    child.before(document.createElement('br'));
+                }
                 child.replaceWith(...child.childNodes);
                 return;
             }
