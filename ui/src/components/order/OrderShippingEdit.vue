@@ -89,11 +89,17 @@ const selectedQuantity = computed(() => Object.values(shippingItems.value)
 const remainingAfterShipping = computed(() => Math.max(0, remainingQuantity.value - selectedQuantity.value));
 const canConfirmShipping = computed(() => getOrder.value?.permissions?.ship?.allowed && !pendingShippings.value.length && selectedQuantity.value > 0 && !getOrder.value?.isFinished);
 
-const shippedRows = computed(() => (getOrder.value?.shippings ?? []).filter(s => !s.is_preparing).flatMap((shipping) => {
-    const stocks = shipping.stocks?.length ? shipping.stocks : [];
-    if (!stocks.length) return [{ shipping, stock: null }];
-    return stocks.map((stock) => ({ shipping, stock }));
-}));
+const shippingTimeline = computed(() => [...(getOrder.value?.shippings ?? [])].sort((a, b) => a.id - b.id));
+
+const canReturnGoods = computed(() => shippedQuantity.value > 0 && !!getOrder.value?.permissions?.manageReturns?.allowed);
+
+// Spodný panel s hlavnou akciou má zmysel len keď je čo pripraviť a nič nečaká na odoslanie
+const showPrepareBar = computed(() => getOrder.value?.permissions?.ship?.allowed && !pendingShippings.value.length && remainingQuantity.value > 0 && !getOrder.value?.isFinished);
+const isFullyShipped = computed(() => !pendingShippings.value.length && remainingQuantity.value === 0 && requiredQuantity.value > 0);
+
+// Storno je zriedkavá a okamžite uložená akcia, preto je schovaná za prepínač
+const stornoMode = ref(false);
+const canEditStorno = computed(() => allProducts.value.some(item => item.maxStorno > 0 || item.stornoQuantity > 0));
 
 const resetShippingItems = (fillRemaining = true) => {
     if (fillRemaining) excludedItemIds.value = [];
@@ -214,201 +220,8 @@ watch(allProducts, () => {
                     </div>
                 </div>
 
-                <!-- Zákazník + objednávka -->
-                <div class="mb-4">
-                    <OrderCustomerCard :customer="customer" :user="getOrder.user" :order="getOrder" />
-                </div>
-
-                <!-- Súhrn expedície + nový dodací list -->
-                <div class="mb-4 grid gap-4 lg:grid-cols-3">
-                    <div class="border-2 border-gray-300 bg-white p-4 shadow lg:col-span-2">
-                        <div class="grid gap-3 sm:grid-cols-4">
-                            <div class="rounded border border-gray-200 bg-gray-50 p-3">
-                                <div class="text-xs uppercase text-gray-500">Stav</div>
-                                <div class="font-semibold text-gray-900">{{ statusLabel }}</div>
-                            </div>
-                            <div class="rounded border border-gray-200 bg-gray-50 p-3 text-center">
-                                <div class="text-xs uppercase text-gray-500">Vybavené</div>
-                                <div class="font-semibold text-gray-900">{{ shippingPercentage }} %</div>
-                            </div>
-                            <div class="rounded border border-gray-200 bg-gray-50 p-3 text-center">
-                                <div class="text-xs uppercase text-gray-500">Expedované</div>
-                                <div class="font-semibold text-gray-900">{{ shippedQuantity }}/{{ requiredQuantity }} ks</div>
-                            </div>
-                            <div class="rounded border border-gray-200 bg-gray-50 p-3 text-center">
-                                <div class="text-xs uppercase text-gray-500">Zostáva</div>
-                                <div class="font-semibold text-gray-900">{{ remainingQuantity }} ks</div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 h-3 overflow-hidden rounded-full bg-gray-200">
-                            <div class="h-full rounded-full transition-all"
-                                :class="getOrder.isFinished ? 'bg-green-600' : shippedQuantity > 0 ? 'bg-amber-500' : 'bg-red-500'"
-                                :style="{ width: `${shippingPercentage}%` }"></div>
-                        </div>
-                    </div>
-
-                    <div class="border-2 border-gray-300 bg-white p-4 shadow">
-                        <div class="mb-3 text-sm font-semibold text-gray-900">Nový dodací list</div>
-                        <div class="mb-2 flex justify-between gap-2 text-sm">
-                            <span class="text-gray-500">Teraz pripraviť</span>
-                            <span class="font-semibold">{{ selectedQuantity }} ks</span>
-                        </div>
-                        <div class="mb-4 flex justify-between gap-2 text-sm">
-                            <span class="text-gray-500">Mimo tohto dodacieho listu</span>
-                            <span class="font-semibold">{{ remainingAfterShipping }} ks</span>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            <button type="button" @click="resetShippingItems(false)"
-                                class="rounded bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200">
-                                Vyčistiť
-                            </button>
-                            <button type="button" @click="resetShippingItems(true)"
-                                class="rounded bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100">
-                                Všetko zostávajúce
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Hlavná tabuľka — VŠETKY produkty -->
-                <div class="mb-4 overflow-x-auto border-2 border-gray-400 bg-white shadow">
-                    <table class="min-w-full divide-y divide-gray-300">
-                        <thead class="thead">
-                            <tr>
-                                <th class="thead_th text-left">Produkt</th>
-                                <th class="thead_th text-right">Cena s DPH</th>
-                                <th class="thead_th text-center">Objednané</th>
-                                <th class="thead_th text-center">Expedované</th>
-                                <th class="thead_th text-center">Ostáva</th>
-                                <th class="thead_th text-center">Storno</th>
-                                <th class="thead_th text-center">Teraz pripraviť</th>
-                                <th class="thead_th text-center">Panel</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            <tr v-for="item in allProducts" :key="item.id"
-                                class="transition"
-                                :class="isExcluded(item)
-                                    ? 'bg-gray-100 opacity-60'
-                                    : item.remaining === 0 && item.stornoQuantity === 0
-                                        ? 'bg-green-50 opacity-70'
-                                        : item.stornoQuantity > 0 && item.remaining === 0
-                                            ? 'bg-gray-100 opacity-60'
-                                            : 'hover:bg-gray-50'">
-
-                                <td class="tbody_td">
-                                    <div class="flex items-center gap-3">
-                                        <img v-if="item.thumb" :src="item.thumb" :alt="item.name"
-                                            class="h-10 w-10 rounded border border-gray-200 object-cover" />
-                                        <div>
-                                            <div class="font-semibold text-gray-900">{{ item.name }}</div>
-                                            <div class="text-xs text-gray-500">{{ item.unit_value }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <td class="tbody_td text-right whitespace-nowrap">
-                                    <div class="font-semibold text-gray-900">{{ formatPrice(item.unitPrice) }} €</div>
-                                    <div class="text-xs text-gray-500">spolu {{ formatPrice(item.lineTotal) }} €</div>
-                                </td>
-
-                                <td class="tbody_td text-center">{{ item.quantity }}</td>
-
-                                <td class="tbody_td text-center">
-                                    <span :class="item.shipped > 0 ? 'font-semibold text-green-700' : 'text-gray-400'">
-                                        {{ item.shipped }}
-                                    </span>
-                                </td>
-
-                                <td class="tbody_td text-center">
-                                    <span :class="item.remaining > 0 ? 'font-semibold text-amber-700' : 'text-gray-400'">
-                                        {{ item.remaining }}
-                                    </span>
-                                </td>
-
-                                <!-- Storno column -->
-                                <td class="tbody_td text-center">
-                                    <div class="flex items-center justify-center gap-1">
-                                        <input
-                                            v-model.number="stornoEdits[item.id]"
-                                            type="number"
-                                            min="0"
-                                            :max="item.maxStorno"
-                                            :disabled="item.maxStorno === 0"
-                                            class="w-16 rounded border border-gray-300 px-1 py-1 text-center text-sm disabled:bg-gray-100 disabled:text-gray-400"
-                                        />
-                                        <div class="flex flex-col gap-1">
-                                            <!-- Storno zvyšok -->
-                                            <button v-if="item.maxStorno > 0 && stornoEdits[item.id] !== item.maxStorno"
-                                                type="button"
-                                                @click="stornoRemaining(item)"
-                                                class="rounded bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-700 hover:bg-orange-100"
-                                                title="Stornovať celý zostatok">
-                                                Všetko
-                                            </button>
-                                            <!-- Uložiť -->
-                                            <button v-if="stornoEdits[item.id] !== item.stornoQuantity"
-                                                type="button"
-                                                @click="saveStorno(item)"
-                                                :disabled="stornoSaving[item.id]"
-                                                class="rounded bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
-                                                {{ stornoSaving[item.id] ? '...' : 'Uložiť' }}
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div v-if="item.stornoQuantity > 0" class="mt-0.5 text-xs text-gray-400">
-                                        uložené: {{ item.stornoQuantity }}
-                                    </div>
-                                </td>
-
-                                <!-- Teraz pripraviť -->
-                                <td class="tbody_td text-center">
-                                    <input
-                                        v-if="item.remaining > 0"
-                                        v-model.number="shippingItems[item.id]"
-                                        type="number" min="0" :max="item.remaining"
-                                        :disabled="isExcluded(item)"
-                                        class="w-24 rounded border px-2 py-1 text-center transition"
-                                        :class="isExcluded(item)
-                                            ? 'border-gray-200 bg-gray-100 text-gray-400 line-through'
-                                            : 'border-gray-300'"
-                                        @input="normalizeQuantity(item)"
-                                    />
-                                    <span v-else class="text-xs text-gray-400">—</span>
-                                </td>
-
-                                <td class="tbody_td text-center">
-                                    <button v-if="item.remaining > 0"
-                                        type="button" @click="toggleExcludeItem(item)"
-                                        class="rounded px-3 py-1 text-xs font-semibold transition"
-                                        :class="isExcluded(item)
-                                            ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                                            : 'bg-orange-50 text-orange-700 hover:bg-orange-100'">
-                                        {{ isExcluded(item) ? 'Pripraviť' : 'Vynechať' }}
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <tr v-if="!allProducts.length">
-                                <td colspan="8" class="tbody_td py-8 text-center text-gray-500">
-                                    Táto objednávka nemá žiadne položky.
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tfoot v-if="allProducts.length" class="bg-gray-100">
-                            <tr>
-                                <td class="tbody_td text-right font-semibold text-gray-700">Spolu s DPH</td>
-                                <td class="tbody_td text-right font-bold text-gray-900 whitespace-nowrap">
-                                    {{ formatPrice(productsTotal) }} €
-                                </td>
-                                <td class="tbody_td" colspan="6"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                <section v-if="pendingShippings.length" class="mb-5 rounded-lg border border-blue-200 bg-blue-50 p-5">
+                <!-- Čaká na prepravcu — najnaliehavejšia úloha, preto hore -->
+                <section v-if="pendingShippings.length" class="mb-4 rounded-lg border-2 border-blue-300 bg-blue-50 p-5 shadow-sm">
                     <h2 class="font-semibold text-blue-900">Pripravené na odoslanie</h2>
                     <p class="text-sm text-blue-800">Balík je pripravený pre prepravcu. Keď ho prepravca prevezme, potvrďte odoslanie.</p>
                     <div v-for="shipping in pendingShippings" :key="shipping.id" class="mt-3">
@@ -416,70 +229,231 @@ watch(allProducts, () => {
                         <p v-for="item in shipping.prepared_items" :key="item.order_product_id" class="mt-1 text-sm">{{ item.name }} — {{ item.quantity }} {{ item.unit }}</p>
                         <p class="my-3 text-sm text-gray-600">Sklad sa odpíše po potvrdení odoslania.</p>
                         <div v-if="getOrder.permissions?.ship?.allowed" class="flex flex-wrap gap-3">
-                            <button type="button" class="rounded bg-blue-700 px-4 py-2 text-white" @click="openDispatch(shipping)">Potvrdiť odoslanie</button>
-                            <button type="button" class="rounded border border-gray-300 bg-white px-4 py-2" @click="cancelPreparation(shipping)">Zrušiť prípravu</button>
+                            <button type="button" class="rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800" @click="openDispatch(shipping)">Potvrdiť odoslanie</button>
+                            <button type="button" class="rounded border border-gray-300 bg-white px-4 py-2 hover:bg-gray-50" @click="cancelPreparation(shipping)">Zrušiť prípravu</button>
                         </div>
                     </div>
                 </section>
-                <!-- Expedované dodacie listy — len ak už niečo bolo expedované -->
-                <div v-if="shippedRows.length" class="mb-5 overflow-x-auto border-2 border-gray-300 bg-white shadow">
-                    <div class="border-b border-gray-200 px-4 py-3 text-sm font-semibold text-gray-900">
-                        Už expedované dodacie listy k objednávke
-                    </div>
-                    <table class="min-w-full divide-y divide-gray-300">
-                        <thead class="thead">
-                            <tr>
-                                <th class="thead_th text-center">Dodací list</th>
-                                <th class="thead_th text-center">Dátum</th>
-                                <th class="thead_th text-left">Produkt</th>
-                                <th class="thead_th text-center">Počet</th>
-                                <th class="thead_th text-center">Notifikácia</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            <tr v-for="row in shippedRows" :key="`${row.shipping.id}-${row.stock?.id ?? 'empty'}`" class="hover:bg-gray-50">
-                                <td class="tbody_td text-center font-semibold">DL #{{ row.shipping.id }}</td>
-                                <td class="tbody_td text-center">{{ row.shipping.dispatched_at || row.shipping.created_at }}</td>
-                                <td class="tbody_td">{{ row.stock?.name ?? '-' }}</td>
-                                <td class="tbody_td text-center font-semibold">{{ row.stock?.quantity ?? 0 }}</td>
-                                <td class="tbody_td text-center">
-                                    <span v-if="row.shipping.notices?.some(notice => notice.notice === 'email')"
-                                        class="rounded bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
-                                        Odoslaná
-                                    </span>
-                                    <span v-else
-                                        class="rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">
-                                        Bez emailu
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                <!-- Zákazník + objednávka -->
+                <div class="mb-4">
+                    <OrderCustomerCard :customer="customer" :user="getOrder.user" :order="getOrder" />
                 </div>
 
-                <!-- Vrátenia tovaru — ak existujú, alebo ak je čo vrátiť -->
-                <div v-if="getReturns.length || shippedQuantity > 0"
+                <!-- Súhrn expedície + história dodacích listov -->
+                <div class="mb-4 border-2 border-gray-300 bg-white p-4 shadow">
+                    <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+                        <span class="rounded px-2 py-0.5 font-semibold"
+                            :class="isFullyShipped ? 'bg-green-100 text-green-800' : pendingShippings.length ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'">
+                            {{ statusLabel }}
+                        </span>
+                        <span class="text-gray-600">Expedované <span class="font-semibold text-gray-900">{{ shippedQuantity }}/{{ requiredQuantity }} ks</span></span>
+                        <span class="text-gray-600">zostáva <span class="font-semibold text-gray-900">{{ remainingQuantity }} ks</span></span>
+                        <span class="ml-auto font-semibold text-gray-900">{{ shippingPercentage }} %</span>
+                    </div>
+
+                    <div class="mt-3 h-3 overflow-hidden rounded-full bg-gray-200">
+                        <div class="h-full rounded-full transition-all"
+                            :class="getOrder.isFinished ? 'bg-green-600' : shippedQuantity > 0 ? 'bg-amber-500' : 'bg-red-500'"
+                            :style="{ width: `${shippingPercentage}%` }"></div>
+                    </div>
+
+                    <p v-if="isFullyShipped" class="mt-3 text-sm font-semibold text-green-700">
+                        ✓ Objednávka je kompletne expedovaná.
+                    </p>
+
+                    <!-- Časová os dodacích listov: kedy vystavený, kedy odoslaný, čo obsahoval, či išiel email -->
+                    <ul v-if="shippingTimeline.length" class="mt-4 divide-y divide-gray-100 border-t border-gray-200 text-sm">
+                        <li v-for="shipping in shippingTimeline" :key="shipping.id" class="py-2">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                <span class="w-16 font-semibold text-gray-900">DL #{{ shipping.id }}</span>
+                                <span class="text-gray-600">
+                                    <span class="text-gray-400">vystavený</span> {{ shipping.created_at.slice(0, 16) }}
+                                </span>
+                                <span v-if="shipping.dispatched_at" class="font-semibold text-green-700">
+                                    <span class="font-normal text-gray-400">odoslaný</span> {{ shipping.dispatched_at }}
+                                </span>
+                                <span v-else class="font-semibold text-amber-700">čaká na odoslanie</span>
+                                <span v-if="shipping.dispatched_at"
+                                    class="rounded px-2 py-0.5 text-xs font-semibold"
+                                    :class="shipping.notices?.some(notice => notice.notice === 'email') ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'">
+                                    {{ shipping.notices?.some(notice => notice.notice === 'email') ? 'Email odoslaný' : 'Bez emailu' }}
+                                </span>
+                                <span class="ml-auto text-xs text-gray-500">{{ shipping.quantity_sum }} ks</span>
+                            </div>
+                            <div v-if="shipping.stocks?.length" class="mt-0.5 pl-20 text-xs text-gray-500">
+                                <span v-for="(stock, index) in shipping.stocks" :key="stock.id">
+                                    {{ stock.name }} × {{ stock.quantity }}<span v-if="index < shipping.stocks.length - 1">, </span>
+                                </span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Hlavná tabuľka — VŠETKY produkty -->
+                <div class="mb-4 border-2 border-gray-400 bg-white shadow">
+                    <div class="flex flex-wrap items-center gap-2 border-b border-gray-200 px-4 py-3">
+                        <span class="mr-auto text-sm font-semibold text-gray-900">Položky objednávky</span>
+                        <template v-if="showPrepareBar">
+                            <button type="button" @click="resetShippingItems(false)"
+                                class="rounded bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-200">
+                                Vyčistiť
+                            </button>
+                            <button type="button" @click="resetShippingItems(true)"
+                                class="rounded bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100">
+                                Všetko zostávajúce
+                            </button>
+                        </template>
+                        <button v-if="canEditStorno" type="button" @click="stornoMode = !stornoMode"
+                            class="rounded px-3 py-1.5 text-xs font-semibold"
+                            :class="stornoMode ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'">
+                            {{ stornoMode ? 'Hotovo so stornom' : 'Upraviť storno' }}
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-300">
+                            <thead class="thead">
+                                <tr>
+                                    <th class="thead_th w-10 text-center"><span class="sr-only">Zahrnúť</span></th>
+                                    <th class="thead_th text-left">Produkt</th>
+                                    <th class="thead_th text-center">Objednané</th>
+                                    <th class="thead_th text-center">Expedované</th>
+                                    <th class="thead_th text-center">Ostáva</th>
+                                    <th class="thead_th text-center">Teraz pripraviť</th>
+                                    <th v-if="stornoMode" class="thead_th text-center">Storno</th>
+                                    <th class="thead_th text-right">Cena s DPH</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr v-for="item in allProducts" :key="item.id"
+                                    class="transition"
+                                    :class="isExcluded(item)
+                                        ? 'bg-gray-100 opacity-60'
+                                        : item.remaining === 0 && item.stornoQuantity === 0
+                                            ? 'bg-green-50 opacity-70'
+                                            : item.stornoQuantity > 0 && item.remaining === 0
+                                                ? 'bg-gray-100 opacity-60'
+                                                : 'hover:bg-gray-50'">
+
+                                    <td class="tbody_td text-center">
+                                        <input v-if="item.remaining > 0 && showPrepareBar"
+                                            type="checkbox" :checked="!isExcluded(item)" @change="toggleExcludeItem(item)"
+                                            :title="isExcluded(item) ? 'Zahrnúť do dodacieho listu' : 'Vynechať z dodacieho listu'"
+                                            class="h-4 w-4 rounded" />
+                                    </td>
+
+                                    <td class="tbody_td">
+                                        <div class="flex items-center gap-3">
+                                            <img v-if="item.thumb" :src="item.thumb" :alt="item.name"
+                                                class="h-10 w-10 rounded border border-gray-200 object-cover" />
+                                            <div>
+                                                <div class="font-semibold text-gray-900">{{ item.name }}</div>
+                                                <div class="text-xs text-gray-500">{{ item.unit_value }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="tbody_td text-center">
+                                        {{ item.quantity }}
+                                        <div v-if="item.stornoQuantity > 0" class="text-xs text-gray-400">storno {{ item.stornoQuantity }}</div>
+                                    </td>
+
+                                    <td class="tbody_td text-center">
+                                        <span :class="item.shipped > 0 ? 'font-semibold text-green-700' : 'text-gray-400'">
+                                            {{ item.shipped }}
+                                        </span>
+                                    </td>
+
+                                    <td class="tbody_td text-center">
+                                        <span :class="item.remaining > 0 ? 'font-semibold text-amber-700' : 'text-gray-400'">
+                                            {{ item.remaining }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Teraz pripraviť -->
+                                    <td class="tbody_td text-center">
+                                        <input
+                                            v-if="item.remaining > 0 && showPrepareBar"
+                                            v-model.number="shippingItems[item.id]"
+                                            type="number" min="0" :max="item.remaining"
+                                            :disabled="isExcluded(item)"
+                                            class="w-24 rounded border px-2 py-1 text-center transition"
+                                            :class="isExcluded(item)
+                                                ? 'border-gray-200 bg-gray-100 text-gray-400 line-through'
+                                                : 'border-gray-300'"
+                                            @input="normalizeQuantity(item)"
+                                        />
+                                        <span v-else class="text-xs text-gray-400">—</span>
+                                    </td>
+
+                                    <!-- Storno — len v režime úpravy storna -->
+                                    <td v-if="stornoMode" class="tbody_td text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <input
+                                                v-model.number="stornoEdits[item.id]"
+                                                type="number"
+                                                min="0"
+                                                :max="item.maxStorno"
+                                                :disabled="item.maxStorno === 0"
+                                                class="w-16 rounded border border-orange-300 px-1 py-1 text-center text-sm disabled:border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                            />
+                                            <div class="flex flex-col gap-1">
+                                                <button v-if="item.maxStorno > 0 && stornoEdits[item.id] !== item.maxStorno"
+                                                    type="button"
+                                                    @click="stornoRemaining(item)"
+                                                    class="rounded bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-700 hover:bg-orange-100"
+                                                    title="Stornovať celý zostatok">
+                                                    Všetko
+                                                </button>
+                                                <button v-if="stornoEdits[item.id] !== item.stornoQuantity"
+                                                    type="button"
+                                                    @click="saveStorno(item)"
+                                                    :disabled="stornoSaving[item.id]"
+                                                    class="rounded bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                                                    {{ stornoSaving[item.id] ? '...' : 'Uložiť' }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="tbody_td text-right whitespace-nowrap">
+                                        <div class="text-gray-900">{{ formatPrice(item.unitPrice) }} €</div>
+                                        <div class="text-xs text-gray-500">spolu {{ formatPrice(item.lineTotal) }} €</div>
+                                    </td>
+                                </tr>
+
+                                <tr v-if="!allProducts.length">
+                                    <td :colspan="stornoMode ? 8 : 7" class="tbody_td py-8 text-center text-gray-500">
+                                        Táto objednávka nemá žiadne položky.
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot v-if="allProducts.length" class="bg-gray-100">
+                                <tr>
+                                    <td class="tbody_td text-right font-semibold text-gray-700" :colspan="stornoMode ? 7 : 6">Spolu s DPH</td>
+                                    <td class="tbody_td text-right font-bold text-gray-900 whitespace-nowrap">
+                                        {{ formatPrice(productsTotal) }} €
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Vrátenia tovaru — ak existujú -->
+                <div v-if="getReturns.length"
                     class="mb-5 overflow-x-auto border-2 border-orange-300 bg-white shadow">
-                    <div class="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+                    <div class="border-b border-gray-200 px-4 py-3">
                         <span class="text-sm font-semibold text-gray-900">
                             Vrátenia tovaru
-                            <span v-if="getReturns.length"
-                                class="ml-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">
+                            <span class="ml-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">
                                 {{ getReturns.length }}
                             </span>
                         </span>
-                        <router-link v-if="shippedQuantity > 0 && getOrder.permissions?.manageReturns?.allowed"
-                            :to="{ name: 'orders.returns.create', params: { orderId } }"
-                            class="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">
-                            + Vrátiť tovar
-                        </router-link>
                     </div>
 
-                    <div v-if="!getReturns.length" class="px-4 py-4 text-center text-sm text-gray-400">
-                        Žiadne vrátenia
-                    </div>
-
-                    <table v-else class="min-w-full divide-y divide-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
                         <thead class="thead">
                             <tr>
                                 <th class="thead_th text-center">Vrátenie</th>
@@ -523,12 +497,29 @@ watch(allProducts, () => {
                     </table>
                 </div>
 
-                <div class="flex flex-wrap justify-between gap-2">
-                    <buttonLink :item="buttonBack" />
+                <!-- Hlavná akcia je prilepená dole, aby bola vždy na dosah -->
+                <div v-if="showPrepareBar"
+                    class="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-x-6 gap-y-2 border-t-2 border-blue-600 bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+                    <span class="text-sm text-gray-600">Teraz pripraviť <span class="font-semibold text-gray-900">{{ selectedQuantity }} ks</span></span>
+                    <span class="text-sm text-gray-600">ostane na neskôr <span class="font-semibold text-gray-900">{{ remainingAfterShipping }} ks</span></span>
+                    <router-link v-if="canReturnGoods"
+                        :to="{ name: 'orders.returns.create', params: { orderId } }"
+                        class="ml-auto rounded border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">
+                        Vrátiť tovar
+                    </router-link>
                     <button type="button" @click="openCheckoutModal" :disabled="!canConfirmShipping"
-                        class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400">
+                        :class="{ 'ml-auto': !canReturnGoods }"
+                        class="rounded bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400">
                         Pripraviť dodací list
                     </button>
+                </div>
+                <div v-else class="flex flex-wrap justify-between gap-2">
+                    <buttonLink :item="buttonBack" />
+                    <router-link v-if="canReturnGoods"
+                        :to="{ name: 'orders.returns.create', params: { orderId } }"
+                        class="rounded bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
+                        Vrátiť tovar
+                    </router-link>
                 </div>
             </div>
 

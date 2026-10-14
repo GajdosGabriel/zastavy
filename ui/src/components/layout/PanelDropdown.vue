@@ -69,7 +69,12 @@ onUnmounted(() => {
     <div :data-dropdown-id="id">
         <button
             ref="buttonRef"
+            type="button"
             @click.stop="toggle"
+            aria-label="Akcie"
+            title="Akcie"
+            aria-haspopup="menu"
+            :aria-expanded="open"
             class="flex items-center p-2 rounded-md transition-colors"
             :class="[
                 !items.length && !$slots.default
@@ -81,7 +86,7 @@ onUnmounted(() => {
             :disabled="!items.length && !$slots.default"
         >
             <svg class="w-5 h-5 text-indigo-100 dark:text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                <path d="M6 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM11.5 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM17 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
             </svg>
         </button>
 
@@ -98,24 +103,30 @@ onUnmounted(() => {
                     v-show="open"
                     :data-dropdown-id="id"
                     :style="dropdownStyle"
+                    role="menu"
                     class="fixed z-50 w-44 rounded border border-gray-300 bg-white shadow-lg"
                 >
                     <div v-if="items.length">
-                        <div v-for="(item, index) in items" :key="index">
+                        <!-- Deštruktívne akcie (danger) sú oddelené čiarou a červené, aby sa nezamenili s bežnými. -->
+                        <div v-for="(item, index) in items" :key="index"
+                            :class="{ 'border-t-2 border-gray-300': item.danger && index > 0 && !items[index - 1].danger }">
                             <router-link
                                 v-if="item.to"
                                 :to="item.to"
                                 class="block cursor-pointer p-2 hover:bg-indigo-300 border-b border-gray-200"
+                                :class="{ 'font-semibold text-red-700 hover:bg-red-100': item.danger }"
                             >
                                 {{ item.label }}
                             </router-link>
-                            <div
+                            <button
                                 v-else-if="item.onClick"
+                                type="button"
                                 @click="item.onClick(); close()"
-                                class="cursor-pointer p-2 hover:bg-indigo-300 border-b border-gray-200"
+                                class="block w-full cursor-pointer p-2 text-left hover:bg-indigo-300 border-b border-gray-200"
+                                :class="{ 'font-semibold text-red-700 hover:bg-red-100': item.danger }"
                             >
                                 {{ item.label }}
-                            </div>
+                            </button>
                             <div v-else class="p-2 text-gray-500">{{ item.label }}</div>
                         </div>
                     </div>

@@ -46,15 +46,14 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
 
 <template>
     <div v-if="shipping">
-        <div class="inline-flex items-center gap-1.5 rounded border border-gray-200 bg-white px-2 py-1 shadow-sm">
-
-        <!-- Ikona dodacieho listu + ID v title -->
-        <button @click="onClickShipping"
+        <!-- Klikateľná je celá pilulka (min. 28 px), nie len text. -->
+        <button type="button" @click="onClickShipping"
             :title="stateTitle"
+            :aria-label="stateTitle"
             :class="shipping.is_preparing
                 ? 'text-sky-700 hover:text-sky-900'
-                : (emailNotice ? 'text-green-700 hover:text-green-900' : 'text-gray-500 hover:text-gray-700')"
-            class="flex cursor-pointer items-center gap-1">
+                : (emailNotice ? 'text-green-700 hover:text-green-900' : 'text-gray-600 hover:text-gray-800')"
+            class="inline-flex min-h-7 cursor-pointer items-center gap-1 rounded border border-gray-200 bg-white px-2 py-1 shadow-sm hover:bg-gray-50">
             <!-- package with ribbon icon (tovar zabalený/expedovaný, prepravca ešte neprevzal) -->
             <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -67,7 +66,6 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
             <!-- Stav dodacieho listu vždy slovom — samotný čas notifikácie vyzeral ako čas odoslania zásielky. -->
             <span class="text-xs font-semibold">{{ shipping.is_preparing ? "Čaká na expedíciu" : "Odoslané" }}</span>
         </button>
-        </div>
         <!-- Čas vystavenia DL, po potvrdení čas odoslania — rovnako ako čas pod stavom objednávky. -->
         <div class="mt-2 text-xs text-gray-500">{{ shipping.state_at_human }}</div>
     </div>

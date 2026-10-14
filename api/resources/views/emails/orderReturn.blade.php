@@ -19,6 +19,7 @@
         .info-box.orange { background: #fffbeb; border: 1px solid #fcd34d; color: #78350f; }
         .info-box.blue { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; }
         .footer { background: #f9f9f9; padding: 20px 32px; font-size: 12px; color: #aaa; text-align: center; border-top: 1px solid #eee; }
+        @media only screen and (max-width: 520px) { .cta-text, .cta-action { display: block !important; width: auto !important; text-align: left !important; } .cta-text { padding-bottom: 10px !important; } .cta-action { padding: 0 18px 14px !important; white-space: normal !important; } }
     </style>
 </head>
 <body>

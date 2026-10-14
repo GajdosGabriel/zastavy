@@ -39,7 +39,7 @@ const hasPendingShipping = computed(() => (props.order.shippings ?? []).some(shi
 
         <!-- Pripravená na odoslanie — zabalená, čaká na vyzdvihnutie kuriérom -->
         <span v-else-if="showPackStatus && order.status?.value === 'ready_to_ship'"
-            class="inline-flex min-w-28 items-center justify-center rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white">
+            class="inline-flex min-w-28 items-center justify-center rounded bg-sky-700 px-2 py-1 text-xs font-semibold text-white">
             Pripravené na odoslanie
         </span>
 
@@ -54,7 +54,7 @@ const hasPendingShipping = computed(() => (props.order.shippings ?? []).some(shi
             class="inline-flex min-w-28 items-center justify-center rounded border px-2 py-1 text-xs font-semibold"
             :class="shippingPercentage > 0
                 ? 'border-amber-400 bg-amber-50 text-amber-700'
-                : 'border-gray-300 bg-white text-gray-600'">
+                : 'border-gray-200 bg-gray-100 text-gray-700'">
             {{ order.shippintPercentageCalculator }}
         </span>
 

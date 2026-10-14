@@ -38,6 +38,7 @@
         .button-row { margin-bottom: 24px; text-align: center; }
         .button { display: inline-block; background: #1e3a5f; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 5px; font-size: 14px; font-weight: 600; }
         .footer { background: #f9f9f9; padding: 20px 32px; font-size: 12px; color: #aaa; text-align: center; border-top: 1px solid #eee; }
+        @media only screen and (max-width: 520px) { .cta-text, .cta-action { display: block !important; width: auto !important; text-align: left !important; } .cta-text { padding-bottom: 10px !important; } .cta-action { padding: 0 18px 14px !important; white-space: normal !important; } }
     </style>
 </head>
 <body>

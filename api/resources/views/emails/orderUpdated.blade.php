@@ -25,6 +25,7 @@
         td { padding: 10px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
         .total-row td { font-weight: 700; font-size: 15px; border-bottom: none; padding-top: 14px; }
         .footer { background: #f9f9f9; padding: 20px 32px; font-size: 12px; color: #aaa; text-align: center; border-top: 1px solid #eee; }
+        @media only screen and (max-width: 520px) { .cta-text, .cta-action { display: block !important; width: auto !important; text-align: left !important; } .cta-text { padding-bottom: 10px !important; } .cta-action { padding: 0 18px 14px !important; white-space: normal !important; } }
     </style>
 </head>
 <body>

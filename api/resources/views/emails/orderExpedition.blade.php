@@ -30,6 +30,7 @@
         .shipping-line { font-size: 14px; color: #555; margin-bottom: 24px; }
         .shipping-line strong { color: #1e3a5f; }
         .footer { background: #f9f9f9; padding: 20px 32px; font-size: 12px; color: #aaa; text-align: center; border-top: 1px solid #eee; }
+        @media only screen and (max-width: 520px) { .cta-text, .cta-action { display: block !important; width: auto !important; text-align: left !important; } .cta-text { padding-bottom: 10px !important; } .cta-action { padding: 0 18px 14px !important; white-space: normal !important; } }
     </style>
 </head>
 <body>

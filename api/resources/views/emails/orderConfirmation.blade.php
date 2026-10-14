@@ -21,6 +21,7 @@
         td { padding: 10px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
         .total-row td { font-weight: 700; font-size: 15px; border-bottom: none; padding-top: 14px; }
         .footer { background: #f9f9f9; padding: 20px 32px; font-size: 12px; color: #aaa; text-align: center; border-top: 1px solid #eee; }
+        @media only screen and (max-width: 520px) { .cta-text, .cta-action { display: block !important; width: auto !important; text-align: left !important; } .cta-text { padding-bottom: 10px !important; } .cta-action { padding: 0 18px 14px !important; white-space: normal !important; } }
     </style>
 </head>
 <body>
@@ -44,11 +45,11 @@
         @if($order->canEditDelivery() && $order->deliveryEditUrl())
         <table role="presentation" style="margin:-12px 0 28px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:5px;">
             <tr>
-                <td style="padding:14px 18px; border-bottom:none; font-size:13px; color:#1e3a5f;">
+                <td class="cta-text" style="padding:14px 18px; border-bottom:none; font-size:13px; color:#1e3a5f;">
                     <strong style="display:block; font-size:14px; margin-bottom:3px;">Doručiť inam?</strong>
                     Adresu doručenia si môžete zmeniť sami, kým objednávku neodošleme.
                 </td>
-                <td style="padding:14px 18px 14px 0; border-bottom:none; text-align:right; white-space:nowrap; vertical-align:middle;">
+                <td class="cta-action" style="padding:14px 18px 14px 0; border-bottom:none; text-align:right; white-space:nowrap; vertical-align:middle;">
                     <a href="{{ $order->deliveryEditUrl() }}"
                        style="display:inline-block; background:#fff; color:#1e3a5f; border:1px solid #1e3a5f; text-decoration:none; padding:8px 16px; border-radius:5px; font-size:13px; font-weight:600;">
                         Zmeniť adresu

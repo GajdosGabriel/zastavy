@@ -51,79 +51,104 @@ const dropdownItems = computed(() => {
 
     const permissionItems = Object.entries(props.order.permissions || {})
         .filter(([key, perm]) => perm.allowed && actionMap[key])
-        .map(([key, perm]) => ({ label: perm.label, ...actionMap[key] }));
+        .map(([key, perm]) => ({ key, label: perm.label, ...actionMap[key] }));
 
     const returnItem = canCreateReturn.value
         ? [{ label: "Vrátenie tovaru", to: { name: "orders.returns.create", params: { orderId: props.order.id } } }]
         : [];
 
-    return [...fixed, ...returnItem, ...permissionItems];
+    // Storno a Zmazať idú na koniec menu ako danger položky, oddelené od bežných akcií.
+    const dangerKeys = ["storno", "delete"];
+    const safe = permissionItems.filter(item => !dangerKeys.includes(item.key));
+    const danger = permissionItems.filter(item => dangerKeys.includes(item.key)).map(item => ({ ...item, danger: true }));
+
+    return [...fixed, ...returnItem, ...safe, ...danger];
+});
+
+const customerName = computed(() => props.order.customer.company || props.order.customer.name || "");
+
+// "Obec Lula / Lula" — mesto zobrazíme len ak už nie je obsiahnuté v názve zákazníka.
+const showCity = computed(() => {
+    const city = (props.order.customer.city || "").trim().toLowerCase();
+    return city && !customerName.value.toLowerCase().includes(city);
+});
+
+const rowStateTitle = computed(() => {
+    if (props.order.isStorned) return "Stornovaná objednávka";
+    if (props.order.isFinished) return "Vybavená objednávka";
+    if (!props.order.isOpened) return "Neotvorená objednávka";
+    return undefined;
 });
 </script>
 
 <template>
-    <tr class="border-b border-gray-200 align-top transition hover:bg-gray-50" :class="[
+    <!-- Pod md sa riadok skladá ako karta (flex + order), od md je to bežný riadok tabuľky. -->
+    <tr class="flex flex-wrap items-start border-b border-gray-200 px-2 py-3 transition hover:bg-gray-50 md:table-row md:p-0 md:align-top" :class="[
         { 'bg-green-50': !order.isOpened },
         { 'bg-blue-50': order.isFinished },
         { 'bg-gray-200': order.isStorned },
     ]">
-        <td class="tbody_td whitespace-nowrap font-semibold">
+        <td class="tbody_td order-1 whitespace-nowrap font-semibold !text-gray-700 max-md:!px-2 max-md:!py-1">
             <div class="flex items-center gap-1.5">
                 <router-link :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }" class="hover:text-blue-700">
                     {{ order.serial_number }}
                 </router-link>
                 <span v-if="order.wants_coupon"
                     class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white"
-                    title="Zákazník požaduje zľavový kupón">K</span>            </div>
+                    title="Zákazník požaduje zľavový kupón">K</span>
+                <span v-if="rowStateTitle" class="sr-only">{{ rowStateTitle }}</span>
+            </div>
         </td>
 
-        <td class="tbody_td w-10">
-            <icon-star :status="order.mark.isActive" class="mx-auto cursor-pointer" @click="clickToMark(order)" />
+        <td class="tbody_td order-2 w-10 max-md:!px-0 max-md:!py-0">
+            <button type="button" @click="clickToMark(order)"
+                class="mx-auto flex h-8 w-8 items-center justify-center rounded hover:bg-gray-100 md:-my-1.5"
+                :aria-pressed="!!order.mark.isActive"
+                :aria-label="order.mark.isActive ? 'Zrušiť označenie' : 'Označiť objednávku'"
+                :title="order.mark.isActive ? 'Zrušiť označenie' : 'Označiť objednávku'">
+                <icon-star :status="order.mark.isActive" />
+            </button>
         </td>
 
-        <td class="tbody_td min-w-64 relative cursor-pointer hover:text-blue-800">
+        <td class="tbody_td order-4 basis-full cursor-pointer hover:text-blue-800 max-md:!px-2 max-md:!py-1 md:min-w-64">
             <router-link :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }">
-                <div v-if="order.customer.company" class="font-bold">
-                    <TruncatedText :text="order.customer.company" />
-                </div>
-                <div v-else class="font-semibold">
-                    <TruncatedText :text="order.customer.name" />
-                </div>
-                <div class="font-semibold text-gray-600">
-                    <TruncatedText :text="order.customer.city" />
-                    <span v-if="order.note || order.has_made_to_order" class="absolute right-2 flex gap-1">
-                        <span v-if="order.has_made_to_order" class="rounded bg-violet-600 px-2 text-xs text-white">
-                            Na zákazku
-                        </span>
-                        <span v-if="order.note" class="rounded bg-amber-500 px-2 text-xs text-white">
-                            Poznámka
-                        </span>
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-900"
+                    :class="order.customer.company ? 'font-bold' : 'font-semibold'">
+                    <TruncatedText :text="customerName" />
+                    <span v-if="order.has_made_to_order" class="rounded bg-violet-600 px-2 text-xs font-semibold text-white">
+                        Na zákazku
                     </span>
+                    <span v-if="order.note" class="rounded bg-amber-600 px-2 text-xs font-semibold text-white">
+                        Poznámka
+                    </span>
+                </div>
+                <div v-if="showCity" class="text-gray-500">
+                    <TruncatedText :text="order.customer.city" />
                 </div>
             </router-link>
         </td>
 
-        <td class="tbody_td whitespace-nowrap text-right font-bold">
+        <td class="tbody_td order-5 whitespace-nowrap font-bold !text-gray-900 max-md:!px-2 max-md:!py-1 md:text-right">
             {{ formatPrice(order.grand_total ?? order.price_sum) }} €
         </td>
 
-        <td class="tbody_td min-w-36">
+        <td class="tbody_td order-6 max-md:!px-2 max-md:!py-1 md:min-w-36">
             <shipping-button :order="order" :show-shipping-action="false" />
             <div class="mt-2 text-xs text-gray-500">{{ order.created_at_human }}</div>
         </td>
 
-        <td class="tbody_td min-w-44" title="zoznam expedícií">
+        <td class="tbody_td order-7 basis-full max-md:!px-2 max-md:!py-1 md:min-w-44" title="zoznam expedícií">
             <div class="flex flex-col gap-2">
                 <div v-if="order.shippings.length" class="flex flex-wrap gap-2">
                     <notice-label v-for="shipping in order.shippings" :key="shipping.id" :shipping="shipping" />
                 </div>
-                <div v-else class="text-xs text-gray-400">
+                <div v-else class="text-xs text-gray-500">
                     Bez expedície
                 </div>
             </div>
         </td>
 
-        <td class="tbody_td w-12">
+        <td class="tbody_td order-3 w-12 max-md:ml-auto max-md:!px-2 max-md:!py-0">
             <panel-dropdown :items="dropdownItems" />
         </td>
     </tr>
