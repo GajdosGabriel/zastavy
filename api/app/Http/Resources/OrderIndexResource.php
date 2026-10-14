@@ -42,6 +42,7 @@ class OrderIndexResource extends JsonResource
             'grand_total' => $this->grandTotal(),
             'note'         => $this->note,
             'wants_coupon' => (bool) $this->wants_coupon,
+            'has_made_to_order' => $this->orderProducts->contains(fn ($p) => $p->product?->made_to_order),
             'orderProducts' => OrderProductResource::collection($this->orderProducts),
             'stock_expedition' => $stockExpedition,
             'product_order_sum' => $orderedQuantity,

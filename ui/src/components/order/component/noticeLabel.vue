@@ -52,7 +52,7 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
         <button @click="onClickShipping"
             :title="stateTitle"
             :class="shipping.is_preparing
-                ? 'text-indigo-700 hover:text-indigo-900'
+                ? 'text-sky-700 hover:text-sky-900'
                 : (emailNotice ? 'text-green-700 hover:text-green-900' : 'text-gray-500 hover:text-gray-700')"
             class="flex cursor-pointer items-center gap-1">
             <!-- package with ribbon icon (tovar zabalený/expedovaný, prepravca ešte neprevzal) -->
@@ -65,7 +65,7 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
                 <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
             </svg>
             <!-- Stav dodacieho listu vždy slovom — samotný čas notifikácie vyzeral ako čas odoslania zásielky. -->
-            <span class="text-xs font-semibold">{{ shipping.is_preparing ? "Čaká na odoslanie" : "Odoslané" }}</span>
+            <span class="text-xs font-semibold">{{ shipping.is_preparing ? "Čaká na expedíciu" : "Odoslané" }}</span>
         </button>
         </div>
         <!-- Čas vystavenia DL, po potvrdení čas odoslania — rovnako ako čas pod stavom objednávky. -->

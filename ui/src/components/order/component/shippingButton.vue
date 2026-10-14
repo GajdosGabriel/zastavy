@@ -39,7 +39,7 @@ const hasPendingShipping = computed(() => (props.order.shippings ?? []).some(shi
 
         <!-- Pripravená na odoslanie — zabalená, čaká na vyzdvihnutie kuriérom -->
         <span v-else-if="showPackStatus && order.status?.value === 'ready_to_ship'"
-            class="inline-flex min-w-28 items-center justify-center rounded bg-indigo-600 px-2 py-1 text-xs font-semibold text-white">
+            class="inline-flex min-w-28 items-center justify-center rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white">
             Pripravené na odoslanie
         </span>
 

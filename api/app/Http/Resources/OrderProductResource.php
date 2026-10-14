@@ -19,6 +19,7 @@ class OrderProductResource extends JsonResource
             'id' => $this->id,
             'product_id' => $this->product_id,
             'is_custom' => (bool) $this->is_custom,
+            'made_to_order' => (bool) $this->product?->made_to_order,
             'order_id' => $this->order_id,
             'name' => $this->product_details->name,
             'product_variant_id' => $this->product_variant_id,

@@ -32,7 +32,7 @@ class OrderController extends Controller
 
         $orders = app(OrderStatisticsService::class)
             ->queryFor(request()->user(), $orderFilters)
-            ->with(['customer', 'shippings.stocks', 'shippings.notices', 'orderProducts', 'stocks', 'mark'])
+            ->with(['customer', 'shippings.stocks', 'shippings.notices', 'orderProducts.product', 'stocks', 'mark'])
             ->orderBy('created_at', 'desc')
             ->paginate();
 

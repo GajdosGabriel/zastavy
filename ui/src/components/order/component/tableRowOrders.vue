@@ -74,8 +74,7 @@ const dropdownItems = computed(() => {
                 </router-link>
                 <span v-if="order.wants_coupon"
                     class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white"
-                    title="Zákazník požaduje zľavový kupón">K</span>
-            </div>
+                    title="Zákazník požaduje zľavový kupón">K</span>            </div>
         </td>
 
         <td class="tbody_td w-10">
@@ -92,9 +91,13 @@ const dropdownItems = computed(() => {
                 </div>
                 <div class="font-semibold text-gray-600">
                     <TruncatedText :text="order.customer.city" />
-                    <span v-if="order.note"
-                        class="absolute right-2 rounded bg-amber-500 px-2 text-xs text-white">
-                        Poznámka
+                    <span v-if="order.note || order.has_made_to_order" class="absolute right-2 flex gap-1">
+                        <span v-if="order.has_made_to_order" class="rounded bg-violet-600 px-2 text-xs text-white">
+                            Na zákazku
+                        </span>
+                        <span v-if="order.note" class="rounded bg-amber-500 px-2 text-xs text-white">
+                            Poznámka
+                        </span>
                     </span>
                 </div>
             </router-link>
