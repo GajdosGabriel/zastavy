@@ -1,104 +1,45 @@
-<!DOCTYPE html>
-<html lang="sk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zmena objednávky</title>
-    <style>
-        body { font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; background: #f5f5f5; }
-        .wrapper { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 6px; overflow: hidden; }
-        .header { background: #1e3a5f; color: #fff; padding: 28px 32px; }
-        .header h1 { margin: 0; font-size: 22px; font-weight: 600; }
-        .header p { margin: 6px 0 0; font-size: 14px; color: #aaa; }
-        .body { padding: 32px; }
-        .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin: 0 0 12px; }
-        .info-block { margin-bottom: 28px; }
-        .info-block p { margin: 4px 0; font-size: 14px; }
-        .change-block { background: #f0f4ff; border-left: 4px solid #1e3a5f; border-radius: 4px; padding: 16px 20px; margin: 0 0 28px; }
-        .change-row { display: flex; gap: 8px; align-items: center; font-size: 14px; margin: 6px 0; }
-        .change-label { color: #555; min-width: 150px; }
-        .change-old { color: #e53e3e; text-decoration: line-through; }
-        .change-arrow { color: #888; }
-        .change-new { color: #2f855a; font-weight: 600; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
-        th { text-align: left; font-size: 12px; text-transform: uppercase; color: #888; padding: 6px 0; border-bottom: 1px solid #e5e5e5; }
-        td { padding: 10px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
-        .total-row td { font-weight: 700; font-size: 15px; border-bottom: none; padding-top: 14px; }
-        .footer { background: #f9f9f9; padding: 20px 32px; font-size: 12px; color: #aaa; text-align: center; border-top: 1px solid #eee; }
-        @media only screen and (max-width: 520px) { .cta-text, .cta-action { display: block !important; width: auto !important; text-align: left !important; } .cta-text { padding-bottom: 10px !important; } .cta-action { padding: 0 18px 14px !important; white-space: normal !important; } }
-    </style>
-</head>
-<body>
-<div class="wrapper">
-    <div class="header">
-        <h1>Zmena objednávky</h1>
-        @if($order->serial_number)
-            <p>Číslo objednávky: {{ $order->serial_number }}</p>
-        @endif
-    </div>
+<x-email.layout title="Zmena objednávky" heading="Zmena objednávky"
+                :subheading="$order->serial_number ? 'Objednávka č. '.$order->serial_number : null">
+    <x-slot:styles>
+        <style>
+            .change-block { background: #f0f4ff; border-left: 4px solid #1e3a5f; border-radius: 4px; padding: 12px 20px; margin: 0 0 24px; }
+            .change-block td { border-bottom: none; padding: 5px 0; }
+            .change-label { color: #555; padding-right: 12px !important; }
+            .change-old { color: #b91c1c; text-decoration: line-through; }
+            .change-new { color: #166534; font-weight: 600; }
+        </style>
+    </x-slot:styles>
 
-    <div class="body">
-        <x-email.customer :customer="$order->billing" />
+    <p class="lead">
+        Dobrý deň, <strong>{{ $order->billing->company ?: $order->billing->name }}</strong>,<br>
+        Vašu objednávku sme upravili. Nižšie nájdete, čo sa zmenilo, a aktuálnu rekapituláciu.
+    </p>
 
-        @if(!empty($changes))
-        <div class="info-block">
-            <p class="section-title">Čo sa zmenilo</p>
-            <div class="change-block">
-                @foreach($changes as $change)
-                <div class="change-row">
-                    <span class="change-label">{{ $change['label'] }}:</span>
+    @if(!empty($changes))
+    <p class="section-title">Čo sa zmenilo</p>
+    <div class="change-block">
+        <table role="presentation" style="margin:0;">
+            @foreach($changes as $change)
+            <tr>
+                <td class="change-label">{{ $change['label'] }}</td>
+                <td>
                     <span class="change-old">{{ $change['old'] ?? '—' }}</span>
-                    <span class="change-arrow">→</span>
+                    <span style="color:#555;"> → </span>
                     <span class="change-new">{{ $change['new'] ?? '—' }}</span>
-                </div>
-                @endforeach
-            </div>
-        </div>
-        @endif
-
-        <p class="section-title">Objednané položky</p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Produkt</th>
-                    <th style="text-align:right">Množstvo</th>
-                    @if($order->orderProducts->first()?->price)
-                        <th style="text-align:right">Cena/ks</th>
-                        <th style="text-align:right">Spolu</th>
-                    @endif
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($order->orderProducts as $item)
-                <tr>
-                    <td><x-email.order-item :item="$item" /></td>
-                    <td style="text-align:right">{{ $item->quantity }} {{ $item->product_details->unit_value }}</td>
-                    @if($order->orderProducts->first()?->price)
-                        <td style="text-align:right">{{ number_format($item->price, 2, ',', ' ') }} €</td>
-                        <td style="text-align:right">{{ number_format($item->total, 2, ',', ' ') }} €</td>
-                    @endif
-                </tr>
-                @endforeach
-                @if($order->orderProducts->first()?->price)
-                <tr><td colspan="3">Doprava a platba</td><td style="text-align:right">{{ number_format($order->shipping_price + $order->payment_fee, 2, ',', ' ') }} €</td></tr>
-                @if($order->discount_amount)<tr><td colspan="3">Zľavový kupón</td><td style="text-align:right">−{{ number_format($order->discount_amount, 2, ',', ' ') }} €</td></tr>@endif
-                @if($order->adjustmentAmount())<tr><td colspan="3">{{ $order->price_adjustment['label'] ?? 'Úprava ceny' }}</td><td style="text-align:right">{{ number_format($order->adjustmentAmount(), 2, ',', ' ') }} €</td></tr>@endif
-                <tr class="total-row">
-                    <td colspan="3">Celková suma</td>
-                    <td style="text-align:right">{{ number_format($order->grandTotal(), 2, ',', ' ') }} €</td>
-                </tr>
-                @endif
-            </tbody>
+                </td>
+            </tr>
+            @endforeach
         </table>
+    </div>
+    @endif
 
-        <x-email.messages-link :order="$order" />
+    <x-email.order-summary :order="$order" title="Aktuálne položky" />
 
-        <x-email.contact-block />
+    <x-email.payment :order="$order" />
+
+    <div class="button-row">
+        <a href="{{ $order->publicUrl() }}" class="button">Zobraziť objednávku online</a>
     </div>
 
-    <div class="footer">
-        Táto správa bola vygenerovaná automaticky · {{ now()->format('d.m.Y') }}
-    </div>
-</div>
-</body>
-</html>
+    <x-email.messages-link :order="$order" />
+</x-email.layout>

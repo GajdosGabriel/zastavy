@@ -169,8 +169,13 @@ const onClickIco = async () => {
 </script>
 
 <template>
+    <!-- Súkromná osoba (hideCompany): firemné vyhľadávanie ani IČO/DIČ nemajú zmysel, ostáva len akcia obsluhy -->
+    <div v-if="hideCompany && $slots['quick-fill-action']" class="mb-4 flex justify-end">
+        <slot name="quick-fill-action" />
+    </div>
+
     <!-- IČO vyhľadávanie -->
-    <div class="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
+    <div v-if="!hideCompany" class="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
         <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
             <label for="ico-search" class="block text-sm font-semibold text-blue-900">Rýchle doplnenie — vyhľadajte firmu podľa IČO</label>
             <slot name="quick-fill-action" />
@@ -250,17 +255,17 @@ const onClickIco = async () => {
             <FormInput v-model="getCustomer.phone" :id="fid('phone')" autocomplete="tel" maxlength="40" type="tel" :required="isRequired('phone')" :invalid="isMissing('phone')" :error="fieldError('phone')" placeholder="Telefón" :field-key="errorKey('phone')" />
             <FieldHint :hint="hintFor('phone')" @apply="applyHint('phone')" />
         </div>
-        <div>
+        <div v-if="!hideCompany">
             <label :for="fid('ico')" class="mb-1.5 block text-sm font-semibold text-gray-700">IČO</label>
             <FormInput v-model="getCustomer.ico" :id="fid('ico')" autocomplete="off" maxlength="10" :field-key="errorKey('ico')" :invalid="!!icoValidationError()" :error="icoValidationError()" inputmode="numeric" placeholder="IČO" @keyup.enter="onClickIco" />
             <FieldHint :hint="hintFor('ico')" @apply="applyHint('ico')" />
         </div>
-        <div>
+        <div v-if="!hideCompany">
             <label :for="fid('dic')" class="mb-1.5 block text-sm font-semibold text-gray-700">DIČ</label>
             <FormInput v-model="getCustomer.dic" :id="fid('dic')" autocomplete="off" maxlength="20" inputmode="numeric" :invalid="!!fieldError('dic')" :error="fieldError('dic')" placeholder="DIČ" :field-key="errorKey('dic')" />
             <FieldHint :hint="hintFor('dic')" @apply="applyHint('dic')" />
         </div>
-        <div>
+        <div v-if="!hideCompany">
             <label :for="fid('ic_dic')" class="mb-1.5 block text-sm font-semibold text-gray-700">IČ DPH</label>
             <FormInput v-model="getCustomer.ic_dic" :id="fid('ic_dic')" autocomplete="off" maxlength="20" :invalid="!!fieldError('ic_dic')" :error="fieldError('ic_dic')" placeholder="IČ DPH" :field-key="errorKey('ic_dic')" />
             <FieldHint :hint="hintFor('ic_dic')" @apply="applyHint('ic_dic')" />

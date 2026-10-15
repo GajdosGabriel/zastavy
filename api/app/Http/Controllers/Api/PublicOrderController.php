@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Dashboard\OrderAttachmentController;
+use App\Enums\OrderStatus;
 use App\Models\Attachment;
 use App\Models\Order;
 use App\Http\Controllers\Controller;
@@ -60,6 +61,8 @@ class PublicOrderController extends Controller
                 'price_adjustment' => $order->price_adjustment,
                 'adjustment_amount' => $order->adjustmentAmount(),
                 'grand_total' => $order->grandTotal(),
+                'status' => OrderStatus::fromOrder($order)->toArray(),
+                'payment_instructions' => $order->paymentInstructions(),
             ],
         ]);
     }

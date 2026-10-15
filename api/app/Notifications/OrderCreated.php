@@ -55,7 +55,7 @@ class OrderCreated extends Notification implements ShouldQueue
             ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->subject(OrderThread::subject($this->order))
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-            ->view('emails.orderConfirmation', ['order' => $this->order])
+            ->view('emails.orderConfirmation', ['order' => $this->order, 'forAdmin' => $notifiable instanceof User])
             // Koreň vlákna objednávky: ďalšie e-maily k objednávke sa zaradia pod túto správu.
             ->withSymfonyMessage(fn ($m) => OrderThread::root($m, $this->order, $notifiable instanceof User));
 

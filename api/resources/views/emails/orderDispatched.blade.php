@@ -70,9 +70,9 @@
     </div>
     @endif
 
-    <x-email.messages-link :order="$order" />
-
     <div class="button-row">
         <a href="{{ $order->publicUrl() }}" class="button">Zobraziť objednávku online</a>
     </div>
+
+    <x-email.messages-link :order="$order" />
 </x-email.layout>

@@ -65,7 +65,15 @@ class UserController extends Controller
                 });
             })
             ->when($request->filled('role'), function ($query) use ($request) {
-                $query->role($request->string('role')->toString());
+                $role = $request->string('role')->toString();
+
+                // Zákazník nie je Spatie rola, ale používateľ naviazaný na zákazníka.
+                // Neznáma rola by v Spatie vyhodila výnimku (500) — vrátime prázdny zoznam.
+                match (true) {
+                    $role === 'customer' => $query->whereNotNull('customer_id'),
+                    \Spatie\Permission\Models\Role::where('name', $role)->exists() => $query->role($role),
+                    default => $query->whereRaw('1 = 0'),
+                };
             })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $status = ModelStatus::tryFrom($request->string('status')->toString());

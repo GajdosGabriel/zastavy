@@ -321,6 +321,32 @@ class Order extends Model
         return \App\Support\OrderPricing::amount($this->priceSum(), $this->price_adjustment, (float) $this->discount_amount);
     }
 
+    /**
+     * Údaje na úhradu prevodom (e-mail aj verejný detail). Null, ak sa neplatí
+     * prevodom, objednávka je stornovaná/archivovaná alebo obchod nemá IBAN (config/shop.php).
+     */
+    public function paymentInstructions(): ?array
+    {
+        $iban = config('shop.bank.iban');
+        $status = OrderStatus::fromOrder($this);
+
+        if (! $iban
+            || $this->paymentMethod?->type !== 'bank_transfer'
+            || in_array($status, [OrderStatus::Cancelled, OrderStatus::Archived], true)) {
+            return null;
+        }
+
+        return [
+            'iban'   => $iban,
+            'swift'  => config('shop.bank.swift'),
+            'holder' => config('shop.bank.holder'),
+            // Variabilný symbol = číslice čísla objednávky (2026-10-0040 → 2026100040, max. 10 číslic).
+            'variable_symbol' => substr(preg_replace('/\D/', '', (string) $this->serial_number), 0, 10),
+            'amount' => $this->grandTotal(),
+            'note'   => 'Objednávka ' . $this->serial_number,
+        ];
+    }
+
     public function grandTotal(): float
     {
         return round(max(0, $this->priceSum() - (float) $this->discount_amount + $this->adjustmentAmount()) + (float) $this->shipping_price + (float) $this->payment_fee, 2);

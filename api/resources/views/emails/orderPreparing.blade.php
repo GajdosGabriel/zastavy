@@ -33,5 +33,11 @@
         Tento e-mail potvrdzuje prípravu v sklade. Zásielka zatiaľ nebola odoslaná — po jej odoslaní Vás budeme informovať samostatným e-mailom.
     </div>
 
+    <x-email.payment :order="$order" />
+
+    <div class="button-row">
+        <a href="{{ $order->publicUrl() }}" class="button">Zobraziť objednávku online</a>
+    </div>
+
     <x-email.messages-link :order="$order" />
 </x-email.layout>

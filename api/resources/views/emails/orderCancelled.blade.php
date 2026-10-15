@@ -1,89 +1,48 @@
-<!DOCTYPE html>
-<html lang="sk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storno objednávky</title>
-    <style>
-        body { font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; background: #f5f5f5; }
-        .wrapper { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 6px; overflow: hidden; }
-        .header { background: #7f1d1d; color: #fff; padding: 28px 32px; }
-        .header h1 { margin: 0; font-size: 22px; font-weight: 600; }
-        .header p { margin: 6px 0 0; font-size: 14px; color: #fca5a5; }
-        .body { padding: 32px; }
-        .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin: 0 0 10px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-        th { text-align: left; font-size: 12px; text-transform: uppercase; color: #888; padding: 6px 0; border-bottom: 1px solid #e5e5e5; }
-        td { padding: 9px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
-        .info-box { background: #fff7f7; border: 1px solid #fecaca; border-radius: 5px; padding: 16px 20px; margin-bottom: 24px; font-size: 14px; color: #7f1d1d; }
-        .footer { background: #f9f9f9; padding: 20px 32px; font-size: 12px; color: #aaa; text-align: center; border-top: 1px solid #eee; }
-        @media only screen and (max-width: 520px) { .cta-text, .cta-action { display: block !important; width: auto !important; text-align: left !important; } .cta-text { padding-bottom: 10px !important; } .cta-action { padding: 0 18px 14px !important; white-space: normal !important; } }
-    </style>
-</head>
-<body>
 @php
     $shippedItems = $order->orderProducts->filter(fn($item) => $item->stockSum > 0);
     $cancelledItems = $order->orderProducts->filter(fn($item) => ($item->storno ?? 0) > 0 && $item->stockSum == 0);
 @endphp
-<div class="wrapper">
-    <div class="header">
-        <h1>Objednávka stornovaná</h1>
-        @if($order->serial_number)
-            <p>č. {{ $order->serial_number }}</p>
-        @endif
-    </div>
-
-    <div class="body">
-        <x-email.customer :customer="$order->billing" />
-
-        <p style="font-size:15px; margin: 0 0 20px; line-height:1.6;">
-            Dobrý deň, <strong>{{ $order->billing->company ?: $order->billing->name }}</strong>,<br>
-            Vaša objednávka č. <strong>{{ $order->serial_number }}</strong> bola stornovaná.
-            @if($shippedItems->count())
-                Časť objednávky, ktorá už bola expedovaná, Vám zostáva — kontaktujte nás v prípade otázok.
-            @else
-                Žiadny tovar Vám nebol zaslaný.
-            @endif
-        </p>
-
-        @if($cancelledItems->count())
-        <p class="section-title">Stornované položky</p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Tovar</th>
-                    <th style="text-align:right">Množstvo</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($cancelledItems as $item)
-                <tr>
-                    <td><x-email.order-item :item="$item" /></td>
-                    <td style="text-align:right">{{ $item->storno }} {{ $item->product_details->unit_value ?? 'ks' }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-        @endif
-
+<x-email.layout title="Storno objednávky" heading="Objednávka stornovaná" accent="#991b1b"
+                :subheading="$order->serial_number ? 'Objednávka č. '.$order->serial_number : null">
+    <p class="lead">
+        Dobrý deň, <strong>{{ $order->billing->company ?: $order->billing->name }}</strong>,<br>
+        Vaša objednávka č. <strong>{{ $order->serial_number }}</strong> bola stornovaná.
         @if($shippedItems->count())
-        <div class="info-box">
-            <strong style="display:block; margin-bottom:6px;">Už expedované položky</strong>
-            Nasledujúce položky boli pred stornom odoslané a sú na ceste k Vám alebo už doručené:
-            <ul style="margin:8px 0 0; padding-left:18px;">
-                @foreach($shippedItems as $item)
-                <li style="margin-bottom:4px;">{{ $item->product_details->name ?? '—' }}@if($item->variant_name) ({{ $item->variant_name }})@endif — {{ $item->stockSum }} {{ $item->product_details->unit_value ?? 'ks' }}</li>
-                @endforeach
-            </ul>
-        </div>
+            Časť objednávky, ktorá už bola expedovaná, Vám zostáva — v prípade otázok nás kontaktujte.
+        @else
+            Žiadny tovar Vám nebol zaslaný.
         @endif
+    </p>
 
-        <x-email.contact-block />
-    </div>
+    @if($cancelledItems->count())
+    <p class="section-title">Stornované položky</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Tovar</th>
+                <th style="text-align:right">Množstvo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($cancelledItems as $item)
+            <tr>
+                <td><x-email.order-item :item="$item" /></td>
+                <td style="text-align:right; white-space:nowrap">{{ $item->storno }} {{ $item->product_details->unit_value ?? 'ks' }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    @endif
 
-    <div class="footer">
-        Gajdoš Gabriel – Reprezent · Slatinská 14, 921 07 Bratislava · {{ now()->format('d.m.Y') }}
+    @if($shippedItems->count())
+    <div class="note-box">
+        <strong style="display:block; margin-bottom:6px;">Už expedované položky</strong>
+        Nasledujúce položky boli pred stornom odoslané a sú na ceste k Vám alebo už doručené:
+        <ul style="margin:8px 0 0; padding-left:18px;">
+            @foreach($shippedItems as $item)
+            <li style="margin-bottom:4px;">{{ $item->product_details->name ?? '—' }}@if($item->variant_name) ({{ $item->variant_name }})@endif — {{ $item->stockSum }} {{ $item->product_details->unit_value ?? 'ks' }}</li>
+            @endforeach
+        </ul>
     </div>
-</div>
-</body>
-</html>
+    @endif
+</x-email.layout>

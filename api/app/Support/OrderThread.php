@@ -20,7 +20,11 @@ class OrderThread
 
     public static function subject(Order $order): string
     {
-        return 'Objednávka | '.$order->billing->company;
+        // Číslo v predmete: zákazník ho nájde v schránke aj bez otvorenia e-mailu.
+        $number = $order->serial_number ? ' č. '.$order->serial_number : '';
+        $name = $order->billing->company ?: $order->billing->name;
+
+        return 'Objednávka'.$number.($name ? ' | '.$name : '');
     }
 
     public static function replySubject(Order $order): string

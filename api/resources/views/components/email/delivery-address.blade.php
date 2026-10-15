@@ -9,7 +9,8 @@
     @if($delivery['company'])
         <p><strong>{{ $delivery['company'] }}</strong></p>
     @endif
-    @if($delivery['name'])
+    {{-- Súkromná osoba má v „firme“ svoje meno — nevypisujeme ho dvakrát. --}}
+    @if($delivery['name'] && trim($delivery['name']) !== trim((string) $delivery['company']))
         <p>{{ $delivery['name'] }}</p>
     @endif
     @if($delivery['street'])
