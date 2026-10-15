@@ -8,7 +8,7 @@
                     <th class="thead_th">Kusov</th>
                     <th class="thead_th">Cena spolu</th>
                     <th class="thead_th">Storno</th>
-                    <th class="thead_th">Panel</th>
+                    <th class="thead_th"><span class="sr-only">Akcie</span></th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">

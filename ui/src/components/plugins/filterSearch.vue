@@ -9,6 +9,8 @@ const props = defineProps({
     historyKey: { type: String, required: true },
     historyTitle: { type: String, default: 'Nedávne hľadania' },
     placeholder: { type: String, default: 'Hľadať…' },
+    // id inputu pre <label for> — keď chýba, pole nesie popis cez aria-label
+    inputId: { type: String, default: null },
     debounce: { type: Number, default: 400 },
 });
 
@@ -128,6 +130,8 @@ defineExpose({ applySearch });
                 type="text"
                 class="filter-input"
                 :placeholder="placeholder"
+                :id="inputId"
+                :aria-label="inputId ? undefined : placeholder"
                 autocomplete="off"
                 @input="onSearchInput"
                 @keydown.enter="onSearchEnter"

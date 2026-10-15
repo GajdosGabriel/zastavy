@@ -25,7 +25,7 @@ const visible = ref(false);
         <button
             type="button"
             tabindex="-1"
-            class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 transition hover:text-slate-700 focus:outline-none"
+            class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 transition hover:text-slate-700 focus:outline-none"
             :title="visible ? 'Skryť heslo' : 'Zobraziť heslo'"
             :aria-label="visible ? 'Skryť heslo' : 'Zobraziť heslo'"
             @click="visible = !visible"

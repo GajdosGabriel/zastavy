@@ -106,7 +106,7 @@ watch(() => props.modelValue, (value) => {
 
         <div class="relative">
             <p v-if="isEmpty && placeholder"
-                class="pointer-events-none absolute left-3 top-2 text-sm text-gray-400">
+                class="pointer-events-none absolute left-3 top-2 text-sm text-gray-500">
                 {{ placeholder }}
             </p>
             <div ref="editor" contenteditable="true" @input="onInput" @blur="onInput" @paste="onPaste"

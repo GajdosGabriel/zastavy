@@ -128,7 +128,7 @@ const submit = async () => {
                             </section>
                             <section class="rounded-xl border border-gray-200 bg-white shadow-sm">
                                 <div class="flex items-center justify-between border-b bg-gray-50 px-5 py-4">
-                                    <h2 class="font-semibold text-gray-800">Položky príjemky <span class="text-gray-400">({{ form.items.length }})</span></h2>
+                                    <h2 class="font-semibold text-gray-800">Položky príjemky <span class="text-gray-500">({{ form.items.length }})</span></h2>
                                     <button type="button" :disabled="form.items.length >= 100" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50" @click="addItem">+ Pridať položku</button>
                                 </div>
                                 <div v-if="loading" class="px-5 pt-4 text-sm text-gray-500">Načítavam skladové položky…</div>

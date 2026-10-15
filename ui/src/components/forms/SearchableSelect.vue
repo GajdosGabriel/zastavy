@@ -160,14 +160,14 @@ onUnmounted(() => clearTimeout(blurTimer));
             <button
                 v-if="selected && !disabled"
                 type="button"
-                class="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-lg leading-none text-gray-400 hover:text-gray-600"
+                class="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-lg leading-none text-gray-500 hover:text-gray-600"
                 aria-label="Zrušiť výber"
                 @click="clear"
             >
                 ×
             </button>
 
-            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
                 <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>

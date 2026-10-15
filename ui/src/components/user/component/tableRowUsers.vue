@@ -89,7 +89,7 @@ const dropdownItems = computed(() => [
             ]">
                 {{ user.status.label }}
             </span>
-            <span v-else class="text-gray-400">-</span>
+            <span v-else class="text-gray-500">-</span>
 
             <span
                 v-if="user.active === false"

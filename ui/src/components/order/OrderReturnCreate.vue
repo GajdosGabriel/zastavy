@@ -103,7 +103,7 @@ async function submit() {
                 <!-- Header -->
                 <div class="mb-4 flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Objednávka č. {{ getOrder?.serial_number }}</p>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Objednávka č. {{ getOrder?.serial_number }}</p>
                         <h1 class="text-xl font-bold text-gray-900">Nové vrátenie tovaru</h1>
                     </div>
                     <buttonLink :item="buttonBack" class="text-sm" />
@@ -114,7 +114,7 @@ async function submit() {
                     <!-- Dôvod + poznámka -->
                     <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
                         <div class="border-b border-gray-100 px-5 py-2.5">
-                            <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Dôvod vrátenia</span>
+                            <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Dôvod vrátenia</span>
                         </div>
                         <div class="px-5 py-4 space-y-4">
                             <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -131,7 +131,7 @@ async function submit() {
                                 </label>
                             </div>
                             <div>
-                                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">Poznámka (nepovinné)</label>
+                                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Poznámka (nepovinné)</label>
                                 <HtmlEditor v-model="note" min-height="5rem"
                                     placeholder="Napr. zákazník odmietol prevziať..." />
                             </div>
@@ -141,19 +141,19 @@ async function submit() {
                     <!-- Položky -->
                     <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
                         <div class="border-b border-gray-100 px-5 py-2.5">
-                            <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Položky na vrátenie</span>
+                            <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Položky na vrátenie</span>
                         </div>
 
-                        <div v-if="shippedItems.length === 0" class="px-5 py-8 text-center text-sm text-gray-400">
+                        <div v-if="shippedItems.length === 0" class="px-5 py-8 text-center text-sm text-gray-500">
                             Žiadne expedované položky na vrátenie.
                         </div>
 
                         <table v-else class="min-w-full divide-y divide-gray-100">
                             <thead>
                                 <tr>
-                                    <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Tovar</th>
-                                    <th class="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">Expedované</th>
-                                    <th class="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">Vrátiť</th>
+                                    <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Tovar</th>
+                                    <th class="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Expedované</th>
+                                    <th class="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Vrátiť</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
@@ -193,7 +193,7 @@ async function submit() {
                             class="rounded-lg px-5 py-2 text-sm font-semibold transition"
                             :class="canSubmit
                                 ? 'bg-red-600 text-white hover:bg-red-700'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+                                : 'bg-gray-200 text-gray-500 cursor-not-allowed'"
                         >
                             {{ submitting ? 'Ukladám...' : 'Vytvoriť vrátenie' }}
                         </button>

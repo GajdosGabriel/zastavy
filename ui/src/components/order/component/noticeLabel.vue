@@ -100,7 +100,7 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
                         </button>
                         <button type="button" @click="saveNotice('email')"
                             :disabled="loadingStore.isLoading"
-                            class="inline-flex items-center gap-2 rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                            class="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
                             <SpinnerButton v-if="loadingStore.isLoading" />
                             Odoslať email
                         </button>
@@ -122,7 +122,7 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
                         </button>
                         <button type="button" @click="confirmNotice"
                             :disabled="loadingStore.isLoading"
-                            class="inline-flex items-center gap-2 rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                            class="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
                             <SpinnerButton v-if="loadingStore.isLoading" />
                             Potvrdiť
                         </button>

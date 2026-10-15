@@ -135,7 +135,7 @@ const buttonBottomLeft = { name: 'Späť', spinner: true, link: '/zakaznici', ic
                             <th class="thead_th">Firma</th>
                             <th class="thead_th">Adresa</th>
                             <th class="thead_th">ICO</th>
-                            <th class="thead_th">Panel</th>
+                            <th class="thead_th"><span class="sr-only">Akcie</span></th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">

@@ -70,29 +70,29 @@ const dropdownItems = (coupon) => [
                     <form @submit.prevent="saveSettings">
                         <div class="grid gap-4 md:grid-cols-5">
                             <div>
-                                <label class="mb-1 block text-xs font-bold text-slate-700">Oneskorenie aktivácie (dni)</label>
-                                <FormInput v-model.number="settings.delay_days" type="number" min="0" max="90" required />
-                                <p class="mt-1 text-xs text-slate-400">Dní po archivácii</p>
+                                <label for="cs-delay" class="mb-1 block text-xs font-bold text-slate-700">Oneskorenie aktivácie (dni)</label>
+                                <FormInput id="cs-delay" aria-describedby="cs-delay-hint" v-model.number="settings.delay_days" type="number" min="0" max="90" required />
+                                <p id="cs-delay-hint" class="mt-1 text-xs text-slate-600">Dní po archivácii</p>
                             </div>
                             <div>
-                                <label class="mb-1 block text-xs font-bold text-slate-700">Platnosť kupóna (dni)</label>
-                                <FormInput v-model.number="settings.valid_days" type="number" min="7" max="365" required />
-                                <p class="mt-1 text-xs text-slate-400">Dní od aktivácie</p>
+                                <label for="cs-valid" class="mb-1 block text-xs font-bold text-slate-700">Platnosť kupóna (dni)</label>
+                                <FormInput id="cs-valid" aria-describedby="cs-valid-hint" v-model.number="settings.valid_days" type="number" min="7" max="365" required />
+                                <p id="cs-valid-hint" class="mt-1 text-xs text-slate-600">Dní od aktivácie</p>
                             </div>
                             <div>
-                                <label class="mb-1 block text-xs font-bold text-slate-700">Zľava (%)</label>
-                                <FormInput v-model.number="settings.discount_percent" type="number" min="1" max="50" required />
-                                <p class="mt-1 text-xs text-slate-400">Percentuálna zľava</p>
+                                <label for="cs-discount" class="mb-1 block text-xs font-bold text-slate-700">Zľava (%)</label>
+                                <FormInput id="cs-discount" v-model.number="settings.discount_percent" type="number" min="1" max="50" required />
+                                <p class="mt-1 text-xs text-slate-600">Percentuálna zľava</p>
                             </div>
                             <div>
-                                <label class="mb-1 block text-xs font-bold text-slate-700">Násobiteľ min. objednávky</label>
-                                <FormInput v-model.number="settings.min_order_multiplier" type="number" step="0.1" min="1" max="5" required />
-                                <p class="mt-1 text-xs text-slate-400">× hodnota pôv. obj.</p>
+                                <label for="cs-multiplier" class="mb-1 block text-xs font-bold text-slate-700">Násobiteľ min. objednávky</label>
+                                <FormInput id="cs-multiplier" aria-describedby="cs-multiplier-hint" v-model.number="settings.min_order_multiplier" type="number" step="0.1" min="1" max="5" required />
+                                <p id="cs-multiplier-hint" class="mt-1 text-xs text-slate-600">× hodnota pôv. obj.</p>
                             </div>
                             <div>
-                                <label class="mb-1 block text-xs font-bold text-slate-700">Min. objednávka (€)</label>
-                                <FormInput v-model.number="settings.min_order_floor" type="number" min="0" required />
-                                <p class="mt-1 text-xs text-slate-400">Spodná hranica</p>
+                                <label for="cs-floor" class="mb-1 block text-xs font-bold text-slate-700">Min. objednávka (€)</label>
+                                <FormInput id="cs-floor" aria-describedby="cs-floor-hint" v-model.number="settings.min_order_floor" type="number" min="0" required />
+                                <p id="cs-floor-hint" class="mt-1 text-xs text-slate-600">Spodná hranica</p>
                             </div>
                         </div>
                         <div class="mt-4 flex items-center gap-3">
@@ -104,7 +104,7 @@ const dropdownItems = (coupon) => [
                                 {{ settingsSaving ? 'Ukladám...' : 'Uložiť nastavenia' }}
                             </button>
                             <span v-if="settingsSaved" class="text-sm font-semibold text-green-600">✓ Uložené</span>
-                            <span class="text-xs text-slate-400">
+                            <span class="text-xs text-slate-600">
                                 Príklad: obj. 80 € → min. {{ Math.ceil(Math.max(settings.min_order_floor, 80 * settings.min_order_multiplier) / 10) * 10 }} €,
                                 platný {{ settings.delay_days }}–{{ settings.delay_days + settings.valid_days }} dní od archivácie
                             </span>
@@ -116,9 +116,9 @@ const dropdownItems = (coupon) => [
                 <form class="mb-6 rounded-md border border-slate-300 bg-white p-4 shadow-sm" @submit.prevent="saveCoupon">
                     <div class="grid gap-4 md:grid-cols-3">
                         <div>
-                            <label class="mb-1 block text-sm font-bold text-slate-700">Kód kupóna</label>
+                            <label for="coupon-code" class="mb-1 block text-sm font-bold text-slate-700">Kód kupóna</label>
                             <div class="flex gap-2">
-                                <FormInput v-model="coupon.code" placeholder="SUMMER10" required class="uppercase flex-1" />
+                                <FormInput id="coupon-code" v-model="coupon.code" placeholder="SUMMER10" required class="uppercase flex-1" />
                                 <button type="button" @click="generateCode"
                                     title="Generovať kód"
                                     class="rounded border border-slate-300 bg-slate-100 px-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 whitespace-nowrap">
@@ -127,38 +127,38 @@ const dropdownItems = (coupon) => [
                             </div>
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-bold text-slate-700">Typ zľavy</label>
-                            <select v-model="coupon.type" required class="form-control rounded border px-3 py-2 w-full">
+                            <label for="coupon-type" class="mb-1 block text-sm font-bold text-slate-700">Typ zľavy</label>
+                            <select id="coupon-type" v-model="coupon.type" required class="form-control rounded border px-3 py-2 w-full">
                                 <option value="percent">Percentuálna (%)</option>
                                 <option value="fixed">Fixná (€)</option>
                             </select>
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-bold text-slate-700">
+                            <label for="coupon-value" class="mb-1 block text-sm font-bold text-slate-700">
                                 Hodnota {{ coupon.type === 'percent' ? '(%)' : '(€)' }}
                             </label>
-                            <FormInput v-model.number="coupon.value" type="number" step="0.01" min="0" placeholder="10" required />
+                            <FormInput id="coupon-value" v-model.number="coupon.value" type="number" step="0.01" min="0" placeholder="10" required />
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-bold text-slate-700">Min. hodnota objednávky (€)</label>
-                            <FormInput v-model="coupon.min_order_price" type="number" step="0.01" min="0" placeholder="Voliteľné" />
+                            <label for="coupon-min" class="mb-1 block text-sm font-bold text-slate-700">Min. hodnota objednávky (€)</label>
+                            <FormInput id="coupon-min" v-model="coupon.min_order_price" type="number" step="0.01" min="0" placeholder="Voliteľné" />
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-bold text-slate-700">Limit použití</label>
-                            <FormInput v-model="coupon.usage_limit" type="number" min="1" placeholder="Voliteľné" />
+                            <label for="coupon-limit" class="mb-1 block text-sm font-bold text-slate-700">Limit použití</label>
+                            <FormInput id="coupon-limit" v-model="coupon.usage_limit" type="number" min="1" placeholder="Voliteľné" />
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-bold text-slate-700">Platný od</label>
-                            <input v-model="coupon.valid_from" type="date" class="form-control rounded border px-3 py-2 w-full" />
+                            <label for="coupon-from" class="mb-1 block text-sm font-bold text-slate-700">Platný od</label>
+                            <input id="coupon-from" v-model="coupon.valid_from" type="date" class="form-control rounded border px-3 py-2 w-full" />
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-bold text-slate-700">Platný do</label>
-                            <input v-model="coupon.valid_to" type="date" class="form-control rounded border px-3 py-2 w-full" />
+                            <label for="coupon-to" class="mb-1 block text-sm font-bold text-slate-700">Platný do</label>
+                            <input id="coupon-to" v-model="coupon.valid_to" type="date" class="form-control rounded border px-3 py-2 w-full" />
                         </div>
-                        <div class="flex items-center gap-2 md:col-span-2 self-end pb-1">
-                            <input id="coupon-active" type="checkbox" v-model="coupon.active" class="h-4 w-4 accent-blue-600" />
-                            <label for="coupon-active" class="text-sm font-medium text-slate-700">Aktívny</label>
-                        </div>
+                        <label for="coupon-active" class="flex min-h-10 cursor-pointer items-center gap-2 self-end md:col-span-2">
+                            <input id="coupon-active" type="checkbox" v-model="coupon.active" class="h-5 w-5 accent-blue-600" />
+                            <span class="text-sm font-medium text-slate-700">Aktívny</span>
+                        </label>
                     </div>
                     <div class="mt-4 flex items-center justify-between">
                         <button type="button" class="btn btn-secondary" @click="resetCoupon">Nový</button>
@@ -178,7 +178,7 @@ const dropdownItems = (coupon) => [
                                 <th class="thead_th">Použití</th>
                                 <th class="thead_th">Pre</th>
                                 <th class="thead_th">Status</th>
-                                <th class="thead_th">Panel</th>
+                                <th class="thead_th"><span class="sr-only">Akcie</span></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -200,21 +200,21 @@ const dropdownItems = (coupon) => [
                                 </td>
                                 <td class="tbody_td text-center">
                                     {{ coupon.used_count }}
-                                    <span v-if="coupon.usage_limit" class="text-slate-400">/ {{ coupon.usage_limit }}</span>
+                                    <span v-if="coupon.usage_limit" class="text-slate-500">/ {{ coupon.usage_limit }}</span>
                                 </td>
                                 <td class="tbody_td text-xs text-slate-500">
                                     <span v-if="coupon.email" :title="coupon.email" class="truncate max-w-[120px] block">{{ coupon.email }}</span>
                                     <span v-else class="text-slate-300">—</span>
                                 </td>
                                 <td class="tbody_td">
-                                    <span :class="coupon.active ? 'text-green-600' : 'text-gray-400'">
+                                    <span :class="coupon.active ? 'text-green-600' : 'text-gray-500'">
                                         {{ coupon.active ? 'Aktívny' : 'Neaktívny' }}
                                     </span>
                                 </td>
                                 <td class="tbody_td"><PanelDropdown :items="dropdownItems(coupon)" /></td>
                             </tr>
                             <tr v-if="!getCoupons.length">
-                                <td colspan="8" class="tbody_td py-8 text-center text-slate-400">Žiadne kupóny</td>
+                                <td colspan="8" class="tbody_td py-8 text-center text-slate-500">Žiadne kupóny</td>
                             </tr>
                         </tbody>
                     </table>
@@ -235,7 +235,7 @@ const dropdownItems = (coupon) => [
                             <tbody class="divide-y divide-red-100">
                                 <tr v-for="coupon in getTrashedCoupons" :key="coupon.id">
                                     <td class="tbody_td text-slate-500 line-through tracking-wide">{{ coupon.code }}</td>
-                                    <td class="tbody_td text-slate-400">
+                                    <td class="tbody_td text-slate-500">
                                         {{ coupon.type === 'percent' ? `${Number(coupon.value).toLocaleString('sk-SK')} %` : `${formatPrice(coupon.value)} €` }}
                                     </td>
                                     <td class="tbody_td">

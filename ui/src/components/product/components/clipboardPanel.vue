@@ -9,7 +9,7 @@ const props = defineProps({
 <template>
     <div class="mb-5 overflow-hidden rounded-md border border-slate-300 bg-slate-50 shadow-sm">
         <div class="grid grid-cols-3 gap-4 bg-slate-800 px-4 py-2 text-sm font-semibold text-white">
-            <span>Clipboard</span>
+            <span>Schránka</span>
             <span>Ks</span>
             <span class="text-right">Hodnota</span>
         </div>

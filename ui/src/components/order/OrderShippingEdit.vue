@@ -9,6 +9,7 @@ import { useShippings } from "../../store/StoreShippings";
 import useOrderProducts from "../../store/StoreOrderProducts";
 import { useReturns } from "../../store/StoreReturns";
 import SpinnerButton from "../icons/spinnerButton.vue";
+import PageLoading from "../layout/PageLoading.vue";
 import loadingStore from "../../store/StoreLoading";
 import axiosInstance from "../../axiosInstance";
 import useErrors from "../../store/StoreErrors";
@@ -180,10 +181,17 @@ const saveStorno = async (item) => {
     }
 };
 
+// Kým nie sú dáta načítané, neukazujeme "nemá položky" ani stav — boli by nepravdivé.
+const loaded = ref(false);
+
 onMounted(async () => {
-    await Promise.all([fetchOrder(orderId), fetchReturns(orderId)]);
-    resetShippingItems(true);
-    initStornoEdits();
+    try {
+        await Promise.all([fetchOrder(orderId), fetchReturns(orderId)]);
+        resetShippingItems(true);
+        initStornoEdits();
+    } finally {
+        loaded.value = true;
+    }
 });
 
 watch(allProducts, () => {
@@ -200,7 +208,11 @@ watch(allProducts, () => {
                 <buttonLink :item="buttonBack" class="text-sm" />
             </h1>
 
-            <div class="page-body col-span-12">
+            <div v-if="!loaded" class="page-body col-span-12">
+                <PageLoading label="Načítavam objednávku…" />
+            </div>
+
+            <div v-else class="page-body col-span-12">
 
                 <!-- Poznámka zákazníka -->
                 <div v-if="getOrder.note || getOrder.wants_coupon || madeToOrderNames.length"
@@ -268,10 +280,10 @@ watch(allProducts, () => {
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
                                 <span class="w-16 font-semibold text-gray-900">DL #{{ shipping.id }}</span>
                                 <span class="text-gray-600">
-                                    <span class="text-gray-400">vystavený</span> {{ shipping.created_at.slice(0, 16) }}
+                                    <span class="text-gray-500">vystavený</span> {{ shipping.created_at.slice(0, 16) }}
                                 </span>
                                 <span v-if="shipping.dispatched_at" class="font-semibold text-green-700">
-                                    <span class="font-normal text-gray-400">odoslaný</span> {{ shipping.dispatched_at }}
+                                    <span class="font-normal text-gray-500">odoslaný</span> {{ shipping.dispatched_at }}
                                 </span>
                                 <span v-else class="font-semibold text-amber-700">čaká na odoslanie</span>
                                 <span v-if="shipping.dispatched_at"
@@ -356,17 +368,17 @@ watch(allProducts, () => {
 
                                     <td class="tbody_td text-center">
                                         {{ item.quantity }}
-                                        <div v-if="item.stornoQuantity > 0" class="text-xs text-gray-400">storno {{ item.stornoQuantity }}</div>
+                                        <div v-if="item.stornoQuantity > 0" class="text-xs text-gray-500">storno {{ item.stornoQuantity }}</div>
                                     </td>
 
                                     <td class="tbody_td text-center">
-                                        <span :class="item.shipped > 0 ? 'font-semibold text-green-700' : 'text-gray-400'">
+                                        <span :class="item.shipped > 0 ? 'font-semibold text-green-700' : 'text-gray-500'">
                                             {{ item.shipped }}
                                         </span>
                                     </td>
 
                                     <td class="tbody_td text-center">
-                                        <span :class="item.remaining > 0 ? 'font-semibold text-amber-700' : 'text-gray-400'">
+                                        <span :class="item.remaining > 0 ? 'font-semibold text-amber-700' : 'text-gray-500'">
                                             {{ item.remaining }}
                                         </span>
                                     </td>
@@ -380,11 +392,11 @@ watch(allProducts, () => {
                                             :disabled="isExcluded(item)"
                                             class="w-24 rounded border px-2 py-1 text-center transition"
                                             :class="isExcluded(item)
-                                                ? 'border-gray-200 bg-gray-100 text-gray-400 line-through'
+                                                ? 'border-gray-200 bg-gray-100 text-gray-500 line-through'
                                                 : 'border-gray-300'"
                                             @input="normalizeQuantity(item)"
                                         />
-                                        <span v-else class="text-xs text-gray-400">—</span>
+                                        <span v-else class="text-xs text-gray-500">—</span>
                                     </td>
 
                                     <!-- Storno — len v režime úpravy storna -->

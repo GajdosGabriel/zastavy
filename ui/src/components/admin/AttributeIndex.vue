@@ -111,10 +111,10 @@ const onAddValue = async (attribute) => {
                         class="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
                         <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                             <button type="button" @click="toggle(attribute.id)" class="flex items-center gap-3 text-left">
-                                <span class="text-gray-400">{{ expanded[attribute.id] ? '▾' : '▸' }}</span>
+                                <span class="text-gray-500">{{ expanded[attribute.id] ? '▾' : '▸' }}</span>
                                 <span>
                                     <span class="font-semibold text-gray-900">{{ attribute.name }}</span>
-                                    <span class="ml-2 font-mono text-xs text-gray-400">{{ attribute.code }}</span>
+                                    <span class="ml-2 font-mono text-xs text-gray-500">{{ attribute.code }}</span>
                                 </span>
                                 <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
                                     {{ attribute.values?.length ?? 0 }} {{ plural(attribute.values?.length ?? 0, 'hodnota', 'hodnoty', 'hodnôt') }}
@@ -153,12 +153,12 @@ const onAddValue = async (attribute) => {
                                     <input v-model="value.value" type="text"
                                         @change="updateValue(attribute.id, value)"
                                         class="min-w-40 flex-1 rounded border border-gray-200 px-2 py-1 text-sm" />
-                                    <span class="font-mono text-xs text-gray-400">{{ value.code }}</span>
+                                    <span class="font-mono text-xs text-gray-500">{{ value.code }}</span>
                                     <input v-model.number="value.sort_order" type="number" min="0"
                                         @change="updateValue(attribute.id, value)" title="Poradie"
                                         class="w-16 rounded border border-gray-200 px-2 py-1 text-sm" />
                                     <button type="button" @click="destroyValue(attribute.id, value)"
-                                        class="rounded px-2 py-1 text-xs text-gray-400 transition hover:bg-red-50 hover:text-red-600">
+                                        class="rounded px-2 py-1 text-xs text-gray-500 transition hover:bg-red-50 hover:text-red-600">
                                         ×
                                     </button>
                                 </div>

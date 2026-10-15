@@ -114,7 +114,7 @@ const submit = async () => {
                         <p v-if="info.serial_number" class="mt-1 text-sm text-gray-500">
                             Objednávka č. <span class="font-medium text-gray-700">{{ info.serial_number }}</span>
                         </p>
-                        <p v-if="info.changed_at" class="mt-2 text-xs text-gray-400">
+                        <p v-if="info.changed_at" class="mt-2 text-xs text-gray-500">
                             Naposledy zmenené {{ info.changed_at }}{{ info.changed_by ? ` — ${info.changed_by}` : '' }}
                         </p>
                     </div>

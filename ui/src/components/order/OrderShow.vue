@@ -97,8 +97,20 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
 
             <div v-else class="page-body col-span-12">
 
-<ReorderButton :endpoint="'/orders/'+orderId+'/reorder'" />
-<router-link v-if="getOrder.permissions?.update?.allowed" :to="'/vyroba/'+orderId" class="text-blue-700 underline">Komunikácia, grafika a výroba<span v-if="getOrder.unread_messages" class="ml-1 rounded-full bg-red-600 px-2 text-xs font-bold text-white no-underline" :title="'Neprečítané správy zákazníka: '+getOrder.unread_messages">{{ getOrder.unread_messages }}</span></router-link>
+                <!-- Sekundárne akcie objednávky -->
+                <div class="mb-4 flex flex-wrap items-start gap-2">
+                    <router-link v-if="getOrder.permissions?.update?.allowed" :to="'/vyroba/'+orderId"
+                        class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                        Komunikácia, grafika a výroba
+                        <span v-if="getOrder.unread_messages" class="ml-2 rounded-full bg-red-600 px-2 text-xs font-bold text-white"
+                            :title="'Neprečítané správy zákazníka: '+getOrder.unread_messages">{{ getOrder.unread_messages }}</span>
+                    </router-link>
+                    <router-link :to="{ name: 'orders.shipping.edit', params: { orderId } }"
+                        class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                        Expedícia
+                    </router-link>
+                    <ReorderButton :endpoint="'/orders/'+orderId+'/reorder'" />
+                </div>
                 <div class="mb-4">
                     <OrderCustomerCard :customer="customer" :user="getOrder.user" :order="getOrder" />
                 </div>
@@ -116,7 +128,7 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                                             <th class="thead_th">s DPH</th>
                                             <th class="thead_th">Exped.</th>
                                             <th class="thead_th">Storno</th>
-                                            <th class="thead_th">Panel</th>
+                                            <th class="thead_th"><span class="sr-only">Akcie</span></th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
@@ -163,7 +175,7 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                 <!-- Prílohy zákazníka (podklady k výrobe) -->
                 <div class="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
                     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-2.5">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Prílohy
                             <span v-if="getOrder.attachments?.length" class="ml-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-gray-600">
                                 {{ getOrder.attachments.length }}
@@ -179,7 +191,7 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                         </div>
                     </div>
 
-                    <div v-if="!getOrder.attachments?.length" class="px-5 py-5 text-center text-sm text-gray-400">
+                    <div v-if="!getOrder.attachments?.length" class="px-5 py-5 text-center text-sm text-gray-500">
                         Žiadne prílohy
                     </div>
 
@@ -191,8 +203,8 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                                 {{ file.name }}
                             </button>
                             <span class="flex shrink-0 items-center gap-3">
-                                <span class="text-xs text-gray-400">{{ formatFileSize(file.size) }}</span>
-                                <span class="text-xs text-gray-400">{{ file.created_at }}</span>
+                                <span class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</span>
+                                <span class="text-xs text-gray-500">{{ file.created_at }}</span>
                                 <button type="button" @click="onDeleteAttachment(file)"
                                     class="text-xs font-semibold text-red-500 hover:text-red-700">
                                     Zmazať
@@ -205,7 +217,7 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                 <!-- Vrátenia -->
                 <div class="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
                     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-2.5">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Vrátenia tovaru
                             <span v-if="getReturns.length" class="ml-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-gray-600">
                                 {{ getReturns.length }}
@@ -218,18 +230,18 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                         </button>
                     </div>
 
-                    <div v-if="!getReturns.length" class="px-5 py-5 text-center text-sm text-gray-400">
+                    <div v-if="!getReturns.length" class="px-5 py-5 text-center text-sm text-gray-500">
                         Žiadne vrátenia
                     </div>
 
                     <table v-else class="min-w-full divide-y divide-gray-100">
                         <thead>
                             <tr>
-                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">#</th>
-                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Dôvod</th>
-                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Položiek</th>
-                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Dátum</th>
-                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Status</th>
+                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">#</th>
+                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Dôvod</th>
+                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Položiek</th>
+                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Dátum</th>
+                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
                                 <th class="px-5 py-2.5"></th>
                             </tr>
                         </thead>

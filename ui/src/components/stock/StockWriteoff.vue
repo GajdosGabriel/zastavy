@@ -290,7 +290,7 @@ const onSubmit = async () => {
                                         <p v-if="fieldError('price')" class="mt-1 text-xs font-semibold text-red-600">
                                             {{ fieldError('price') }}
                                         </p>
-                                        <p v-else class="mt-1 text-xs text-gray-400">
+                                        <p v-else class="mt-1 text-xs text-gray-500">
                                             Z ceny sa počíta hodnota skladu. Bez nej sa príjem do hodnoty nezaráta.
                                         </p>
                                     </div>

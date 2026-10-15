@@ -62,7 +62,7 @@ onMounted(() => {
                         >
                             {{ isExporting ? "Exportujem..." : "Exportovať do CSV" }}
                         </button>
-                        <span v-if="!getSelected.length" class="text-xs text-slate-400">
+                        <span v-if="!getSelected.length" class="text-xs text-slate-500">
                             Vyber aspoň jeden atribút
                         </span>
                     </div>

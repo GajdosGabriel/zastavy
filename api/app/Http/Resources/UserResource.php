@@ -90,11 +90,16 @@ class UserResource extends JsonResource
         }
 
         if ($user->can('users.viewAny')) {
-            $items[] = ['NAME' => 'Použivatelia', 'ROUTE' => 'users.index', 'URL' => route('users.index'), 'ICON' => ''];
+            $items[] = ['NAME' => 'Používatelia', 'ROUTE' => 'users.index', 'URL' => route('users.index'), 'ICON' => ''];
         }
 
         if ($user->can('stocks.viewAny')) {
             $items[] = ['NAME' => 'Sklad', 'ROUTE' => 'stocks.index', 'URL' => route('stocks.index'), 'ICON' => ''];
+        }
+
+        // Rovnaká podmienka ako SalesAccess::staff — inak by stránka vrátila 403.
+        if ($user->isStaff() && $user->can('orders.create') && $user->can('orders.viewAny')) {
+            $items[] = ['NAME' => 'Predaj', 'ROUTE' => 'sales.index', 'URL' => '/predaj', 'ICON' => ''];
         }
 
         $items[] = ['NAME' => 'Kontakt', 'ROUTE' => 'public.contactUs', 'URL' => '/kontakt', 'ICON' => ''];
@@ -106,24 +111,29 @@ class UserResource extends JsonResource
     {
         $user = $this->resource;
 
-        $items = [
-            ['NAME' => 'Dashboard', 'ROUTE' => 'dashboard.index', 'URL' => '/dashboard', 'ACTION' => null],
-        ];
-
-        $hasAdminAccess = $user->hasAnyPermission([
-            'products.viewAny', 'customers.viewAny', 'stocks.viewAny',
-            'users.viewAny', 'categories.manage', 'announcements.manage',
-        ]);
-
-        if ($hasAdminAccess) {
-            $items[] = ['NAME' => 'Admin', 'ROUTE' => 'admin.index', 'URL' => '/admin', 'ACTION' => null];
-        }
+        // Dashboard je v hlavnej navigácii, tu by bol duplicitný. Menu je rozdelené na sekcie
+        // (ACTION 'header'), aby boli všetky admin stránky na jednom mieste.
+        $items = [];
 
         if ($user->hasRole('super-admin')) {
+            $items[] = ['NAME' => 'Obchod', 'ROUTE' => null, 'URL' => null, 'ACTION' => 'header'];
             $items[] = ['NAME' => 'Doprava', 'ROUTE' => 'shipping-methods.index', 'URL' => '/admin/doprava', 'ACTION' => null];
             $items[] = ['NAME' => 'Platby',  'ROUTE' => 'payment-methods.index',  'URL' => '/admin/platby',  'ACTION' => null];
-            $items[] = ['NAME' => 'Emailing', 'ROUTE' => 'emailing.index', 'URL' => '/admin/emailing', 'ACTION' => null];
             $items[] = ['NAME' => 'Kupóny',  'ROUTE' => 'coupons.index',          'URL' => '/admin/kupony',  'ACTION' => null];
+            $items[] = ['NAME' => 'Vlastnosti produktov', 'ROUTE' => 'attributes.index', 'URL' => '/admin/vlastnosti', 'ACTION' => null];
+
+            $items[] = ['NAME' => 'Komunikácia', 'ROUTE' => null, 'URL' => null, 'ACTION' => 'header'];
+            $items[] = ['NAME' => 'Emailing', 'ROUTE' => 'emailing.index', 'URL' => '/admin/emailing', 'ACTION' => null];
+            $items[] = ['NAME' => 'Oznamy',   'ROUTE' => 'announcements.index', 'URL' => '/oznamy', 'ACTION' => null];
+
+            $items[] = ['NAME' => 'Systém', 'ROUTE' => null, 'URL' => null, 'ACTION' => 'header'];
+            $items[] = ['NAME' => 'Denník udalostí',     'ROUTE' => 'system-logs.index',      'URL' => '/admin/dennik',              'ACTION' => null];
+            $items[] = ['NAME' => 'Export zákazníkov',   'ROUTE' => 'customers.export.index', 'URL' => '/admin/export-zakaznikov',   'ACTION' => null];
+            $items[] = ['NAME' => 'Export používateľov', 'ROUTE' => 'users.export.index',     'URL' => '/admin/export-pouzivatelov', 'ACTION' => null];
+        }
+
+        if ($items) {
+            $items[] = ['NAME' => null, 'ROUTE' => null, 'URL' => null, 'ACTION' => 'divider'];
         }
 
         $items[] = ['NAME' => 'Odhlásiť', 'ROUTE' => null, 'URL' => null, 'ACTION' => 'logout'];

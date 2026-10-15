@@ -114,7 +114,7 @@ async function doDelete() {
 <template>
     <BaseLayout>
         <template #main>
-            <div v-if="!ret" class="page-body col-span-12 text-gray-400 text-sm py-10 text-center">Načítavam...</div>
+            <div v-if="!ret" class="page-body col-span-12 text-gray-500 text-sm py-10 text-center">Načítavam...</div>
 
             <div v-else class="page-body col-span-12">
 
@@ -124,7 +124,7 @@ async function doDelete() {
                 <!-- Header -->
                 <div class="mb-4 flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Objednávka č. {{ ret.order_id }}</p>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Objednávka č. {{ ret.order_id }}</p>
                         <h1 class="flex items-center gap-2 text-xl font-bold text-gray-900">
                             Vrátenie #{{ ret.id }}
                             <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold"
@@ -153,7 +153,7 @@ async function doDelete() {
                 <!-- Detail karty -->
                 <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
                     <div class="border-b border-gray-100 px-5 py-2.5 flex items-center justify-between">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Detail</span>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Detail</span>
                         <button v-if="ret.can_manage && ret.status === 'pending' && !editing"
                             @click="startEdit"
                             class="text-xs font-semibold text-blue-600 hover:text-blue-800">Upraviť</button>
@@ -164,7 +164,7 @@ async function doDelete() {
                         <!-- Dôvod (edit) -->
                         <div v-if="editing" class="space-y-3">
                             <div>
-                                <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Dôvod</p>
+                                <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Dôvod</p>
                                 <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                                     <label v-for="r in REASONS" :key="r.value"
                                         class="flex cursor-pointer items-center gap-2 rounded-lg border-2 px-3 py-2 text-sm transition"
@@ -177,7 +177,7 @@ async function doDelete() {
                                 </div>
                             </div>
                             <div>
-                                <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Poznámka</p>
+                                <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Poznámka</p>
                                 <HtmlEditor v-model="editNote" min-height="5rem" />
                             </div>
                         </div>
@@ -185,19 +185,19 @@ async function doDelete() {
                         <!-- Dôvod (view) -->
                         <div v-else class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
                             <div>
-                                <p class="text-xs text-gray-400">Dôvod</p>
+                                <p class="text-xs text-gray-500">Dôvod</p>
                                 <p class="font-medium text-gray-900">{{ ret.reason_label }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-400">Vytvoril</p>
+                                <p class="text-xs text-gray-500">Vytvoril</p>
                                 <p class="font-medium text-gray-900">{{ ret.created_by ?? '—' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-400">Dátum</p>
+                                <p class="text-xs text-gray-500">Dátum</p>
                                 <p class="font-medium text-gray-900">{{ ret.created_at }}</p>
                             </div>
                             <div v-if="ret.note" class="col-span-full">
-                                <p class="text-xs text-gray-400">Poznámka</p>
+                                <p class="text-xs text-gray-500">Poznámka</p>
                                 <div class="html-content text-gray-700" v-html="sanitizeHtml(ret.note)" />
                             </div>
                         </div>
@@ -207,14 +207,14 @@ async function doDelete() {
                 <!-- Položky -->
                 <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
                     <div class="border-b border-gray-100 px-5 py-2.5">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Položky</span>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Položky</span>
                     </div>
                     <table class="min-w-full divide-y divide-gray-100">
                         <thead>
                             <tr>
-                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Tovar</th>
-                                <th class="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">Expedované</th>
-                                <th class="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">Vrátiť</th>
+                                <th class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Tovar</th>
+                                <th class="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Expedované</th>
+                                <th class="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Vrátiť</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">

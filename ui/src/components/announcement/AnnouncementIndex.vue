@@ -53,7 +53,7 @@ const dropdownItems = (announcement) => [
                                 <th class="thead_th">Umiestnenie</th>
                                 <th class="thead_th">Status</th>
                                 <th class="thead_th">Zobrazovanie</th>
-                                <th class="thead_th">Panel</th>
+                                <th class="thead_th"><span class="sr-only">Akcie</span></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">

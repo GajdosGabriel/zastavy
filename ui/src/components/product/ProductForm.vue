@@ -301,7 +301,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
 
                             <!-- Existujúce s drag&drop -->
                             <div v-if="productStore.product.images?.length">
-                                <p class="mb-2 text-xs text-gray-400">Potiahnite obrázky pre zmenu poradia</p>
+                                <p class="mb-2 text-xs text-gray-500">Potiahnite obrázky pre zmenu poradia</p>
                                 <div class="flex flex-wrap gap-3">
                                     <div
                                         v-for="(image, index) in productStore.product.images"
@@ -320,7 +320,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                                         <span class="absolute left-1.5 top-1.5 rounded bg-gray-700/60 px-1 text-xs text-white">{{ index + 1 }}</span>
                                         <img :src="image.path" alt="" class="h-24 w-24 rounded object-contain pointer-events-none" />
                                         <button type="button" @click="onClickImageRemove(image.id)"
-                                            class="mt-1 w-full rounded text-center text-xs text-gray-400 hover:bg-red-50 hover:text-red-600 py-0.5 transition">
+                                            class="mt-1 w-full rounded text-center text-xs text-gray-500 hover:bg-red-50 hover:text-red-600 py-0.5 transition">
                                             Odstrániť
                                         </button>
                                     </div>

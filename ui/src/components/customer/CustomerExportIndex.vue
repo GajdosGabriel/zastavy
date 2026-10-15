@@ -71,12 +71,12 @@ onMounted(() => {
                             @click="exportCustomers">
                             {{ isExporting ? "Exportujem..." : "Exportovať do CSV" }}
                         </button>
-                        <span v-if="!getSelected.length" class="text-xs text-slate-400">
+                        <span v-if="!getSelected.length" class="text-xs text-slate-500">
                             Vyberte aspoň jeden stĺpec
                         </span>
                     </div>
 
-                    <p class="mt-4 text-xs text-slate-400">
+                    <p class="mt-4 text-xs text-slate-500">
                         Súbor je CSV s bodkočiarkou ako oddeľovačom a kódovaním UTF-8 s BOM —
                         otvorí sa priamo v Exceli aj v Google Sheets bez rozbitej diakritiky.
                     </p>

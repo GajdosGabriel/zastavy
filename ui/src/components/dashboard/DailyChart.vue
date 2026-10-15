@@ -90,7 +90,7 @@ const active = computed(() => hovered.value === null ? null : props.days[hovered
                         </div>
                   </div>
 
-                  <div class="mt-2 flex justify-between text-[11px] text-slate-400">
+                  <div class="mt-2 flex justify-between text-[11px] text-slate-500">
                         <span>{{ days.length ? dayLabel(days[0].date) : '' }}</span>
                         <span>dnes</span>
                   </div>

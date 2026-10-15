@@ -12,10 +12,7 @@ import { storeToRefs } from "pinia";
 import productTableRow from "../orderProducts/productTableRow.vue";
 import { formatPrice } from "../../models/functions";
 import shippingButton from "./component/shippingButton.vue";
-import iconEmail from "../icons/email.vue";
-import iconPhone from "../icons/phone.vue";
-import iconCalendar from "../icons/calendar.vue";
-import iconUser from "../icons/user.vue";
+import OrderCustomerCard from "./component/OrderCustomerCard.vue";
 import PageHeader from '../layout/page/pageHeader.vue';
 import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
 import buttonLink from '../layout/page/ButtonLink.vue';
@@ -218,38 +215,9 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
             <div class="page-body col-span-12">
                 <PageHeader :item="{ title: 'Upraviť objednávku', buttonLink: buttonBack }" />
 
-                <!-- Zákazník + objednávka -->
-                <div class="bg-white p-4 border-2 border-gray-300 rounded-ms shadow mb-4 md:flex justify-between md:space-x-6">
-                    <div class="md:w-1/2 max-w-xs bg-gray-50 p-2">
-                        <div class="font-semibold text-lg mb-2">{{ customer.company }}</div>
-                        <div>{{ customer.street }}</div>
-                        <div>{{ customer.city }}</div>
-                        <div>{{ customer.postcode }}</div>
-                        <div class="border-b-2 border-gray-300 w-full mb-1 mt-1"></div>
-                        <div>ICO: {{ customer.ico }}</div>
-                        <div>DIC: {{ customer.dic }}</div>
-                    </div>
-                    <div class="md:w-1/2 max-w-xs bg-gray-50 p-2">
-                        <div class="font-semibold text-lg mb-2">
-                            <span class="text-gray-400">No.</span> {{ getOrder.serial_number }}
-                        </div>
-                        <div class="border-b-2 border-gray-300 w-full mb-1 mt-1"></div>
-                        <div class="flex items-center"><icon-user />{{ getOrder.user?.username || customer.name }}</div>
-                        <div class="flex items-center"><icon-phone />{{ getOrder.user?.phone || customer.phone }}</div>
-                        <div class="flex items-center"><icon-email />{{ getOrder.user?.email || customer.email }}</div>
-                        <div class="border-b-2 border-gray-300 w-full mb-1 mt-1"></div>
-                        <div>{{ getOrder.created_at_human }}</div>
-                        <div class="flex items-center">
-                            <icon-calendar />{{ getOrder.created_at }}
-                            <div class="text-gray-500 ml-2">prijatá</div>
-                        </div>
-                        <div class="flex items-center">
-                            <div v-for="shipping in (getOrder.shippings ?? []).filter(s => s.dispatched_at)" :key="shipping.id" class="flex items-center">
-                                <icon-calendar />{{ shipping.dispatched_at }}
-                                <div class="text-gray-500 ml-2">expedovaná</div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Zákazník + objednávka — rovnaká hlavička ako na detaile a v expedícii -->
+                <div class="mb-4">
+                    <OrderCustomerCard :customer="customer" :user="getOrder.user" :order="getOrder" />
                 </div>
 
                 <!-- Doprava + platba -->
@@ -329,7 +297,7 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', ic
                                             <th class="thead_th">s DPH</th>
                                             <th class="thead_th">Exped.</th>
                                             <th class="thead_th">Storno</th>
-                                            <th class="thead_th">Panel</th>
+                                            <th class="thead_th"><span class="sr-only">Akcie</span></th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">

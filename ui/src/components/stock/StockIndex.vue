@@ -25,6 +25,8 @@ const router = useRouter();
 
 const searchInput = ref("");
 const onlyProblems = ref(false);
+// Kým súhrn nie je načítaný, nesmieme ukázať "Žiadne záznamy".
+const summaryLoaded = ref(false);
 
 // Typ pohybu — filtre sa navzájom vylučujú, klik na aktívny ho zruší.
 const typeLabels = reactive([
@@ -75,7 +77,7 @@ onMounted(() => {
     // Návrat z detailu položky — zoznam sa vracia na všetky pohyby.
     resetUrl();
     resetQuery();
-    fetchSummary();
+    fetchSummary().finally(() => (summaryLoaded.value = true));
     fetchStocks();
 });
 
@@ -115,7 +117,13 @@ const money = (value) => formatPrice(value);
                 }" />
 
                 <!-- Prehľadové čísla -->
-                <div class="mb-5 flex gap-4 text-sm font-semibold"><router-link :to="{ name: 'stocks.receipts.index' }" class="text-blue-700 hover:underline">Evidencia príjemiek</router-link><router-link v-if="getUserCan?.['stocks.create']" :to="{ name: 'stocks.writeoff' }" class="text-red-700 hover:underline">Odpis zo skladu</router-link></div>
+                <!-- Podnavigácia skladu -->
+                <nav aria-label="Sklad" class="mb-5 flex flex-wrap gap-2 text-sm font-semibold">
+                    <router-link :to="{ name: 'stocks.receipts.index' }"
+                        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 hover:bg-gray-50">Evidencia príjemiek</router-link>
+                    <router-link v-if="getUserCan?.['stocks.create']" :to="{ name: 'stocks.writeoff' }"
+                        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 hover:bg-gray-50">Odpis zo skladu</router-link>
+                </nav>
                 <div v-if="getSummaryMeta" class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
                         <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Skladové položky</div>
@@ -130,7 +138,7 @@ const money = (value) => formatPrice(value);
                     <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
                         <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Hodnota skladu</div>
                         <div class="mt-1 text-2xl font-bold text-gray-900">{{ money(getSummaryMeta.total_value) }} €</div>
-                        <div class="mt-0.5 text-xs text-gray-400">z nákupných cien príjmov</div>
+                        <div class="mt-0.5 text-xs text-gray-500">z nákupných cien príjmov</div>
                     </div>
                     <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
                         <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Odpísané</div>
@@ -143,7 +151,7 @@ const money = (value) => formatPrice(value);
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gray-50 px-5 py-3">
                         <div>
                             <h2 class="text-sm font-semibold text-gray-700">Stav skladu</h2>
-                            <p class="mt-0.5 text-xs text-gray-400">
+                            <p class="mt-0.5 text-xs text-gray-600">
                                 Nedostatkové položky sú hore. Kliknutím na položku otvoríte jej pohyby.
                             </p>
                         </div>
@@ -153,8 +161,13 @@ const money = (value) => formatPrice(value);
                         </label>
                     </div>
 
-                    <div v-if="!visibleSummary.length" class="px-5 py-10 text-center text-sm text-gray-400">
-                        Žiadne záznamy
+                    <div v-if="!summaryLoaded" role="status" class="animate-pulse space-y-3 px-5 py-6">
+                        <span class="sr-only">Načítavam stav skladu…</span>
+                        <div v-for="n in 4" :key="n" class="h-4 rounded bg-gray-100" aria-hidden="true"></div>
+                    </div>
+
+                    <div v-else-if="!visibleSummary.length" class="px-5 py-10 text-center text-sm text-gray-600">
+                        {{ onlyProblems ? 'Žiadne problémové položky' : 'Žiadne záznamy' }}
                     </div>
 
                     <div v-else class="overflow-x-auto">
@@ -165,8 +178,8 @@ const money = (value) => formatPrice(value);
                                     <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">Prijaté</th>
                                     <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">Expedované</th>
                                     <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">Odpísané</th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">Na sklade</th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">V e-shope</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500" title="Prijaté − expedované − odpísané podľa skladových pohybov">Na sklade</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500" title="Množstvo nastavené pri produkte, ktoré vidí zákazník">V e-shope</th>
                                     <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Hodnota</th>
                                 </tr>
                             </thead>
@@ -182,13 +195,13 @@ const money = (value) => formatPrice(value);
                                         <div v-if="item.variant_name" class="text-xs font-medium text-blue-700">
                                             {{ item.variant_name }}
                                         </div>
-                                        <div class="text-xs text-gray-400">{{ item.code }}</div>
+                                        <div class="text-xs text-gray-500">{{ item.code }}</div>
                                     </td>
                                     <td class="px-4 py-3 text-center text-sm text-gray-600">
-                                        {{ item.total_in }} <span class="text-xs text-gray-400">{{ item.unit_value }}</span>
+                                        {{ item.total_in }} <span class="text-xs text-gray-500">{{ item.unit_value }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-center text-sm text-gray-600">
-                                        {{ item.total_out }} <span class="text-xs text-gray-400">{{ item.unit_value }}</span>
+                                        {{ item.total_out }} <span class="text-xs text-gray-500">{{ item.unit_value }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-center text-sm" :class="item.total_writeoff ? 'text-red-600' : 'text-gray-300'">
                                         {{ item.total_writeoff || '—' }}
@@ -199,7 +212,7 @@ const money = (value) => formatPrice(value);
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-center text-sm">
-                                        <span v-if="item.tracked_quantity === null" class="text-xs text-gray-400">
+                                        <span v-if="item.tracked_quantity === null" class="text-xs text-gray-500">
                                             nesleduje sa
                                         </span>
                                         <span
@@ -271,7 +284,7 @@ const money = (value) => formatPrice(value);
                                 <spinnerTable v-if="loadingStore.isLoading" />
                                 <tableRow v-else v-for="item in getStocks" :key="item.id" :item="item" />
                                 <tr v-if="!loadingStore.isLoading && !getStocks.length">
-                                    <td colspan="7" class="px-6 py-10 text-center text-sm text-gray-400">Žiadne pohyby</td>
+                                    <td colspan="7" class="px-6 py-10 text-center text-sm text-gray-600">Žiadne pohyby</td>
                                 </tr>
                             </tbody>
                         </table>

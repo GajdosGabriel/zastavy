@@ -127,7 +127,7 @@ const dropdownItems = computed(() => {
             <span v-if="product.total_quantity !== null">
                 {{ product.total_quantity }} {{ product.unit_value }}
             </span>
-            <span v-else class="text-xs text-gray-400">nesleduje sa</span>
+            <span v-else class="text-xs text-gray-500">nesleduje sa</span>
         </td>
 
         <td class="px-4 py-4 whitespace-nowrap flex justify-between">

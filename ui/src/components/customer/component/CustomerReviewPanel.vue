@@ -99,10 +99,10 @@ const onResolve = async () => {
                     <li v-for="change in applied" :key="'a' + change.index" class="flex items-baseline gap-2 text-sm text-gray-700">
                         <span class="min-w-0 flex-1">
                             <span class="font-semibold">{{ change.label }}:</span>
-                            <span class="text-gray-400 line-through">{{ change.from || "prázdne" }}</span>
+                            <span class="text-gray-500 line-through">{{ change.from || "prázdne" }}</span>
                             <span class="mx-1">→</span>
                             <span class="font-medium text-green-700">{{ change.to || "prázdne" }}</span>
-                            <span class="ml-1 text-xs text-gray-400">({{ change.source_label }})</span>
+                            <span class="ml-1 text-xs text-gray-500">({{ change.source_label }})</span>
                         </span>
                         <button
                             type="button"
@@ -134,14 +134,14 @@ const onResolve = async () => {
                                     <span class="rounded px-1.5 py-0.5 text-[11px] font-semibold" :class="severityClass(issue.severity)">
                                         {{ issue.severity_label }}
                                     </span>
-                                    <span class="text-[11px] text-gray-400">{{ issue.source_label }}</span>
+                                    <span class="text-[11px] text-gray-500">{{ issue.source_label }}</span>
                                 </div>
 
                                 <p class="mt-0.5 text-sm text-gray-600">{{ issue.message }}</p>
 
                                 <p v-if="issue.applicable" class="mt-1 text-sm">
-                                    <span class="text-gray-400 line-through">{{ issue.current || "prázdne" }}</span>
-                                    <span class="mx-1 text-gray-400">→</span>
+                                    <span class="text-gray-500 line-through">{{ issue.current || "prázdne" }}</span>
+                                    <span class="mx-1 text-gray-500">→</span>
                                     <span class="font-medium text-gray-900">{{ issue.suggested }}</span>
                                 </p>
                             </div>

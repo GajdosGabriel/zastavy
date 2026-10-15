@@ -70,7 +70,7 @@ const paginatorUrl = (url) => setPaginator(url);
                 <div class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                     <div class="border-b border-gray-100 bg-gray-50 px-5 py-4">
                         <h2 class="text-base font-semibold text-gray-800">{{ title }}</h2>
-                        <p v-if="getVariantSummary?.code" class="mt-0.5 text-xs text-gray-400">
+                        <p v-if="getVariantSummary?.code" class="mt-0.5 text-xs text-gray-500">
                             Kód: {{ getVariantSummary.code }}
                         </p>
                     </div>
@@ -80,30 +80,30 @@ const paginatorUrl = (url) => setPaginator(url);
                             <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Prijaté</div>
                             <div class="mt-1 text-2xl font-bold text-green-700">
                                 {{ getVariantSummary.total_in }}
-                                <span class="text-sm font-normal text-gray-400">{{ getVariantSummary.unit_value }}</span>
+                                <span class="text-sm font-normal text-gray-500">{{ getVariantSummary.unit_value }}</span>
                             </div>
                         </div>
                         <div class="bg-white px-5 py-4">
                             <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Expedované</div>
                             <div class="mt-1 text-2xl font-bold text-blue-700">
                                 {{ getVariantSummary.total_out }}
-                                <span class="text-sm font-normal text-gray-400">{{ getVariantSummary.unit_value }}</span>
+                                <span class="text-sm font-normal text-gray-500">{{ getVariantSummary.unit_value }}</span>
                             </div>
                         </div>
                         <div class="bg-white px-5 py-4">
                             <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Odpísané</div>
                             <div class="mt-1 text-2xl font-bold" :class="getVariantSummary.total_writeoff ? 'text-red-600' : 'text-gray-300'">
                                 {{ getVariantSummary.total_writeoff }}
-                                <span class="text-sm font-normal text-gray-400">{{ getVariantSummary.unit_value }}</span>
+                                <span class="text-sm font-normal text-gray-500">{{ getVariantSummary.unit_value }}</span>
                             </div>
                         </div>
                         <div class="bg-white px-5 py-4">
                             <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Na sklade</div>
                             <div class="mt-1 text-2xl font-bold" :class="balanceClass">
                                 {{ getVariantSummary.balance }}
-                                <span class="text-sm font-normal text-gray-400">{{ getVariantSummary.unit_value }}</span>
+                                <span class="text-sm font-normal text-gray-500">{{ getVariantSummary.unit_value }}</span>
                             </div>
-                            <div class="mt-1 text-xs" :class="mismatch ? 'font-semibold text-amber-600' : 'text-gray-400'">
+                            <div class="mt-1 text-xs" :class="mismatch ? 'font-semibold text-amber-600' : 'text-gray-500'">
                                 V e-shope:
                                 {{ getVariantSummary.tracked_quantity ?? 'nesleduje sa' }}
                             </div>
@@ -140,7 +140,7 @@ const paginatorUrl = (url) => setPaginator(url);
                                 <spinnerTable v-if="loadingStore.isLoading" />
                                 <tableRow v-else v-for="item in getStocks" :key="item.id" :item="item" />
                                 <tr v-if="!loadingStore.isLoading && !getStocks.length">
-                                    <td colspan="7" class="px-6 py-10 text-center text-sm text-gray-400">
+                                    <td colspan="7" class="px-6 py-10 text-center text-sm text-gray-500">
                                         Položka zatiaľ nemá žiadne pohyby
                                     </td>
                                 </tr>

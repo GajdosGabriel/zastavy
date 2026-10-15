@@ -143,7 +143,7 @@ const errorFor = (field) => {
 <template>
     <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
         <div class="flex items-center justify-between border-b border-gray-100 px-5 py-2.5">
-            <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Doručovacie adresy</span>
+            <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Doručovacie adresy</span>
             <button
                 v-if="canEdit && !showForm"
                 type="button"
@@ -257,7 +257,7 @@ const errorFor = (field) => {
                             <div v-if="address.company" class="font-medium text-gray-800">{{ address.company }}</div>
                             <div class="text-gray-600">{{ address.street }}</div>
                             <div class="text-gray-600">{{ address.postcode }} {{ address.city }}</div>
-                            <div v-if="address.note" class="mt-0.5 text-xs text-gray-400">{{ address.note }}</div>
+                            <div v-if="address.note" class="mt-0.5 text-xs text-gray-500">{{ address.note }}</div>
                         </td>
                         <td class="tbody_td text-gray-600">
                             <div v-if="address.name">{{ address.name }}</div>
@@ -272,12 +272,12 @@ const errorFor = (field) => {
                         </td>
                     </tr>
                     <tr v-if="!addresses.length && !loading">
-                        <td colspan="4" class="px-6 py-6 text-center text-sm text-gray-400">
+                        <td colspan="4" class="px-6 py-6 text-center text-sm text-gray-500">
                             Žiadne uložené adresy — tovar chodí na fakturačnú adresu.
                         </td>
                     </tr>
                     <tr v-if="loading">
-                        <td colspan="4" class="px-6 py-6 text-center text-sm text-gray-400">Načítavam…</td>
+                        <td colspan="4" class="px-6 py-6 text-center text-sm text-gray-500">Načítavam…</td>
                     </tr>
                 </tbody>
             </table>

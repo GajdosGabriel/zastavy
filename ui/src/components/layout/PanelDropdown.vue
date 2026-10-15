@@ -78,7 +78,7 @@ onUnmounted(() => {
             class="flex items-center p-2 rounded-md transition-colors"
             :class="[
                 !items.length && !$slots.default
-                    ? 'text-gray-400 bg-gray-500 cursor-not-allowed'
+                    ? 'text-gray-500 bg-gray-500 cursor-not-allowed'
                     : open
                         ? 'text-white bg-indigo-700 hover:bg-indigo-600'
                         : 'text-indigo-100 bg-gray-700 hover:bg-gray-700'

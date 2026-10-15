@@ -1,94 +1,83 @@
 <script setup>
-import CollapsibleFilterPanel from "../plugins/CollapsibleFilterPanel.vue";
-import { onUnmounted, reactive, ref, watch, computed } from "vue";
+import ListFilter from "../plugins/ListFilter.vue";
+import { computed, onUnmounted, reactive, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import useOrders from "../../store/StoreOrders";
 import useQuery from "../../store/StoreQuery";
-import FilterLabel from "../plugins/filterLabel.vue";
-import FilterSearch from "../plugins/filterSearch.vue";
-import { isActive, isConfirmed, isDeleted, isNotificated, resetFilter } from "../../models/filterLabels";
-
-const HISTORY_KEY = "orderFilterHistory";
+import { isActive, isConfirmed, isDeleted, isNotificated } from "../../models/filterLabels";
 
 const ordersStore = useOrders();
 const { fetchOrders, fetchOrderStatistics } = ordersStore;
 const { getStatuses } = storeToRefs(ordersStore);
 const queryStore = useQuery();
 const { getQuery } = storeToRefs(queryStore);
-const { setQuery, removeQuery, resetQuery } = queryStore;
-const labelList = reactive([isActive, isConfirmed, isDeleted, isNotificated]);
+const { setQuery, resetQuery } = queryStore;
 
-const shippedOptions = [
-    { label: 'Dnes', value: 'dnes' },
-    { label: 'Týždeň', value: 'tyzden' },
-    { label: 'Mesiac', value: 'mesiac' },
-];
+// Stavové chipy sa navzájom vylučujú (chipsMode single).
+const chips = reactive([isActive, isConfirmed, isDeleted, isNotificated]);
 
-const searchType = ref('customer');
-const searchInput = ref('');
-const status = ref("");
-const shippedAt = ref("");
-
-// Samostatná história pre zákazníka a produkt
-const historyKey = computed(() => `${HISTORY_KEY}_${searchType.value}`);
-
-// ── Vyhľadávanie ─────────────────────────────────────────────
-const activeSearchKey = computed(() =>
-    searchType.value === 'customer' ? 'bySearchInput=' : 'searchByProduct='
-);
-
-const applySearch = (term = null) => {
-    const search = (term ?? searchInput.value ?? '').trim();
-
-    removeQuery({ key: 'bySearchInput=' });
-    removeQuery({ key: 'searchByProduct=' });
-
-    if (search) {
-        setQuery({ key: activeSearchKey.value, value: search });
-    }
+const search = {
+    historyKey: "orderFilterHistory",
+    modes: [
+        { value: "customer", label: "Zákazník", queryKey: "bySearchInput=", placeholder: "Názov, IČO, mesto…" },
+        { value: "product", label: "Produkt", queryKey: "searchByProduct=", placeholder: "Názov produktu…" },
+    ],
 };
 
-const switchSearchType = () => {
-    applySearch();
-};
+const selects = computed(() => [
+    {
+        id: "status", label: "Status", queryKey: "status=", emptyLabel: "Všetky statusy",
+        options: getStatuses.value, hidden: !getStatuses.value.length,
+    },
+    {
+        id: "shippedAt", label: "Expedované", queryKey: "shippedAt=", emptyLabel: "Kedykoľvek",
+        options: [
+            { label: "Dnes", value: "dnes" },
+            { label: "Týždeň", value: "tyzden" },
+            { label: "Mesiac", value: "mesiac" },
+        ],
+    },
+]);
 
 // ── Predvolený filter z URL (napr. preklik z dashboardu) ─────
-// Musí prebehnúť pred registráciou watcherov — zoznam si ho načíta
+// Musí prebehnúť pred registráciou watchera — zoznam si ho načíta
 // v OrderIndex onMounted, takže nevznikne dvojitý request.
 const route = useRoute();
 const router = useRouter();
+const initial = { selects: {} };
 
 const applyRouteQuery = () => {
-    const { filter, status: routeStatus, shippedAt: routeShippedAt, product, customer, marked } = route.query;
+    const { filter, status, shippedAt, product, customer, marked } = route.query;
 
-    if (![filter, routeStatus, routeShippedAt, product, customer, marked].some(Boolean)) {
+    if (![filter, status, shippedAt, product, customer, marked].some(Boolean)) {
         return;
     }
 
     resetQuery();
-    labelList.forEach((item) => item.active = false);
+    chips.forEach((item) => (item.active = false));
 
-    const label = labelList.find((item) => item.key === `${filter}=`);
-    if (label) {
-        label.active = true;
-        setQuery(label.key + label.value);
+    const chip = chips.find((item) => item.key === `${filter}=`);
+    if (chip) {
+        chip.active = true;
+        setQuery({ key: chip.key, value: chip.value });
     }
 
-    if (routeStatus) {
-        status.value = String(routeStatus);
-        setQuery({ key: 'status=', value: status.value });
+    if (status) {
+        initial.selects.status = String(status);
+        setQuery({ key: "status=", value: initial.selects.status });
     }
 
-    if (routeShippedAt) {
-        shippedAt.value = String(routeShippedAt);
-        setQuery({ key: 'shippedAt=', value: shippedAt.value });
+    if (shippedAt) {
+        initial.selects.shippedAt = String(shippedAt);
+        setQuery({ key: "shippedAt=", value: initial.selects.shippedAt });
     }
 
     if (product || customer) {
-        searchType.value = product ? 'product' : 'customer';
-        searchInput.value = String(product || customer);
-        setQuery({ key: activeSearchKey.value, value: searchInput.value });
+        const mode = search.modes.find((item) => item.value === (product ? "product" : "customer"));
+        initial.mode = mode.value;
+        initial.search = String(product || customer);
+        setQuery({ key: mode.queryKey, value: initial.search });
     }
 
     ordersStore.statement.markSelected = Boolean(marked);
@@ -102,111 +91,24 @@ const applyRouteQuery = () => {
 
 applyRouteQuery();
 
-// ── Watchers ─────────────────────────────────────────────────
 watch(getQuery, () => {
     // Zmena filtra začína od prvej strany — stará ?page=N by mohla byť mimo rozsahu.
     ordersStore.resetUrl();
     fetchOrders();
 
-    if (getQuery.value.some((item) => item.startsWith('shippedAt='))) {
+    if (getQuery.value.some((item) => item.startsWith("shippedAt="))) {
         fetchOrderStatistics();
     }
 }, { deep: true });
 
-watch(status, () => {
-    status.value
-        ? setQuery({ key: 'status=', value: status.value })
-        : removeQuery({ key: 'status=' });
-});
-
-watch(shippedAt, () => {
-    shippedAt.value
-        ? setQuery({ key: 'shippedAt=', value: shippedAt.value })
-        : removeQuery({ key: 'shippedAt=' });
-});
-
-// ── Label / expedičný filter ─────────────────────────────────
-const onClickLabel = (object) => {
-    labelList.forEach(item => item.key == object.key ? item.active = true : item.active = false);
-
-    resetQuery();
-    setQuery(object.key + object.value);
-
-    if (status.value) {
-        setQuery({ key: 'status=', value: status.value });
-    }
-
-    if (shippedAt.value) {
-        setQuery({ key: 'shippedAt=', value: shippedAt.value });
-    }
-
-    if (searchInput.value && searchInput.value.trim()) {
-        setQuery({ key: activeSearchKey.value, value: searchInput.value.trim() });
-    }
-};
-
-// ── Reset všetkého ───────────────────────────────────────────
-const onClearQuery = () => {
-    searchInput.value = '';
-    status.value = "";
-    shippedAt.value = "";
-    resetQuery();
-    labelList.forEach(item => item.active = false);
-};
-
 onUnmounted(() => {
     resetQuery();
+    chips.forEach((item) => (item.active = false));
     ordersStore.statement.markSelected = false;
 });
 </script>
 
 <template>
-    <CollapsibleFilterPanel id="order-filters">
-        <div class="filter-row">
-            <!-- Radio: typ hľadania -->
-            <div class="filter-radio-group">
-                <label :class="['filter-radio-label', searchType === 'customer' && 'filter-radio-active']">
-                    <input v-model="searchType" type="radio" value="customer" class="sr-only" @change="switchSearchType" />
-                    Zákazník
-                </label>
-                <label :class="['filter-radio-label', searchType === 'product' && 'filter-radio-active']">
-                    <input v-model="searchType" type="radio" value="product" class="sr-only" @change="switchSearchType" />
-                    Produkt
-                </label>
-            </div>
-
-            <!-- Jeden input + história -->
-            <FilterSearch v-model="searchInput" :history-key="historyKey"
-                :history-title="`Nedávne hľadania (${searchType === 'customer' ? 'zákazník' : 'produkt'})`"
-                :placeholder="searchType === 'customer' ? 'Názov, IČO, mesto…' : 'Názov produktu…'"
-                @search="applySearch" />
-
-            <!-- Status -->
-            <div v-if="getStatuses.length" class="filter-field-compact">
-                <select id="order-status" v-model="status" class="filter-select-compact">
-                    <option value="">Všetky statusy</option>
-                    <option v-for="item in getStatuses" :key="item.value" :value="item.value">
-                        {{ item.label }}
-                    </option>
-                </select>
-            </div>
-
-            <!-- Expedícia -->
-            <div class="filter-field-compact">
-                <select id="order-shipped" v-model="shippedAt" class="filter-select-compact">
-                    <option value="">Expedícia</option>
-                    <option v-for="opt in shippedOptions" :key="opt.value" :value="opt.value">
-                        {{ opt.label }}
-                    </option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Label filtre v jednom riadku -->
-        <div class="filter-chips-row">
-            <FilterLabel v-for="label in labelList" :key="label.key" :label="label"
-                @labelemit="onClickLabel" />
-            <FilterLabel v-if="getQuery.length" :label="resetFilter" @labelemit="onClearQuery" />
-        </div>
-    </CollapsibleFilterPanel>
+    <ListFilter id="order-filters" :search="search" :selects="selects" :chips="chips" chips-mode="single"
+        :initial="initial" />
 </template>

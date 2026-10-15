@@ -54,15 +54,10 @@ const routes = [
         }
     },
     {
+        // Bývalá duplicitná kópia dashboardu — staré odkazy presmerujeme.
         path: '/admin',
         name: 'admin.index',
-        components: {
-            default: () => import('../components/pages/dashboard.vue'),
-        },
-        meta: {
-            title: 'Administrácia',
-            superAdminOnly: true,
-        }
+        redirect: { name: 'dashboard.index' },
     },
     {
         path: '/product/:productId/show/:productSlug',

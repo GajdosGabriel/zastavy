@@ -2,8 +2,11 @@
     <div class="flex items-center">
         <div v-if="getUser?.isAuth" class="relative right" width="48">
             <button
+                type="button"
                 @click.stop="isShow"
-                class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out"
+                aria-haspopup="menu"
+                :aria-expanded="show"
+                class="flex min-h-9 items-center px-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out"
             >
                 <div>{{ getUser.firstName }}</div>
 
@@ -26,13 +29,21 @@
                 leave-from-class="opacity-100 scale-100"
                 leave-to-class="opacity-0 scale-75"
             >
-                <div v-if="show" class="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-xl z-20">
-                    <template v-for="item in userMenu" :key="item.NAME">
+                <div v-if="show" class="absolute right-0 mt-2 py-2 w-56 bg-white rounded-md shadow-xl z-20">
+                    <template v-for="(item, index) in userMenu" :key="item.NAME ?? `divider-${index}`">
+                        <!-- Nadpis sekcie a oddeľovač, ktoré posiela API (ACTION 'header' / 'divider') -->
+                        <div v-if="item.ACTION === 'header'"
+                            class="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-gray-500 first:pt-1">
+                            {{ item.NAME }}
+                        </div>
+
+                        <hr v-else-if="item.ACTION === 'divider'" class="my-2 border-gray-200" />
+
                         <button
-                            v-if="item.ACTION === 'logout'"
+                            v-else-if="item.ACTION === 'logout'"
                             type="button"
                             @click="logoutUser"
-                            class="block w-full text-left px-4 py-2 text-sm capitalize text-gray-700 hover:bg-blue-500 hover:text-white"
+                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-600 hover:text-white"
                         >
                             {{ item.NAME }}
                         </button>
@@ -41,7 +52,7 @@
                             v-else
                             :to="{ name: item.ROUTE }"
                             @click="closeMenu"
-                            class="block px-4 py-2 text-sm capitalize text-gray-700 hover:bg-blue-500 hover:text-white"
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-600 hover:text-white"
                         >
                             {{ item.NAME }}
                         </router-link>

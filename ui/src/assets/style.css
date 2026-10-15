@@ -53,6 +53,40 @@
     @apply mt-3 block md:mt-0;
 }
 
+/* ── Košík: zbalený panel nástrojov obsluhy (vlastná položka, zľava/prirážka) ── */
+.staff-tools {
+    @apply rounded-xl border border-dashed border-blue-300 bg-blue-50/50;
+}
+
+.staff-tools-summary {
+    @apply flex min-h-11 cursor-pointer items-center px-4 text-sm font-semibold text-blue-900;
+}
+
+.staff-tools-body {
+    @apply space-y-3 border-t border-blue-200 px-4 pb-4;
+}
+
+.staff-tools-body > * {
+    @apply my-0 mt-3;
+}
+
+/* ── ListFilter: jeden riadok polí s popisom nad každým, zarovnaný na spodnú hranu ── */
+.filter-bar {
+    @apply flex flex-wrap items-end gap-3;
+}
+
+.filter-field-search {
+    @apply min-w-0 flex-1 basis-72;
+}
+
+.filter-field-select {
+    @apply w-full sm:w-44;
+}
+
+.filter-bar .filter-check {
+    @apply min-h-9 py-1.5;
+}
+
 /* ── hlavný riadok: radio + input + status + expedícia ── */
 .filter-row {
     @apply mb-3 flex flex-wrap items-center gap-2;
@@ -219,8 +253,9 @@
     @apply bg-blue-800;
 }
 
+/* relative: skrytý popis (sr-only) v hlavičke musí ostať vnútri posúvateľnej tabuľky, inak rozšíri stránku */
 .thead_th {
-    @apply px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider;
+    @apply relative px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider;
 }
 
 .tbody_td {
@@ -234,7 +269,7 @@
 /* -------------------------- Navigation -------------------------- */
 
 .nav_link {
-    @apply cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out;
+    @apply cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-700 hover:text-gray-900 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out;
 }
 
 .nav_link_active,

@@ -1,93 +1,26 @@
 <script setup lang="ts">
-import CollapsibleFilterPanel from "../plugins/CollapsibleFilterPanel.vue";
-import { ref, watch, reactive } from "vue";
+import ListFilter from "../plugins/ListFilter.vue";
+import { computed } from "vue";
 import { storeToRefs } from "pinia";
-import useQuery from "../../store/StoreQuery";
 import useCustomers from "../../store/StoreCustomers";
 import { CUSTOMER_TYPES } from "../../constants";
 
-const isName = reactive({
-    name: 'Meno',
-    key: 'bySearchInput=',
-    value: '',
-    boolean: false,
-});
-
-const { setQuery, removeQuery } = useQuery();
+// Načítanie pri zmene filtra rieši CustomerIndex (sleduje query string).
 const { getStatuses } = storeToRefs(useCustomers());
-const withoutOrder = ref<string>("");
-const status = ref<string>("");
-const type = ref<string>("");
 
-watch(isName, () => {
-    setQuery("bySearchInput=" + isName.value);
-});
+const search = { historyKey: "customerFilterHistory", placeholder: "Názov, IČO, mesto alebo e-mail" };
 
-watch(withoutOrder, () => {
-    withoutOrder.value
-        ? setQuery("withoutOrder=" + withoutOrder.value)
-        : removeQuery("withoutOrder=" + withoutOrder.value);
-});
+const selects = computed(() => [
+    { id: "type", label: "Typ", queryKey: "type=", emptyLabel: "Všetky typy", options: CUSTOMER_TYPES },
+    {
+        id: "status", label: "Status", queryKey: "status=", emptyLabel: "Všetky statusy",
+        options: getStatuses.value, hidden: !getStatuses.value.length,
+    },
+]);
 
-watch(status, () => {
-    status.value
-        ? setQuery("status=" + status.value)
-        : removeQuery("status=");
-});
-
-watch(type, () => {
-    type.value
-        ? setQuery("type=" + type.value)
-        : removeQuery("type=");
-});
-
-const clearInput = () => {
-    removeQuery("bySearchInput=" + isName.value);
-    isName.value = "";
-};
+const toggles = [{ id: "withoutOrder", label: "Bez objednávky", queryKey: "withoutOrder=", value: "true" }];
 </script>
 
 <template>
-    <CollapsibleFilterPanel id="customer-filters">
-        <div class="grid gap-4 md:grid-cols-5">
-            <div class="filter-field md:col-span-2">
-                <label class="filter-label" for="customer-search">Hľadanie zákazníka</label>
-                <div class="filter-control">
-                    <input id="customer-search" type="text" v-model="isName.value" class="filter-input"
-                        placeholder="Názov, IČO, mesto alebo e-mail" />
-                    <button v-if="isName.value" type="button" class="filter-clear" aria-label="Zrušiť hľadanie"
-                        @click="clearInput">
-                        ×
-                    </button>
-                </div>
-            </div>
-
-            <div class="filter-field">
-                <label class="filter-label" for="customer-type">Typ</label>
-                <select id="customer-type" v-model="type" class="filter-select">
-                    <option value="">Všetky typy</option>
-                    <option v-for="item in CUSTOMER_TYPES" :key="item.value" :value="item.value">
-                        {{ item.label }}
-                    </option>
-                </select>
-            </div>
-
-            <div v-if="getStatuses.length" class="filter-field">
-                <label class="filter-label" for="customer-status">Status</label>
-                <select id="customer-status" v-model="status" class="filter-select">
-                    <option value="">Všetky statusy</option>
-                    <option v-for="item in getStatuses" :key="item.value" :value="item.value">
-                        {{ item.label }}
-                    </option>
-                </select>
-            </div>
-
-            <div class="flex items-end">
-                <label for="withoutOrder" class="filter-check">
-                    <input type="checkbox" id="withoutOrder" v-model="withoutOrder" />
-                    Bez objednávky
-                </label>
-            </div>
-        </div>
-    </CollapsibleFilterPanel>
+    <ListFilter id="customer-filters" :search="search" :selects="selects" :toggles="toggles" />
 </template>

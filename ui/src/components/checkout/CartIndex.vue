@@ -4,7 +4,7 @@ import OrderPriceAdjustment from '../forms/OrderPriceAdjustment.vue';
 import { adjustmentAmount } from '../../models/orderPricing';
 import useCheckoutOptions from '../../store/StoreCheckoutOptions';
 import BaseLayout from "../layout/BaseLayout.vue";
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import useCheckouts, { CUSTOMER_STORAGE_KEY } from "../../store/StoreCheckouts";
 import useCustomers from "../../store/StoreCustomers";
@@ -17,6 +17,7 @@ import CustomerFormFields from "../forms/CustomerFormFields.vue";
 import DeliveryAddressFields from "../forms/DeliveryAddressFields.vue";
 import ShippingPaymentSelector from "../forms/ShippingPaymentSelector.vue";
 import EmailOrderImport from "./EmailOrderImport.vue";
+import buttonLink from "../layout/page/ButtonLink.vue";
 
 const checkoutsStore = useCheckouts();
 const { getCarts, getCheckout, note, attachments, delivery, deliverToOtherAddress, customerDraft } = storeToRefs(checkoutsStore);
@@ -33,7 +34,8 @@ const {
 const customersStore = useCustomers();
 const { getCustomer } = storeToRefs(customersStore);
 const isPrivatePerson = ref(false);
-watch(isPrivatePerson, (value) => { if (value) getCustomer.value.company = ''; });
+// Súkromná osoba nemá firemné údaje — skryté polia vyčistíme, aby sa neodoslali.
+watch(isPrivatePerson, (value) => { if (value) Object.assign(getCustomer.value, { company: '', ico: '', dic: '', ic_dic: '' }); });
 const { setCustomer } = customersStore;
 const { getFieldErrors } = storeToRefs(useErrors());
 const { getUser } = storeToRefs(useUsers());
@@ -86,6 +88,21 @@ const freeShippingInfo = computed(() => {
             methodName: withFree[0].name,
             remaining: Math.max(0, threshold - Number(getCheckout.value?.grandTotal ?? 0)),
       };
+});
+
+// Rovnaký výpočet ako ShippingPaymentSelector — pre lepiacu lištu na mobile.
+const orderTotal = computed(() => {
+      const items = Number(getCheckout.value?.grandTotal ?? 0);
+      const subtotal = Math.max(0, items + adjustment.value - Number(checkoutOptions.discountAmount ?? 0));
+      return Math.max(0, subtotal + Number(checkoutOptions.shippingPrice(items) ?? 0) + Number(checkoutOptions.paymentFee ?? 0));
+});
+
+// Po neúspešnom odoslaní presunieme zameranie na prvé chybné pole, aby ho zákazník nemusel hľadať.
+const focusFirstError = () => nextTick(() => {
+      const field = document.querySelector('main [aria-invalid="true"], main input.border-red-500, main select.border-red-500, main textarea.border-red-500');
+      if (!field) return;
+      field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      field.focus({ preventScroll: true });
 });
 
 const shortDescription = (product) => formatSubstring(htmlToText(product.description), 60);
@@ -143,11 +160,16 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
       isSubmitting.value = false;
       showSubmitModal.value = false;
 
+      if (!result) {
+            focusFirstError();
+      }
+
       if (result) {
             const uuid = typeof result === 'string' ? result : null;
             router.push({
                   name: "public.thankYouForOrder.show",
-                  query: uuid ? { token: uuid } : {},
+                  // notified=0: ďakovná stránka nesmie tvrdiť, že e-mail odišiel, keď ho obsluha vypla.
+                  query: { ...(uuid ? { token: uuid } : {}), ...(sendNotification ? {} : { notified: '0' }) },
             });
       }
 };
@@ -160,32 +182,28 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
             <div class="page-body col-span-12">
 
                 <!-- Hlavička -->
-                <div class="mb-6 flex items-center justify-between">
+                <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
                     <h1 class="page-heading mb-0">Váš košík</h1>
-                    <router-link
-                        :to="{ name: 'public.index' }"
-                        class="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-900"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
-                        {{ getCarts.length ? 'Pokračovať v nákupe' : 'Začnite nakupovať' }}
-                    </router-link>
+                    <buttonLink class="text-sm" :item="{ name: getCarts.length ? 'Pokračovať v nákupe' : 'Začnite nakupovať', link: { name: 'public.index' }, icon: 'arrow-left' }" />
                 </div>
 
-                <CustomOrderItem v-if="isStaff" @add="checkoutsStore.submitCartToIndex($event)" />
                 <EmailOrderImport v-if="isSuperAdmin" ref="emailImport" @applied="onEmailApplied" />
-                <div v-if="isSuperAdmin && !showCheckout" class="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
-                    <button type="button" class="text-sm font-semibold text-blue-800 underline" @click="emailImport?.open()">Doplniť z e-mailu pomocou AI</button>
-                </div>
-                <OrderPriceAdjustment v-if="isStaff && getCarts.length" v-model="priceAdjustment" :subtotal="getCheckout.grandTotal" :coupon="checkoutOptions.discountAmount" />
+
+                <!-- Nástroje obsluhy pri prázdnom košíku (inak sú pod položkami) -->
+                <details v-if="isStaff && !getCarts.length" class="staff-tools mb-4" open>
+                    <summary class="staff-tools-summary">Nástroje obsluhy</summary>
+                    <div class="staff-tools-body">
+                        <CustomOrderItem @add="checkoutsStore.submitCartToIndex($event)" />
+                        <button v-if="isSuperAdmin && !showCheckout" type="button" class="text-sm font-semibold text-blue-800 underline" @click="emailImport?.open()">Doplniť z e-mailu pomocou AI</button>
+                    </div>
+                </details>
                 <!-- Prázdny košík -->
                 <div v-if="!showCheckout" class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-4 h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <p class="text-lg font-semibold text-gray-400">Košík je prázdny</p>
-                    <p class="mt-1 text-sm text-gray-400">Vyberte produkty z nášho katalógu</p>
+                    <p class="text-lg font-semibold text-gray-500">Košík je prázdny</p>
+                    <p class="mt-1 text-sm text-gray-500">Vyberte produkty z nášho katalógu</p>
                     <router-link
                         :to="{ name: 'public.index' }"
                         class="mt-6 inline-flex items-center rounded-md bg-blue-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-900"
@@ -215,9 +233,42 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                             Košík je zatiaľ prázdny — pridajte položky objednávky.
                         </p>
 
-                        <!-- Tabuľka produktov -->
+                        <!-- Položky: na mobile karty, od md tabuľka -->
                         <div v-else class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                            <table class="min-w-full divide-y divide-gray-200">
+                            <ul class="divide-y divide-gray-100 md:hidden">
+                                <li v-for="product in getCarts" :key="product.key" class="flex gap-3 px-4 py-4">
+                                    <img :src="product.thumb" width="56" height="56" loading="lazy" :alt="product.name"
+                                        class="h-14 w-14 shrink-0 rounded-lg border border-gray-200 object-cover" />
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="min-w-0">
+                                                <p class="font-semibold text-gray-900">{{ product.name }}</p>
+                                                <p v-if="product.variant_name" class="text-xs font-medium text-blue-700">{{ product.variant_name }}</p>
+                                            </div>
+                                            <button type="button" @click="removeCart(product)"
+                                                class="-mr-2 -mt-1 shrink-0 rounded-lg p-2.5 text-gray-500 transition hover:bg-red-50 hover:text-red-600"
+                                                :aria-label="`Odstrániť ${product.name}`">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+                                            <div class="inline-flex items-center gap-1.5">
+                                                <input type="number" inputmode="numeric" step="1"
+                                                    :aria-label="`Množstvo: ${product.name}${product.variant_name ? ' – ' + product.variant_name : ''} (${product.unit_value || 'ks'})`"
+                                                    v-model.number="product.input_order"
+                                                    class="w-20 rounded-lg border border-gray-300 px-2 py-2 text-center text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    :min="product.min_order" @change="updateCartQuantity(product, product.input_order)" required />
+                                                <span class="text-sm text-gray-600">{{ product.unit_value }} × {{ formatPrice(product.active_price) }} €</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-900">{{ productTotal(product) }} €</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <table class="hidden min-w-full divide-y divide-gray-200 md:table">
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Tovar</th>
@@ -242,7 +293,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                                     <p v-if="product.variant_name" class="text-xs font-medium text-blue-700">
                                                         {{ product.variant_name }}
                                                     </p>
-                                                    <p class="text-xs text-gray-400">{{ shortDescription(product) }}</p>
+                                                    <p class="text-xs text-gray-500">{{ shortDescription(product) }}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -272,8 +323,9 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                             <button
                                                 type="button"
                                                 @click="removeCart(product)"
-                                                class="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                                                class="rounded-lg p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-600"
                                                 title="Odstrániť"
+                                                :aria-label="`Odstrániť ${product.name}`"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -287,7 +339,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                 <button
                                     type="button"
                                     @click="clickEmptyBasket"
-                                    class="inline-flex items-center gap-1.5 text-xs text-gray-400 transition hover:text-red-600"
+                                    class="inline-flex min-h-9 items-center gap-1.5 rounded px-2 text-sm text-gray-600 transition hover:bg-red-50 hover:text-red-700"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -297,13 +349,28 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                             </div>
                         </div>
 
+                        <!-- Nástroje obsluhy — pod položkami, zbalené, aby neodsúvali obsah košíka -->
+                        <details v-if="isStaff && getCarts.length" class="staff-tools">
+                            <summary class="staff-tools-summary">Nástroje obsluhy</summary>
+                            <div class="staff-tools-body">
+                                <CustomOrderItem @add="checkoutsStore.submitCartToIndex($event)" />
+                                <OrderPriceAdjustment v-model="priceAdjustment" :subtotal="getCheckout.grandTotal" :coupon="checkoutOptions.discountAmount" />
+                            </div>
+                        </details>
+
                         <!-- Fakturačné údaje -->
                         <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                             <div class="border-b border-gray-100 bg-gray-50 px-6 py-4">
                                 <h2 class="text-base font-semibold text-gray-800">Fakturačné údaje</h2>
                             </div>
                             <div class="px-6 py-5">
-                                <fieldset class="mb-4 flex gap-6 text-sm"><legend class="sr-only">Typ zákazníka</legend><label class="flex items-center gap-2"><input type="radio" :value="false" v-model="isPrivatePerson" />Firma</label><label class="flex items-center gap-2"><input type="radio" :value="true" v-model="isPrivatePerson" />Súkromná osoba</label></fieldset>
+                                <fieldset class="mb-4">
+                                    <legend class="sr-only">Typ zákazníka</legend>
+                                    <div class="filter-radio-group">
+                                        <label :class="['filter-radio-label min-h-9 text-sm', !isPrivatePerson && 'filter-radio-active']"><input type="radio" :value="false" v-model="isPrivatePerson" class="sr-only" />Firma</label>
+                                        <label :class="['filter-radio-label min-h-9 text-sm', isPrivatePerson && 'filter-radio-active']"><input type="radio" :value="true" v-model="isPrivatePerson" class="sr-only" />Súkromná osoba</label>
+                                    </div>
+                                </fieldset>
                                 <CustomerFormFields
                                     :hideCompany="isPrivatePerson"
                                     :fieldErrors="getFieldErrors"
@@ -355,11 +422,11 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                         >
                                             <span class="truncate text-gray-700">{{ file.name }}</span>
                                             <span class="flex shrink-0 items-center gap-2">
-                                                <span class="text-xs text-gray-400">{{ formatFileSize(file.size) }}</span>
+                                                <span class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</span>
                                                 <button
                                                     type="button"
                                                     @click="removeAttachment(index)"
-                                                    class="rounded p-1 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                                                    class="rounded p-1 text-gray-500 transition hover:bg-red-50 hover:text-red-600"
                                                     title="Odstrániť prílohu"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -386,8 +453,8 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                         />
                     </div>
 
-                    <!-- Pravý stĺpec: doprava, platba, kupón, súhrn -->
-                    <aside class="space-y-4">
+                    <!-- Pravý stĺpec: doprava, platba, kupón, súhrn (pb na mobile: miesto pre lepiacu lištu) -->
+                    <aside class="space-y-4 pb-20 lg:pb-0">
                         <div class="sticky top-4 space-y-4">
                             <!-- Zoznam produktov v súhrne -->
                             <div v-if="getCarts.length" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -401,7 +468,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                         <span class="text-gray-600 leading-snug">
                                             {{ product.name }}
                                             <span v-if="product.variant_name" class="text-gray-500">({{ product.variant_name }})</span>
-                                            <span class="text-gray-400">× {{ product.input_order }}</span>
+                                            <span class="text-gray-500">× {{ product.input_order }}</span>
                                         </span>
                                         <span class="shrink-0 font-medium text-gray-900">{{ productTotal(product) }} €</span>
                                     </div>
@@ -420,7 +487,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                         type="button"
                                         @click="onClickForm"
                                         :disabled="isSubmitting || !getCarts.length"
-                                        class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                                        class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400"
                                     >
                                         <svg v-if="isSubmitting" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -432,6 +499,19 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                             </div>
                         </div>
                     </aside>
+                </div>
+
+                <!-- Mobil: suma a odoslanie stále na dosah (súhrn je inak až na konci stránky) -->
+                <div v-if="showCheckout && getCarts.length"
+                    class="fixed inset-x-0 bottom-0 z-30 flex items-center gap-4 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden">
+                    <div class="min-w-0">
+                        <div class="text-xs text-gray-600">Celkom s DPH</div>
+                        <div class="text-lg font-bold text-blue-800">{{ formatPrice(orderTotal) }} €</div>
+                    </div>
+                    <button type="button" @click="onClickForm" :disabled="isSubmitting"
+                        class="ml-auto inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400">
+                        {{ isSubmitting ? 'Odosielam...' : 'Odoslať objednávku' }}
+                    </button>
                 </div>
 
             </div>

@@ -31,6 +31,22 @@
     <meta property="og:image" content="https://zastavy-vlajky.sk/og-default.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
 
+    <!-- Kým sa SPA načíta, statický základ vyzerá ako hlavička webu (nie holý text na bielom). -->
+    <style>
+      body:has(#static-main) { margin: 0; background: #e2e8f0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+      #static-main { min-height: 100vh; }
+      #static-h1 {
+        margin: 0; height: 64px; display: flex; align-items: center; padding: 0 28px;
+        background: #d1d5db; color: #1e3a8a; font-size: 18px; font-weight: 600;
+      }
+      #static-main::after {
+        content: ""; display: block; width: 32px; height: 32px; margin: 96px auto 0;
+        border: 3px solid #cbd5e1; border-top-color: #1e40af; border-radius: 50%;
+        animation: static-spin .8s linear infinite;
+      }
+      @keyframes static-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { #static-main::after { animation: none; } }
+    </style>
   </head>
   <body>
     <!-- Statický základ do vykreslenia SPA (po prvom vykreslení ho odstráni main.js): landmark <main> a titulok. -->

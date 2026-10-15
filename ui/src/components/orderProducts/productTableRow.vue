@@ -88,6 +88,7 @@ const onChangeVariant = (variantId) => {
                 <select v-else-if="item.isNew"
                     class="shadow w-full appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     id="product"
+                    aria-label="Variant produktu"
                     v-model="item.product_variant_id"
                     :disabled="!canEditProduct()"
                     @change="onChangeVariant(item.product_variant_id)">
@@ -106,12 +107,12 @@ const onChangeVariant = (variantId) => {
         </td>
 
         <td class="tbody_td">
-            <input v-model="item.quantity" type="number" class="w-16" :min="item.min_order ?? 1" :disabled="!canEditQty()" />
+            <input v-model="item.quantity" type="number" aria-label="Množstvo" class="w-16" :min="item.min_order ?? 1" :disabled="!canEditQty()" />
             <input v-if="item.is_custom" v-model="item.unit_value" aria-label="Jednotka" maxlength="20" class="ml-2 w-16 rounded border-gray-300" /><span v-else class="ml-2">{{ item.unit_value }}</span>
         </td>
 
         <td class="tbody_td">
-            <input v-model="item.price" type="number" step=".01" class="w-24" :disabled="!canEditQty()" />
+            <input v-model="item.price" type="number" step=".01" aria-label="Cena za kus" class="w-24" :disabled="!canEditQty()" />
         </td>
 
         <td class="tbody_td">
@@ -124,32 +125,32 @@ const onChangeVariant = (variantId) => {
 
         <td class="tbody_td">
             <div v-if="!item.isNew" class="flex flex-col gap-1 text-xs">
-                <div class="w-fit rounded-full px-2 font-semibold" :class="item.stockSum ? 'bg-green-200' : 'bg-red-200'">
+                <div class="w-fit rounded-full px-2 font-semibold" :class="item.stockSum ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
                     {{ item.stockSum }} / {{ item.shipping_required_quantity ?? item.quantity }}
                 </div>
                 <div class="text-gray-500">
                     {{ item.shipping_percentage ?? 0 }} %, ostáva {{ item.shipping_remaining_quantity ?? 0 }}
                 </div>
             </div>
-            <span v-else class="text-xs text-gray-400">nová</span>
+            <span v-else class="text-xs text-gray-500">nová</span>
         </td>
 
         <td class="tbody_td">
-            <input v-if="!item.isNew" v-model="item.storno" type="number" :max="item.quantity" class="w-14" :disabled="isOrderFinished" />
-            <span v-else class="text-xs text-gray-400">—</span>
+            <input v-if="!item.isNew" v-model="item.storno" type="number" aria-label="Stornované množstvo" :max="item.quantity" class="w-14" :disabled="isOrderFinished" />
+            <span v-else class="text-xs text-gray-500">—</span>
         </td>
 
         <td class="tbody_td">
             <panel-dropdown>
-                <div @click="onClickSave(item)"
-                    class="cursor-pointer p-2 hover:bg-indigo-300 border-b-2 border-gray-200">
+                <button type="button" @click="onClickSave(item)"
+                    class="block w-full cursor-pointer p-2 text-left hover:bg-indigo-300 border-b-2 border-gray-200">
                     Uložiť
-                </div>
-                <div v-if="item.isNew || !item.stockSum"
+                </button>
+                <button v-if="item.isNew || !item.stockSum" type="button"
                     @click="onClickDelete(item)"
-                    class="cursor-pointer p-2 hover:bg-indigo-300 border-b-2 border-gray-200">
+                    class="block w-full cursor-pointer border-t-2 border-gray-300 p-2 text-left font-semibold text-red-700 hover:bg-red-100">
                     Zmazať
-                </div>
+                </button>
             </panel-dropdown>
         </td>
     </tr>

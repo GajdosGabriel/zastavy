@@ -102,7 +102,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-      <div v-if="enabled" ref="root" class="relative shrink-0">
+      <div v-if="enabled" ref="root" class="relative mr-2 shrink-0">
             <button type="button"
                   class="relative flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-gray-200 focus:outline-none"
                   :class="total ? 'text-red-600' : 'text-gray-600'"
@@ -134,7 +134,7 @@ onBeforeUnmount(() => {
                                     class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition hover:bg-slate-50 hover:text-blue-700">
                                     <span class="h-2.5 w-2.5 shrink-0 rounded-full" :class="item.tone" />
                                     <span class="min-w-0 flex-1">{{ item.text }}</span>
-                                    <span class="text-slate-300">→</span>
+                                    <span class="text-slate-500" aria-hidden="true">→</span>
                               </router-link>
                         </li>
                   </ul>

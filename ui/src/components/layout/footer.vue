@@ -46,7 +46,7 @@ const playVideo = ref(false);
             <li>Telefón : 0905 320 616</li>
             <li>
               Email :
-              <a class="mail" href="mailto:obchod@zastavy-vlajky.sk">obchod@zastavy-vlajky.sk</a>
+              <a class="mail inline-block py-1.5" href="mailto:obchod@zastavy-vlajky.sk">obchod@zastavy-vlajky.sk</a>
             </li>
           </ul>
         </address>
@@ -58,13 +58,13 @@ const playVideo = ref(false);
         
         <ul class="footer_list">
           <li v-for="item in NAV_ITEMS" :key="item.NAME">
-            <router-link :to="{ name: item.ROUTE }">
+            <router-link :to="{ name: item.ROUTE }" class="inline-block py-1.5">
               {{ item.NAME }}
             </router-link>
           </li>
 
           <li v-if="!getUser?.isAuth">
-            <router-link :to="{ name: 'public.login.index' }">
+            <router-link :to="{ name: 'public.login.index' }" class="inline-block py-1.5">
               Prihlásiť sa
             </router-link>
           </li>
@@ -73,7 +73,7 @@ const playVideo = ref(false);
       <div class="clearfix"></div>
     </div>
 
-    <div class="text-center border-2 border-gray-500 p-2 text-gray-400">
+    <div class="text-center border-2 border-gray-500 p-2 text-gray-500">
       <p>&copy; {{ new Date().getFullYear() }} Všetky práva vyhradené | Design by Gabriel Gajdoš</p>
     </div>
   </div>

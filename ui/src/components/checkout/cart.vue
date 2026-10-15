@@ -81,7 +81,7 @@ const productRoute = computed(() => ({
                     class="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-600">
                     {{ variant.name }}
                 </span>
-                <span v-if="variants.length > 4" class="px-1 text-xs text-slate-400">
+                <span v-if="variants.length > 4" class="px-1 text-xs text-slate-500">
                     +{{ variants.length - 4 }}
                 </span>
             </div>
@@ -92,7 +92,7 @@ const productRoute = computed(() => ({
 
             <p v-if="item.description" class="mt-3 flex-1 text-xs leading-5 text-slate-500 md:text-sm">
                 {{ shortDescription }}
-                <router-link :to="productRoute" class="cursor-pointer">
+                <router-link :to="productRoute" class="inline-block cursor-pointer py-1">
                     <span class="font-semibold text-blue-800 hover:underline">viac popisu</span>
                 </router-link>
             </p>

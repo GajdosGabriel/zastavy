@@ -37,7 +37,7 @@ onUnmounted(() => clearTimeout(timer));
     <button
         v-if="value"
         type="button"
-        class="shrink-0 rounded p-0.5 text-gray-400 transition hover:bg-gray-100 hover:text-blue-600"
+        class="shrink-0 rounded p-0.5 text-gray-500 transition hover:bg-gray-100 hover:text-blue-600"
         :title="copied ? 'Skopírované' : label"
         :aria-label="copied ? 'Skopírované' : label"
         @click.stop.prevent="copy"

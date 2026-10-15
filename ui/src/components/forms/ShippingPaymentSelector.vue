@@ -92,7 +92,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                     </span>
                 </label>
             </div>
-            <p v-if="getSelectedShipping?.free_from_price !== null && cartTotal < parseFloat(getSelectedShipping?.free_from_price ?? 0)" class="mt-1.5 text-xs text-gray-400">
+            <p v-if="getSelectedShipping?.free_from_price !== null && cartTotal < parseFloat(getSelectedShipping?.free_from_price ?? 0)" class="mt-1.5 text-xs text-gray-500">
                 Doprava zdarma od {{ formatPrice(getSelectedShipping.free_from_price) }} €
             </p>
         </div>
@@ -139,7 +139,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                         −{{ getCouponData.type === 'percent' ? `${getCouponData.value}%` : `${formatPrice(getCouponData.value)} €` }}
                     </span>
                 </div>
-                <button type="button" @click="clearCoupon(); setCouponMode(null)" class="text-xs text-gray-400 hover:text-red-600">Odstrániť</button>
+                <button type="button" @click="clearCoupon(); setCouponMode(null)" class="text-xs text-gray-500 hover:text-red-600">Odstrániť</button>
             </div>
 
             <!-- Výber -->
@@ -156,7 +156,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                         class="accent-blue-600" />
                     <span class="text-sm font-medium text-gray-800">Získaj kupón</span>
                 </label>
-                <p v-if="getCouponMode === 'get'" class="px-1 text-xs text-gray-400">
+                <p v-if="getCouponMode === 'get'" class="px-1 text-xs text-gray-500">
                     Po odoslaní objednávky Vám e-mailom pošleme zľavový kupón na ďalší nákup.
                     Nedá sa kombinovať s uplatnením iného kupónu.
                 </p>

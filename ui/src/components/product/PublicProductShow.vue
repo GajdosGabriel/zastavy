@@ -175,12 +175,13 @@ onUnmounted(() => {
                     <span class="text-gray-700">{{ productLoaded ? getProduct.name : '' }}</span>
                 </nav>
 
+                <!-- Na mobile: galéria → cena a Kúpiť → popis. Na desktope je karta s cenou vpravo cez oba riadky. -->
                 <section v-if="productLoaded" class="grid gap-6 lg:grid-cols-12">
-                    <div class="lg:col-span-7">
+                    <div class="order-1 lg:col-span-7 lg:col-start-1 lg:row-start-1">
                         <div class="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
-                            <div class="flex min-h-96 items-center justify-center bg-gray-50 p-4 md:p-8">
+                            <div class="flex min-h-56 items-center justify-center bg-gray-50 p-4 md:min-h-96 md:p-8">
                                 <img :src="selectedImage" :alt="getProduct.name" width="520" height="520"
-                                    class="max-h-[520px] w-full object-contain" />
+                                    class="max-h-64 w-full object-contain md:max-h-[520px]" />
                             </div>
                         </div>
 
@@ -188,12 +189,16 @@ onUnmounted(() => {
                             <button v-for="(image, index) in getImages" :key="image.id" type="button"
                                 @click="onClickImage(index)"
                                 class="h-20 w-20 overflow-hidden rounded border bg-white p-1 shadow-sm hover:border-blue-500"
-                                :class="currentImage === index ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200'">
-                                <img :src="image.path" :alt="getProduct.name" width="72" height="72" loading="lazy" class="h-full w-full object-contain" />
+                                :class="currentImage === index ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200'"
+                                :aria-label="`Zobraziť obrázok ${index + 1} z ${getImages.length}`"
+                                :aria-pressed="currentImage === index">
+                                <img :src="image.path" alt="" width="72" height="72" loading="lazy" class="h-full w-full object-contain" />
                             </button>
                         </div>
+                    </div>
 
-                        <section class="mt-6 rounded-md border border-gray-200 bg-white p-5 shadow-sm">
+                    <div class="order-3 lg:col-span-7 lg:col-start-1 lg:row-start-2">
+                        <section class="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
                             <h2 class="mb-3 text-xl font-semibold text-gray-900">Popis tovaru</h2>
                             <div class="leading-7 text-gray-600">
                                 <p v-if="!getProduct.description">Popis produktu pripravujeme.</p>
@@ -242,7 +247,7 @@ onUnmounted(() => {
                         </section>
                     </div>
 
-                    <aside class="lg:col-span-5">
+                    <aside class="order-2 lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1">
                         <div class="sticky top-4 space-y-5">
                             <section class="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
                                 <div class="mb-4 border-b border-gray-200 pb-4">
@@ -263,7 +268,7 @@ onUnmounted(() => {
                                     <div class="flex items-end justify-between gap-4">
                                         <span class="text-sm text-gray-500">Cena s DPH</span>
                                         <div class="text-right">
-                                            <span v-if="hasDiscount" class="mr-2 text-sm text-gray-400 line-through">
+                                            <span v-if="hasDiscount" class="mr-2 text-sm text-gray-500 line-through">
                                                 {{ formatPrice(basePrice) }} €
                                             </span>
                                             <span class="text-3xl font-bold text-red-600">

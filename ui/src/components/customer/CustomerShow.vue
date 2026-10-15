@@ -52,7 +52,7 @@ const dropdownItems = computed(() => {
                 <!-- Header -->
                 <div class="mb-4 flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Zákazník</p>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Zákazník</p>
                         <h1 class="text-xl font-bold text-gray-900">{{ getCustomer.company || getCustomer.name || '—' }}</h1>
                     </div>
                     <div class="flex gap-2">
@@ -67,7 +67,7 @@ const dropdownItems = computed(() => {
 
                         <!-- Firma -->
                         <div class="py-3 sm:pr-5">
-                            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{{ getCustomer.type_label || 'Firma' }}</p>
+                            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">{{ getCustomer.type_label || 'Firma' }}</p>
                             <p class="text-sm font-semibold text-gray-900">{{ getCustomer.company || '—' }}</p>
                             <p class="text-sm text-gray-600">{{ getCustomer.street }}</p>
                             <p class="text-sm text-gray-600">{{ getCustomer.postcode }} {{ getCustomer.city }}</p>
@@ -79,7 +79,7 @@ const dropdownItems = computed(() => {
 
                         <!-- Kontakt -->
                         <div class="py-3 sm:px-5">
-                            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Kontakt</p>
+                            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Kontakt</p>
                             <p class="text-sm font-semibold text-gray-900">{{ getCustomer.name || '—' }}</p>
                             <a v-if="getCustomer.phone" :href="`tel:${getCustomer.phone}`"
                                class="block text-sm text-blue-700 hover:underline">{{ getCustomer.phone }}</a>
@@ -90,10 +90,10 @@ const dropdownItems = computed(() => {
                         <!-- Meta -->
                         <div class="py-3 sm:pl-5 flex justify-between items-start">
                             <div>
-                                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Info</p>
+                                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Info</p>
                                 <div class="space-y-1 text-sm text-gray-600">
-                                    <div><span class="text-gray-400">Zaregistrovaný:</span> {{ getCustomer.created_at || '—' }}</div>
-                                    <div><span class="text-gray-400">Objednávky:</span> {{ getOrders?.length ?? 0 }}</div>
+                                    <div><span class="text-gray-500">Zaregistrovaný:</span> {{ getCustomer.created_at || '—' }}</div>
+                                    <div><span class="text-gray-500">Objednávky:</span> {{ getOrders?.length ?? 0 }}</div>
                                 </div>
                             </div>
                             <PanelDropdown v-if="dropdownItems.length" :items="dropdownItems" />
@@ -104,7 +104,7 @@ const dropdownItems = computed(() => {
                 <!-- Používatelia -->
                 <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
                     <div class="border-b border-gray-100 px-5 py-2.5">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Používatelia</span>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Používatelia</span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -135,7 +135,7 @@ const dropdownItems = computed(() => {
                                     </td>
                                 </tr>
                                 <tr v-if="!getCustomer.users?.length">
-                                    <td colspan="6" class="px-6 py-6 text-center text-sm text-gray-400">Žiadni používatelia</td>
+                                    <td colspan="6" class="px-6 py-6 text-center text-sm text-gray-500">Žiadni používatelia</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -153,7 +153,7 @@ const dropdownItems = computed(() => {
                 <!-- Objednávky -->
                 <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
                     <div class="border-b border-gray-100 px-5 py-2.5">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Objednávky</span>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Objednávky</span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -165,13 +165,13 @@ const dropdownItems = computed(() => {
                                     <th class="thead_th">Cena</th>
                                     <th class="thead_th">Status</th>
                                     <th class="thead_th">Expedícia</th>
-                                    <th class="thead_th">Panel</th>
+                                    <th class="thead_th"><span class="sr-only">Akcie</span></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 <tableRowOrders v-for="order in templateOrder(getOrders)" :key="order.id" :order="order" />
                                 <tr v-if="!getOrders?.length">
-                                    <td colspan="7" class="px-6 py-6 text-center text-sm text-gray-400">Žiadne objednávky</td>
+                                    <td colspan="7" class="px-6 py-6 text-center text-sm text-gray-500">Žiadne objednávky</td>
                                 </tr>
                             </tbody>
                         </table>

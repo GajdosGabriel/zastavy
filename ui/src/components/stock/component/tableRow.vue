@@ -40,7 +40,7 @@ const dropdownItems = computed(() => {
         <td class="px-4 py-3">
             <div class="font-semibold text-gray-900 text-sm">{{ item.name }}</div>
             <div v-if="item.variant_name" class="text-xs font-medium text-blue-700">{{ item.variant_name }}</div>
-            <div v-if="item.code" class="text-xs text-gray-400">{{ item.code }}</div>
+            <div v-if="item.code" class="text-xs text-gray-500">{{ item.code }}</div>
         </td>
         <td class="px-4 py-3 text-sm text-gray-600">
             <router-link v-if="item.stock_receipt_id" :to="{ name: 'stocks.receipts.show', params: { receiptId: item.stock_receipt_id } }" class="block font-semibold text-blue-700 hover:underline">{{ item.receipt_number }}</router-link>
@@ -51,29 +51,29 @@ const dropdownItems = computed(() => {
                 >
                     {{ item.company }}
                 </router-link>
-                <div v-if="item.order_serial" class="text-xs text-gray-400">Obj. č. {{ item.order_serial }}</div>
+                <div v-if="item.order_serial" class="text-xs text-gray-500">Obj. č. {{ item.order_serial }}</div>
             </template>
             <template v-else-if="item.supplier || item.document_number || item.note">
                 <div v-if="item.supplier" class="font-semibold text-gray-700">{{ item.supplier }}</div>
-                <div v-if="item.document_number" class="text-xs text-gray-400">Doklad č. {{ item.document_number }}</div>
+                <div v-if="item.document_number" class="text-xs text-gray-500">Doklad č. {{ item.document_number }}</div>
                 <div v-if="item.note" class="text-gray-500">{{ item.note }}</div>
             </template>
             <span v-else class="text-gray-300">—</span>
         </td>
         <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
             {{ item.shipping_created_at_human }}
-            <div v-if="item.received_at_formatted" class="text-xs text-gray-400">{{ item.received_at_formatted }}</div>
+            <div v-if="item.received_at_formatted" class="text-xs text-gray-500">{{ item.received_at_formatted }}</div>
         </td>
         <td class="px-4 py-3 text-right whitespace-nowrap">
             <span class="text-sm font-bold" :class="quantityClass">
                 {{ item.inventory_delta > 0 ? '+' : '' }}{{ item.inventory_delta }}
             </span>
-            <span class="ml-1 text-xs text-gray-400">{{ item.product_unit_value }}</span>
+            <span class="ml-1 text-xs text-gray-500">{{ item.product_unit_value }}</span>
         </td>
         <td class="px-4 py-3 text-right whitespace-nowrap text-sm">
             <template v-if="item.total_price !== null">
                 <div class="font-semibold text-gray-800">{{ formatPrice(item.total_price) }} €</div>
-                <div class="text-xs text-gray-400">{{ formatPrice(item.price) }} € / ks</div>
+                <div class="text-xs text-gray-500">{{ formatPrice(item.price) }} € / ks</div>
             </template>
             <span v-else class="text-gray-300">—</span>
         </td>

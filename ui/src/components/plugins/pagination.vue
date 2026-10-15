@@ -100,7 +100,7 @@ onBeforeUnmount(() => resetPaginator());
             <!-- Čísla strán -->
             <template v-for="item in visiblePages" :key="item.key">
                 <span v-if="item.type === 'dots'"
-                    class="flex h-8 w-8 items-center justify-center text-sm text-gray-400">
+                    class="flex h-8 w-8 items-center justify-center text-sm text-gray-500">
                     …
                 </span>
                 <button v-else

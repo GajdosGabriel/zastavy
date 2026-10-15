@@ -375,7 +375,7 @@ onMounted(async () => {
                                                         />
                                                         <div>
                                                             <input v-if="product.is_custom" v-model="product.name" aria-label="Názov vlastnej položky" class="w-full rounded border-gray-300" /><p v-else class="font-semibold text-gray-900">{{ product.name }}</p>
-                                                            <p class="text-xs text-gray-400">{{ product.code }}</p>
+                                                            <p class="text-xs text-gray-500">{{ product.code }}</p>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -401,7 +401,7 @@ onMounted(async () => {
                                                     <button
                                                         type="button"
                                                         @click="removeProduct(product)"
-                                                        class="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                                                        class="rounded-lg p-1.5 text-gray-500 transition hover:bg-red-50 hover:text-red-600"
                                                         title="Odstrániť"
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -411,7 +411,7 @@ onMounted(async () => {
                                                 </td>
                                             </tr>
                                             <tr v-if="!orderProducts.length">
-                                                <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-400">
+                                                <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-500">
                                                     Objednávka zatiaľ nemá položky.
                                                 </td>
                                             </tr>
@@ -441,7 +441,7 @@ onMounted(async () => {
                                             @blur="() => { setTimeout(() => { showCustomerDropdown = false; }, 150); }"
                                             @focus="showCustomerDropdown = customerSearchResults.length > 0"
                                         />
-                                        <svg v-if="customerSearchLoading" class="absolute right-2.5 top-2.5 h-4 w-4 animate-spin text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <svg v-if="customerSearchLoading" class="absolute right-2.5 top-2.5 h-4 w-4 animate-spin text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                                         </svg>
@@ -458,14 +458,14 @@ onMounted(async () => {
                                             @mousedown.prevent="selectCustomerFromSearch(c)"
                                         >
                                             <span class="font-semibold text-gray-900">{{ c.company || c.name }}</span>
-                                            <span class="text-xs text-gray-400">{{ c.city }}</span>
+                                            <span class="text-xs text-gray-500">{{ c.city }}</span>
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- Kontakty zákazníka -->
                                 <div v-if="getCustomer?.users?.length" class="mb-5">
-                                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
                                         Kontakt{{ getCustomer.users.length > 1 ? ' — vyberte osobu' : '' }}
                                     </p>
                                     <div class="flex flex-wrap gap-2">
@@ -485,7 +485,7 @@ onMounted(async () => {
                                                 {{ [user.firstName, user.lastName].filter(Boolean).join(' ') || user.username }}
                                             </span>
                                             <span class="text-xs text-gray-500">{{ user.email }}</span>
-                                            <span v-if="user.phone" class="text-xs text-gray-400">{{ user.phone }}</span>
+                                            <span v-if="user.phone" class="text-xs text-gray-500">{{ user.phone }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -550,13 +550,13 @@ onMounted(async () => {
                                     >
                                         <span class="text-gray-600 leading-snug">
                                             {{ product.name }}
-                                            <span class="text-gray-400">× {{ product.input_order }}</span>
+                                            <span class="text-gray-500">× {{ product.input_order }}</span>
                                         </span>
                                         <span class="shrink-0 font-medium text-gray-900">
                                             {{ formatPrice(Number(product.active_price || 0) * Number(product.input_order || 0)) }} €
                                         </span>
                                     </div>
-                                    <div v-if="!orderProducts.length" class="py-3 text-sm text-gray-400 text-center">
+                                    <div v-if="!orderProducts.length" class="py-3 text-sm text-gray-500 text-center">
                                         Žiadne položky
                                     </div>
                                 </div>

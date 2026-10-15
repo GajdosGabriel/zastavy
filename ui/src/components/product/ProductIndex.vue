@@ -89,7 +89,7 @@ const template = (product) => {
                                           <th scope="col" class="thead_th flex items-center">
                                                 Produkt
                                           </th>
-                                          <th scope="col" class="thead_th">ClipBoard</th>
+                                          <th scope="col" class="thead_th">Schránka</th>
                                           <th scope="col" class="thead_th">Cena</th>
                                           <th scope="col" class="thead_th">
                                                 Publikované
@@ -97,7 +97,7 @@ const template = (product) => {
                                           <th scope="col" class="thead_th">Varianty</th>
                                           <th scope="col" class="thead_th">Sklad</th>
                                           <th scope="col" class="thead_th">
-                                                <span>Panel</span>
+                                                <span class="sr-only">Akcie</span>
                                           </th>
                                     </tr>
                               </thead>

@@ -5,13 +5,16 @@ const props = defineProps({
     }
 });
 
+defineEmits(["labelemit"]);
 </script>
 
 <template>
-    <div @click="$emit('labelemit', props.label)"
+    <!-- Tlačidlo (nie div), aby sa dalo ovládať klávesnicou; aria-pressed hlási zapnutý filter. -->
+    <button type="button" @click="$emit('labelemit', props.label)"
         :class="[props.label.key === 'resetFilter' ? 'filter-chip-reset' : props.label.active ? 'filter-chip-active' : '']"
-        class="filter-chip" :title="props.label.name">
-        {{ props.label.name + ' ' }}
-        <span v-if="props.label.iconRight"> ({{ props.label.iconRight }})</span>
-    </div>
+        :aria-pressed="props.label.key === 'resetFilter' ? undefined : Boolean(props.label.active)"
+        class="filter-chip">
+        {{ props.label.name }}
+        <span v-if="props.label.iconRight" class="ml-1">({{ props.label.iconRight }})</span>
+    </button>
 </template>
