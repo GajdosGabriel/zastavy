@@ -60,10 +60,6 @@ class OrderIndexResource extends JsonResource
                 'isActive' => $this->mark !== null,
                 'endpoint' => route('orders.marks.store', $this->id),
             ],
-            'links' => [
-                ['label' => 'Zákazník',  'path' => '/zakaznici/' . $this->customer?->id . '/objednavky'],
-                ['label' => 'Expedícia', 'path' => '/objednavky/' . $this->id . '/show?expedicia=1'],
-            ],
             'endpoints' => [
                 'index' => route('orders.index'),
                 'show' => route('orders.show', $this->id),

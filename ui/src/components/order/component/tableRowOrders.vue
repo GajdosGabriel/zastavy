@@ -42,10 +42,12 @@ const actionMap = {
 const canCreateReturn = computed(() => Number(props.order.stock_expedition ?? 0) > 0);
 
 const dropdownItems = computed(() => {
-    const fixed = (props.order.links || []).map(link => ({
-        label: link.label,
-        to: { path: link.path },
-    }));
+    // Cesty UI patria do routera, nie do API. Expedícia je súčasťou „Zobraziť“
+    // (príprava DL je tlačidlo v riadku), preto vlastnú položku nemá.
+    const customerId = props.order.customer?.id;
+    const fixed = customerId
+        ? [{ label: "Zákazník", to: { name: "customers.orders", params: { customerId } } }]
+        : [];
 
     if (!Object.keys(props.order.endpoints).length) return fixed;
 
