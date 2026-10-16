@@ -90,7 +90,7 @@ const rowStateTitle = computed(() => {
     ]">
         <td class="tbody_td order-1 whitespace-nowrap font-semibold !text-gray-700 max-md:!px-2 max-md:!py-1">
             <div class="flex items-center gap-1.5">
-                <router-link :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }" class="hover:text-blue-700">
+                <router-link :to="{ name: 'orders.show', params: { orderId: order.id } }" class="hover:text-blue-700">
                     {{ order.serial_number }}
                 </router-link>
                 <span v-if="order.wants_coupon"
@@ -111,7 +111,7 @@ const rowStateTitle = computed(() => {
         </td>
 
         <td class="tbody_td order-4 basis-full cursor-pointer hover:text-blue-800 max-md:!px-2 max-md:!py-1 md:min-w-64">
-            <router-link :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }">
+            <router-link :to="{ name: 'orders.show', params: { orderId: order.id } }">
                 <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-900"
                     :class="order.customer.company ? 'font-bold' : 'font-semibold'">
                     <TruncatedText :text="customerName" />

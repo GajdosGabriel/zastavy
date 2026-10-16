@@ -120,6 +120,25 @@ class OrderEmailHistoryTest extends TestCase
         $this->assertSame('OrderPreparing', OrderEmail::sole()->type);
     }
 
+    public function test_timeline_combines_delivery_notes_and_emails_newest_first(): void
+    {
+        $order = $this->order();
+        $this->actAsSuperAdmin();
+        $order->notifyCustomer(new OrderCreated($order));
+
+        $this->travel(1)->hours();
+        $shipping = $order->shippings()->create(['prepared_items' => [['order_product_id' => 1, 'name' => 'Vlajka obce', 'quantity' => 2, 'unit' => 'ks']]]);
+        $this->postJson("/api/orders/{$order->id}/emails", ['type' => 'shipping', 'shipping_id' => $shipping->id])->assertStatus(202);
+
+        $timeline = $this->getJson("/api/orders/{$order->id}/emails")->json('timeline');
+
+        $this->assertSame(['E-mail: Príprava zásielky', 'DL #'.$shipping->id.' vystavený', 'E-mail: Potvrdenie objednávky', 'Objednávka prijatá'],
+            array_column($timeline, 'label'));
+        $this->assertSame('Vlajka obce × 2', $timeline[1]['detail']);
+        $this->assertSame('pending', $timeline[1]['status']);
+        $this->assertNotNull($timeline[0]['email_id']);
+    }
+
     public function test_cancellation_only_for_cancelled_order(): void
     {
         $order = $this->order();

@@ -49,7 +49,51 @@ class OrderEmailController extends Controller
             // Položky sa menili po poslednom e-maile — zákazník nemusí mať aktuálny stav.
             'changed_since_last_email' => $lastSent && $lastItemChange && $lastSent->lt($lastItemChange),
             'options' => $this->options($order, request()),
+            'timeline' => $this->timeline($order, $emails),
         ]);
+    }
+
+    /**
+     * História objednávky v detaile: čo sa s objednávkou stalo (dodacie listy,
+     * vrátenia) a čo o tom zákazník dostal e-mailom — na jednej časovej osi,
+     * najnovšie hore.
+     */
+    private function timeline(Order $order, $emails): array
+    {
+        $event = fn ($at, string $kind, string $label, ?string $detail = null, string $status = 'ok', array $extra = []) => $at ? [
+            'at' => $at->toIso8601String(),
+            'at_human' => $at->format('d.m.Y H:i'),
+            'kind' => $kind,
+            'label' => $label,
+            'detail' => $detail,
+            'status' => $status,
+        ] + $extra : null;
+        $items = fn ($rows) => collect($rows)->map(fn ($r) => trim(($r['name'] ?? '').' × '.($r['quantity'] ?? '')))->implode(', ') ?: null;
+
+        $events = [$event($order->created_at, 'order', 'Objednávka prijatá', $order->user?->name ? 'Zadal(a) '.$order->user->name : null)];
+
+        foreach ($order->shippings()->with('stocks.orderProduct')->get() as $shipping) {
+            $events[] = $event($shipping->created_at, 'shipping', 'DL #'.$shipping->id.' vystavený', $items($shipping->prepared_items),
+                $shipping->dispatched_at ? 'ok' : 'pending');
+            $events[] = $event($shipping->dispatched_at, 'shipping', 'DL #'.$shipping->id.' odoslaný',
+                $items($shipping->stocks->map(fn ($s) => ['name' => $s->orderProduct?->product_details->name, 'quantity' => $s->quantity])));
+        }
+
+        foreach ($order->orderReturns()->get() as $return) {
+            $events[] = $event($return->created_at, 'return', 'Vrátenie #'.$return->id.' prijaté');
+            $events[] = $event($return->processed_at, 'return', 'Vrátenie #'.$return->id.' spracované');
+        }
+
+        foreach ($emails as $email) {
+            $events[] = $event($email->created_at, 'email', 'E-mail: '.$email->label(),
+                $email->status === 'failed' ? 'Neodoslaný: '.$email->error : $email->recipient,
+                $email->status === 'failed' ? 'failed' : 'ok', ['email_id' => $email->body !== null ? $email->id : null]);
+        }
+
+        // Pri rovnakom čase je e-mail (dôsledok udalosti) nad udalosťou samotnou.
+        return collect($events)->filter()->values()
+            ->sortBy([['at', 'desc'], fn ($a, $b) => ($b['kind'] === 'email') <=> ($a['kind'] === 'email')])
+            ->values()->all();
     }
 
     public function show(Order $order, OrderEmail $email)

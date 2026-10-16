@@ -35,15 +35,11 @@ const order = [
         }
     },
     {
+        // Expedícia je súčasťou detailu objednávky; stará adresa (záložky, odkazy
+        // v e-mailoch obsluhe) otvorí detail rovno v režime prípravy dodacieho listu.
         path: '/objednavky/:orderId/expedicia',
         name: 'orders.shipping.edit',
-        components: {
-            default: () => import('../components/order/OrderShippingEdit.vue'),
-        },
-        meta: {
-            title: 'Expedícia objednávky',
-            requiresAuth: true,
-        }
+        redirect: (to) => ({ name: 'orders.show', params: { orderId: to.params.orderId }, query: { expedicia: 1 } }),
     },
     {
         path: '/objednavky/:orderId/vratenie/create',

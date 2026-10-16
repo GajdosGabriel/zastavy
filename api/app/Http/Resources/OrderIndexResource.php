@@ -62,7 +62,7 @@ class OrderIndexResource extends JsonResource
             ],
             'links' => [
                 ['label' => 'Zákazník',  'path' => '/zakaznici/' . $this->customer?->id . '/objednavky'],
-                ['label' => 'Expedícia', 'path' => '/objednavky/' . $this->id . '/expedicia'],
+                ['label' => 'Expedícia', 'path' => '/objednavky/' . $this->id . '/show?expedicia=1'],
             ],
             'endpoints' => [
                 'index' => route('orders.index'),

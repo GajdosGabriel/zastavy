@@ -60,7 +60,7 @@ const hasPendingShipping = computed(() => (props.order.shippings ?? []).some(shi
 
         <!-- Tlačidlo Vystaviť dodací list / Potvrdiť odoslanie -->
         <router-link v-if="showShippingAction && order.permissions?.ship?.allowed && !order.isFinished && !order.isStorned"
-            :to="{ name: 'orders.shipping.edit', params: { orderId: order.id } }"
+            :to="{ name: 'orders.show', params: { orderId: order.id }, query: hasPendingShipping ? {} : { expedicia: 1 } }"
             class="inline-flex min-w-24 items-center justify-center rounded px-3 py-1 text-xs font-semibold text-white transition"
             :class="hasPendingShipping ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-600 hover:bg-slate-700'">
             {{ hasPendingShipping ? 'Potvrdiť odoslanie' : 'Vystaviť dodací list' }}
