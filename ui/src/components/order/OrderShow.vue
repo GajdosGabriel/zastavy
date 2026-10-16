@@ -8,11 +8,12 @@ import { useProducts } from "../../store/StoreProducts";
 import { useReturns } from "../../store/StoreReturns";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import productTableRow from "../orderProducts/productTableRow.vue";
 import { formatPrice, formatFileSize } from "../../models/functions";
 import shippingButton from "./component/shippingButton.vue";
 import OrderCustomerCard from "./component/OrderCustomerCard.vue";
+import OrderEmailsCard from "./component/OrderEmailsCard.vue";
 import buttonSubmitComponent from '../layout/page/ButtonSubmit.vue';
 import buttonLink from '../layout/page/ButtonLink.vue';
 
@@ -61,6 +62,10 @@ const STATUS_LABELS = {
 const hasShippedItems = computed(() =>
     (getOrder.value?.orderProducts ?? []).some(item => Number(item.stockSum ?? 0) > 0)
 );
+
+// Po úprave či storne položky karta e-mailov upozorní, že zákazník nemá aktuálny stav.
+const emailsCard = ref(null);
+watch(getOrderProducts, () => emailsCard.value?.load(), { deep: true });
 
 const attachmentInput = ref(null);
 
@@ -213,6 +218,9 @@ const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ or
                         </li>
                     </ul>
                 </div>
+
+                <!-- Čo všetko zákazníkovi odišlo + dodatočné odoslanie zabudnutého oznamu -->
+                <OrderEmailsCard ref="emailsCard" v-if="getOrder.permissions?.update?.allowed" :order-id="orderId" />
 
                 <!-- Vrátenia -->
                 <div class="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">

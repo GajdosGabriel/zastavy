@@ -113,6 +113,12 @@ Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function 
     Route::get('/orders/statistics', [OrderController::class, 'statistics'])->name('orders.statistics');
 
     Route::post('orders/{order}/shippings/preview', [OrderShippingController::class, 'preview']);
+    Route::get('orders/{order}/emails', [\App\Http\Controllers\Api\Dashboard\OrderEmailController::class, 'index'])->name('orders.emails.index');
+    Route::post('orders/{order}/emails/preview', [\App\Http\Controllers\Api\Dashboard\OrderEmailController::class, 'preview'])->name('orders.emails.preview');
+    Route::post('orders/{order}/emails', [\App\Http\Controllers\Api\Dashboard\OrderEmailController::class, 'store'])
+        ->middleware('throttle:10,1')->name('orders.emails.store');
+    Route::get('orders/{order}/emails/{email}', [\App\Http\Controllers\Api\Dashboard\OrderEmailController::class, 'show'])
+        ->whereNumber('email')->name('orders.emails.show');
     Route::post('orders/{order}/customer-tax-ids', \App\Http\Controllers\Api\Dashboard\OrderCustomerTaxIdController::class)
         ->middleware('throttle:30,1')
         ->name('orders.customer-tax-ids');

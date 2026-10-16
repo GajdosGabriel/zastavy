@@ -95,6 +95,12 @@ class Order extends Model
         $this->notify($notification);
     }
 
+    /** E-maily zákazníkovi k objednávke (história v detaile). */
+    public function emails()
+    {
+        return $this->hasMany(OrderEmail::class);
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class)->withTrashed();

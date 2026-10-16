@@ -25,7 +25,7 @@
         @foreach($order->orderProducts as $item)
         <tr>
             <td><x-email.order-item :item="$item" /></td>
-            <td style="text-align:right; white-space:nowrap; padding-left:10px;">{{ $item->quantity }} {{ $item->product_details->unit_value ?? 'ks' }}</td>
+            <td style="text-align:right; white-space:nowrap; padding-left:10px;">{{ $item->quantity }} {{ $item->product_details->unit_value ?? 'ks' }}@if($item->storno > 0)<br><span style="color:#b91c1c; font-size:12px;">z toho storno {{ $item->storno }}</span>@endif</td>
             @if($hasPrices)
                 <td style="text-align:right; white-space:nowrap; padding-left:10px;">{{ $money($item->price) }}</td>
                 <td style="text-align:right; white-space:nowrap; padding-left:10px;">{{ $money($item->total) }}</td>

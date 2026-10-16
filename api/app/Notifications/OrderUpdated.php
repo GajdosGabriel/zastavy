@@ -17,6 +17,8 @@ class OrderUpdated extends Notification implements ShouldQueue
     public function __construct(
         public readonly Order $order,
         public readonly array $changes = [],
+        /** Voliteľný text obsluhy, napr. dôvod storna položky. */
+        public readonly ?string $note = null,
     ) {}
 
     public function via($notifiable): array
@@ -36,6 +38,7 @@ class OrderUpdated extends Notification implements ShouldQueue
             ->view('emails.orderUpdated', [
                 'order'   => $this->order,
                 'changes' => $this->changes,
+                'note'    => $this->note,
             ]);
     }
 

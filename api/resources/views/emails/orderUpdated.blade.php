@@ -15,6 +15,10 @@
         Vašu objednávku sme upravili. Nižšie nájdete, čo sa zmenilo, a aktuálnu rekapituláciu.
     </p>
 
+    @if(filled($note ?? null))
+    <div class="change-block">{!! nl2br(e($note)) !!}</div>
+    @endif
+
     @if(!empty($changes))
     <p class="section-title">Čo sa zmenilo</p>
     <div class="change-block">

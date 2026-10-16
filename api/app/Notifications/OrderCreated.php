@@ -20,7 +20,13 @@ class OrderCreated extends Notification implements ShouldQueue
      * @return void
      */
     public $order;
-    public function __construct(Order $order)
+
+    /**
+     * @param  bool  $resent  dodatočné odoslanie z detailu objednávky — správa má vlastné
+     *                        Message-ID a odpovedá na koreň vlákna. Druhú správu s rovnakým
+     *                        Message-ID by Gmail ako duplikát zahodil.
+     */
+    public function __construct(Order $order, public bool $resent = false)
     {
         $this->order = $order;
     }
@@ -53,11 +59,13 @@ class OrderCreated extends Notification implements ShouldQueue
 
         $message = (new MailMessage)
             ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
-            ->subject(OrderThread::subject($this->order))
+            ->subject($this->resent ? OrderThread::replySubject($this->order) : OrderThread::subject($this->order))
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->view('emails.orderConfirmation', ['order' => $this->order, 'forAdmin' => $notifiable instanceof User])
             // Koreň vlákna objednávky: ďalšie e-maily k objednávke sa zaradia pod túto správu.
-            ->withSymfonyMessage(fn ($m) => OrderThread::root($m, $this->order, $notifiable instanceof User));
+            ->withSymfonyMessage(fn ($m) => $this->resent
+                ? OrderThread::reply($m, $this->order, $notifiable instanceof User)
+                : OrderThread::root($m, $this->order, $notifiable instanceof User));
 
         // Odpoveď na admin kópiu ide zákazníkovi; odpoveď zákazníka na jeho
         // vlastné potvrdenie ostáva na obchod@zastavy-vlajky.sk.

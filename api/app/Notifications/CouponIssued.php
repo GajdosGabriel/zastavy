@@ -29,6 +29,8 @@ class CouponIssued extends Notification implements ShouldQueue
             ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->replyTo('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->subject('Váš zľavový kupón na ďalší nákup')
+            // Samostatný e-mail mimo vlákna, ale do histórie objednávky patrí.
+            ->withSymfonyMessage(fn ($m) => \App\Support\OrderThread::tag($m, $this->order))
             ->view('emails.couponIssued', [
                 'coupon' => $this->coupon,
                 'order'  => $this->order,

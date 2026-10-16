@@ -2,10 +2,13 @@
 
 namespace App\Listeners;
 
+use App\Models\Order;
+use App\Models\OrderEmail;
 use App\Models\User;
 use App\Notifications\ResetPassword;
 use App\Notifications\UserInvited;
 use App\Services\SystemLog\Recorder;
+use App\Support\OrderThread;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Events\Dispatcher;
@@ -70,6 +73,8 @@ class SystemLogSubscriber
             'subject' => (string) $event->message->getSubject(),
             'context' => $this->mailContext($event->message, $event->data),
             'body' => $this->mailBody($event->message, $event->data),
+            'order' => OrderThread::parseTag($event->message),
+            'class' => $this->mailClass($event->data),
         ];
     }
 
@@ -77,12 +82,51 @@ class SystemLogSubscriber
     {
         self::$pending = null;
 
+        $body = $this->mailBody($event->message, $event->data);
         Recorder::info('mail', 'sent', (string) $event->message->getSubject(),
             status: 'sent',
             recipient: $this->recipients($event->message),
             context: $this->mailContext($event->message, $event->data) + ['message_id' => $event->sent->getMessageId()],
-            body: $this->mailBody($event->message, $event->data),
+            body: $body,
         );
+
+        self::recordOrderEmail(OrderThread::parseTag($event->message), $this->mailClass($event->data),
+            (string) $event->message->getSubject(), $this->recipients($event->message), 'sent', body: $body);
+    }
+
+    /**
+     * História e-mailov zákazníkovi v detaile objednávky. Kópie pre obsluhu sa
+     * nezapisujú; zlyhanie zápisu nesmie zhodiť odoslanie.
+     *
+     * @param  array{0: string, 1: bool}|null  $tag
+     */
+    private static function recordOrderEmail(?array $tag, ?string $class, string $subject, ?string $recipient,
+        string $status, ?string $error = null, ?string $body = null, ?int $orderId = null): void
+    {
+        try {
+            if ($tag) {
+                [$uuid, $admin] = $tag;
+                if ($admin) {
+                    return;
+                }
+                $orderId = Order::withTrashed()->where('uuid', $uuid)->value('id');
+            }
+            if (! $orderId) {
+                return;
+            }
+
+            OrderEmail::create([
+                'order_id' => $orderId,
+                'type' => $class ? class_basename($class) : null,
+                'subject' => Str::limit($subject, 250),
+                'recipient' => $recipient !== null ? Str::limit($recipient, 191, '') : null,
+                'status' => $status,
+                'error' => $error !== null ? Str::limit($error, 490) : null,
+                'body' => $body,
+            ]);
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     /**
@@ -107,6 +151,9 @@ class SystemLogSubscriber
             context: ($pending['context'] ?? []) + Recorder::exception($e),
             body: $pending['body'] ?? null,
         );
+
+        self::recordOrderEmail($pending['order'] ?? null, $pending['class'] ?? null, $pending['subject'] ?? '',
+            $pending['recipient'] ?? null, 'failed', $e->getMessage(), $pending['body'] ?? null);
     }
 
     public function jobFailed(JobFailed $event): void
@@ -127,6 +174,13 @@ class SystemLogSubscriber
                     userId: $notifiable instanceof User ? $notifiable->getKey() : null,
                     context: ['class' => $notification, 'channel' => $channel, 'job_id' => $event->job->getJobId()] + $exception,
                 );
+
+                // Notifikácia zákazníkovi objednávky (Order::notifyCustomer) — do histórie objednávky.
+                if ($channel === 'mail' && $notifiable instanceof Order) {
+                    self::recordOrderEmail(null, $notification, OrderThread::replySubject($notifiable),
+                        $this->notifiableEmail($notifiable, $command->notification), 'failed',
+                        $event->exception->getMessage(), orderId: $notifiable->getKey());
+                }
             }
 
             return;
