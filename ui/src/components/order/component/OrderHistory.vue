@@ -150,6 +150,8 @@ defineExpose({ load, openModal });
                         <span class="text-xs text-gray-500">{{ event.at_human }}</span>
                         <button v-if="event.email_id" type="button" @click="openEmail(event)"
                             class="text-xs font-semibold text-blue-600 hover:text-blue-800">Zobraziť e-mail</button>
+                        <span v-else-if="event.body_expired" class="text-xs text-gray-500"
+                            title="Obsah starších e-mailov sa po čase maže, záznam o odoslaní zostáva.">obsah sa už neuchováva</span>
                     </div>
                     <div v-if="event.detail" class="truncate text-xs text-gray-500" :title="event.detail">{{ event.detail }}</div>
                 </div>

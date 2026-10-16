@@ -40,6 +40,11 @@ if (config('operations.enabled')) {
 // Denník udalostí drží len posledných 30 dní (config/logging.php).
 Schedule::command('model:prune', ['--model' => \App\Models\SystemLog::class])->dailyAt('03:25');
 
+Artisan::command('order-emails:prune-bodies', function () {
+    $this->info('Vymazaný obsah e-mailov: '.\App\Models\OrderEmail::pruneBodies());
+})->purpose('Vymaže obsah starých e-mailov v histórii objednávok, záznam o odoslaní ponechá');
+Schedule::command('order-emails:prune-bodies')->dailyAt('03:35')->withoutOverlapping(10);
+
 Artisan::command('emailing:send', function (\App\Services\EmailingService $service) {
     $this->info('Spracované: '.$service->runBatch());
 })->purpose('Odoslanie obmedzenej dávky marketingových emailov');

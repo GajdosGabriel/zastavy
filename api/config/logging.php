@@ -143,4 +143,13 @@ return [
         'days' => (int) env('SYSTEM_LOG_DAYS', 30),
     ],
 
+    /*
+    | História e-mailov zákazníkovi v detaile objednávky (tabuľka order_emails).
+    | Záznam (typ, predmet, komu, kedy, stav) sa drží s objednávkou natrvalo;
+    | obsah e-mailu (HTML) sa po `body_days` dňoch vymaže. 0 = obsah nemazať.
+    */
+    'order_email' => [
+        'body_days' => (int) env('ORDER_EMAIL_BODY_DAYS', 730),
+    ],
+
 ];

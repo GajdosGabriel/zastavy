@@ -139,6 +139,39 @@ class OrderEmailHistoryTest extends TestCase
         $this->assertNotNull($timeline[0]['email_id']);
     }
 
+    public function test_old_email_bodies_are_pruned_but_records_stay(): void
+    {
+        $order = $this->order();
+        $this->actAsSuperAdmin();
+        $order->notifyCustomer(new OrderCreated($order));
+
+        $this->travel(729)->days();
+        $this->artisan('order-emails:prune-bodies')->assertSuccessful();
+        $this->assertNotNull(OrderEmail::sole()->body);
+
+        $this->travel(2)->days();
+        $this->artisan('order-emails:prune-bodies')->expectsOutput('Vymazaný obsah e-mailov: 1')->assertSuccessful();
+
+        $email = OrderEmail::sole();
+        $this->assertNull($email->body);
+        $this->assertSame('OrderCreated', $email->type);
+
+        $event = collect($this->getJson("/api/orders/{$order->id}/emails")->json('timeline'))->firstWhere('kind', 'email');
+        $this->assertNull($event['email_id']);
+        $this->assertTrue($event['body_expired']);
+    }
+
+    public function test_body_pruning_can_be_disabled(): void
+    {
+        config(['logging.order_email.body_days' => 0]);
+        $order = $this->order();
+        $order->notifyCustomer(new OrderCreated($order));
+
+        $this->travel(5)->years();
+        $this->artisan('order-emails:prune-bodies')->expectsOutput('Vymazaný obsah e-mailov: 0');
+        $this->assertNotNull(OrderEmail::sole()->body);
+    }
+
     public function test_cancellation_only_for_cancelled_order(): void
     {
         $order = $this->order();

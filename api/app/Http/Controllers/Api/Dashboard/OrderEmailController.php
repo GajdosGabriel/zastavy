@@ -87,7 +87,7 @@ class OrderEmailController extends Controller
         foreach ($emails as $email) {
             $events[] = $event($email->created_at, 'email', 'E-mail: '.$email->label(),
                 $email->status === 'failed' ? 'Neodoslaný: '.$email->error : $email->recipient,
-                $email->status === 'failed' ? 'failed' : 'ok', ['email_id' => $email->body !== null ? $email->id : null]);
+                $email->status === 'failed' ? 'failed' : 'ok', ['email_id' => $email->body !== null ? $email->id : null, 'body_expired' => $email->bodyExpired()]);
         }
 
         // Pri rovnakom čase je e-mail (dôsledok udalosti) nad udalosťou samotnou.
