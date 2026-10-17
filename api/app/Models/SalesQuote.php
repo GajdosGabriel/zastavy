@@ -13,7 +13,12 @@ class SalesQuote extends Model
     protected $hidden = ['token_hash', 'token'];
 
     protected $casts = ['customer' => 'array', 'requested_items' => 'array', 'token_expires_at' => 'datetime', 'accepted_at' => 'datetime', 'token' => 'encrypted',
-        'valid_until' => 'date:Y-m-d', 'sent_at' => 'datetime', 'viewed_at' => 'datetime', 'total_net' => 'float', 'total_gross' => 'float'];
+        'valid_until' => 'date:Y-m-d', 'sent_at' => 'datetime', 'viewed_at' => 'datetime', 'rejected_at' => 'datetime', 'total_net' => 'float', 'total_gross' => 'float'];
+
+    public function messages()
+    {
+        return $this->hasMany(SalesQuoteMessage::class)->orderBy('id');
+    }
 
     /** Všetky verzie vrátane konceptu (ten má najvyššie číslo a prázdne sent_at). */
     public function versions()

@@ -32,6 +32,9 @@ class QuotePricing
             'items.*.quantity' => 'required|integer|min:1|max:100000',
             'items.*.price_net' => 'required|numeric|min:0|max:999999.99',
             'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
+            'items.*.alternatives' => 'nullable|array|max:5',
+            'items.*.alternatives.*.quantity' => 'required|integer|min:1|max:100000',
+            'items.*.alternatives.*.price_net' => 'required|numeric|min:0|max:999999.99',
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'shipping_method_id' => $required.'|integer',
             'shipping_price_net' => $required.'|numeric|min:0|max:999999.99',
@@ -45,7 +48,8 @@ class QuotePricing
     {
         $variants = ProductVariant::with('product')->whereIn('id', collect($input)->pluck('variant_id')->filter())->get()->keyBy('id');
 
-        return collect($input)->map(function (array $item, int $index) use ($variants, $strict) {
+        // validated() skladá polia podľa poradia pravidiel, nie vstupu — poradie položiek obnoví index.
+        return collect($input)->sortKeys()->map(function (array $item, int $index) use ($variants, $strict) {
             $custom = ! empty($item['is_custom']);
             $variant = $custom ? null : $variants->get($item['variant_id']);
             if (! $custom && ! $variant?->product) {
@@ -57,13 +61,22 @@ class QuotePricing
             $snapshot = $custom
                 ? ['name' => trim($item['name']), 'code' => null, 'unit_value' => ($item['unit'] ?? '') ?: 'ks', 'vat' => (int) $item['vat'], 'variant_name' => null, 'variant_code' => null]
                 : ['name' => $variant->product->name, 'code' => $variant->product->code, 'unit_value' => $variant->product->unit_value ?: 'ks', 'vat' => (int) $variant->product->vat, 'variant_name' => $variant->name, 'variant_code' => $variant->code];
-            $line = self::line((int) $item['quantity'], (float) $item['price_net'], (float) ($item['discount_percent'] ?? 0), $snapshot['vat']);
-            if ($line['line_gross'] > 999999.99) {
+            $discount = (float) ($item['discount_percent'] ?? 0);
+            $line = self::line((int) $item['quantity'], (float) $item['price_net'], $discount, $snapshot['vat']);
+            // Cenové varianty podľa množstva: zákazník si pri prijatí vyberie jednu z možností.
+            $alternatives = collect($item['alternatives'] ?? [])->sortKeys()->map(function (array $alt, int $n) use ($index, $variant, $strict, $discount, $snapshot) {
+                if ($strict && $variant && $alt['quantity'] < max(1, (int) $variant->min_order)) {
+                    throw ValidationException::withMessages(["items.$index.alternatives.$n.quantity" => 'Množstvo je pod minimálnym odberom ('.$variant->min_order.').']);
+                }
+
+                return self::line((int) $alt['quantity'], (float) $alt['price_net'], $discount, $snapshot['vat']);
+            })->values()->all();
+            if (collect([$line, ...$alternatives])->max('line_gross') > 999999.99) {
                 throw ValidationException::withMessages(["items.$index.price_net" => 'Suma jednej položky nesmie presiahnuť 999 999,99 €.']);
             }
 
             return ['is_custom' => $custom, 'product_id' => $variant?->product_id, 'variant_id' => $variant?->id, 'description' => ($item['description'] ?? null) ?: null,
-                'snapshot' => $snapshot] + $line;
+                'snapshot' => $snapshot] + $line + ['alternatives' => $alternatives];
         })->values()->all();
     }
 
@@ -89,6 +102,32 @@ class QuotePricing
         $net = round((float) $priceNet, 2);
 
         return ['id' => $method->id, 'name' => $method->name, 'price_net' => $net, 'vat' => self::SHIPPING_VAT, 'price' => round($net * (1 + self::SHIPPING_VAT / 100), 2)];
+    }
+
+    /**
+     * Položky s množstvom, ktoré si zákazník vybral. `$choices[i]` je index
+     * v `alternatives` položky i; chýbajúca voľba znamená základné množstvo.
+     */
+    public static function chosen(array $items, array $choices = []): array
+    {
+        foreach ($choices as $i => $choice) {
+            if ($choice !== null && ! isset($items[$i])) {
+                throw ValidationException::withMessages(["choices.$i" => 'Položka neexistuje.']);
+            }
+        }
+
+        return collect($items)->map(function (array $item, int $i) use ($choices) {
+            $choice = $choices[$i] ?? null;
+            if ($choice === null) {
+                return $item;
+            }
+            $alternative = $item['alternatives'][$choice] ?? null;
+            if (! $alternative) {
+                throw ValidationException::withMessages(["choices.$i" => 'Zvolené množstvo neexistuje.']);
+            }
+
+            return array_merge($item, $alternative);
+        })->all();
     }
 
     /** Celková zľava ide do objednávky ako percentuálna úprava ceny (OrderPricing). */

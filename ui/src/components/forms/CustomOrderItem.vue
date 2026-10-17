@@ -1,6 +1,8 @@
 <script setup>
 import { reactive, ref } from 'vue';
 const emit = defineEmits(['add']);
+// Košík pracuje s cenou s DPH, cenová ponuka bez DPH — hodnota ide von vždy ako `active_price`.
+const props = defineProps({ priceLabel: { type: String, default: 'Jednotková cena (€)' } });
 // Rovnaké sadzby ako VatRule na serveri.
 const VAT_RATES = [23, 20, 10, 0];
 const open = ref(false);
@@ -27,7 +29,7 @@ const add = () => {
 <label class="text-sm">Názov<input v-model="item.name" maxlength="200" placeholder="Napr. grafická príprava" class="mt-1 w-full rounded border-gray-300" /></label>
 <label class="text-sm">Množstvo<input v-model.number="item.input_order" type="number" min="1" step="1" class="mt-1 w-full rounded border-gray-300" /></label>
 <label class="text-sm">Jednotka<input v-model="item.unit_value" maxlength="20" class="mt-1 w-full rounded border-gray-300" /></label>
-<label class="text-sm">Jednotková cena (€)<input v-model.number="item.active_price" type="number" min="0" step="0.01" class="mt-1 w-full rounded border-gray-300" /></label>
+<label class="text-sm">{{ props.priceLabel }}<input v-model.number="item.active_price" type="number" min="0" step="0.01" class="mt-1 w-full rounded border-gray-300" /></label>
 <label class="text-sm">DPH<select v-model.number="item.vat" class="mt-1 w-full rounded border-gray-300"><option v-for="rate in VAT_RATES" :key="rate" :value="rate">{{ rate }} %</option></select></label>
 </div><p v-if="error" role="alert" class="text-sm text-red-700">{{ error }}</p>
 <button type="button" class="rounded bg-blue-700 px-4 py-2 text-white" @click="add">Pridať položku</button>

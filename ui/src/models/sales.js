@@ -23,12 +23,16 @@ export async function downloadSales(url,name,token=''){
  const href=URL.createObjectURL(data),a=document.createElement('a');a.href=href;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(href),1000);
 }
 export const productionLabels={awaiting_artwork:'Čaká na grafiku',ready:'Pripravené',in_progress:'Vo výrobe',completed:'Dokončené'};
-export const quoteLabels={requested:'Dopyt',draft:'Koncept',offered:'Odoslaná',accepted:'Prijatá',withdrawn:'Stiahnutá'};
-export const quoteTones={requested:'bg-amber-100 text-amber-800',draft:'bg-gray-100 text-gray-700',offered:'bg-blue-100 text-blue-800',accepted:'bg-green-100 text-green-800',withdrawn:'bg-red-100 text-red-700'};
+export const quoteLabels={requested:'Dopyt',draft:'Koncept',offered:'Odoslaná',accepted:'Prijatá',rejected:'Odmietnutá',withdrawn:'Stiahnutá'};
+export const quoteTones={requested:'bg-amber-100 text-amber-800',draft:'bg-gray-100 text-gray-700',offered:'bg-blue-100 text-blue-800',accepted:'bg-green-100 text-green-800',rejected:'bg-orange-100 text-orange-800',withdrawn:'bg-red-100 text-red-700'};
+export const quoteMessageLabels={message:'Správa',change_request:'Žiadosť o úpravu',rejected:'Odmietnutie'};
+// Položky so zvoleným množstvom (choices[i] = index v alternatives); uložené položky majú cenu v `snapshot.vat`.
+export const chosenItems=(items,choices={})=>items.map((item,i)=>{const alt=choices[i]!=null?item.alternatives?.[choices[i]]:null;return {...item,...(alt??{}),vat:item.vat??item.snapshot?.vat??0};});
 export const VAT_RATES=[23,20,10,0];
 export const SHIPPING_VAT=23;
 export const money=v=>Number(v??0).toLocaleString('sk-SK',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
-const r2=v=>Math.round((Number(v)+Number.EPSILON)*100)/100;
+// Zaokrúhľuje ako PHP round(): 74.105 → 74.11 (násobenie 74.105*100 by dalo 7410.4999…).
+const r2=v=>{const n=Number(v),s=Math.abs(n).toPrecision(15);return Math.sign(n)*(s.includes('e')?Math.round(Math.abs(n)*100)/100:Math.round(Number(s+'e2'))/100);};
 export const netFromGross=(gross,vat)=>r2(Number(gross)/(1+Number(vat)/100));
 // Rovnaký výpočet ako App\Support\QuotePricing — súčty v editore sa zhodujú s uloženou ponukou.
 export function quoteLine(i){const unitNet=r2(Number(i.price_net||0)*(1-Number(i.discount_percent||0)/100)),unitGross=r2(unitNet*(1+Number(i.vat||0)/100)),q=Number(i.quantity||0);

@@ -8,6 +8,8 @@ use App\Models\ProductVariant;
 use App\Models\SalesQuote;
 use App\Models\ShippingMethod;
 use App\Models\User;
+use App\Notifications\QuoteMessageReceived;
+use App\Notifications\QuoteMessageSent;
 use App\Notifications\QuoteOffered;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -83,12 +85,16 @@ class SalesQuoteStaffTest extends TestCase
         // S DPH: 10 × 11,07 + 2 × 122,99 = 356,68; zľava 17,83; doprava 12,30.
         $this->assertEquals(351.15, $totals['gross']);
         $this->assertEquals(round(351.15 - 285.48, 2), $totals['vat']);
+        $this->assertStringEndsWith('product-placeholder.svg', $res->json('thumbs.'.$this->variant->id));
         $res->assertJsonPath('status', 'offered')->assertJsonPath('version', 1)->assertJsonPath('sent_to', 'obec@example.test');
 
         Notification::assertSentTo(new AnonymousNotifiable, QuoteOffered::class, function ($n, $channels, $notifiable) {
             $mail = $n->toMail($notifiable);
             $this->assertStringContainsString('CP-', $mail->subject);
-            $this->assertStringContainsString('/ponuka/', $mail->render());
+            $html = (string) $mail->render();
+            $this->assertStringContainsString('/ponuka/', $html);
+            $this->assertStringContainsString('&amp;prijat=1', $html);
+            $this->assertStringContainsString('ďakujeme za Váš dopyt', html_entity_decode($html));
 
             return $notifiable->routes['mail'] === ['obec@example.test' => 'Jana Nová'];
         });
@@ -129,6 +135,73 @@ class SalesQuoteStaffTest extends TestCase
         $this->getJson('/api/sales-quotes?status=offered')->assertOk()->assertJsonCount(1, 'data');
         $this->getJson('/api/sales-quotes?search=Škola')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $b['id']);
         $this->getJson('/api/sales-quotes?search='.$a['number'])->assertOk()->assertJsonCount(1, 'data');
+    }
+
+    private function offered(array $extra = []): SalesQuote
+    {
+        $q = $this->create();
+        $this->postJson('/api/sales-quotes/'.$q['id'].'/offer', $this->payload($extra))->assertOk();
+
+        return SalesQuote::findOrFail($q['id']);
+    }
+
+    public function test_customer_chooses_quantity_variant_on_acceptance(): void
+    {
+        $items = $this->payload()['items'];
+        $items[0]['alternatives'] = [['quantity' => 50, 'price_net' => 8], ['quantity' => 100, 'price_net' => 7]];
+        $quote = $this->offered(['items' => $items]);
+        $this->assertEquals(7.2, $quote->sentVersions()->first()->items[0]['alternatives'][0]['unit_net']);
+
+        $this->postJson('/api/public-quotes/'.$quote->uuid.'/accept', ['version' => 1, 'name' => 'Jana', 'confirm' => true, 'choices' => [5 => 0]], ['X-Sales-Token' => $quote->shareToken()])
+            ->assertUnprocessable();
+        $uuid = $this->postJson('/api/public-quotes/'.$quote->uuid.'/accept', ['version' => 1, 'name' => 'Jana', 'confirm' => true, 'choices' => [0 => 1]], ['X-Sales-Token' => $quote->shareToken()])
+            ->assertOk()->json('order_uuid');
+        $line = Order::where('uuid', $uuid)->firstOrFail()->orderProducts->firstWhere('is_custom', false);
+        $this->assertSame(100, (int) $line->quantity);
+        // 7 € − 10 % = 6,30 bez DPH → 7,75 s DPH
+        $this->assertEquals(7.75, $line->price);
+        $this->assertEquals(775, $line->total);
+        $this->assertNotEquals(351.15, $quote->fresh()->total_gross);
+    }
+
+    public function test_pdf_is_available_to_staff_customer_and_attached_to_email(): void
+    {
+        $quote = $this->offered(['notify' => true]);
+        $res = $this->get('/api/sales-quotes/'.$quote->id.'/pdf')->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', $res->getContent());
+        $this->get('/api/public-quotes/'.$quote->uuid.'/pdf')->assertNotFound();
+        $this->get('/api/public-quotes/'.$quote->uuid.'/pdf', ['X-Sales-Token' => $quote->shareToken()])->assertOk()
+            ->assertHeader('Content-Disposition', 'attachment; filename="Cenova-ponuka-'.$quote->number.'.pdf"');
+
+        Notification::assertSentTo(new AnonymousNotifiable, QuoteOffered::class, function ($n, $channels, $notifiable) use ($quote) {
+            $mail = $n->toMail($notifiable);
+
+            return $mail->rawAttachments[0]['name'] === 'Cenova-ponuka-'.$quote->number.'.pdf';
+        });
+    }
+
+    public function test_rejection_and_conversation(): void
+    {
+        $quote = $this->offered();
+        $token = $quote->shareToken();
+        $admin = User::role('super-admin')->first();
+
+        $this->postJson('/api/public-quotes/'.$quote->uuid.'/messages', ['name' => 'Jana', 'body' => 'Dá sa dodať do piatku?', 'kind' => 'change_request'], ['X-Sales-Token' => $token])
+            ->assertOk()->assertJsonPath('messages.0.kind', 'change_request');
+        Notification::assertSentTo($admin, QuoteMessageReceived::class);
+        $this->getJson('/api/sales-quotes?status=unread')->assertJsonCount(1, 'data')->assertJsonPath('data.0.unread_messages', 1);
+        $this->getJson('/api/sales-quotes/'.$quote->id)->assertOk();
+        $this->getJson('/api/sales-quotes?status=unread')->assertJsonCount(0, 'data');
+
+        $this->postJson('/api/sales-quotes/'.$quote->id.'/messages', ['body' => 'Áno, do piatku stihneme.'])->assertOk()->assertJsonCount(2, 'messages');
+        Notification::assertSentTo(new AnonymousNotifiable, QuoteMessageSent::class);
+
+        $this->postJson('/api/public-quotes/'.$quote->uuid.'/reject', ['name' => 'Jana', 'reason' => 'Príliš drahé'], ['X-Sales-Token' => $token])
+            ->assertOk()->assertJsonPath('status', 'rejected')->assertJsonPath('rejection_reason', 'Príliš drahé');
+        $this->postJson('/api/public-quotes/'.$quote->uuid.'/accept', ['version' => 1, 'name' => 'Jana', 'confirm' => true], ['X-Sales-Token' => $token])->assertConflict();
+
+        // Po odmietnutí môže obsluha poslať novú verziu.
+        $this->postJson('/api/sales-quotes/'.$quote->id.'/offer', $this->payload(['version' => 1]))->assertOk()->assertJsonPath('status', 'offered')->assertJsonPath('version', 2);
     }
 
     public function test_closed_quote_cannot_be_edited(): void

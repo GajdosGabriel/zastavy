@@ -8,16 +8,21 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\SalesQuote;
+use App\Models\SalesQuoteMessage;
 use App\Models\SalesQuoteVersion;
 use App\Models\ShippingMethod;
 use App\Models\User;
 use App\Notifications\OrderCreated;
+use App\Notifications\QuoteMessageReceived;
+use App\Notifications\QuoteMessageSent;
 use App\Notifications\QuoteOffered;
 use App\Services\CustomerService;
 use App\Services\OrderNumberService;
 use App\Services\QuoteNumberService;
+use App\Services\QuotePdf;
 use App\Services\SalesAccess;
 use App\Services\SystemLog\Activity;
+use App\Support\OrderThread;
 use App\Support\QuotePricing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -117,12 +122,13 @@ class SalesQuoteController extends Controller
     public function index(Request $request)
     {
         SalesAccess::staff($request);
-        $f = $request->validate(['status' => 'nullable|in:requested,draft,offered,accepted,withdrawn,expired,expiring', 'search' => 'nullable|string|max:100',
+        $f = $request->validate(['status' => 'nullable|in:requested,draft,offered,accepted,rejected,withdrawn,expired,expiring,unread', 'search' => 'nullable|string|max:100',
             'source' => 'nullable|in:web,staff', 'customer_id' => 'nullable|integer']);
 
-        return SalesQuote::query()->withExists('draft as has_draft')
+        return SalesQuote::query()->withExists('draft as has_draft')->withCount(['messages as unread_messages' => fn ($q) => $q->unread()])
             ->when($f['status'] ?? null, function ($q, $status) {
                 match ($status) {
+                    'unread' => $q->whereHas('messages', fn ($q) => $q->unread()),
                     'expired' => $q->where('status', 'offered')->whereDate('valid_until', '<', today()),
                     'expiring' => $q->where('status', 'offered')->whereDate('valid_until', '>=', today())->whereDate('valid_until', '<=', today()->addDays(7)),
                     'offered' => $q->where('status', 'offered')->where(fn ($q) => $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', today())),
@@ -138,12 +144,13 @@ class SalesQuoteController extends Controller
             ->when($f['customer_id'] ?? null, fn ($q, $id) => $q->where('customer_id', $id))
             ->latest('id')->paginate(20)
             ->through(fn (SalesQuote $quote) => $quote->only(['id', 'number', 'status', 'source', 'title', 'customer', 'customer_id', 'version', 'valid_until', 'total_net', 'total_gross',
-                'sent_at', 'viewed_at', 'accepted_at', 'created_at', 'has_draft']) + ['is_expired' => $quote->isExpired()]);
+                'sent_at', 'viewed_at', 'accepted_at', 'rejected_at', 'created_at', 'has_draft', 'unread_messages']) +['is_expired' => $quote->isExpired()]);
     }
 
     public function show(Request $request, SalesQuote $quote)
     {
         SalesAccess::staff($request);
+        $quote->messages()->unread()->update(['read_at' => now()]);
 
         return $this->detail($quote, true);
     }
@@ -168,6 +175,11 @@ class SalesQuoteController extends Controller
         $data['has_draft'] = $quote->draft()->exists();
         $data['attachments'] = $quote->attachments->map->only(['id', 'name', 'size']);
         $data['order_uuid'] = $quote->order?->uuid;
+        $data['messages'] = $quote->messages->map->only(['id', 'direction', 'kind', 'author', 'body', 'created_at'])->values();
+        // Náhľady tovaru podľa variantu; odtlačok v ponuke obrázok nedrží (URL na S3 by exspirovala).
+        $variantIds = collect($data['versions'])->flatMap(fn ($v) => collect($v->items)->pluck('variant_id'))->merge(collect($quote->requested_items)->pluck('variant_id'))->filter()->unique();
+        $data['thumbs'] = ProductVariant::withTrashed()->with('image', 'product.images')->whereIn('id', $variantIds)->get()
+            ->mapWithKeys(fn ($v) => [$v->id => url($v->thumb)]);
         if ($staff) {
             $data['order_serial_number'] = $quote->order?->serial_number;
             $data['creator'] = $quote->creator?->only(['id', 'name']);
@@ -279,7 +291,8 @@ class SalesQuoteController extends Controller
 
     public function accept(Request $request, string $uuid)
     {
-        $data = $request->validate(['version' => 'required|integer|min:1', 'name' => 'required|string|max:150', 'confirm' => 'required|accepted']);
+        $data = $request->validate(['version' => 'required|integer|min:1', 'name' => 'required|string|max:150', 'confirm' => 'required|accepted',
+            'choices' => 'nullable|array|max:100', 'choices.*' => 'nullable|integer|min:0|max:4']);
 
         return DB::transaction(function () use ($uuid, $request, $data) {
             $quote = SalesQuote::where('uuid', $uuid)->lockForUpdate()->firstOrFail();
@@ -290,8 +303,9 @@ class SalesQuoteController extends Controller
             }
             $version = $quote->sentVersions()->firstOrFail();
             abort_unless($quote->status === 'offered' && $version->valid_until?->endOfDay()->isFuture(), 409, 'Ponuka už nie je platná.');
+            $items = QuotePricing::chosen($version->items, $data['choices'] ?? []);
             // Katalógové ceny sa môžu zmeniť; záväzný je uložený odtlačok prijatej ponuky.
-            foreach ($version->items as $item) {
+            foreach ($items as $item) {
                 abort_unless(! empty($item['is_custom']) || ProductVariant::whereKey($item['variant_id'])->where('product_id', $item['product_id'])->whereHas('product')->exists(), 409, 'Položka bola vyradená. Vyžiadajte novú ponuku.');
             }
             abort_unless(ShippingMethod::whereKey($version->shipping['id'] ?? null)->where('active', true)->exists(), 409, 'Doprava bola vyradená. Vyžiadajte novú ponuku.');
@@ -299,24 +313,99 @@ class SalesQuoteController extends Controller
             $known = $quote->customer_id ? Customer::find($quote->customer_id) : null;
             [$customer, $contact] = $known ? [$known, $customers->storeUser($known, $quote->customer)] : $customers->handleCheckout($quote->customer);
             $actor = User::find($quote->user_id);
-            $notes = collect($version->items)->filter(fn ($i) => ! empty($i['description']))->map(fn ($i) => $i['snapshot']['name'].': '.$i['description']);
+            $notes = collect($items)->filter(fn ($i) => ! empty($i['description']))->map(fn ($i) => $i['snapshot']['name'].': '.$i['description']);
             $order = Order::create(['customer_id' => $customer->id, 'user_id' => $actor?->isActive() ? $actor->id : $contact?->id,
                 'billing_snapshot' => $quote->customer, 'name' => $quote->customer['name'], 'email' => $quote->customer['email'], 'phone' => $quote->customer['phone'] ?? null,
                 'shipping_method_id' => $version->shipping['id'], 'shipping_method_name' => $version->shipping['name'], 'shipping_price' => $version->shipping['price'],
                 'price_adjustment' => $version->discount_percent > 0 ? ['direction' => 'discount', 'type' => 'percent', 'value' => $version->discount_percent, 'label' => 'Zľava z cenovej ponuky'] : null,
                 'note' => trim('Cenová ponuka '.($quote->number ?? $quote->id).', verzia '.$quote->version."\n".$notes->implode("\n")."\n".($version->terms ?? ''))]);
             $order->update(['serial_number' => app(OrderNumberService::class)->next(now()->format('Y-m'))]);
-            foreach ($version->items as $item) {
+            foreach ($items as $item) {
                 $order->orderProducts()->create(['product_id' => $item['product_id'], 'product_variant_id' => $item['variant_id'], 'is_custom' => ! empty($item['is_custom']),
                     'product_snapshot' => $item['snapshot'], 'variant_label' => $item['snapshot']['variant_name'], 'quantity' => $item['quantity'], 'price' => $item['price'],
                     'total' => $item['line_gross'] ?? round($item['quantity'] * $item['price'], 2)]);
             }
-            $quote->update(['order_id' => $order->id, 'status' => 'accepted', 'accepted_at' => now(), 'accepted_by' => $data['name'], 'customer_id' => $customer->id]);
+            // Súčet podľa zvolených množstiev; staršie verzie bez cien bez DPH ostávajú pri pôvodnom súčte.
+            $totals = $version->totals ? QuotePricing::totals($items, (float) $version->discount_percent, $version->shipping) : null;
+            $quote->update(['order_id' => $order->id, 'status' => 'accepted', 'accepted_at' => now(), 'accepted_by' => $data['name'], 'customer_id' => $customer->id]
+                + ($totals ? ['total_net' => $totals['net'], 'total_gross' => $totals['gross']] : []));
             $order->notifyCustomer(new OrderCreated($order));
             Notification::send(User::role('super-admin')->get(), (new OrderCreated($order))->afterCommit());
 
             return ['order_uuid' => $order->uuid];
         }, 3);
+    }
+
+    /** PDF pre obsluhu — aj z neodoslaného konceptu (náhľad pred odoslaním). */
+    public function pdf(Request $request, SalesQuote $quote, QuotePdf $pdf)
+    {
+        SalesAccess::staff($request);
+        $version = $request->filled('version') ? $quote->versions()->where('version', $request->integer('version'))->firstOrFail() : $quote->versions()->firstOrFail();
+
+        return $pdf->download($quote, $version);
+    }
+
+    public function publicPdf(Request $request, string $uuid, QuotePdf $pdf)
+    {
+        $quote = SalesQuote::where('uuid', $uuid)->firstOrFail();
+        SalesAccess::token($request, $quote);
+
+        return $pdf->download($quote, $quote->sentVersions()->firstOrFail());
+    }
+
+    /** Odpoveď obsluhy zákazníkovi; príde mu e-mail s odkazom na ponuku. */
+    public function message(Request $request, SalesQuote $quote)
+    {
+        SalesAccess::staff($request);
+        $data = $request->validate(['body' => 'required|string|max:5000']);
+        abort_unless($quote->customer['email'] ?? null, 422, 'Ponuka nemá e-mail zákazníka.');
+
+        return DB::transaction(function () use ($quote, $data, $request) {
+            $message = $quote->messages()->create(['direction' => 'staff', 'kind' => 'message', 'author' => $request->user()->name ?: OrderThread::FROM_NAME,
+                'user_id' => $request->user()->id, 'body' => $data['body']]);
+            Notification::route('mail', [$quote->customer['email'] => $quote->customer['name'] ?? null])->notify((new QuoteMessageSent($message))->afterCommit());
+
+            return $this->detail($quote, true);
+        });
+    }
+
+    /** Správa zákazníka alebo žiadosť o úpravu ponuky. */
+    public function publicMessage(Request $request, string $uuid)
+    {
+        $data = $request->validate(['name' => 'required|string|max:150', 'body' => 'required|string|max:5000', 'kind' => 'nullable|in:message,change_request']);
+
+        return DB::transaction(function () use ($request, $uuid, $data) {
+            $quote = SalesQuote::where('uuid', $uuid)->lockForUpdate()->firstOrFail();
+            SalesAccess::token($request, $quote);
+            abort_if($quote->isClosed(), 409, 'Ponuka je uzavretá. K objednávke nám napíšte cez stránku objednávky.');
+            $message = $quote->messages()->create(['direction' => 'customer', 'kind' => $data['kind'] ?? 'message', 'author' => $data['name'], 'body' => $data['body']]);
+            $this->notifyStaff($message);
+
+            return $this->detail($quote, false);
+        });
+    }
+
+    public function reject(Request $request, string $uuid)
+    {
+        $data = $request->validate(['name' => 'required|string|max:150', 'reason' => 'nullable|string|max:5000']);
+
+        return DB::transaction(function () use ($request, $uuid, $data) {
+            $quote = SalesQuote::where('uuid', $uuid)->lockForUpdate()->firstOrFail();
+            SalesAccess::token($request, $quote);
+            abort_unless($quote->status === 'offered', 409, 'Ponuku už nie je možné odmietnuť.');
+            $quote->update(['status' => 'rejected', 'rejected_at' => now(), 'rejection_reason' => $data['reason'] ?? null]);
+            $message = $quote->messages()->create(['direction' => 'customer', 'kind' => 'rejected', 'author' => $data['name'],
+                'body' => ($data['reason'] ?? null) ?: 'Zákazník ponuku odmietol bez uvedenia dôvodu.']);
+            Activity::record('quote', 'rejected', 'Odmietnutá cenová ponuka '.$quote->number, ['quote_id' => $quote->id, 'version' => $quote->version]);
+            $this->notifyStaff($message);
+
+            return $this->detail($quote, false);
+        });
+    }
+
+    private function notifyStaff(SalesQuoteMessage $message): void
+    {
+        Notification::send(User::role('super-admin')->get(), (new QuoteMessageReceived($message))->afterCommit());
     }
 
     public function file(Request $request, string $uuid, int $attachment)

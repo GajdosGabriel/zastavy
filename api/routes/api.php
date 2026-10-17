@@ -234,6 +234,9 @@ Route::middleware('throttle:30,1,sales-public:')->group(function(){
  Route::get('public-quotes/{uuid}',[\App\Http\Controllers\Api\SalesQuoteController::class,'publicShow']);
  Route::post('public-quotes/{uuid}/accept',[\App\Http\Controllers\Api\SalesQuoteController::class,'accept']);
  Route::get('public-quotes/{uuid}/files/{attachment}',[\App\Http\Controllers\Api\SalesQuoteController::class,'file']);
+ Route::get('public-quotes/{uuid}/pdf',[\App\Http\Controllers\Api\SalesQuoteController::class,'publicPdf']);
+ Route::post('public-quotes/{uuid}/messages',[\App\Http\Controllers\Api\SalesQuoteController::class,'publicMessage'])->middleware('throttle:5,1,quote-messages:');
+ Route::post('public-quotes/{uuid}/reject',[\App\Http\Controllers\Api\SalesQuoteController::class,'reject']);
  Route::get('public-artworks/{uuid}',[\App\Http\Controllers\Api\ProductionController::class,'publicShow']);
  Route::post('public-artworks/{uuid}/decision',[\App\Http\Controllers\Api\ProductionController::class,'decision']);
  Route::get('public-artworks/{uuid}/files/{version}',[\App\Http\Controllers\Api\ProductionController::class,'file']);
@@ -247,6 +250,8 @@ Route::middleware(['auth:sanctum',DashboardMiddleware::class])->group(function()
  Route::post('sales-quotes',[\App\Http\Controllers\Api\SalesQuoteController::class,'create']);
  Route::put('sales-quotes/{quote}',[\App\Http\Controllers\Api\SalesQuoteController::class,'update']);
  Route::delete('sales-quotes/{quote}/draft',[\App\Http\Controllers\Api\SalesQuoteController::class,'discardDraft']);
+ Route::get('sales-quotes/{quote}/pdf',[\App\Http\Controllers\Api\SalesQuoteController::class,'pdf']);
+ Route::post('sales-quotes/{quote}/messages',[\App\Http\Controllers\Api\SalesQuoteController::class,'message']);
  Route::post('sales-quotes/{quote}/offer',[\App\Http\Controllers\Api\SalesQuoteController::class,'offer']);
  Route::post('sales-quotes/{quote}/share',[\App\Http\Controllers\Api\SalesQuoteController::class,'share']);
  Route::post('sales-quotes/{quote}/withdraw',[\App\Http\Controllers\Api\SalesQuoteController::class,'withdraw']);

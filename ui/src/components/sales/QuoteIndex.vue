@@ -3,7 +3,7 @@ import {ref,watch,onMounted} from 'vue';import {useRoute,useRouter} from 'vue-ro
 const route=useRoute(),router=useRouter();
 const quotes=ref(null),error=ref(''),busy=ref(false);
 const filters=ref({status:route.query.status??'',search:route.query.search??'',source:route.query.source??''});
-const statusOptions=[['','Všetky'],['requested','Nové dopyty'],['draft','Koncepty'],['offered','Odoslané – platné'],['expiring','Končí do 7 dní'],['expired','Po platnosti'],['accepted','Prijaté'],['withdrawn','Stiahnuté']];
+const statusOptions=[['','Všetky'],['unread','Nová odpoveď zákazníka'],['requested','Nové dopyty'],['draft','Koncepty'],['offered','Odoslané – platné'],['expiring','Končí do 7 dní'],['expired','Po platnosti'],['accepted','Prijaté'],['rejected','Odmietnuté'],['withdrawn','Stiahnuté']];
 const date=v=>v?new Date(v).toLocaleDateString('sk-SK'):'—';
 async function load(page=1){busy.value=true;error.value='';try{
  const params=Object.fromEntries(Object.entries({...filters.value,page}).filter(([,v])=>v!==''&&v!==null));
@@ -57,6 +57,7 @@ onMounted(()=>load(Number(route.query.page)||1));
                                 <td class="px-4 py-2 whitespace-nowrap">
                                     <span class="rounded-full px-2 py-0.5 text-xs font-semibold" :class="q.is_expired ? 'bg-red-100 text-red-700' : quoteTones[q.status]">{{ q.is_expired ? 'Po platnosti' : quoteLabels[q.status] }}</span>
                                     <span v-if="q.has_draft && q.status !== 'draft'" class="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">rozpracovaná</span>
+                                    <span v-if="q.unread_messages" class="ml-1 rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white" :title="'Neprečítané správy: ' + q.unread_messages">{{ q.unread_messages === 1 ? 'nová správa' : q.unread_messages + ' nové správy' }}</span>
                                     <span v-if="q.status === 'offered' && q.viewed_at" class="ml-1 text-xs text-green-700" :title="'Zobrazená ' + new Date(q.viewed_at).toLocaleString('sk-SK')">zobrazená</span>
                                 </td>
                                 <td class="px-4 py-2 text-right whitespace-nowrap">{{ q.total_net != null ? money(q.total_net) : '—' }}</td>

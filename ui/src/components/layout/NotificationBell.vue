@@ -46,6 +46,10 @@ const items = computed(() => {
                   text: `${n('quotes_requested')} ${plural(n('quotes_requested'), 'cenový dopyt čaká', 'cenové dopyty čakajú', 'cenových dopytov čaká')} na nacenenie`,
             },
             {
+                  key: 'quotes_unread', tone: 'bg-amber-500', to: { name: 'sales.quotes.index', query: { status: 'unread' } },
+                  text: `${n('quotes_unread')} ${plural(n('quotes_unread'), 'ponuka má', 'ponuky majú', 'ponúk má')} novú odpoveď zákazníka`,
+            },
+            {
                   key: 'messages_unread', tone: 'bg-blue-500', to: { name: 'sales.index' },
                   text: `${n('messages_unread')} ${plural(n('messages_unread'), 'neprečítaná správa', 'neprečítané správy', 'neprečítaných správ')} od zákazníkov`,
             },

@@ -98,6 +98,7 @@ class DashboardService
                 ->where('orders.created_at', '<', now()->subDays(7)->startOfDay())
                 ->count(),
             'quotes_requested'   => $sales ? SalesQuote::where('status', 'requested')->count() : null,
+            'quotes_unread'      => $sales ? SalesQuote::whereHas('messages', fn ($q) => $q->unread())->count() : null,
             'production_overdue' => $sales ? $this->overdueProduction($user) : null,
             'messages_unread'    => $sales ? OrderMessage::unreadFor($user)->count() : null,
         ];

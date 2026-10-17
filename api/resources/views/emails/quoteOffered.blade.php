@@ -10,8 +10,16 @@
         @if($version->version > 1)
             posielame Vám upravenú cenovú ponuku{{ $quote->title ? ' – '.$quote->title : '' }}. Predchádzajúca verzia už neplatí.
         @else
-            ďakujeme za Váš záujem. Posielame Vám cenovú ponuku{{ $quote->title ? ' – '.$quote->title : '' }}.
+            ďakujeme za Váš dopyt. Posielame Vám cenovú ponuku{{ $quote->title ? ' – '.$quote->title : '' }}.
         @endif
+        Ponuku nájdete aj v prílohe tohto e-mailu (PDF).
+    </p>
+
+    <div class="button-row">
+        <a href="{{ $acceptUrl }}" class="button">Prijať ponuku a objednať</a>
+    </div>
+    <p style="margin-top:-8px; text-align:center; color:#555; font-size:13px;">
+        Tlačidlo otvorí ponuku, kde objednávku jedným kliknutím potvrdíte.
     </p>
 
     <p class="section-title">Položky</p>
@@ -76,8 +84,11 @@
     </div>
 
     <div class="button-row">
-        <a href="{{ $url }}" class="button">Zobraziť a prijať ponuku</a>
+        <a href="{{ $acceptUrl }}" class="button">Prijať ponuku a objednať</a>
     </div>
 
-    <p style="color:#888; font-size:13px;">Máte otázku alebo chcete ponuku upraviť? Odpovedzte na tento e-mail.</p>
+    <p style="color:#555; font-size:13px;">
+        Chcete ponuku upraviť alebo máte otázku? <a href="{{ $url }}">Napíšte nám pri ponuke</a> alebo odpovedzte na tento e-mail.<br>
+        Bežný tovar si môžete objednať aj priamo v našom e-shope <a href="{{ $shopUrl }}">{{ preg_replace('#^https?://#', '', $shopUrl) }}</a>.
+    </p>
 </x-email.layout>
