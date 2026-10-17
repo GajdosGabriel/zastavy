@@ -18,7 +18,9 @@ const routes = [
     {path:'/dopyt',name:'sales.request',component:()=>import('../components/sales/QuoteRequest.vue'),meta:{title:'Cenová ponuka'}},
     {path:'/ponuka/:uuid',name:'sales.quote.public',component:()=>import('../components/sales/QuoteView.vue'),meta:{title:'Cenová ponuka'}},
     {path:'/predaj',name:'sales.index',component:()=>import('../components/sales/SalesDashboard.vue'),meta:{title:'Ponuky a výroba',requiresAuth:true}},
-    {path:'/predaj/ponuky/:id',name:'sales.quote',component:()=>import('../components/sales/QuoteView.vue'),meta:{title:'Nacenenie ponuky',requiresAuth:true}},
+    {path:'/predaj/ponuky',name:'sales.quotes.index',component:()=>import('../components/sales/QuoteIndex.vue'),meta:{title:'Cenové ponuky',requiresAuth:true}},
+    {path:'/predaj/ponuky/nova',name:'sales.quote.create',component:()=>import('../components/sales/QuoteEditor.vue'),meta:{title:'Nová cenová ponuka',requiresAuth:true}},
+    {path:'/predaj/ponuky/:id(\\d+)',name:'sales.quote',component:()=>import('../components/sales/QuoteEditor.vue'),meta:{title:'Cenová ponuka',requiresAuth:true}},
     {path:'/vyroba/:orderId',name:'production.show',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Plán výroby',requiresAuth:true}},
     {path:'/grafika/:uuid',name:'artwork.public',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Schválenie grafiky'}},
     // Odkaz z e-mailov objednávky; /grafika/:uuid ostáva pre už rozoslané odkazy.

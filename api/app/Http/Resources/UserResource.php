@@ -99,6 +99,7 @@ class UserResource extends JsonResource
 
         // Rovnaká podmienka ako SalesAccess::staff — inak by stránka vrátila 403.
         if ($user->isStaff() && $user->can('orders.create') && $user->can('orders.viewAny')) {
+            $items[] = ['NAME' => 'Ponuky', 'ROUTE' => 'sales.quotes.index', 'URL' => '/predaj/ponuky', 'ICON' => ''];
             $items[] = ['NAME' => 'Predaj', 'ROUTE' => 'sales.index', 'URL' => '/predaj', 'ICON' => ''];
         }
 

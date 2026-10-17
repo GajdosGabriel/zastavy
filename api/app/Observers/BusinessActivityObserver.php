@@ -43,7 +43,7 @@ class BusinessActivityObserver
 
         } elseif ($model instanceof SalesQuote) {
             if ($model->wasChanged('status') && $model->status === 'accepted') {
-                Activity::record('quote', 'accepted', 'Prijatá cenová ponuka #'.$model->id,
+                Activity::record('quote', 'accepted', 'Prijatá cenová ponuka '.($model->number ?? '#'.$model->id),
                     ['quote_id' => $model->id, 'version' => $model->version, 'accepted_by' => $model->accepted_by], $model->order);
             }
         } else {

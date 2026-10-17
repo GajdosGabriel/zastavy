@@ -239,6 +239,9 @@ Route::middleware(['auth:sanctum',DashboardMiddleware::class])->group(function()
  Route::get('orders/{order}/reorder',[\App\Http\Controllers\Api\ReorderController::class,'show']);
  Route::get('sales-quotes',[\App\Http\Controllers\Api\SalesQuoteController::class,'index']);
  Route::get('sales-quotes/{quote}',[\App\Http\Controllers\Api\SalesQuoteController::class,'show']);
+ Route::post('sales-quotes',[\App\Http\Controllers\Api\SalesQuoteController::class,'create']);
+ Route::put('sales-quotes/{quote}',[\App\Http\Controllers\Api\SalesQuoteController::class,'update']);
+ Route::delete('sales-quotes/{quote}/draft',[\App\Http\Controllers\Api\SalesQuoteController::class,'discardDraft']);
  Route::post('sales-quotes/{quote}/offer',[\App\Http\Controllers\Api\SalesQuoteController::class,'offer']);
  Route::post('sales-quotes/{quote}/share',[\App\Http\Controllers\Api\SalesQuoteController::class,'share']);
  Route::post('sales-quotes/{quote}/withdraw',[\App\Http\Controllers\Api\SalesQuoteController::class,'withdraw']);

@@ -31,7 +31,7 @@ onMounted(()=>load());
 
                 <!-- Cenové dopyty a ponuky -->
                 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                    <h2 class="border-b border-gray-100 bg-gray-50 px-5 py-3 text-sm font-semibold text-gray-700">Cenové dopyty a ponuky</h2>
+                    <h2 class="flex justify-between border-b border-gray-100 bg-gray-50 px-5 py-3 text-sm font-semibold text-gray-700">Cenové dopyty a ponuky <router-link to="/predaj/ponuky" class="font-normal text-blue-700 hover:underline">Všetky ponuky →</router-link></h2>
 
                     <div v-if="!quotes" role="status" class="animate-pulse space-y-3 px-5 py-5">
                         <span class="sr-only">Načítavam dopyty…</span>
@@ -41,7 +41,7 @@ onMounted(()=>load());
                     <ul v-else class="divide-y divide-gray-100">
                         <li v-for="q in quotes.data" :key="q.id" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 text-sm">
                             <router-link :to="'/predaj/ponuky/' + q.id" class="font-semibold text-blue-700 hover:underline">
-                                #{{ q.id }} — {{ q.customer.company }}
+                                {{ q.number ?? '#' + q.id }} — {{ q.customer.company || q.customer.name }}
                             </router-link>
                             <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700">{{ quoteLabels[q.status] }}</span>
                             <span class="text-gray-600">{{ q.customer.email }}</span>

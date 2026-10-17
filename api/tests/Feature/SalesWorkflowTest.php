@@ -52,7 +52,7 @@ class SalesWorkflowTest extends TestCase
 
     private function offer(int $version = 0): array
     {
-        return ['version' => $version, 'items' => [['variant_id' => $this->variant->id, 'quantity' => 2, 'price' => 9.50]], 'shipping_method_id' => $this->shipping->id, 'shipping_price' => 3, 'terms' => 'Dodanie do 10 dní', 'valid_until' => today()->addDays(7)->toDateString()];
+        return ['version' => $version, 'items' => [['variant_id' => $this->variant->id, 'quantity' => 2, 'price_net' => 10]], 'shipping_method_id' => $this->shipping->id, 'shipping_price_net' => 3, 'customer' => $this->customer, 'terms' => 'Dodanie do 10 dní', 'valid_until' => today()->addDays(7)->toDateString()];
     }
 
     private function offered(): array
@@ -95,9 +95,9 @@ class SalesWorkflowTest extends TestCase
         $this->accept($link)->assertOk()->assertExactJson($a);
         $this->assertDatabaseCount('orders', 1);
         $o = Order::firstOrFail();
-        $this->assertEquals(9.5, $o->orderProducts->first()->price);
+        $this->assertEquals(12.3, $o->orderProducts->first()->price);
         $this->assertSame('Large', $o->orderProducts->first()->variant_name);
-        $this->assertEquals(3, $o->shipping_price);
+        $this->assertEquals(3.69, $o->shipping_price);
         Notification::assertSentToTimes($o, OrderCreated::class, 1);
         $log = \App\Models\SystemLog::where('event', 'quote.accepted')->sole();
         $this->assertSame($o->id, $log->context['order_id']);

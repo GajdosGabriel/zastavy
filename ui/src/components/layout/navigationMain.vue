@@ -45,6 +45,7 @@ const onClickItem = (item: Page) => {
             case 'announcements.index': useAnnouncement().setPaginator(item.URL); break;
             case 'public.contactUs': break;
             case 'sales.index': break;
+            case 'sales.quotes.index': break;
             default: console.warn(`Unknown route: ${item.ROUTE}`);
       }
 };

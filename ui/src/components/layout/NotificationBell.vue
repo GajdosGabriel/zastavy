@@ -42,7 +42,7 @@ const items = computed(() => {
                   text: `${n('not_notified')} ${plural(n('not_notified'), 'expedícia', 'expedície', 'expedícií')} bez správy zákazníkovi`,
             },
             {
-                  key: 'quotes_requested', tone: 'bg-amber-500', to: { name: 'sales.index' },
+                  key: 'quotes_requested', tone: 'bg-amber-500', to: { name: 'sales.quotes.index', query: { status: 'requested' } },
                   text: `${n('quotes_requested')} ${plural(n('quotes_requested'), 'cenový dopyt čaká', 'cenové dopyty čakajú', 'cenových dopytov čaká')} na nacenenie`,
             },
             {

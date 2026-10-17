@@ -22,6 +22,7 @@ const eventLabels: Record<string, string> = {
       'order.return_deleted': 'Odstránenie vratky',
       'order.return_restored': 'Obnovenie vratky',
       'quote.accepted': 'Prijatie cenovej ponuky',
+      'quote.sent': 'Odoslanie cenovej ponuky',
       'stock.created': 'Vytvorenie skladového pohybu',
       'stock.updated': 'Úprava skladového pohybu',
       'stock.deleted': 'Odstránenie skladového pohybu',
