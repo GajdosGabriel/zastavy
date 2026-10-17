@@ -1,7 +1,7 @@
 <script setup>
 import ListFilter from "../plugins/ListFilter.vue";
 import { computed, onUnmounted, reactive, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { storeToRefs } from "pinia";
 import useOrders from "../../store/StoreOrders";
 import useQuery from "../../store/StoreQuery";
@@ -44,7 +44,6 @@ const selects = computed(() => [
 // Musí prebehnúť pred registráciou watchera — zoznam si ho načíta
 // v OrderIndex onMounted, takže nevznikne dvojitý request.
 const route = useRoute();
-const router = useRouter();
 const initial = { selects: {} };
 
 const applyRouteQuery = () => {
@@ -84,9 +83,7 @@ const applyRouteQuery = () => {
     if (marked) {
         setQuery("isMarked=true");
     }
-
-    // URL vyčistíme, aby po zmene filtra neostal v adrese zastaraný stav.
-    router.replace({ query: {} });
+    // Adresu ďalej udržiava v súlade s filtrom OrderIndex.
 };
 
 applyRouteQuery();

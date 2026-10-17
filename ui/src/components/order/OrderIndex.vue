@@ -1,7 +1,11 @@
 <script setup>
 import BaseLayout from '../layout/BaseLayout.vue';
-import { onMounted } from "vue";
+import { onMounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import useOrders from "../../store/StoreOrders";
+import useQuery from "../../store/StoreQuery";
+import usePaginator from "../../store/StorePaginator";
+import { PAGE_ORDER } from "../../constants";
 import { storeToRefs } from "pinia";
 import { useUsers as useUser } from "../../store/StoreUsers";
 import tableRowOrders from "./component/tableRowOrders.vue";
@@ -20,8 +24,40 @@ const ordersStore = useOrders();
 const { getOrders } = storeToRefs(ordersStore);
 const { fetchOrders, setPaginator, fetchMarkSelected } = ordersStore;
 const { getUserCan } = storeToRefs(useUser());
+const { getQuery } = storeToRefs(useQuery());
+const { getPaginator } = storeToRefs(usePaginator());
+const route = useRoute();
+const router = useRouter();
+
+// Strana a filtre sú v adrese (/objednavky?strana=2&customer=…), aby návrat
+// z detailu, F5 aj späť v prehliadači otvorili zoznam tam, kde bol.
+// Filtre z adresy načíta FilterOrder, stranu nastavíme pred prvým načítaním.
+const page = Number(route.query.strana) || 1;
+ordersStore.url = page > 1 ? `${PAGE_ORDER.URL}?page=${page}` : PAGE_ORDER.URL;
+
+const ROUTE_PARAMS = { "status=": "status", "shippedAt=": "shippedAt", "bySearchInput=": "customer", "searchByProduct=": "product" };
+
+const listQuery = () => {
+      const query = {};
+      for (const item of getQuery.value) {
+            const split = item.indexOf("=") + 1;
+            const key = item.slice(0, split);
+            if (key === "isMarked=") query.marked = 1;
+            else if (ROUTE_PARAMS[key]) query[ROUTE_PARAMS[key]] = decodeURIComponent(item.slice(split));
+            else query.filter = key.slice(0, -1);
+      }
+      const current = getPaginator.value?.current_page;
+      if (current > 1) query.strana = current;
+      return query;
+};
+
+watch([getQuery, () => getPaginator.value?.current_page], () => {
+      if (route.name !== PAGE_ORDER.ROUTE) return;
+      router.replace({ query: listQuery() }).then(() => { ordersStore.listRoute = route.fullPath; });
+}, { deep: true });
 
 onMounted(() => {
+      ordersStore.listRoute = route.fullPath;
       fetchOrders();
       document.title = "Zoznam objednávok";
 });

@@ -142,7 +142,7 @@ const rowStateTitle = computed(() => {
         <td class="tbody_td order-7 basis-full max-md:!px-2 max-md:!py-1 md:min-w-44" title="zoznam expedícií">
             <div class="flex flex-col gap-2">
                 <div v-if="order.shippings.length" class="flex flex-wrap gap-2">
-                    <notice-label v-for="shipping in order.shippings" :key="shipping.id" :shipping="shipping" />
+                    <notice-label v-for="shipping in order.shippings" :key="shipping.id" :shipping="shipping" :order="order" />
                 </div>
                 <div v-else class="text-xs text-gray-500">
                     Bez expedície

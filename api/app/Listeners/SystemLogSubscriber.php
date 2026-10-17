@@ -100,7 +100,7 @@ class SystemLogSubscriber
      *
      * @param  array{0: string, 1: bool}|null  $tag
      */
-    private static function recordOrderEmail(?array $tag, ?string $class, string $subject, ?string $recipient,
+    public static function recordOrderEmail(?array $tag, ?string $class, string $subject, ?string $recipient,
         string $status, ?string $error = null, ?string $body = null, ?int $orderId = null): void
     {
         try {

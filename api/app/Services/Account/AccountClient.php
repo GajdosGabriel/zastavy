@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Services\Account;
+
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * Klient pre Account – zatiaľ len komunikácia so zákazníkmi.
+ *
+ * Predloha je v Accounte v `klient-pre-projekty/`. Firemné údaje
+ * (organizácie, predplatné) zastavy z Accountu nečítajú.
+ */
+class AccountClient
+{
+    public function enabled(): bool
+    {
+        return filled(config('account.token'));
+    }
+
+    /** Posielať e-maily zákazníkom cez Account? */
+    public function messagingEnabled(): bool
+    {
+        return $this->enabled() && (bool) config('account.messaging');
+    }
+
+    /**
+     * Odošle e-mail cez schránku zastáv v Accounte.
+     *
+     * Volá sa z fronty, výpadok Accountu teda vyrieši opakovanie. Blokovaná
+     * adresa vyhodí AccountMessageRejected – tú opakovať nemá zmysel.
+     *
+     * @param  array<string, mixed>  $message
+     * @return array{conversation: array<string, mixed>, message: array<string, mixed>}
+     */
+    public function sendMessage(array $message): array
+    {
+        $this->assertWritesAllowed();
+
+        $response = $this->request()->post('/api/v1/messages', $message);
+
+        if ($response->status() === 422 && $response->json('reason')) {
+            throw new AccountMessageRejected($response->json('reason'), (string) $response->json('message'));
+        }
+
+        return $response->throw()->json('data');
+    }
+
+    /**
+     * Konverzácie k objednávke (aj s e-mailami, ktoré prišli do Inboxu).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function conversations(string $refType, string|int $refId): array
+    {
+        if (! $this->enabled()) {
+            return [];
+        }
+
+        try {
+            return $this->request()
+                ->get('/api/v1/conversations', ['ref_type' => $refType, 'ref_id' => (string) $refId])
+                ->throw()
+                ->json('data');
+        } catch (\Throwable $e) {
+            Log::warning('Account: konverzacie sa nepodarilo nacitat', ['error' => $e->getMessage()]);
+
+            return [];
+        }
+    }
+
+    /** Odhlásenie z e-mailov – Account na adresu prestane posielať. Najlepšia snaha. */
+    public function suppress(string $email, string $reason = 'unsubscribed'): void
+    {
+        if (! $this->messagingEnabled()) {
+            return;
+        }
+
+        try {
+            $this->assertWritesAllowed();
+            $this->request()->post('/api/v1/suppressions', ['email' => $email, 'reason' => $reason])->throw();
+        } catch (\Throwable $e) {
+            Log::warning('Account: odhlasenie sa nepodarilo nahlasit', ['email' => $email, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Poistka: mimo produkcie sa posiela len do lokálnej inštancie Accountu
+     * (localhost, *.local, *.test), inak len s ACCOUNT_ALLOW_REMOTE_WRITES.
+     */
+    public function assertWritesAllowed(): void
+    {
+        if (app()->isProduction() || config('account.allow_remote_writes')) {
+            return;
+        }
+
+        $host = strtolower((string) parse_url((string) config('account.url'), PHP_URL_HOST));
+
+        if (in_array($host, ['localhost', '127.0.0.1', '::1', ''], true) || preg_match('/\.(local|test|localhost)$/', $host)) {
+            return;
+        }
+
+        throw new \RuntimeException('Odosielanie cez vzdialený Account je mimo produkcie vypnuté (ACCOUNT_ALLOW_REMOTE_WRITES).');
+    }
+
+    protected function request(): PendingRequest
+    {
+        return Http::withToken(config('account.token'))
+            ->acceptJson()
+            ->timeout(config('account.timeout'))
+            ->baseUrl(config('account.url'));
+    }
+}

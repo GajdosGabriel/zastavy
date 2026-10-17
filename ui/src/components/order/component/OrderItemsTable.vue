@@ -232,8 +232,10 @@ const adjustment = computed(() => Number(props.order?.adjustment_amount ?? 0));
             <div class="space-y-1 border-t border-gray-100 px-5 py-3 text-right text-sm">
                 <p v-if="order.discount_amount">Zľavový kupón: −{{ formatPrice(order.discount_amount) }} €</p>
                 <p v-if="adjustment">{{ order.price_adjustment?.label || (adjustment < 0 ? 'Zľava' : 'Prirážka') }}: {{ formatPrice(adjustment) }} €</p>
-                <p class="text-gray-600">Doprava: {{ formatPrice(order.shipping_price || 0) }} € · Platba: {{ formatPrice(order.payment_fee || 0) }} €</p>
-                <p class="text-lg font-bold">Celkom: {{ formatPrice(order.grand_total || 0) }} €</p>
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <p class="text-gray-600">Doprava: {{ formatPrice(order.shipping_price || 0) }} € · Platba: {{ formatPrice(order.payment_fee || 0) }} €</p>
+                    <p class="ml-auto text-lg font-bold">Celkom: {{ formatPrice(order.grand_total || 0) }} €</p>
+                </div>
             </div>
         </div>
 

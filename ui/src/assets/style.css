@@ -213,7 +213,7 @@
 
 /* ── Chipy (menšie) ── */
 .filter-chip {
-    @apply inline-flex min-h-8 cursor-pointer items-center justify-center rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800;
+    @apply inline-flex min-h-8 cursor-pointer items-center justify-center rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800;
 }
 
 .filter-chip-active {

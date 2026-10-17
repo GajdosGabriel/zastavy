@@ -4,13 +4,15 @@ import { useNotices } from "../../../store/StoreNotices";
 import useOrders from "../../../store/StoreOrders";
 import SpinnerButton from "../../icons/spinnerButton.vue";
 import loadingStore from "../../../store/StoreLoading";
+import ShippingDialog from "./ShippingDialog.vue";
 
-const props = defineProps(["shipping"]);
+const props = defineProps(["shipping", "order"]);
 
 const { storeShippingNotice } = useNotices();
 const { fetchOrders } = useOrders();
 const notifyCustomer = ref(true);
 const showNoticeModal = ref(false);
+const dispatchShipping = ref(null);
 
 const notices = computed(() => props.shipping?.notices ?? []);
 // Notifikácia emailom môže prísť aj dodatočne, preto ju hľadáme naprieč záznamami.
@@ -28,7 +30,14 @@ const stateTitle = computed(() => {
         : `${state} – ${mail} neodoslaný`;
 });
 
+// Pripravený DL otvorí rovnaké potvrdenie odoslania ako „Potvrdiť odoslanie“ v detaile objednávky.
+const canDispatch = computed(() => !!(props.shipping?.is_preparing && props.order?.permissions?.ship?.allowed));
+
 const onClickShipping = () => {
+    if (canDispatch.value) {
+        dispatchShipping.value = props.shipping;
+        return;
+    }
     notifyCustomer.value = !emailNotice.value;
     showNoticeModal.value = true;
 };
@@ -42,6 +51,11 @@ const saveNotice = async (notifyType) => {
 };
 
 const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
+
+const onDispatched = async () => {
+    dispatchShipping.value = null;
+    await fetchOrders();
+};
 </script>
 
 <template>
@@ -131,4 +145,7 @@ const confirmNotice = () => saveNotice(notifyCustomer.value ? "email" : "none");
             </div>
         </div>
     </Teleport>
+
+    <ShippingDialog v-if="order" :order="order" :shipping="dispatchShipping"
+        @close="dispatchShipping = null" @done="onDispatched" />
 </template>

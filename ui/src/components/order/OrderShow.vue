@@ -70,10 +70,11 @@ const canShip = computed(() => !!getOrder.value?.permissions?.ship?.allowed);
 const dialogItems = ref(null);
 const dialogShipping = ref(null);
 const closeDialog = () => { dialogItems.value = null; dialogShipping.value = null; };
-const onShippingDone = async () => {
+// Po expedícii sa vraciame na zoznam (na tú istú stranu a filter), kde čaká ďalšia objednávka.
+const backToList = () => router.push(ordersStore.listRoute ?? { name: 'orders.index' });
+const onShippingDone = () => {
     closeDialog();
-    itemsMode.value = "view";
-    await reload();
+    backToList();
 };
 const cancelPreparation = async (shipping) => {
     if (!window.confirm('Zrušiť prípravu dodacieho listu?')) return;
@@ -114,7 +115,7 @@ const onDeleteAttachment = (file) => {
 };
 
 const heading = computed(() => getOrder.value?.serial_number ? 'Objednávka č. ' + getOrder.value.serial_number : 'Objednávka');
-const buttonBack = { name: 'Späť', spinner: true, link: 'orders.index', icon: 'arrow-left' }
+const buttonBack = { name: 'Späť', spinner: true, link: ordersStore.listRoute ?? 'orders.index', icon: 'arrow-left' }
 const buttonHeader = { name: 'Upraviť', spinner: true, link: '/objednavky/'+ orderId +'/edit' }
 
 watch(() => route.query.expedicia, (value) => { if (value && isLoaded.value) itemsMode.value = "prepare"; });
@@ -235,8 +236,8 @@ watch(() => route.query.expedicia, (value) => { if (value && isLoaded.value) ite
                     </ul>
                 </div>
 
-                <!-- Vrátenia -->
-                <div class="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+                <!-- Vrátenia — vrátiť sa dá len expedovaný tovar, inak sekcia nemá význam -->
+                <div v-if="getReturns.length || hasShippedItems" class="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
                     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-2.5">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Vrátenia tovaru

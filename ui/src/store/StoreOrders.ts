@@ -12,6 +12,7 @@ interface OrdersState {
     statement: { markSelected: boolean };
     isLoading: boolean;
     url: string;
+    listRoute: string | null;
     orders: any[];
     order: Record<string, any>;
     customer: Record<string, any>;
@@ -33,6 +34,8 @@ export const useOrders = defineStore("orders", {
         },
         isLoading: false,
         url: PAGE_ORDER.URL,
+        // Posledná adresa zoznamu (strana + filtre), kam sa vracia detail objednávky.
+        listRoute: null,
         orders: [],
         order: {},
         customer: {},

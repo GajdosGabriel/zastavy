@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * E-mail, ktorý odišiel (alebo neodišiel) zákazníkovi k objednávke.
- * Zapisuje ho SystemLogSubscriber podľa hlavičky X-Order-Ref (App\Support\OrderThread).
+ * Zapisuje ho SystemLogSubscriber podľa hlavičky X-Order-Ref (App\Support\OrderThread),
+ * pri posielaní cez Account App\Services\Account\OrderMailer.
  */
 class OrderEmail extends Model
 {
@@ -23,6 +24,7 @@ class OrderEmail extends Model
         'OrderReturnProcessed' => 'Vrátenie tovaru',
         'OrderMessageSent' => 'Správa k objednávke',
         'CouponIssued' => 'Zľavový kupón',
+        'InboxReply' => 'Odpoveď z Inboxu',
     ];
 
     protected $fillable = ['order_id', 'type', 'subject', 'recipient', 'status', 'error', 'body'];

@@ -91,6 +91,14 @@ class Order extends Model
     public function notifyCustomer(\Illuminate\Notifications\Notification $notification): void
     {
         if (! $this->routeNotificationForMail()) return;
+
+        // Cez Account: odpoveď zákazníka sa vráti do konverzácie objednávky
+        // a obsluha ju vidí v spoločnom Inboxe (config/account.php).
+        if (app(\App\Services\Account\AccountClient::class)->messagingEnabled()) {
+            \App\Jobs\SendOrderMailViaAccount::dispatch($this, $notification)->afterCommit();
+            return;
+        }
+
         if (method_exists($notification, 'afterCommit')) $notification->afterCommit();
         $this->notify($notification);
     }

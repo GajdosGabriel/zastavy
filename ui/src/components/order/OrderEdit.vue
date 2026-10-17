@@ -197,7 +197,7 @@ const submitUpdate = async (notify) => {
         originalShippingId.value = selectedShippingId.value;
         originalPaymentId.value  = selectedPaymentId.value;
         markAsSaved();
-        router.push({ name: 'orders.index' });
+        router.push(ordersStore.listRoute ?? { name: 'orders.index' });
     } catch (e) {
         setErrors(e);
     } finally {
@@ -206,7 +206,7 @@ const submitUpdate = async (notify) => {
 };
 
 const buttonSubmit = { name: 'Uložiť', spinner: false };
-const buttonBack   = { name: 'Späť',   spinner: true, link: 'orders.index', icon: 'arrow-left' };
+const buttonBack   = { name: 'Späť',   spinner: true, link: ordersStore.listRoute ?? 'orders.index', icon: 'arrow-left' };
 </script>
 
 <template>

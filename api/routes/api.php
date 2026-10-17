@@ -52,6 +52,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/verify-email/{uuid}', [UserController::class, 'verifyEmail'])->name('users.verifyEmail');
 
+// Account: odpovede zákazníkov na e-maily k objednávkam (podpísané HMAC).
+Route::post('/webhooks/account', \App\Http\Controllers\Api\AccountWebhookController::class)
+    ->middleware('throttle:120,1')
+    ->name('webhooks.account');
+
 // Autentifikačné endpointy — throttle proti brute-force útokom.
 Route::middleware('throttle:5,1')->group(function () {
     Route::post('/login', [SanctumController::class, 'login'])->name('sanctum.login');
