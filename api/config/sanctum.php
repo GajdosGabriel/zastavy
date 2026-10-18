@@ -46,7 +46,10 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Rovnako ako cookie auth_token (30 dní). Bez expirácie by tokeny z
+    // cookie, ktorá už vypršala, ostávali v tabuľke navždy; maže ich
+    // naplánovaný sanctum:prune-expired.
+    'expiration' => (int) env('SANCTUM_EXPIRATION', 60 * 24 * 30) ?: null,
 
     /*
     |--------------------------------------------------------------------------
