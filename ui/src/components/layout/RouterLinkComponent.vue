@@ -2,8 +2,8 @@
 
 const props = defineProps(["permission"]);
 
-const parts = props.permission.split('/');
-const productId = parts[5]; // "1"
+// ID je posledný segment (…/api/products/1); pevný index by zlyhal pri API pod /web/api.
+const productId = props.permission ? props.permission.split('/').filter(Boolean).pop() : null;
 
 
 </script>

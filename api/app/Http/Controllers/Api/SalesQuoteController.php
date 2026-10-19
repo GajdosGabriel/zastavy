@@ -22,6 +22,7 @@ use App\Services\QuoteNumberService;
 use App\Services\QuotePdf;
 use App\Services\SalesAccess;
 use App\Services\SystemLog\Activity;
+use App\Support\Media;
 use App\Support\OrderThread;
 use App\Support\QuotePricing;
 use Illuminate\Http\Request;
@@ -179,7 +180,7 @@ class SalesQuoteController extends Controller
         // Náhľady tovaru podľa variantu; odtlačok v ponuke obrázok nedrží (URL na S3 by exspirovala).
         $variantIds = collect($data['versions'])->flatMap(fn ($v) => collect($v->items)->pluck('variant_id'))->merge(collect($quote->requested_items)->pluck('variant_id'))->filter()->unique();
         $data['thumbs'] = ProductVariant::withTrashed()->with('image', 'product.images')->whereIn('id', $variantIds)->get()
-            ->mapWithKeys(fn ($v) => [$v->id => url($v->thumb)]);
+            ->mapWithKeys(fn ($v) => [$v->id => Media::absolute($v->thumb)]);
         if ($staff) {
             $data['order_serial_number'] = $quote->order?->serial_number;
             $data['creator'] = $quote->creator?->only(['id', 'name']);

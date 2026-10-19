@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enums\ModelStatus;
 use App\Http\Resources\Concerns\StaffMeta;
+use App\Support\Media;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -53,7 +54,7 @@ class ProductResource extends JsonResource
             'status' => $status->toArray(),
             'status_options' => ModelStatus::allowedForUser($user),
             'vat' => $this->vat,
-            'thumb' => url($this->thumb),
+            'thumb' => Media::absolute($this->thumb),
             'unit_value' => $this->unit_value,
             // lastmod pre sitemap.xml (ui/scripts/generate-sitemap.mjs).
             'updated_at' => $this->updated_at?->toIso8601String(),

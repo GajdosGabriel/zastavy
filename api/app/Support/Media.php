@@ -63,6 +63,30 @@ class Media
         return $url;
     }
 
+    /**
+     * Absolútna URL obrázka. Cesta z url() už nesie prefix aplikácie
+     * (napr. /web/storage/...) — tú lepíme len na origin APP_URL, lebo helper
+     * url() by prefix zdvojil (/web/web/storage/...). Ostatné cesty
+     * (placeholder /images/...) sú relatívne k aplikácii a idú cez url().
+     */
+    public static function absolute(?string $url): ?string
+    {
+        if (! $url || preg_match('#^(https?:)?//#i', $url)) {
+            return $url;
+        }
+
+        $app = parse_url((string) config('app.url'));
+        $prefix = rtrim($app['path'] ?? '', '/');
+
+        if ($prefix === '' || ! str_starts_with($url, $prefix . '/')) {
+            return url($url);
+        }
+
+        $origin = ($app['scheme'] ?? 'https') . '://' . ($app['host'] ?? '') . (isset($app['port']) ? ':' . $app['port'] : '');
+
+        return $origin . $url;
+    }
+
     public static function delete(?string $disk, ?string $path): void
     {
         if (! $path) {
