@@ -157,7 +157,8 @@ export const useProducts = defineStore('products', () => {
         featured: product.value.featured,
         made_to_order: product.value.made_to_order ?? false,
         categories: product.value.categories?.map((c: any) => c.id ?? c) ?? [],
-        status: product.value.status?.value || product.value.status,
+        // Stav neposielame — API ho vracia vypočítaný (skrytý/vypredaný) a jeho
+        // uložením by produkt v tom stave zamrzol.
     });
 
     const fetchProducts = async (): Promise<void> => {

@@ -95,9 +95,19 @@ enum ModelStatus: string
         return array_map(fn (self $status) => $status->toArray(), $cases);
     }
 
+    /**
+     * Skrytý a vypredaný sa odvodzujú z `published` a skladu. Uložená hodnota
+     * je pozostatok formulára, ktorý vypočítaný stav posielal späť — ignorujeme ju,
+     * inak by produkt ostal „vypredaný“ aj po doskladnení či prepnutí na zákazku.
+     */
+    private function isDerived(): bool
+    {
+        return in_array($this, [self::Hidden, self::OutOfStock], true);
+    }
+
     public static function fromProduct(Product $product): self
     {
-        if ($product->status instanceof self && $product->status !== self::Active) {
+        if ($product->status instanceof self && $product->status !== self::Active && ! $product->status->isDerived()) {
             return $product->status;
         }
 
@@ -120,7 +130,7 @@ enum ModelStatus: string
 
     public static function fromVariant(ProductVariant $variant): self
     {
-        if ($variant->status instanceof self && $variant->status !== self::Active) {
+        if ($variant->status instanceof self && $variant->status !== self::Active && ! $variant->status->isDerived()) {
             return $variant->status;
         }
 
