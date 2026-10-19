@@ -73,6 +73,7 @@ Route::apiResource('homes', HomeController::class)->only(['index', 'show'])->par
 
 // Verejný checkout a IČO lookup — throttle proti spamu objednávok a scrapingu kontaktov.
 Route::apiResource('checkouts', CheckoutController::class)->middleware('throttle:30,1');
+Route::get('company-search', [CheckoutController::class, 'search'])->middleware('throttle:30,1')->name('company-search');
 
 // Kontrola vyplnených údajov ešte pred odoslaním formulára. Tie isté pravidlá,
 // aké po uložení použije post-kontrola — len tu stihnú chybu zastaviť.

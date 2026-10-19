@@ -42,6 +42,59 @@ class CompanyRegistry
         );
     }
 
+    /**
+     * Firmy podľa názvu — na výber, keď IČO človek nepozná.
+     *
+     * Vracia len krátky zoznam (IČO, názov, mesto, stav). Plné údaje sa
+     * potom dotiahnu cez find() podľa vybraného IČO, tak ako doteraz.
+     *
+     * @return array<int, array{ico: string, company: string, city: string, status: string}>
+     */
+    public function search(string $query, int $limit = 10): array
+    {
+        $query = trim(preg_replace('/\s+/u', ' ', $query) ?? '');
+
+        if (mb_strlen($query) < 3) {
+            return [];
+        }
+
+        return Cache::remember(
+            'company_registry_search:'.md5(mb_strtolower($query).'|'.$limit),
+            now()->addDay(),
+            fn () => $this->fetchSearch($query, $limit),
+        );
+    }
+
+    private function fetchSearch(string $query, int $limit): array
+    {
+        try {
+            $response = Http::acceptJson()->timeout(8)->get('https://api.orsf.sk/v1/search', [
+                'q' => $query,
+                'limit' => $limit,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Register firiem neodpovedal.', ['query' => $query, 'error' => $e->getMessage()]);
+
+            return [];
+        }
+
+        if (! $response->successful()) {
+            return [];
+        }
+
+        return collect($response->json('hits') ?? [])
+            ->filter(fn ($hit) => is_array($hit) && ! empty($hit['ico']))
+            ->map(fn (array $hit) => [
+                'ico' => (string) $hit['ico'],
+                'company' => (string) ($hit['name'] ?? ''),
+                'city' => (string) ($hit['city'] ?? ''),
+                'status' => (string) ($hit['status'] ?? ''),
+            ])
+            ->take($limit)
+            ->values()
+            ->all();
+    }
+
     private function fetch(string $ico): ?array
     {
         try {

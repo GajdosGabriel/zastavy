@@ -74,8 +74,21 @@ const icoValidationError = () => {
     return fieldError("ico");
 };
 
+// Predvolene sa hľadá podľa IČO; keď ho človek nepozná, prepne na názov.
+type SearchMode = "ico" | "name";
+const searchMode = ref<SearchMode>("ico");
+const nameResults = ref<{ ico: string; company: string; city: string; status: string; source: string }[]>([]);
+
+const setSearchMode = (mode: SearchMode) => {
+    if (searchMode.value === mode) return;
+    searchMode.value = mode;
+    icoSearchInput.value = "";
+    icoSearchMessage.value = "";
+    nameResults.value = [];
+};
+
 const icoSearchValidationError = () => {
-    if (String(icoSearchInput.value).length > 8) {
+    if (searchMode.value === "ico" && String(icoSearchInput.value).length > 8) {
         return "IČO môže mať maximálne 8 číslic.";
     }
     return "";
@@ -84,6 +97,7 @@ const icoSearchValidationError = () => {
 const stripDigits = (val: unknown) => String(val ?? "").replace(/\D/g, "");
 
 watch(icoSearchInput, (val) => {
+    if (searchMode.value !== "ico") return;
     const cleaned = stripDigits(val);
     if (cleaned !== val) icoSearchInput.value = cleaned;
 }, { flush: "sync" });
@@ -149,12 +163,9 @@ const applyHint = (field: string) => {
     }
 };
 
-const onClickIco = async () => {
-    icoSearchMessage.value = "";
-    if (icoSearchValidationError()) return;
-
+const fillByIco = async (ico: string) => {
     isSearchingCompany.value = true;
-    getCustomer.value.ico = icoSearchInput.value;
+    getCustomer.value.ico = ico;
 
     try {
         await findCustomerByIco();
@@ -165,6 +176,46 @@ const onClickIco = async () => {
         icoSearchInput.value = "";
         isSearchingCompany.value = false;
     }
+};
+
+const searchByName = async () => {
+    const q = String(icoSearchInput.value).trim();
+    if (q.length < 3) {
+        icoSearchMessage.value = "Zadajte aspoň 3 znaky názvu.";
+        return;
+    }
+
+    isSearchingCompany.value = true;
+    try {
+        const response = await axiosInstance.get("/company-search", { params: { q } });
+        nameResults.value = response.data.data || [];
+        if (!nameResults.value.length) {
+            icoSearchMessage.value = "Žiadna firma s takým názvom sa nenašla.";
+        }
+    } catch (error: any) {
+        icoSearchMessage.value = error.response?.data?.message || "Vyhľadávanie sa nepodarilo.";
+    } finally {
+        isSearchingCompany.value = false;
+    }
+};
+
+const pickNameResult = async (ico: string) => {
+    nameResults.value = [];
+    icoSearchMessage.value = "";
+    await fillByIco(ico);
+};
+
+const onClickIco = async () => {
+    icoSearchMessage.value = "";
+    nameResults.value = [];
+    if (icoSearchValidationError()) return;
+
+    if (searchMode.value === "name") {
+        await searchByName();
+        return;
+    }
+
+    await fillByIco(icoSearchInput.value);
 };
 </script>
 
@@ -177,7 +228,27 @@ const onClickIco = async () => {
     <!-- IČO vyhľadávanie -->
     <div v-if="!hideCompany" class="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
         <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <label for="ico-search" class="block text-sm font-semibold text-blue-900">Rýchle doplnenie — vyhľadajte firmu podľa IČO</label>
+            <div class="flex flex-wrap items-center gap-3">
+                <label for="ico-search" class="block text-sm font-semibold text-blue-900">
+                    Rýchle doplnenie — vyhľadajte firmu podľa {{ searchMode === "ico" ? "IČO" : "názvu" }}
+                </label>
+                <div class="inline-flex overflow-hidden rounded-md border border-blue-200 text-xs font-semibold" role="group" aria-label="Hľadať podľa">
+                    <button
+                        type="button"
+                        :aria-pressed="searchMode === 'ico'"
+                        :class="searchMode === 'ico' ? 'bg-blue-600 text-white' : 'bg-white text-blue-800 hover:bg-blue-100'"
+                        class="px-3 py-1 transition"
+                        @click="setSearchMode('ico')"
+                    >IČO</button>
+                    <button
+                        type="button"
+                        :aria-pressed="searchMode === 'name'"
+                        :class="searchMode === 'name' ? 'bg-blue-600 text-white' : 'bg-white text-blue-800 hover:bg-blue-100'"
+                        class="border-l border-blue-200 px-3 py-1 transition"
+                        @click="setSearchMode('name')"
+                    >Názov</button>
+                </div>
+            </div>
             <slot name="quick-fill-action" />
         </div>
         <div class="flex gap-2">
@@ -185,9 +256,9 @@ const onClickIco = async () => {
                 v-model="icoSearchInput"
                 id="ico-search"
                 autocomplete="off"
-                placeholder="IČO organizácie"
-                inputmode="numeric"
-                pattern="[0-9]*"
+                :placeholder="searchMode === 'ico' ? 'IČO organizácie' : 'Názov firmy, obce, školy…'"
+                :inputmode="searchMode === 'ico' ? 'numeric' : 'text'"
+                :pattern="searchMode === 'ico' ? '[0-9]*' : undefined"
                 :invalid="!!icoSearchValidationError()"
                 @keyup.enter="onClickIco"
             />
@@ -202,6 +273,25 @@ const onClickIco = async () => {
         </div>
         <p v-if="icoSearchValidationError()" class="mt-2 text-xs font-semibold text-red-600">{{ icoSearchValidationError() }}</p>
         <p v-if="icoSearchMessage" class="mt-2 text-xs text-blue-700">{{ icoSearchMessage }}</p>
+        <ul v-if="nameResults.length" class="mt-2 max-h-72 divide-y divide-blue-100 overflow-y-auto rounded-lg border border-blue-200 bg-white">
+            <li v-for="item in nameResults" :key="item.source + item.ico">
+                <button
+                    type="button"
+                    class="flex w-full items-start justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-blue-50 disabled:opacity-50"
+                    :disabled="isSearchingCompany"
+                    @click="pickNameResult(item.ico)"
+                >
+                    <span>
+                        <span class="font-semibold text-gray-900">{{ item.company }}</span>
+                        <span class="block text-xs text-gray-500">
+                            IČO {{ item.ico }}<template v-if="item.city"> · {{ item.city }}</template>
+                            <span v-if="item.status && item.status !== 'aktívna'" class="font-semibold text-red-600"> · {{ item.status }}</span>
+                        </span>
+                    </span>
+                    <span v-if="item.source === 'database'" class="shrink-0 rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">náš zákazník</span>
+                </button>
+            </li>
+        </ul>
     </div>
 
     <!-- Polia -->

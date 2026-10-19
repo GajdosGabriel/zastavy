@@ -56,6 +56,57 @@ class CheckoutController extends Controller
         return $this->companyFromRegistry($ico);
     }
 
+    /**
+     * Hľadanie firmy podľa názvu. Vráti len zoznam na výber (IČO, názov,
+     * mesto) — plné údaje sa doplnia cez show() podľa vybraného IČO.
+     *
+     * Obsluha vidí najprv vlastných zákazníkov, potom register. Verejnosť
+     * len register — ani zoznam názvov našich zákazníkov sa von nedáva.
+     */
+    public function search(Request $request)
+    {
+        $query = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($query) < 3) {
+            return response()->json([
+                'message' => 'Zadajte aspoň 3 znaky názvu.',
+            ], 422);
+        }
+
+        $results = collect();
+
+        if ($this->isStaff($request)) {
+            $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $query).'%';
+
+            $results = Customer::query()
+                ->where('company', 'like', $like)
+                ->whereNotNull('ico')
+                ->where('ico', '!=', '')
+                ->orderBy('company')
+                ->limit(10)
+                ->get(['ico', 'company', 'city'])
+                ->map(fn (Customer $c) => [
+                    'ico' => $c->ico,
+                    'company' => $c->company,
+                    'city' => (string) $c->city,
+                    'status' => '',
+                    'source' => 'database',
+                ]);
+        }
+
+        $known = $results->pluck('ico')
+            ->map(fn ($ico) => str_pad(preg_replace('/\D+/', '', (string) $ico), 8, '0', STR_PAD_LEFT))
+            ->all();
+
+        $registry = collect(app(CompanyRegistry::class)->search($query))
+            ->reject(fn ($hit) => in_array(str_pad($hit['ico'], 8, '0', STR_PAD_LEFT), $known, true))
+            ->map(fn ($hit) => $hit + ['source' => 'internet']);
+
+        return response()->json([
+            'data' => $results->concat($registry)->values(),
+        ]);
+    }
+
     private function companyFromRegistry(string $ico)
     {
         $company = $this->findCompanyByIco($ico);

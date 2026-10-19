@@ -329,6 +329,55 @@ class CheckoutTest extends TestCase
         $this->assertStringNotContainsString('+421911222333', $response->getContent());
     }
 
+    public function test_public_name_search_returns_registry_hits_only(): void
+    {
+        $this->makeCustomerWithContact();
+
+        Http::fake([
+            'api.orsf.sk/v1/search*' => Http::response(['hits' => [
+                ['ico' => '00315371', 'name' => 'Obec Liptovská Anna', 'city' => 'Liptovská Anna', 'status' => 'aktívna'],
+            ]], 200),
+        ]);
+
+        $response = $this->getJson('/api/company-search?q=Firma');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.ico', '00315371')
+            ->assertJsonPath('data.0.source', 'internet');
+    }
+
+    public function test_staff_name_search_lists_own_customers_first(): void
+    {
+        $customer = $this->makeCustomerWithContact();
+
+        Role::findOrCreate('super-admin', 'web');
+        $staff = User::factory()->create();
+        $staff->assignRole('super-admin');
+        Sanctum::actingAs($staff);
+
+        Http::fake([
+            'api.orsf.sk/v1/search*' => Http::response(['hits' => [
+                ['ico' => $customer->ico, 'name' => 'Firma s.r.o.', 'city' => 'Žilina'],
+                ['ico' => '87654321', 'name' => 'Iná Firma a.s.', 'city' => 'Košice'],
+            ]], 200),
+        ]);
+
+        $response = $this->getJson('/api/company-search?q=Firma');
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.ico', $customer->ico)
+            ->assertJsonPath('data.0.source', 'database')
+            ->assertJsonPath('data.1.ico', '87654321');
+        $this->assertStringNotContainsString('tajny@example.com', $response->getContent());
+    }
+
+    public function test_name_search_requires_three_characters(): void
+    {
+        $this->getJson('/api/company-search?q=ab')->assertStatus(422);
+    }
+
     public function test_staff_ico_lookup_returns_customer_contact(): void
     {
         $customer = $this->makeCustomerWithContact();
