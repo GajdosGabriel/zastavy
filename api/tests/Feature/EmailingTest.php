@@ -307,7 +307,7 @@ class EmailingTest extends TestCase
         $this->assertStringContainsString('<a href="https://example.test/info" style="color:#1155cc">https://example.test/info</a>.', $message->getHtmlBody());
         $this->assertSame(1, substr_count($message->getHtmlBody(), 'href="https://example.test/a"'));
         // Pod textom je citovaný systémový e-mail udalosti, ako pri ručnej odpovedi.
-        $this->assertMatchesRegularExpression('~už vyrábame\..*napísal\(a\):.*<blockquote.*Ďakujeme za objednávku~s', $message->getHtmlBody());
+        $this->assertMatchesRegularExpression('~už vyrábame\..*napísal\(a\):.*<blockquote.*Potvrdenie prijatia objednávky~s', $message->getHtmlBody());
 
         // Štýly citátu ostanú celé: odstráni sa len pravidlo pre <body>, nie trieda .body.
         $this->assertStringContainsString('.body { padding: 32px; }', $message->getHtmlBody());

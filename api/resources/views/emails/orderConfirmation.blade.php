@@ -1,6 +1,7 @@
 @php($forAdmin = $forAdmin ?? false)
-<x-email.layout :title="$forAdmin ? 'Nová objednávka' : 'Potvrdenie objednávky'"
-                :heading="$forAdmin ? 'Nová objednávka' : 'Ďakujeme za objednávku'"
+{{-- „Prijatie“, nie „potvrdenie objednávky“: dostupnosť ešte len overujeme, zmluvu tým neuzatvárame. --}}
+<x-email.layout :title="$forAdmin ? 'Nová objednávka' : 'Potvrdenie prijatia objednávky'"
+                :heading="$forAdmin ? 'Nová objednávka' : 'Potvrdenie prijatia objednávky'"
                 :subheading="$order->serial_number ? 'Objednávka č. '.$order->serial_number : null"
                 :contact="! $forAdmin">
     @if($forAdmin)
