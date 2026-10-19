@@ -15,6 +15,14 @@ export const formatDecimal = (number = null) => {
 const priceFormatter = new Intl.NumberFormat('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export const formatPrice = (number = null) => priceFormatter.format(Number(number ?? 0));
 
+// Zľava v % podľa akciovej ceny variantu — tá sa reálne účtuje, preto z nej a nie zo stĺpca `discount`.
+export const discountPercent = (variant) => {
+  const price = Number(variant?.price ?? 0);
+  const sale = Number(variant?.sale_price ?? 0);
+  if (!(sale > 0 && price > sale)) return 0;
+  return Math.round(((price - sale) / price) * 100);
+};
+
 export const formatUnitName = (number = 0) => {
   const n = Math.abs(Number(number));
   if (n === 1) return 'kus';

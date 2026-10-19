@@ -8,7 +8,8 @@ import { useRoute } from "vue-router";
 import { storeToRefs } from "pinia";
 import kosik from "../checkout/kosikLink.vue";
 import kosikButton from "../icons/kosik.vue";
-import { formatDecimal, formatPrice, formatPriceWithoutVat, formatUnitName } from "../../models/functions";
+import { discountPercent, formatDecimal, formatPrice, formatPriceWithoutVat, formatUnitName } from "../../models/functions";
+import DiscountBadge from "./components/DiscountBadge.vue";
 import RequiredMark from "../forms/RequiredMark.vue";
 import VariantPicker from "./components/VariantPicker.vue";
 import { applySeo, setJsonLd, productJsonLd, breadcrumbJsonLd, organizationJsonLd } from "../../models/seo";
@@ -46,7 +47,8 @@ const selectedImage = computed(() => getImages.value?.[currentImage.value]?.path
 const minOrder = computed(() => Number(selectedVariant.value?.min_order ?? 1));
 const activePrice = computed(() => Number(selectedVariant.value?.active_price ?? 0));
 const basePrice = computed(() => Number(selectedVariant.value?.price ?? 0));
-const hasDiscount = computed(() => Number(selectedVariant.value?.sale_price ?? 0) > 0);
+const discount = computed(() => discountPercent(selectedVariant.value));
+const hasDiscount = computed(() => discount.value > 0);
 const canBuy = computed(() => !!selectedVariant.value);
 const madeToOrder = computed(() => !!getProduct.value.made_to_order);
 
@@ -179,9 +181,10 @@ onUnmounted(() => {
                 <section v-if="productLoaded" class="grid gap-6 lg:grid-cols-12">
                     <div class="order-1 lg:col-span-7 lg:col-start-1 lg:row-start-1">
                         <div class="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
-                            <div class="flex min-h-56 items-center justify-center bg-gray-50 p-4 md:min-h-96 md:p-8">
+                            <div class="relative flex min-h-56 items-center justify-center bg-gray-50 p-4 md:min-h-96 md:p-8">
                                 <img :src="selectedImage" :alt="getProduct.name" width="520" height="520"
                                     class="max-h-64 w-full object-contain md:max-h-[520px]" />
+                                <DiscountBadge :percent="discount" large />
                             </div>
                         </div>
 

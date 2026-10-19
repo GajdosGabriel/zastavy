@@ -1,7 +1,8 @@
 <script setup>
 import { computed, ref } from "vue";
 import useCheckouts from "../../store/StoreCheckouts";
-import { formatPrice, formatUnitName } from "../../models/functions";
+import { discountPercent, formatPrice, formatUnitName } from "../../models/functions";
+import DiscountBadge from "../product/components/DiscountBadge.vue";
 import { htmlToText } from "../../models/html";
 import kosikButton from "../icons/kosik.vue";
 
@@ -22,6 +23,11 @@ const quantity = ref(Number(props.item.default_variant?.min_order ?? 1));
 
 const priceFrom = computed(() => Number(props.item.price_from ?? 0));
 const priceTo = computed(() => Number(props.item.price_to ?? 0));
+// Najvyššia zľava z ponúkaných variantov; ak sa líšia, odznak hovorí „až“.
+const discounts = computed(() => variants.value.map(discountPercent));
+const maxDiscount = computed(() => Math.max(0, ...discounts.value));
+const discountVaries = computed(() => new Set(discounts.value).size > 1);
+
 const isPriceRange = computed(() => hasChoice.value && priceTo.value > priceFrom.value);
 
 const submitCart = () => {
@@ -56,6 +62,7 @@ const productRoute = computed(() => ({
             <router-link :to="productRoute" class="cursor-pointer" tabindex="-1" aria-hidden="true">
                 <img :src="item.images?.[0]?.path ?? item.thumb" width="400" height="192" loading="lazy" class="max-h-48 w-full object-contain" :alt="item.name" />
             </router-link>
+            <DiscountBadge :percent="maxDiscount" :up-to="discountVaries" />
             <span v-if="!item.is_in_stock"
                 class="absolute right-3 top-3 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
                 na objednávku
