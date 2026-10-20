@@ -55,6 +55,22 @@ enum MailingTrigger: string
         };
     }
 
+    /**
+     * `kind` systémového e-mailu udalosti v Accounte (OrderMailer posiela `order.{Notifikácia}`).
+     * Podľa neho Account nájde mail, ktorý odpoveď vo vlákne cituje.
+     */
+    public function quoteKind(): string
+    {
+        return match ($this) {
+            self::OrderCreated => 'order.OrderCreated',
+            self::ShippingDispatched, self::OrderCompleted => 'order.OrderExpedition',
+            self::OrderCancelled => 'order.OrderCancelled',
+        };
+    }
+
+    /** Premenné, ktoré sa pri udalosti posielajú do Accountu (v texte kampane ako {kluc}). */
+    public const VARIABLES = ['cislo_objednavky', 'firma', 'odkaz_objednavky'];
+
     /** Najdlhšie povolené oneskorenie (365 dní). */
     public const MAX_DELAY_HOURS = 8760;
 

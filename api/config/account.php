@@ -17,6 +17,7 @@
 |   ACCOUNT_TOKEN=acc_xxxxxxxxxxxxxxxx      (oprávnenia messages:write, messages:read)
 |   ACCOUNT_WEBHOOK_SECRET=whsec_xxxxxxxx    (webhook /api/webhooks/account, udalosti message.*)
 |   ACCOUNT_MESSAGING=true
+|   ACCOUNT_MAILING=true                     (kampane v Accounte, oprávnenie mailing:write)
 |
 */
 
@@ -26,6 +27,14 @@ return [
     'webhook_secret' => env('ACCOUNT_WEBHOOK_SECRET'),
 
     'messaging' => (bool) env('ACCOUNT_MESSAGING', false),
+
+    // Emailing (kampane) v Accounte: udalosti objednávok idú tam a lokálny
+    // modul Emailing neposiela. Token potrebuje aj mailing:write.
+    'mailing' => (bool) env('ACCOUNT_MAILING', false),
+
+    // Verejná adresa Accountu pre odkazy v už odoslaných kampaniach
+    // (odhlásenie, klik, otvorenie) – ACCOUNT_URL môže byť interná.
+    'public_url' => rtrim((string) env('ACCOUNT_PUBLIC_URL', env('ACCOUNT_URL', 'http://account.local')), '/'),
 
     // Mimo produkcie sa do vzdialenej inštancie Accountu neposiela – mail
     // odoslaný z lokálu cez produkčný Account by dostal skutočný zákazník.

@@ -25,6 +25,7 @@ class OrderEmail extends Model
         'OrderMessageSent' => 'Správa k objednávke',
         'CouponIssued' => 'Zľavový kupón',
         'InboxReply' => 'Odpoveď z Inboxu',
+        'Emailing' => 'Automatická odpoveď (emailing)',
     ];
 
     protected $fillable = ['order_id', 'type', 'subject', 'recipient', 'status', 'error', 'body'];

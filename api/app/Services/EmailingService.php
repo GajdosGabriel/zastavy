@@ -22,6 +22,12 @@ class EmailingService
      */
     public function trigger(MailingTrigger $event, \App\Models\Order $order, ?\App\Models\Shipping $shipping = null, ?\Carbon\Carbon $at = null): void
     {
+        // Kampane bežia v Accounte – udalosť ide tam a lokálne sa nič nezaraďuje.
+        if (app(\App\Services\Account\AccountClient::class)->mailingEnabled()) {
+            app(\App\Services\Account\AccountMailing::class)->event($event, $order, $shipping, $at);
+
+            return;
+        }
         if (! \Illuminate\Support\Facades\Schema::hasColumn('mailing_deliveries', 'event_shipping_id')) return;
         $email = mb_strtolower(trim($order->routeNotificationForMail() ?? ''));
         if ($email === '') return;
@@ -242,7 +248,8 @@ class EmailingService
 
     public function runBatch(): int
     {
-        if (! $this->ready()) {
+        // Po prechode na Account by lokálna fronta poslala staré čakajúce maily druhýkrát.
+        if (! $this->ready() || app(\App\Services\Account\AccountClient::class)->mailingEnabled()) {
             return 0;
         }
         $count = 0;

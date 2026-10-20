@@ -38,7 +38,10 @@ class OrderObserver
      */
     public function updated(Order $order)
     {
-        //
+        // Lokálny emailing kontroluje storno pri odoslaní; v Accounte treba čakajúce maily zrušiť.
+        if ($order->wasChanged('status') && $order->status === \App\Enums\OrderStatus::Cancelled) {
+            $this->cancelMailing($order);
+        }
     }
 
     /**
@@ -49,7 +52,14 @@ class OrderObserver
      */
     public function deleted(Order $order)
     {
-        //
+        $this->cancelMailing($order);
+    }
+
+    private function cancelMailing(Order $order): void
+    {
+        if (app(\App\Services\Account\AccountClient::class)->mailingEnabled()) {
+            app(\App\Services\Account\AccountMailing::class)->cancel($order);
+        }
     }
 
     /**

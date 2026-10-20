@@ -20,8 +20,19 @@ class EmailingMeasurementController extends Controller
             && DB::table('mailing_contacts')->where('id', $delivery->contact_id)->whereNull('unsubscribed_at')->exists();
     }
 
+    /** Odkazy v kampaniach odoslaných pred prechodom – tokeny sa preniesli do Accountu. */
+    private function account(string $path, string $token)
+    {
+        return app(\App\Services\Account\AccountClient::class)->mailingEnabled()
+            ? redirect()->away(config('account.public_url').$path.$token, 302)
+            : null;
+    }
+
     public function click(Request $request, string $token)
     {
+        if ($redirect = $this->account('/m/c/', $token)) {
+            return $redirect;
+        }
         $link = DB::table('mailing_links')->where('token', $token)->first();
         abort_unless($link && EmailingMeasurement::safeDestination($link->url), 404);
         // Destination comes exclusively from stored campaign content, never
@@ -45,6 +56,9 @@ class EmailingMeasurementController extends Controller
 
     public function open(Request $request, string $token)
     {
+        if ($redirect = $this->account('/m/o/', $token.'.gif')) {
+            return $redirect;
+        }
         try {
             $delivery = DB::table('mailing_deliveries')->where('open_token', $token)->first();
             if ($delivery && $this->measurable($request, $delivery)) {

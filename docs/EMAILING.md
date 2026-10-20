@@ -2,6 +2,28 @@
 
 Sekcia **Emailing** je dostupná administrátorom na `/admin/emailing`.
 
+> **Prechod do Accountu.** Emailing sa presúva do Accountu (menu Emailing), aby ho mohli
+> používať aj ďalšie projekty. Kým je `ACCOUNT_MAILING=false`, platí všetko nižšie. Po
+> zapnutí hlásia zastavy udalosti objednávok do Accountu a lokálny modul nič neposiela.
+>
+> Postup:
+>
+> 1. V Accounte nasadiť migrácie a tokenu zastáv pridať `mailing:write` (Vývojári → token).
+>    Webhooku zastáv pridať udalosti `mailing.delivery.*` a `mailing.unsubscribed`.
+> 2. Overiť, že je zapnuté `ACCOUNT_MESSAGING=true`. Odpoveď vo vlákne cituje potvrdenie
+>    objednávky z Accountu.
+> 3. Zastaviť plánovač zastáv (alebo rovno nasadiť s `ACCOUNT_MAILING=true`, potom
+>    `emailing:send` nič neodošle).
+> 4. `php artisan emailing:export-account storage/app/emailing.json` v zastavách,
+>    potom `php artisan mailing:import zastavy emailing.json` v Accounte (najprv `--dry-run`).
+> 5. V zastavách `ACCOUNT_MAILING=true`, `ACCOUNT_PUBLIC_URL=…` a spustiť
+>    `php artisan emailing:register-triggers`.
+> 6. Staré odkazy na odhlásenie, kliknutie a otvorenie zastavy presmerujú do Accountu
+>    s rovnakým tokenom.
+>
+> Lokálny modul (EmailingService, `/admin/emailing`, tabuľky `mailing_*`) sa odstráni až
+> po overení v produkcii.
+
 ## Prvý postup
 
 1. V Príjemcoch vložte oprávnené emailové adresy alebo importujte zákaznícke kontakty. Uveďte zdroj a dôvod oprávnenia na zasielanie. Existujúce kontakty sa automaticky neprihlasujú; import nikdy nezruší odhlásenie. Adresy sa normalizujú na malé písmená a deduplikujú.

@@ -270,6 +270,10 @@ class EmailingController extends Controller
 
     public function unsubscribe(Request $r, string $token)
     {
+        // Kontakty sú v Accounte s rovnakým tokenom; 307 zachová aj POST jedným klikom.
+        if (app(\App\Services\Account\AccountClient::class)->mailingEnabled()) {
+            return redirect()->away(config('account.public_url').'/m/u/'.$token, 307);
+        }
         $contact = DB::table('mailing_contacts')->where('token', $token)->first();
         abort_unless($contact, 404);
         if ($r->isMethod('post')) {

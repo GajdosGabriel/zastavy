@@ -85,6 +85,47 @@ class AccountClient
         }
     }
 
+    /** Kampane (emailing) bežia v Accounte? */
+    public function mailingEnabled(): bool
+    {
+        return $this->enabled() && (bool) config('account.mailing');
+    }
+
+    /**
+     * Udalosť pre automatizácie v Accounte. Volá sa z fronty (ReportMailingEvent).
+     *
+     * @param  array<string, mixed>  $event  pozri POST /api/v1/mailing/events
+     */
+    public function mailingEvent(array $event): int
+    {
+        $this->assertWritesAllowed();
+
+        return (int) $this->request()->post('/api/v1/mailing/events', $event)->throw()->json('data.queued');
+    }
+
+    /**
+     * Vec sa zrušila – čakajúce maily k nej sa neodošlú.
+     *
+     * @param  array<int, string>  $except  udalosti, ktorých maily ostanú
+     */
+    public function cancelMailing(string $refType, string $refId, array $except = []): int
+    {
+        $this->assertWritesAllowed();
+
+        return (int) $this->request()->post('/api/v1/mailing/events/cancel', [
+            'ref' => ['type' => $refType, 'id' => $refId],
+            'except' => $except,
+        ])->throw()->json('data.skipped');
+    }
+
+    /** @param  array<int, array<string, mixed>>  $triggers */
+    public function registerMailingTriggers(array $triggers): void
+    {
+        $this->assertWritesAllowed();
+
+        $this->request()->put('/api/v1/mailing/triggers', ['triggers' => $triggers])->throw();
+    }
+
     /**
      * Poistka: mimo produkcie sa posiela len do lokálnej inštancie Accountu
      * (localhost, *.local, *.test), inak len s ACCOUNT_ALLOW_REMOTE_WRITES.
