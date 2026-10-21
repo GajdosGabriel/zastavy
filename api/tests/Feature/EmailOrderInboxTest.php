@@ -233,6 +233,49 @@ class EmailOrderInboxTest extends TestCase
         $this->patchJson('/api/email-order-drafts/'.$draft->id, ['status' => 'not_order'])->assertUnprocessable();
     }
 
+    public function test_obsluha_spracuje_navrh_objednavky_ako_cenovu_ponuku(): void
+    {
+        $this->ai();
+        $this->webhook()->assertOk();
+        $draft = EmailOrderDraft::sole();
+
+        $this->postJson('/api/email-order-drafts/'.$draft->id.'/quote')->assertUnauthorized();
+        Sanctum::actingAs(User::factory()->create());
+        $this->postJson('/api/email-order-drafts/'.$draft->id.'/quote')->assertForbidden();
+
+        $staff = User::factory()->create();
+        $staff->assignRole('super-admin');
+        Sanctum::actingAs($staff);
+
+        $response = $this->postJson('/api/email-order-drafts/'.$draft->id.'/quote')->assertOk();
+
+        $quote = SalesQuote::sole();
+        $response->assertJsonPath('data.quote.number', $quote->number)->assertJsonPath('data.status', EmailOrderDraft::CREATED);
+        $this->assertSame('email', $quote->source);
+        $this->assertSame('requested', $quote->fresh()->status);
+        $this->assertSame('sken.jpg', $quote->attachments()->sole()->name);
+        $this->assertSame($quote->id, $draft->fresh()->sales_quote_id);
+        $this->assertFalse($draft->fresh()->auto_created);
+        $this->assertDatabaseCount('orders', 0);
+
+        // Druhá ponuka ani objednávka z toho istého mailu nevznikne
+        $this->postJson('/api/email-order-drafts/'.$draft->id.'/quote')->assertUnprocessable();
+        $this->assertSame(1, SalesQuote::count());
+    }
+
+    public function test_bez_navrhu_ponuka_z_mailu_nevznikne(): void
+    {
+        $this->ai(['kind' => 'other']);
+        $this->webhook()->assertOk();
+
+        $staff = User::factory()->create();
+        $staff->assignRole('super-admin');
+        Sanctum::actingAs($staff);
+
+        $this->postJson('/api/email-order-drafts/'.EmailOrderDraft::sole()->id.'/quote')->assertUnprocessable();
+        $this->assertDatabaseCount('sales_quotes', 0);
+    }
+
     public function test_navrh_z_emailu_nesmie_poslat_zakaznik(): void
     {
         $this->ai(['kind' => 'other']);

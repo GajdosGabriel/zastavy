@@ -108,7 +108,7 @@ const template = () => {
                         <router-link v-if="isSuperAdmin" to="/objednavky/z-emailu"
                               class="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold"
                               :class="emailDrafts ? 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'">
-                              ✉ Objednávky a dopyty z e-mailu
+                              ✉ Prijaté e-maily
                               <span v-if="emailDrafts" class="rounded-full bg-amber-500 px-1.5 text-xs text-white">{{ emailDrafts }}</span>
                         </router-link>
 

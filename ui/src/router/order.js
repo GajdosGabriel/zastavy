@@ -19,7 +19,7 @@ const order = [
             default: () => import('../components/order/EmailOrderDraftIndex.vue'),
         },
         meta: {
-            title: 'Objednávky a dopyty z e-mailu',
+            title: 'Prijaté e-maily',
             requiresAuth: true,
         }
     },

@@ -8,7 +8,7 @@ import useFlash from "../../store/StoreFlash";
 import router from "../../router";
 import { formatFileSize } from "../../models/functions";
 
-// Objednávky a dopyty z e-mailu: maily na obchod@ mimo vlákna objednávky, ktoré AI
+// Prijaté e-maily: maily na obchod@ mimo vlákna objednávky, ktoré AI
 // rozpoznala ako objednávku alebo dopyt na ponuku. Dopyty a úplné objednávky vznikli
 // samy (záložka Vybavené), ostatné obsluha otvorí v košíku, doplní a odošle.
 const tabs = [
@@ -88,6 +88,21 @@ const retry = async () => {
     }
 };
 
+// AI zaradila dopyt ako objednávku – vznikne cenová ponuka v stave „dopyt“.
+const toQuote = async () => {
+    busy.value = true;
+    try {
+        const { data } = await axiosInstance.post(`/email-order-drafts/${detail.value.id}/quote`);
+        detail.value = data.data;
+        useFlash().success(`Vznikla cenová ponuka ${data.data.quote.number}.`);
+        await load();
+    } catch (e) {
+        useErrors().setErrors(e);
+    } finally {
+        busy.value = false;
+    }
+};
+
 const download = async (attachment) => {
     try {
         const response = await axiosInstance.get(`/email-order-drafts/${detail.value.id}/attachments/${attachment.id}`, { responseType: "blob" });
@@ -104,7 +119,7 @@ const openInCart = () => router.push({ path: "/kosik", query: { email: detail.va
 const canCreate = computed(() => detail.value && !detail.value.order && detail.value.preview);
 
 onMounted(() => {
-    document.title = "Objednávky a dopyty z e-mailu";
+    document.title = "Prijaté e-maily";
     load();
 });
 </script>
@@ -113,7 +128,7 @@ onMounted(() => {
     <BaseLayout>
         <template #main>
             <div class="page-body col-span-12">
-                <PageHeader :item="{ title: 'Objednávky a dopyty z e-mailu', buttonLink: { name: 'Späť', link: '/objednavky', icon: 'arrow-left' } }" />
+                <PageHeader :item="{ title: 'Prijaté e-maily', buttonLink: { name: 'Späť', link: '/objednavky', icon: 'arrow-left' } }" />
 
                 <div class="mb-4 flex flex-wrap gap-2" role="tablist">
                     <button v-for="item in tabs" :key="item.key" type="button" role="tab" :aria-selected="tab === item.key"
@@ -201,6 +216,7 @@ onMounted(() => {
 
                         <div v-if="!detail.order && !detail.quote" class="flex flex-wrap gap-2 border-t border-gray-100 pt-4">
                             <button v-if="canCreate" type="button" :disabled="busy" class="rounded bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50" @click="openInCart">Otvoriť v košíku</button>
+                            <button v-if="detail.preview" type="button" :disabled="busy" class="rounded border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="toQuote">Spracovať ako cenovú ponuku</button>
                             <button v-if="detail.status === 'not_order' || detail.status === 'failed' || !detail.preview" type="button" :disabled="busy" class="rounded border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="retry">Spracovať znova</button>
                             <button v-if="detail.status !== 'not_order'" type="button" :disabled="busy" class="rounded border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="setStatus('not_order')">Nie je objednávka</button>
                             <button v-if="detail.status === 'not_order' && detail.preview" type="button" :disabled="busy" class="rounded border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="setStatus('draft')">Vrátiť medzi návrhy</button>

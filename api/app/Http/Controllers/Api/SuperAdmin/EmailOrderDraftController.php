@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessEmailOrder;
 use App\Models\EmailOrderDraft;
+use App\Services\EmailOrders\EmailOrderInbox;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -67,6 +68,18 @@ class EmailOrderDraftController extends Controller
         $draft->update(['status' => $data['status']]);
 
         return $this->show($request, $draft);
+    }
+
+    /** Návrh objednávky je v skutočnosti dopyt – vznikne cenová ponuka ako pri automatickom dopyte. */
+    public function quote(Request $request, EmailOrderDraft $draft, EmailOrderInbox $inbox)
+    {
+        $this->authorizeSuperAdmin($request);
+        abort_if($draft->order_id || $draft->sales_quote_id, 422, 'Z tohto e-mailu už vznikla objednávka alebo ponuka.');
+        abort_unless($draft->preview, 422, 'E-mail nemá návrh – spracujte ho znova.');
+
+        $inbox->createQuote($draft, auto: false);
+
+        return $this->show($request, $draft->refresh());
     }
 
     /** Znova cez AI – napr. po výpadku alebo keď AI mail chybne neoznačila za objednávku. */

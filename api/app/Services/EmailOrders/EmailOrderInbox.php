@@ -166,14 +166,19 @@ class EmailOrderInbox
      * Dopyt na cenovú ponuku z e-mailu – rovnako ako dopyt z webu vznikne hneď
      * ako ponuka v stave „dopyt“; ceny a odoslanie rieši obsluha v Cenových ponukách.
      * Pôvodný mail je prvou (neprečítanou) správou zákazníka v konverzácii ponuky.
+     * Obsluha (`$auto = false`) takto spracuje aj návrh objednávky, ktorý je v skutočnosti dopytom.
      */
-    public function createQuote(EmailOrderDraft $draft): SalesQuote
+    public function createQuote(EmailOrderDraft $draft, bool $auto = true): SalesQuote
     {
-        return DB::transaction(function () use ($draft) {
+        return DB::transaction(function () use ($draft, $auto) {
             $draft = EmailOrderDraft::whereKey($draft->id)->lockForUpdate()->firstOrFail();
 
             if ($draft->salesQuote) {
                 return $draft->salesQuote;
+            }
+
+            if ($draft->order_id) {
+                throw ValidationException::withMessages(['email_order_draft_id' => ['Z tohto e-mailu už objednávka alebo ponuka vznikla.']]);
             }
 
             $preview = $draft->preview;
@@ -220,9 +225,9 @@ class EmailOrderInbox
             // Podklady zákazníka (logo, sken) patria k ponuke rovnako ako pri dopyte z webu.
             $draft->attachments()->update(['attachable_type' => $quote->getMorphClass(), 'attachable_id' => $quote->id]);
 
-            $draft->update(['status' => EmailOrderDraft::CREATED, 'sales_quote_id' => $quote->id, 'auto_created' => true]);
+            $draft->update(['status' => EmailOrderDraft::CREATED, 'sales_quote_id' => $quote->id, 'auto_created' => $auto]);
 
-            Recorder::info('quote', 'email_quote_created', 'Dopyt z e-mailu '.$quote->number, status: 'requested',
+            Recorder::info('quote', 'email_quote_created', 'Dopyt z e-mailu '.$quote->number, status: $auto ? 'requested' : 'manual',
                 recipient: $draft->from_email, context: ['draft' => $draft->id, 'quote' => $quote->id, 'message' => $message->id]);
 
             return $quote;

@@ -23,7 +23,7 @@ Nový mail na `obchod@` mimo vlákna objednávky ostane v Inboxe Accountu neprir
 
 Objednávka vznikne bežnou cestou e-shopu (ceny z DB, číslo, potvrdenie). Existujúca firma sa nemení. Inak ostane návrh a dôvody sa uložia (`reasons`) – aj pri vypnutej automatike, takže je vidieť, ako často by obstála.
 
-**Obsluha** (super-admin): Objednávky → **Objednávky z e-mailu**. Detail ukáže pôvodný mail, prílohy, návrh a dôvody. **Otvoriť v košíku** naplní košík uloženým návrhom (AI sa znova nevolá), po odoslaní sa objednávka prepojí s mailom. Ďalej **Nie je objednávka** a **Spracovať znova**.
+**Obsluha** (super-admin): Objednávky → **Prijaté e-maily**. Detail ukáže pôvodný mail, prílohy, návrh a dôvody. **Otvoriť v košíku** naplní košík uloženým návrhom (AI sa znova nevolá), po odoslaní sa objednávka prepojí s mailom. Ďalej **Spracovať ako cenovú ponuku** (keď AI dopyt zaradila ako objednávku – vznikne ponuka v stave „dopyt“ rovnako ako pri automatickom dopyte), **Nie je objednávka** a **Spracovať znova**.
 
 **Pri vytvorení objednávky** (automaticky aj z košíka) sa pôvodný mail stane prvou správou zákazníka v konverzácii objednávky aj s prílohami (napr. sken ručne písanej objednávky). Do poznámky ide len riadok „Objednávka z e-mailu od …“. Potvrdenie odíde s `conversation` = konverzácia mailu v Accounte – Account si ju tým priradí k objednávke, potvrdenie príde zákazníkovi ako odpoveď na jeho mail a jeho ďalšie odpovede už idú k objednávke.
 

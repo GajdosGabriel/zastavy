@@ -151,6 +151,7 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::get('email-order-drafts', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'index'])->name('email-order-drafts.index');
     Route::get('email-order-drafts/{draft}', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'show'])->name('email-order-drafts.show');
     Route::patch('email-order-drafts/{draft}', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'update'])->name('email-order-drafts.update');
+    Route::post('email-order-drafts/{draft}/quote', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'quote'])->name('email-order-drafts.quote');
     Route::post('email-order-drafts/{draft}/retry', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'retry'])
         ->middleware('throttle:5,1')->name('email-order-drafts.retry');
     Route::get('email-order-drafts/{draft}/attachments/{attachment}', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'attachment'])
