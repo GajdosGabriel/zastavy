@@ -214,7 +214,8 @@ class EmailOrderInboxTest extends TestCase
         $this->assertSame('email', $quote->source);
         $this->assertSame($this->customer->id, $quote->customer_id);
         $this->assertSame('obec@lehota.test', $quote->customer['email']);
-        $this->assertSame([['variant_id' => $this->variant->id, 'name' => 'Zástava SR / 100 × 150 cm', 'quantity' => 2]], $quote->requested_items);
+        // assertEquals: MySQL JSON stĺpec mení poradie kľúčov
+        $this->assertEquals([['variant_id' => $this->variant->id, 'name' => 'Zástava SR / 100 × 150 cm', 'quantity' => 2]], $quote->requested_items);
         $this->assertStringContainsString('Termín do konca mesiaca.', $quote->brief);
         $this->assertStringContainsString('- vlajka obce s erbom (5 ks)', $quote->brief);
         $this->assertSame('sken.jpg', $quote->attachments()->sole()->name);
