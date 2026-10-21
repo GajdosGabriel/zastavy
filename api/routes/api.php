@@ -148,6 +148,13 @@ Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function 
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::post('email-order-preview', \App\Http\Controllers\Api\SuperAdmin\EmailOrderController::class)->middleware('throttle:5,1');
+    Route::get('email-order-drafts', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'index'])->name('email-order-drafts.index');
+    Route::get('email-order-drafts/{draft}', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'show'])->name('email-order-drafts.show');
+    Route::patch('email-order-drafts/{draft}', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'update'])->name('email-order-drafts.update');
+    Route::post('email-order-drafts/{draft}/retry', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'retry'])
+        ->middleware('throttle:5,1')->name('email-order-drafts.retry');
+    Route::get('email-order-drafts/{draft}/attachments/{attachment}', [\App\Http\Controllers\Api\SuperAdmin\EmailOrderDraftController::class, 'attachment'])
+        ->whereNumber('attachment')->name('email-order-drafts.attachments.show');
     Route::post('/product/{product}/image/reorder', [ProductImageController::class, 'reorder'])->name('product.image.reorder');
 
     // Musí byť pred apiResource('stocks'), inak by "summary" pohltilo {stock}.

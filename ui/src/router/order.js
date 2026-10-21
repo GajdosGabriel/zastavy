@@ -13,6 +13,17 @@ const order = [
         }
     },
     {
+        path: '/objednavky/z-emailu',
+        name: 'orders.email-drafts',
+        components: {
+            default: () => import('../components/order/EmailOrderDraftIndex.vue'),
+        },
+        meta: {
+            title: 'Objednávky a dopyty z e-mailu',
+            requiresAuth: true,
+        }
+    },
+    {
         path: '/objednavky/:orderId/show',
         name: 'orders.show',
         components: {

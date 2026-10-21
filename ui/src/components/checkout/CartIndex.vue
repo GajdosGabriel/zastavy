@@ -11,6 +11,7 @@ import useCustomers from "../../store/StoreCustomers";
 import { useUsers } from "../../store/StoreUsers";
 import useErrors from "../../store/StoreErrors";
 import router from "../../router";
+import axiosInstance from "../../axiosInstance";
 import { formatDecimal, formatPrice, formatFileSize, formatSubstring } from "../../models/functions";
 import { htmlToText } from "../../models/html";
 import CustomerFormFields from "../forms/CustomerFormFields.vue";
@@ -119,7 +120,22 @@ onMounted(() => {
       } else if (getCarts.value.length) {
             setCustomer(parseStoredCustomer());
       }
+      openEmailOrderDraft();
 });
+
+// Odkaz „Otvoriť v košíku“ z Objednávok z e-mailu: /kosik?email=<id návrhu>
+const openEmailOrderDraft = async () => {
+      const id = router.currentRoute.value.query.email;
+      if (!id || !isSuperAdmin.value) return;
+      router.replace({ query: {} });
+      try {
+            const { data } = await axiosInstance.get(`/email-order-drafts/${id}`);
+            await nextTick();
+            emailImport.value?.openDraft(data.data);
+      } catch (e) {
+            useErrors().setErrors(e);
+      }
+};
 
 onBeforeUnmount(() => {
       customerDraft.value = { customer: { ...getCustomer.value }, isPrivatePerson: isPrivatePerson.value, fromEmail: customerFromEmail.value };

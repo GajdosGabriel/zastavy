@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Models\Coupon;
+use App\Models\EmailOrderDraft;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -10,6 +11,7 @@ use App\Models\User;
 use App\Models\ShippingMethod;
 use App\Notifications\OrderCreated;
 use App\Services\Delivery\DeliveryAddressService;
+use App\Services\EmailOrders\EmailOrderInbox;
 use Illuminate\Http\Request;
 use App\Contracts\StoreOrderContract;
 use App\Models\PaymentMethod;
@@ -59,6 +61,7 @@ class StoreOrder implements StoreOrderContract
         $order->update(['serial_number' => app(\App\Services\OrderNumberService::class)->next($order->created_at->format('Y-m'))]);
         $this->storeOrderProducts($order, $items);
         $this->storeAttachments($order, $user);
+        $this->attachEmailOrder($order);
 
         if ($couponId) {
             Coupon::where('id', $couponId)->increment('used_count');
@@ -115,6 +118,20 @@ class StoreOrder implements StoreOrderContract
         }
 
         (new StoreAttachments())->handle($order, $files, $user?->id);
+    }
+
+    /**
+     * Obsluha odoslala košík naplnený z objednávky z e-mailu – pôvodný mail
+     * prejde do konverzácie objednávky. Pred potvrdením, ktoré tak odíde do
+     * vlákna zákazníkovho mailu.
+     */
+    protected function attachEmailOrder(Order $order): void
+    {
+        if (! $this->isStaffRequest() || ! $this->request->filled('email_order_draft_id')) {
+            return;
+        }
+
+        app(EmailOrderInbox::class)->attach(EmailOrderDraft::findOrFail($this->request->input('email_order_draft_id')), $order, auto: false);
     }
 
     /**

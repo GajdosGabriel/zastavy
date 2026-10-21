@@ -1,6 +1,7 @@
 <script setup>
 import BaseLayout from '../layout/BaseLayout.vue';
-import { onMounted, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import axiosInstance from "../../axiosInstance";
 import { useRoute, useRouter } from "vue-router";
 import useOrders from "../../store/StoreOrders";
 import useQuery from "../../store/StoreQuery";
@@ -23,7 +24,7 @@ import spinnerTable from '../icons/spinnerTable.vue';
 const ordersStore = useOrders();
 const { getOrders } = storeToRefs(ordersStore);
 const { fetchOrders, setPaginator, fetchMarkSelected } = ordersStore;
-const { getUserCan } = storeToRefs(useUser());
+const { getUserCan, getUser } = storeToRefs(useUser());
 const { getQuery } = storeToRefs(useQuery());
 const { getPaginator } = storeToRefs(usePaginator());
 const route = useRoute();
@@ -56,10 +57,22 @@ watch([getQuery, () => getPaginator.value?.current_page], () => {
       router.replace({ query: listQuery() }).then(() => { ordersStore.listRoute = route.fullPath; });
 }, { deep: true });
 
-onMounted(() => {
+// Objednávky z e-mailu čakajúce na obsluhu (len super-admin, rovnako ako AI import).
+const emailDrafts = ref(0);
+const isSuperAdmin = computed(() => Boolean(getUser.value?.roles?.includes("super-admin")));
+
+onMounted(async () => {
       ordersStore.listRoute = route.fullPath;
       fetchOrders();
       document.title = "Zoznam objednávok";
+      if (isSuperAdmin.value) {
+            try {
+                  const { data } = await axiosInstance.get("/email-order-drafts", { params: { tab: "open" } });
+                  emailDrafts.value = data.counts?.open ?? 0;
+            } catch {
+                  // Počítadlo je len pomôcka — zoznam objednávok funguje aj bez neho.
+            }
+      }
 });
 
 const paginatorUrl = (url) => {
@@ -91,6 +104,13 @@ const template = () => {
 
                   <div class="page-body col-span-12">
                         <PageHeader :item="template().page_header" />
+
+                        <router-link v-if="isSuperAdmin" to="/objednavky/z-emailu"
+                              class="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold"
+                              :class="emailDrafts ? 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'">
+                              ✉ Objednávky a dopyty z e-mailu
+                              <span v-if="emailDrafts" class="rounded-full bg-amber-500 px-1.5 text-xs text-white">{{ emailDrafts }}</span>
+                        </router-link>
 
                         <filterOrder />
 

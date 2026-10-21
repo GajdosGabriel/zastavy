@@ -41,4 +41,15 @@ return [
     'allow_remote_writes' => (bool) env('ACCOUNT_ALLOW_REMOTE_WRITES', false),
 
     'timeout' => (int) env('ACCOUNT_TIMEOUT', 30),
+
+    // Objednávky z e-mailu: nový mail mimo vlákna objednávky (webhook
+    // message.unassigned) rozpozná AI a pripraví návrh na schválenie.
+    // `auto_create` z úplného návrhu rovno vytvorí objednávku; doprava
+    // a platba sa vtedy berú odtiaľto (bez nich ostane návrh na doplnenie).
+    'email_orders' => [
+        'enabled' => (bool) env('EMAIL_ORDERS', false),
+        'auto_create' => (bool) env('EMAIL_ORDERS_AUTO_CREATE', false),
+        'shipping_method_id' => env('EMAIL_ORDERS_SHIPPING_METHOD_ID') ? (int) env('EMAIL_ORDERS_SHIPPING_METHOD_ID') : null,
+        'payment_method_id' => env('EMAIL_ORDERS_PAYMENT_METHOD_ID') ? (int) env('EMAIL_ORDERS_PAYMENT_METHOD_ID') : null,
+    ],
 ];

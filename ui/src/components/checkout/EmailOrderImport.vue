@@ -13,11 +13,14 @@ const busy = ref(false);
 const error = ref('');
 const draft = ref(null);
 const acknowledged = ref(false);
+// Návrh z prijatého e-mailu (Objednávky z e-mailu) — AI ho už spracovala, netreba ju volať znova.
+const draftId = ref(null);
 const fields = { company: 'Firma / obec', name: 'Kontaktné meno', email: 'E-mail', phone: 'Telefón', street: 'Ulica a číslo', postcode: 'PSČ', city: 'Mesto', ico: 'IČO', dic: 'DIČ', ic_dic: 'IČ DPH' };
 const selected = computed(() => draft.value?.items.filter(item => item.selected && item.cart) ?? []);
 const validQuantities = computed(() => selected.value.every(item => Number.isInteger(Number(item.cart.input_order)) && Number(item.cart.input_order) >= item.cart.min_order && Number(item.cart.input_order) <= 100000));
 let opener;
 async function open() {
+    draftId.value = null;
     opener = document.activeElement;
     dialog.value.showModal();
     await nextTick();
@@ -27,6 +30,17 @@ function close() {
     if (busy.value) return;
     dialog.value.close();
     opener?.focus();
+}
+/** @param {{ id: number, body: string, preview: object }} stored  návrh z /email-order-drafts/{id} */
+function openDraft(stored) {
+    opener = document.activeElement;
+    draftId.value = stored.id;
+    text.value = stored.body ?? '';
+    error.value = '';
+    acknowledged.value = false;
+    draft.value = JSON.parse(JSON.stringify(stored.preview));
+    draft.value.items.forEach(item => { item.selected = Boolean(item.cart); });
+    dialog.value.showModal();
 }
 async function analyze() {
     if (busy.value) return;
@@ -51,12 +65,13 @@ function apply() {
     useCustomers().setCustomer({ ...draft.value.customer });
     selected.value.forEach(item => carts.submitCartToIndex({ ...item.cart, input_order: Number(item.cart.input_order) }));
     if (draft.value.note) carts.note = [carts.note, draft.value.note].filter(Boolean).join('\n');
+    carts.emailOrderDraftId = draftId.value;
     emit('applied', draft.value.customer);
     draft.value = null;
     text.value = '';
     close();
 }
-defineExpose({ open });
+defineExpose({ open, openDraft });
 </script>
 
 <template>
@@ -69,8 +84,9 @@ defineExpose({ open });
             <div class="space-y-4 p-5">
                 <p class="text-sm text-slate-600">Vložte celý text e-mailu vrátane odosielateľa a podpisu. AI vyhľadá zákazníka, chýbajúce firemné údaje a produkty. Text sa odošle službe OpenAI na spracovanie.</p>
                 <label for="email-order-text" class="block text-sm font-semibold">Text e-mailu</label>
-                <textarea id="email-order-text" ref="textInput" v-model="text" :disabled="busy" maxlength="20000" rows="8" class="w-full rounded-lg border-slate-300 text-sm" placeholder="Sem vložte objednávku z e-mailu…" @input="draft = null" />
-                <button type="button" :disabled="busy || text.trim().length < 20" class="rounded-lg bg-blue-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40" @click="analyze">{{ busy ? 'Spracúvam e-mail a dohľadávam údaje…' : 'Vyhľadať a pripraviť návrh' }}</button>
+                <textarea id="email-order-text" ref="textInput" v-model="text" :disabled="busy || draftId" maxlength="20000" rows="8" class="w-full rounded-lg border-slate-300 text-sm" placeholder="Sem vložte objednávku z e-mailu…" @input="draft = null" />
+                <p v-if="draftId" class="text-sm text-slate-600">Prijatý e-mail — návrh je už pripravený. Po odoslaní košíka sa e-mail pripojí ku konverzácii objednávky a potvrdenie odíde ako odpoveď naň.</p>
+                <button v-else type="button" :disabled="busy || text.trim().length < 20" class="rounded-lg bg-blue-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40" @click="analyze">{{ busy ? 'Spracúvam e-mail a dohľadávam údaje…' : 'Vyhľadať a pripraviť návrh' }}</button>
                 <p v-if="busy" role="status" class="text-sm text-slate-600">Dohľadanie môže trvať približne dve minúty.</p>
                 <p v-if="error" role="alert" class="text-sm text-red-700">{{ error }}</p>
                 <template v-if="draft">

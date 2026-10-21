@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\Account\AccountMailingEvents;
 use App\Services\Account\AccountMessages;
+use App\Services\EmailOrders\EmailOrderInbox;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -12,8 +13,9 @@ use Illuminate\Http\Request;
  * Príjem udalostí z Accountu – odpovede zákazníkov na e-maily k objednávkam.
  *
  * Endpoint sa v Accounte registruje v „API a webhooky“ (produkt zastavy)
- * s udalosťami message.received, message.sent, message.bounced, message.failed
- * a pri emailingu v Accounte aj mailing.delivery.*, mailing.unsubscribed.
+ * s udalosťami message.received, message.sent, message.bounced, message.failed,
+ * pre objednávky z e-mailu message.unassigned a pri emailingu v Accounte aj
+ * mailing.delivery.*, mailing.unsubscribed.
  * Podpis: HMAC-SHA256 z „timestamp.telo“ tajomstvom ACCOUNT_WEBHOOK_SECRET.
  */
 class AccountWebhookController extends Controller
@@ -21,6 +23,7 @@ class AccountWebhookController extends Controller
     public function __construct(
         private readonly AccountMessages $messages,
         private readonly AccountMailingEvents $mailing,
+        private readonly EmailOrderInbox $emailOrders,
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -47,7 +50,12 @@ class AccountWebhookController extends Controller
 
         $event = (string) $request->input('event');
 
-        if (str_starts_with($event, 'message.')) {
+        if ($event === 'message.unassigned') {
+            $this->emailOrders->receive(
+                (array) $request->input('data.conversation', []),
+                (array) $request->input('data.message', []),
+            );
+        } elseif (str_starts_with($event, 'message.')) {
             $this->messages->handle(
                 $event,
                 (array) $request->input('data.conversation', []),

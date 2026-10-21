@@ -30,7 +30,7 @@ onMounted(()=>load(Number(route.query.page)||1));
                     </label>
                     <label class="text-sm text-gray-700">Zdroj
                         <select v-model="filters.source" class="mt-1 block rounded border border-gray-300 px-3 py-1.5" @change="load()">
-                            <option value="">Všetky</option><option value="web">Dopyt z webu</option><option value="staff">Založené obsluhou</option>
+                            <option value="">Všetky</option><option value="web">Dopyt z webu</option><option value="email">Dopyt z e-mailu</option><option value="staff">Založené obsluhou</option>
                         </select>
                     </label>
                 </form>
@@ -63,7 +63,7 @@ onMounted(()=>load(Number(route.query.page)||1));
                                 <td class="px-4 py-2 text-right whitespace-nowrap">{{ q.total_net != null ? money(q.total_net) : '—' }}</td>
                                 <td class="px-4 py-2 text-right whitespace-nowrap font-medium">{{ q.total_gross != null ? money(q.total_gross) : '—' }}</td>
                                 <td class="px-4 py-2 whitespace-nowrap" :class="{ 'text-red-700': q.is_expired }">{{ date(q.valid_until) }}</td>
-                                <td class="px-4 py-2 whitespace-nowrap text-gray-600">{{ date(q.created_at) }} <span class="text-xs">{{ q.source === 'web' ? '· web' : '' }}</span></td>
+                                <td class="px-4 py-2 whitespace-nowrap text-gray-600">{{ date(q.created_at) }} <span class="text-xs">{{ q.source === 'web' ? '· web' : q.source === 'email' ? '· e-mail' : '' }}</span></td>
                             </tr>
                         </tbody>
                     </table>

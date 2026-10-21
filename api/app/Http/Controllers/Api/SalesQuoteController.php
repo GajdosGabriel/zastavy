@@ -124,7 +124,7 @@ class SalesQuoteController extends Controller
     {
         SalesAccess::staff($request);
         $f = $request->validate(['status' => 'nullable|in:requested,draft,offered,accepted,rejected,withdrawn,expired,expiring,unread', 'search' => 'nullable|string|max:100',
-            'source' => 'nullable|in:web,staff', 'customer_id' => 'nullable|integer']);
+            'source' => 'nullable|in:web,staff,email', 'customer_id' => 'nullable|integer']);
 
         return SalesQuote::query()->withExists('draft as has_draft')->withCount(['messages as unread_messages' => fn ($q) => $q->unread()])
             ->when($f['status'] ?? null, function ($q, $status) {

@@ -19,9 +19,13 @@ class EmailOrderAI
             .'Ak je viac možných variantov alebo chýba rozmer/prevedenie, variant_id=null a vysvetli v warnings. '
             .'Nevynechaj nenájdené položky. Množstvo pri jednotnom čísle je 1; ak nie je jasné, quantity=null. '
             .'Inú dodaciu adresu, dopravu, platbu a výrobné pokyny zachovaj v note a warnings na ručné doplnenie. '
-            .'Nevymýšľaj ceny, kontakty, IČO ani DIČ.',
+            .'Nevymýšľaj ceny, kontakty, IČO ani DIČ. '
+            .'kind=order, ak odosielateľ u nás záväzne objednáva tovar (aj neúplne alebo voľným textom). '
+            .'kind=quote, ak žiada cenovú ponuku, kalkuláciu alebo cenu tovaru, ktorý predávame. '
+            .'Otázka bez dopytu na cenu, reklamácia, faktúra dodávateľa, reklama či spam sú kind=other.',
             ['email' => $text, 'catalog' => $catalog],
             $this->object([
+                'kind' => ['type' => 'string', 'enum' => ['order', 'quote', 'other']],
                 'customer' => $this->customerSchema(),
                 'items' => ['type' => 'array', 'items' => $this->object([
                     'description' => ['type' => 'string'],

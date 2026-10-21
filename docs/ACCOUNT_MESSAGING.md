@@ -36,7 +36,8 @@ v Accounte (pozri [EMAILING.md](EMAILING.md)).
    (pri Gmaile heslo aplikácie) a SMTP, označiť ako predvolenú.
 3. **Account → API a webhooky:** token pre zastavy s oprávneniami
    `messages:write` a `messages:read`. Webhook `https://…/api/webhooks/account`
-   s udalosťami `message.received`, `message.sent`, `message.bounced`, `message.failed`.
+   s udalosťami `message.received`, `message.sent`, `message.bounced`, `message.failed`
+   (pre objednávky z e-mailu aj `message.unassigned`, pozri [EMAIL_ORDER_IMPORT.md](EMAIL_ORDER_IMPORT.md)).
 4. **zastavy `.env`:**
    ```env
    ACCOUNT_URL=https://account.zastavy-vlajky.sk

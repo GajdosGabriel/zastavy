@@ -4,6 +4,7 @@ namespace App\Services\Account;
 
 use App\Listeners\SystemLogSubscriber;
 use App\Models\Order;
+use App\Services\EmailOrders\EmailOrderInbox;
 use App\Services\SystemLog\Recorder;
 use App\Support\OrderThread;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -51,6 +52,8 @@ class OrderMailer
             'ref' => self::ref($order),
             'kind' => 'order.'.$type,
             'thread_id' => OrderThread::id($order),
+            // Objednávka z e-mailu: odpovedá sa do vlákna zákazníkovho mailu (Account si konverzáciu priradí).
+            'conversation' => EmailOrderInbox::conversationFor($order),
             'meta' => ['notification' => $type],
             'headers' => $this->headers($mail),
             'attachments' => $this->attachments($mail),

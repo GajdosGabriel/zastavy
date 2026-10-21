@@ -56,6 +56,9 @@ class CreateOrderRequest extends OrderRequest
             'note' => ['nullable', 'string', 'max:1000'],
             'wants_coupon' => ['boolean'],
             'notify_customer' => ['sometimes', 'boolean'],
+            // Košík naplnený z objednávky z e-mailu (EmailOrderDraft)
+            'email_order_draft_id' => $this->user('sanctum')?->isStaff()
+                ? ['nullable', 'integer', Rule::exists('email_order_drafts', 'id')->whereNull('order_id')] : ['prohibited'],
             // Povinná len ak je v admine aspoň jedna aktívna doprava, inak by sa
             // objednávka nedala odoslať vôbec.
             'shipping_method_id' => [ShippingMethod::where('active', true)->exists() ? 'required' : 'nullable', 'integer', Rule::exists('shipping_methods', 'id')->where('active', true)->whereNull('deleted_at')],

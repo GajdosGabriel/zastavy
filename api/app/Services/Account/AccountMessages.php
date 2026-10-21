@@ -7,7 +7,6 @@ use App\Models\Order;
 use App\Models\OrderMessage;
 use App\Services\SystemLog\Recorder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -70,7 +69,7 @@ class AccountMessages
                 ]);
 
                 foreach ($message['attachments'] ?? [] as $file) {
-                    $this->storeAttachment($row, $file, $paths);
+                    AccountAttachments::store($row, $file, 'order-messages/'.$row->order_id, $paths);
                 }
             });
         } catch (\Throwable $e) {
@@ -117,36 +116,5 @@ class AccountMessages
     {
         return ! empty($message['id'])
             && OrderMessage::where('order_id', $order->id)->where('account_message_id', $message['id'])->exists();
-    }
-
-    /**
-     * @param  array<string, mixed>  $file
-     * @param  array<int, string>  $paths
-     */
-    private function storeAttachment(OrderMessage $row, array $file, array &$paths): void
-    {
-        if (empty($file['url'])) {
-            return;
-        }
-
-        $response = Http::timeout(30)->get($file['url']);
-
-        if (! $response->successful()) {
-            return;
-        }
-
-        $name = (string) ($file['filename'] ?? 'priloha');
-        $path = 'order-messages/'.$row->order_id.'/'.Str::random(40).'.'.(pathinfo($name, PATHINFO_EXTENSION) ?: 'bin');
-
-        Storage::disk('local')->put($path, $response->body());
-        $paths[] = $path;
-
-        $row->attachments()->create([
-            'disk' => 'local',
-            'path' => $path,
-            'name' => $name,
-            'mime' => $file['mime'] ?? null,
-            'size' => strlen($response->body()),
-        ]);
     }
 }

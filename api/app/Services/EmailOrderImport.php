@@ -12,7 +12,11 @@ class EmailOrderImport
 {
     public function __construct(private EmailOrderAI $ai, private CompanyRegistry $registry) {}
 
-    public function preview(string $text): array
+    /**
+     * @param  bool  $inbox  príjem z Accountu: mail, ktorý nie je objednávka ani
+     *                       dopyt na ponuku (kind=other), vráti null bez dohľadávania na webe
+     */
+    public function preview(string $text, bool $inbox = false): ?array
     {
         $variants = ProductVariant::where('published', true)
             ->whereHas('product', fn ($q) => $q->where('published', true))
@@ -28,6 +32,10 @@ class EmailOrderImport
             'items.*.variant_id' => 'nullable|integer', 'items.*.quantity' => 'nullable|integer|min:1|max:100000',
             'warnings' => 'present|array|max:100', 'warnings.*' => 'string|max:2000', 'note' => 'present|nullable|string|max:5000',
         ])->validate();
+        $kind = in_array($draft['kind'] ?? null, ['order', 'quote', 'other'], true) ? $draft['kind'] : 'order';
+        if ($inbox && $kind === 'other') {
+            return null;
+        }
         $customer = $this->cleanCustomer($draft['customer']);
         $warnings = $draft['warnings'];
         $sources = [];
@@ -76,20 +84,21 @@ class EmailOrderImport
                 $warnings[] = 'Webové dohľadávanie je nedostupné. Návrh obsahuje dostupné údaje z e-mailu, databázy a registra.';
             }
         }
+        $aiWarnings = $draft['warnings'];
         $items = [];
         foreach ($draft['items'] as $item) {
             $variant = $variants->firstWhere('id', $item['variant_id'] ?? null);
             $quantity = $item['quantity'] ?? null;
             if (! $variant || ! $quantity) {
                 $warnings[] = 'Ručne doplňte položku: '.$item['description'];
-                $items[] = ['description' => $item['description'], 'cart' => null];
+                $items[] = ['description' => $item['description'], 'quantity' => $quantity, 'cart' => null];
                 continue;
             }
             $min = max(1, (int) $variant->min_order);
             if ($quantity < $min) {
                 $warnings[] = 'Množstvo položky '.$item['description'].' bolo zvýšené na minimálny odber '.$min.'.';
             }
-            $items[] = ['description' => $item['description'], 'cart' => [
+            $items[] = ['description' => $item['description'], 'quantity' => $quantity, 'cart' => [
                 'product_id' => $variant->product_id, 'variant_id' => $variant->id,
                 'name' => $variant->product->name, 'variant_name' => $variant->name,
                 'slug' => $variant->product->slug, 'thumb' => $variant->thumb,
@@ -103,10 +112,13 @@ class EmailOrderImport
             if (! $customer[$key]) $warnings[] = 'Chýba '.$label.'.';
         }
         return [
+            'kind' => $kind,
             'customer' => $customer, 'source' => $source,
             'customer_status' => $match ? 'existing' : ($ambiguous ? 'ambiguous' : 'new'),
             'items' => $items, 'note' => $draft['note'] ?? '',
             'warnings' => array_values(array_unique($warnings)), 'sources' => array_values(array_unique($sources)),
+            // Pochybnosti samotnej AI (nejednoznačný variant, iná adresa, doprava…) – bránia automatickému vytvoreniu.
+            'ai_warnings' => array_values($aiWarnings),
         ];
     }
 

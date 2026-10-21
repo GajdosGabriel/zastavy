@@ -130,6 +130,8 @@ export const useCheckouts = defineStore("checkouts", () => {
     const carts = ref<any[]>([]);
     let submitting = false;
     const note = ref("");
+    // Košík naplnený z objednávky z e-mailu — server pôvodný mail pripojí k objednávke.
+    const emailOrderDraftId = ref<number | null>(null);
     const priceAdjustment = ref<any>(null);
     // Prílohy zámerne neputujú do localStorage — File objekty sa serializovať nedajú.
     const attachments = ref<File[]>([]);
@@ -257,6 +259,7 @@ export const useCheckouts = defineStore("checkouts", () => {
 
     const resetCarts = (): void => {
         priceAdjustment.value = null;
+        emailOrderDraftId.value = null;
         carts.value = [];
         attachments.value = [];
     };
@@ -327,6 +330,7 @@ export const useCheckouts = defineStore("checkouts", () => {
         const staff = useUsers().getUser?.roles?.some((role: string) =>
             ['super-admin', 'admin', 'manager', 'sales', 'warehouse'].includes(role));
         if (staff) payload.price_adjustment = priceAdjustment.value;
+        if (staff && emailOrderDraftId.value) payload.email_order_draft_id = emailOrderDraftId.value;
         if (!staff) {
             payload.customer = { ...payload.customer };
             delete payload.customer.id;
@@ -361,6 +365,7 @@ export const useCheckouts = defineStore("checkouts", () => {
             priceAdjustment.value = null;
             attachments.value = [];
             note.value = "";
+            emailOrderDraftId.value = null;
             resetDelivery();
             useCustomer().resetCustomer();
             customerDraft.value = null;
@@ -392,6 +397,7 @@ export const useCheckouts = defineStore("checkouts", () => {
         carts,
         priceAdjustment,
         note,
+        emailOrderDraftId,
         attachments,
         customerDraft,
         delivery,
