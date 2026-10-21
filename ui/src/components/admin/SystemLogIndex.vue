@@ -80,7 +80,7 @@ const mailFields = computed(() => {
 });
 const omittedNotes: Record<string, string> = {
       sensitive: 'Obsah tohto e-mailu sa neukladá, lebo obsahuje heslo alebo odkaz na zmenu hesla.',
-      bulk: 'Obsah hromadnej kampane sa do denníka neukladá — nájdete ho v Emailingu.',
+      bulk: 'Obsah hromadnej kampane sa do denníka neukladá — nájdete ho v Accounte (Emailing).',
 };
 const mailNote = computed(() => omittedNotes[mail.value?.context?.body_omitted]
       ?? 'Obsah tohto e-mailu nie je uložený (starší záznam alebo e-mail zlyhal ešte pred vykreslením).');

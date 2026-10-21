@@ -4,7 +4,8 @@ namespace App\Enums;
 
 /**
  * Udalosti, po ktorých sa dá spustiť automatická emailová kampaň.
- * Nový trigger = nový case + volanie EmailingService::trigger() na mieste, kde udalosť nastáva.
+ * Nový trigger = nový case + volanie AccountMailing::event() na mieste, kde udalosť nastáva
+ * a `php artisan emailing:register-triggers`, aby ho Account ponúkol pri kampani.
  */
 enum MailingTrigger: string
 {

@@ -265,24 +265,7 @@ Route::middleware(['auth:sanctum',DashboardMiddleware::class])->group(function()
  Route::get('order-messages/unread',[\App\Http\Controllers\Api\ProductionController::class,'unread']);
 });
 
-Route::match(['get', 'post'], 'emailing/unsubscribe/{token}', [\App\Http\Controllers\Api\SuperAdmin\EmailingController::class, 'unsubscribe'])->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:60,1')->withoutMiddleware([\App\Http\Middleware\EnsureAccountIsActive::class])->name('emailing.unsubscribe');
-Route::get('emailing/link/{token}', [\App\Http\Controllers\Api\EmailingMeasurementController::class, 'click'])->where('token', '[A-Za-z0-9]{64}')->withoutMiddleware([\App\Http\Middleware\EnsureAccountIsActive::class, \App\Http\Middleware\AuthTokenFromCookie::class])->name('emailing.click');
-Route::get('emailing/image/{token}.gif', [\App\Http\Controllers\Api\EmailingMeasurementController::class, 'open'])->where('token', '[A-Za-z0-9]{64}')->withoutMiddleware([\App\Http\Middleware\EnsureAccountIsActive::class, \App\Http\Middleware\AuthTokenFromCookie::class])->name('emailing.open');
-Route::middleware(['auth:sanctum', AdminMiddleware::class])->prefix('emailing')->controller(\App\Http\Controllers\Api\SuperAdmin\EmailingController::class)->group(function () {
-    Route::get('/', 'index');
-    Route::get('/contacts', 'contacts');
-    Route::post('/contacts', 'addContacts');
-    Route::post('/contacts/{id}/suppress', 'suppress')->whereNumber('id');
-    Route::post('/contacts/{id}/reactivate', 'reactivate')->whereNumber('id');
-    Route::post('/bounces', 'bounce');
-    Route::post('/templates', 'template');
-    Route::put('/templates/{id}', 'template')->whereNumber('id');
-    Route::post('/preview', 'preview');
-    Route::post('/test', 'test')->middleware('throttle:5,1');
-    Route::post('/campaigns', 'save');
-    Route::put('/campaigns/{id}', 'save')->whereNumber('id');
-    Route::delete('/campaigns/{id}', 'destroy')->whereNumber('id');
-    Route::post('/campaigns/{id}/queue', 'queue')->whereNumber('id');
-    Route::post('/campaigns/{id}/cancel', 'cancel')->whereNumber('id');
-    Route::get('/campaigns/{id}/deliveries', 'deliveries')->whereNumber('id');
-});
+// Odkazy z kampaní odoslaných ešte zo zastáv – emailing beží v Accounte.
+Route::match(['get', 'post'], 'emailing/unsubscribe/{token}', [\App\Http\Controllers\Api\EmailingRedirectController::class, 'unsubscribe'])->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:60,1')->withoutMiddleware([\App\Http\Middleware\EnsureAccountIsActive::class])->name('emailing.unsubscribe');
+Route::get('emailing/link/{token}', [\App\Http\Controllers\Api\EmailingRedirectController::class, 'click'])->where('token', '[A-Za-z0-9]{64}')->withoutMiddleware([\App\Http\Middleware\EnsureAccountIsActive::class, \App\Http\Middleware\AuthTokenFromCookie::class])->name('emailing.click');
+Route::get('emailing/image/{token}.gif', [\App\Http\Controllers\Api\EmailingRedirectController::class, 'open'])->where('token', '[A-Za-z0-9]{64}')->withoutMiddleware([\App\Http\Middleware\EnsureAccountIsActive::class, \App\Http\Middleware\AuthTokenFromCookie::class])->name('emailing.open');

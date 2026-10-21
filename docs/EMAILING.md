@@ -1,130 +1,27 @@
 # Emailing
 
-Sekcia **Emailing** je dostupná administrátorom na `/admin/emailing`.
+Kampane, šablóny, príjemcovia a automatizácie po objednávke bežia v **Accounte**
+(menu Emailing, projekt zastavy). Zastavy vlastný emailing nemajú – prechod
+prebehol 21. 10. 2026 (`mailing:import` v Accounte, potom sa lokálne tabuľky
+`mailing_*` zrušili).
 
-> **Prechod do Accountu.** Emailing sa presúva do Accountu (menu Emailing), aby ho mohli
-> používať aj ďalšie projekty. Kým je `ACCOUNT_MAILING=false`, platí všetko nižšie. Po
-> zapnutí hlásia zastavy udalosti objednávok do Accountu a lokálny modul nič neposiela.
->
-> Postup:
->
-> 1. V Accounte nasadiť migrácie a tokenu zastáv pridať `mailing:write` (Vývojári → token).
->    Webhooku zastáv pridať udalosti `mailing.delivery.*` a `mailing.unsubscribed`.
-> 2. Overiť, že je zapnuté `ACCOUNT_MESSAGING=true`. Odpoveď vo vlákne cituje potvrdenie
->    objednávky z Accountu.
-> 3. Zastaviť plánovač zastáv (alebo rovno nasadiť s `ACCOUNT_MAILING=true`, potom
->    `emailing:send` nič neodošle).
-> 4. `php artisan emailing:export-account storage/app/emailing.json` v zastavách,
->    potom `php artisan mailing:import zastavy emailing.json` v Accounte (najprv `--dry-run`).
-> 5. V zastavách `ACCOUNT_MAILING=true`, `ACCOUNT_PUBLIC_URL=…` a spustiť
->    `php artisan emailing:register-triggers`.
-> 6. Staré odkazy na odhlásenie, kliknutie a otvorenie zastavy presmerujú do Accountu
->    s rovnakým tokenom.
->
-> Lokálny modul (EmailingService, `/admin/emailing`, tabuľky `mailing_*`) sa odstráni až
-> po overení v produkcii.
+## Čo robia zastavy
 
-## Prvý postup
+- **Hlásia udalosti objednávok** (`AccountMailing::event`, fronta
+  `ReportMailingEvent`): vytvorená objednávka, expedovaná zásielka, vybavená
+  objednávka, storno. Spolu s udalosťou idú premenné `cislo_objednavky`, `firma`,
+  `odkaz_objednavky` a vlákno objednávky, aby odpoveď vo vlákne citovala potvrdenie.
+- **Rušia čakajúce maily** pri storne alebo zmazaní objednávky (`AccountMailing::cancel`).
+- **Zapisujú odpoveď vo vlákne do histórie objednávky** z webhooku
+  `mailing.delivery.sent|failed|bounced` (záznam typu „Emailing“).
+- **Presmerujú staré odkazy** z kampaní odoslaných ešte zo zastáv
+  (`/api/emailing/unsubscribe|link|image/{token}`) do Accountu s tým istým tokenom.
 
-1. V Príjemcoch vložte oprávnené emailové adresy alebo importujte zákaznícke kontakty. Uveďte zdroj a dôvod oprávnenia na zasielanie. Existujúce kontakty sa automaticky neprihlasujú; import nikdy nezruší odhlásenie. Adresy sa normalizujú na malé písmená a deduplikujú.
-2. Vyberte jednu z piatich šablón alebo vytvorte vlastnú. Napíšte predmet, nadpis, text a odkaz tlačidla. Kupón vyberte z existujúcej správy kupónov. Uložte koncept a obnovte náhľad po úpravách.
-3. Po nastavení odosielania pošlite test sebe. Test ide len na email prihláseného administrátora.
-4. Zvoľte čas alebo nechajte okamžitý začiatok. Potvrdením sa obsah uzamkne a vytvorí zoznam aktuálne aktívnych príjemcov. Nové kontakty sa spätne nepridávajú.
-5. V kampaniach sledujte záznamy; čakajúcu kampaň možno zastaviť. Práve prebiehajúci SMTP pokus sa môže dokončiť. Odhlásenie sa kontroluje tesne pred odoslaním.
+## Nastavenie
 
-Šablóna **Spisor.eu – Anonymizer** zachováva vzhľad a informačné bloky dodaného HTML. Predmet, nadpis, hlavný text, tlačidlo a kupón sú upraviteľné. Značky AcyMailingu boli nahradené adresou príjemcu a vlastným odhlasovacím odkazom; jeho reklamný obrázok sa nepoužíva. Vybraný vzhľad sa zachová aj pri uložení vlastnej šablóny a kopírovaní kampane.
-
-Šablóna **Vlajky a štátne symboly** obsahuje štyri produktové karty z dodaného HTML (obrázky, popisy, ceny a odkazy), obecné zástavy a kontakty. Predmet, nadpis, úvodný text, hlavné tlačidlo a kupón sa upravujú v editore. Produktové údaje a ceny sú súčasťou šablóny, nesynchronizujú sa automaticky s katalógom. Obrázky sa načítavajú z produktových záznamov cez trvalý verejný endpoint `/api/images/{id}`; nepoužívajú pevné cesty ani dočasné podpísané adresy. V zozname šablón je skutočný náhľad emailu. Na mobile sa produktové karty zobrazujú pod sebou. Používa vlastné odhlásenie systému bez pätičky AcyMailingu.
-
-## Nasadenie
-
-### Automatizácia po objednávke
-
-V editore kampane vyberte **Spôsob spustenia → Po vytvorení objednávky**, nastavte oneskorenie v hodinách alebo dňoch (predvolene 24 hodín; voľba **Žiadne oneskorenie** odošle ponuku pri najbližšom behu plánovača), pripravte obsah a potvrďte aktiváciu. Existujúce objednávky sa spätne nespracujú. Každá nová objednávka, vrátane ručne vytvorenej alebo importovanej cez model objednávky, naplánuje jednu ponuku pre zodpovedajúci aktívny kontakt v adresári. Objednávka sama nepridáva kontakt ani neobnovuje odhlásenie. Viac objednávok jedného kontaktu znamená viac ponúk; viac aktívnych automatizácií sa spúšťa nezávisle.
-
-Čas sa počíta od vytvorenia objednávky, nie od doručenia potvrdenia. Správa sa odošle najskôr po uplynutí oneskorenia pri najbližšom behu plánovača v rámci spoločného limitu. Záznam uvádza číslo objednávky a plánovaný čas. Automatizácia zostáva aktívna aj po vyprázdnení fronty. Zastavenie zruší čakajúce ponuky aj prijímanie nových udalostí; pre zmenu obsahu alebo opätovné spustenie vytvorte kópiu.
-
-Pred odoslaním sa kontroluje odhlásenie, existencia a storno objednávky, zhoda emailu a platnosť pripojeného kupóna. Nevyhovujúce pokusy sa označia ako preskočené. Prerušené ani zlyhané SMTP pokusy sa automaticky neopakujú. Identifikátor objednávky zabraňuje duplicitnému naplánovaniu tej istej udalosti.
-
-### Odpoveď vo vlákne objednávky
-
-Pri každom spôsobe spustenia viazanom na udalosť možno zaškrtnúť **Poslať ako odpoveď vo vlákne objednávky**. Email potom neodíde ako ponuka v šablóne, ale ako obyčajná správa s predmetom `Re: Objednávka | firma`, od rovnakého odosielateľa ako potvrdenie objednávky a pod vaším textom je riadok „… napísal(a):“ s citovaným systémovým emailom danej udalosti – rovnako, ako keby ste naň odpovedali ručne. Pri „Po vytvorení objednávky“ sa cituje potvrdenie, pri expedícii a vybavení email o odoslaní, pri „Po oznámení storna objednávky“ oznámenie o storne (tento spúšťač sa aktivuje len vtedy, keď sa pri storne zákazníkovi posiela oznámenie). Citát možno vypnúť voľbou **Zahrnúť pod text email udalosti, na ktorý sa odpovedá** – potom odíde len váš text. Zákazník správu v oboch prípadoch nájde v tej istej konverzácii ako potvrdenie. Bez zaškrtnutia sa automatizácia správa ako doteraz – ponuka v šablóne. V texte fungujú značky `{cislo_objednavky}`, `{firma}` a `{odkaz_objednavky}`.
-
-Ide o servisnú správu, preto platia iné pravidlá než pre ponuky: dostane ju každý zákazník objednávky (aj mimo adresára Príjemcov a aj odhlásený z ponúk), nemá odhlasovací odkaz, kupón, tlačidlo ani meranie. Obsah má byť informačný – stav objednávky a ďalší postup, nie reklama. Preskočí sa pri zmazanej alebo stornovanej objednávke (okrem spúšťača storna) a pri adrese označenej ako nedoručiteľná. Odchádza cez spoločnú frontu, takže platí `EMAILING_ENABLED`, hodinový limit a beh plánovača.
-
-Do rovnakého vlákna patria aj systémové emaily objednávky (zmena, príprava, expedícia, zmena adresy, vrátenie, storno): majú predmet `Re: Objednávka | firma` a hlavičky `In-Reply-To`/`References` na potvrdenie, ktorého `Message-ID` je odvodené z identifikátora objednávky (`App\Support\OrderThread`). Kópie pre administrátorov tvoria vlastné vlákno. Kupón po objednávke zostáva samostatným emailom.
-
-### Správy k objednávke
-
-V detaile objednávky pod **Komunikácia, grafika a výroba** si obsluha so zákazníkom píše k čomukoľvek v objednávke, nielen ku grafike. Správa obsluhy (voliteľne s prílohami) odíde zákazníkovi do toho istého vlákna s tlačidlom **Zobraziť a odpovedať**; odpoveď, pripomienky ku grafike aj schválenie sa uložia ku konverzácii a obsluhe príde upozornenie e-mailom, do zvončeka a k objednávke. Nahratá verzia grafiky sa zákazníkovi pošle až tlačidlom **Odoslať návrh zákazníkovi**. Zákazník môže začať aj sám: potvrdenie objednávky, zmena, príprava a odoslanie obsahujú tlačidlo **Napísať k objednávke**.
-
-Odpoveď napísaná priamo na e-mail sa do systému nenačíta – príde do schránky odosielateľa ako doteraz. Súkromný odkaz (`/objednavka/{uuid}/spravy#token=…`) je pre objednávku jeden, každé použitie mu predĺži platnosť na 90 dní a nová verzia grafiky ho nemení; zneplatní ho len **Vytvoriť nový odkaz pre zákazníka**. Konverzácia objednávku sama nemení – položky a cenu upraví obsluha v úprave objednávky. Migrácia: `2026_10_13_110000_create_order_messages.php`.
-
-### E-maily zákazníkovi v detaile objednávky
-
-Karta **História objednávky** v detaile objednávky (ktorý zahŕňa aj expedíciu) ukazuje na jednej časovej osi dodacie listy, vrátenia a všetko, čo zákazníkovi k objednávke odišlo (aj neodoslané pokusy), s možnosťou zobraziť e-mail tak, ako odišiel. Zapisuje sa podľa internej hlavičky `X-Order-Ref` (`OrderThread::tag`) do tabuľky `order_emails`; kópie pre obsluhu sa nezapisujú. Na rozdiel od denníka (30 dní) sa záznam o e-maile (typ, predmet, komu, kedy, stav) drží rovnako dlho ako objednávka. Obsah e-mailu (HTML) sa po `ORDER_EMAIL_BODY_DAYS` dňoch (predvolene 730, teda 2 roky; 0 = nemazať) vymaže príkazom `order-emails:prune-bodies`, ktorý plánovač spúšťa denne o 3:35. V histórii potom pri e-maile stojí „obsah sa už neuchováva“. Migrácia `2026_10_16_100000_create_order_emails.php` prenesie e-maily, ktoré ešte sú v denníku.
-
-Tlačidlom **Poslať zákazníkovi e-mail** sa dá dodatočne poslať zabudnutý oznam: potvrdenie objednávky, zmena objednávky (s voliteľnou poznámkou, napr. dôvod storna položky), storno objednávky a príprava/odoslanie pre každý dodací list. Pred odoslaním je náhľad; posiela sa vždy aktuálny stav objednávky. Opätovné potvrdenie má vlastné `Message-ID` (rovnaké by Gmail ako duplikát zahodil) a zaradí sa do toho istého vlákna. Ak sa položky zmenili po poslednom e-maile, karta na to upozorní.
-
-Spájanie do konverzácie robí poštový klient zákazníka. Gmail vyžaduje zhodný predmet aj hlavičky, Outlook sa riadi najmä predmetom. Niektorí poskytovatelia (napr. Amazon SES) prepisujú `Message-ID`; vtedy sa následné správy spoja medzi sebou, ale nie s potvrdením – po nasadení overte na vlastnej schránke cez „Zobraziť originál“.
-
-Transakčné notifikácie ostávajú vo svojej existujúcej ceste. Spoločný `SystemLogSubscriber` už zachytáva odoslané transakčné aj marketingové emaily. Odporúčaný ďalší krok je spoločný prehľad s filtrami podľa typu, príjemcu a objednávky; potvrdenia nemajú závisieť od marketingového odhlásenia, vypnutia emailingu alebo jeho hodinového limitu.
-
-Nová migrácia vytvorí štyri tabuľky, existujúcich zákazníkov nemení:
-
-```sh
-php artisan migrate --path=database/migrations/2026_10_05_160000_create_emailing_tables.php --force
-php artisan migrate --path=database/migrations/2026_10_05_170000_add_emailing_layout.php --force
-php artisan migrate --path=database/migrations/2026_10_05_180000_add_emailing_triggers.php --force
-php artisan migrate --path=database/migrations/2026_10_05_190000_add_emailing_measurement.php --force
-php artisan migrate --path=database/migrations/2026_10_13_100000_add_order_reply_to_emailing.php --force
-```
-
-Nastavenie prostredia (heslá zostávajú len v konfigurácii servera):
-
-```dotenv
-EMAILING_ENABLED=false
-EMAILING_HOURLY_LIMIT=100
-EMAILING_BATCH_SIZE=10
-MAIL_MAILER=smtp
-```
-
-Doplňte MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM_ADDRESS a MAIL_FROM_NAME podľa poštového poskytovateľa. Nastavte verejnú HTTPS APP_URL – generujú sa z nej odkazy na odhlásenie. Overte odosielateľskú doménu u poskytovateľa, jej SPF/DKIM a doručenie testu do vlastnej schránky. Po príprave nastavte EMAILING_ENABLED=true a obnovte konfiguračnú cache (`php artisan config:cache`). Log, array a failover mailery sa nepovažujú za doručujúce.
-
-Plánovač musí každú minútu spúšťať `php artisan schedule:run`. Príkaz `emailing:send` spracuje najviac EMAILING_BATCH_SIZE príjemcov. Nepotrebuje queue worker. Hodinový limit je spoločný pre všetky kampane a počíta pokusy za posledných 60 minút; testovacie správy majú samostatný HTTP throttle. Scheduler nepúšťajte s neobmedzeným SMTP timeoutom: nakonfigurujte primeraný timeout poskytovateľa/servera. Viac plánovačov koordinuje databázový zámok; produkcia vyžaduje MySQL/InnoDB.
-
-## Význam záznamov
-
-### Meranie odozvy
-
-V editore sú samostatné prepínače pre **návštevy odkazov** a **odhad otvorenia obrázkom**. Nové kampane majú v rozhraní predvolené meranie kliknutí; otvorenia sú vypnuté. Existujúce kampane si ponechávajú vypnuté meranie, už odoslané emaily nemožno zmerať spätne. Nastavenie sa uzamkne spolu s obsahom pri aktivácii. Náhľad a test sebe nemajú meracie odkazy ani pixel.
-
-Meranie používa vlastnú HTTPS adresu API z APP_URL. Odkazy obsahujú náhodné 64-znakové tokeny, nie email ani ID príjemcu. Cieľ presmerovania je pevne uložený pri odoslaní; klient ho nemôže zmeniť parametrom. Nezapájame externú analytickú službu, JavaScript, fingerprinting ani analytické cookies. Analytické tabuľky ukladajú iba prvý čas a počty, nie IP adresy ani user-agenty. Bežné prístupové logy webservera majú vlastné nastavenie a retenčnú dobu.
-
-Merajú sa HTTPS tlačidlá a produktové obrázky/odkazy vo všetkých troch vzhľadoch. Odhlásenie, mailto, tel, HTTP a odkazy, ktorých text zobrazuje webovú adresu, sa nemenia. Posledné z nich zostávajú priame, aby viditeľná adresa zodpovedala cieľu. Email obsahuje stručnú informáciu o zapnutom meraní. Pri meraní otvorení navyše obsahuje štandardný obrázok 1 × 1 px.
-
-V záznamoch kampane vidno prvú návštevu/načítanie obrázka pri správe a súhrn podľa cieľovej adresy. Obrázok a tlačidlo jedného produktu sa agregujú; počet „správ s návštevou“ ich v rámci jednej správy deduplikuje. Súhrn v Štatistikách sleduje odozvu na správy odoslané vo vybranom dátumovom období, aj keď návšteva nastala neskôr. Nejde o počet jedinečných ľudí: preposlaný email má rovnaký token. Nemerané správy nemajú údaje; chýbajúci údaj neznamená, že ich človek nečítal.
-
-HEAD, deklarované prefetch požiadavky a známe roboty/skenerové user-agenty nezvyšujú počty. Filtrovanie je len orientačné: bezpečnostné skenery sa môžu správať ako prehliadač. Apple Mail Privacy Protection môže obrázok načítať bez otvorenia, Gmail používa proxy/cache a klienti môžu obrázky blokovať. Preto neuvádzame „prečítané“ ani garantované ľudské kliknutia. Neobchádzame ochrany klientov a negarantujeme doručiteľnosť: závisí aj od domény, obsahu a reputácie. SPF/DKIM/DMARC a správne verejné HTTPS zostávajú dôležité.
-
-Nové meranie sa zastaví po odhlásení kontaktu alebo po 90 dňoch od pokusu o odoslanie; doterajšie agregáty zostávajú. Odkazy ďalej presmerúvajú na uložený cieľ. Výnimka pri zápise štatistík nezastaví presmerovanie; výpadok databázy pri čítaní cieľa ho však ovplyvní, pretože cieľ je uložený na serveri.
-
-Podklady: [Apple Mail Privacy Protection](https://support.apple.com/en-ca/guide/iphone/iphf084865c7/ios), [obrázky v Gmaile](https://support.google.com/mail/answer/145919), [Microsoft Safe Links](https://learn.microsoft.com/en-us/defender-office-365/safe-links-about).
-
-- Čaká: zatiaľ nespracované.
-- Odosielanie / overiť: rezervovaný pokus. Ak stav zostane dlhšie, proces sa mohol prerušiť; overte poskytovateľa pošty.
-- Odoslané: transport prevzal správu; nepotvrdzuje doručenie, prečítanie ani kliknutie.
-- Zlyhalo: výnimka transportu; technické detaily sú v serverovom logu.
-- Preskočené: odhlásený kontakt alebo zastavená kampaň.
-
-Zlyhané ani prerušené pokusy sa automaticky neopakujú: SMTP neposkytuje záruku presne jedného doručenia pri strate spojenia. Pred opätovnou ponukou skontrolujte záznamy poskytovateľa. Kopírovanie kampane vytvorí nový koncept pre všetkých aktuálnych príjemcov, nie opakovanie iba zlyhaných.
-
-Odkazy „Zrušiť odber“ hore v správe a v pätičke zobrazia potvrdzovaciu stránku (GET nemení stav, aby link skener neodhlasoval klientov). POST vykoná trvalé odhlásenie aj bez prihlásenia. Hlavičky List-Unsubscribe (s individuálnym HTTPS odkazom) a List-Unsubscribe-Post podporujú odhlásenie poštovým klientom jedným kliknutím bez ďalšieho potvrdenia. Objednávkové emaily zostávajú samostatné.
-
-Gmail môže zobraziť vlastné „Zrušiť odber“ pri mene odosielateľa. O jeho zobrazení rozhodujú automatické kontroly Gmailu vrátane overenia domény a reputácie; samotné hlavičky nezaručujú zobrazenie. Pozri [pravidlá Gmailu](https://support.google.com/mail/answer/14229414?hl=en). Poštový poskytovateľ musí podpísať odhlasovacie hlavičky pomocou DKIM. Verejný HTTPS odkaz musí prijímať POST bez prihlásenia, CAPTCHA alebo presmerovania. Test sebe a náhľad zámerne neobsahujú aktívne odhlásenie ani tieto hlavičky; funkciu overujte na skutočnej kampani s vlastnou adresou v adresári príjemcov.
-
-Počty podľa dátumu sú v časovom pásme aplikácie, zobrazenom v rozhraní. Plánovaný čas z editora sa prevádza z miestneho pásma prehliadača. Bez integrácie webhookov poskytovateľa sa neevidujú bounces. Návštevy odkazov a odhad otvorení sa merajú voliteľne vlastnými endpointmi (pozri Meranie odozvy). Zo zistených nedoručiteľných adries možno príjemcov ručne odhlásiť. Šablóny sú zámerne textové bloky s bezpečným HTML vykreslením, nie editor ľubovoľného HTML.
-
-## Overenie
-
-`EmailingTest` testuje oprávnenia, validáciu, HTML escaping, deduplikáciu, odhlásenie, nemennosť kampane, kontrolu odhlásenia pred odoslaním, plánovanie, limit, zrušenie a zlyhanie transportu. Používa simulovaný mailer a izolovanú testovaciu databázu. SQLite beh neoveruje súbehové MySQL zámky ani skutočnú doručiteľnosť.
+- `.env`: `ACCOUNT_MAILING=true`, voliteľne `ACCOUNT_PUBLIC_URL` (inak `ACCOUNT_URL`).
+  Bez `ACCOUNT_MAILING` sa udalosti neposielajú.
+- Token zastáv v Accounte potrebuje `mailing:write`, webhook udalosti
+  `mailing.delivery.sent`, `mailing.delivery.failed`, `mailing.delivery.bounced`.
+- Nový spúšťač: case v `App\Enums\MailingTrigger`, volanie `AccountMailing::event()`
+  na mieste udalosti a `php artisan emailing:register-triggers`.

@@ -124,7 +124,6 @@ class UserResource extends JsonResource
             $items[] = ['NAME' => 'Vlastnosti produktov', 'ROUTE' => 'attributes.index', 'URL' => '/admin/vlastnosti', 'ACTION' => null];
 
             $items[] = ['NAME' => 'Komunikácia', 'ROUTE' => null, 'URL' => null, 'ACTION' => 'header'];
-            $items[] = ['NAME' => 'Emailing', 'ROUTE' => 'emailing.index', 'URL' => '/admin/emailing', 'ACTION' => null];
             $items[] = ['NAME' => 'Oznamy',   'ROUTE' => 'announcements.index', 'URL' => '/oznamy', 'ACTION' => null];
 
             $items[] = ['NAME' => 'Systém', 'ROUTE' => null, 'URL' => null, 'ACTION' => 'header'];

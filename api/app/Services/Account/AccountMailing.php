@@ -24,7 +24,7 @@ class AccountMailing
     {
         $email = mb_strtolower(trim($order->routeNotificationForMail() ?? ''));
 
-        if ($email === '') {
+        if ($email === '' || ! app(AccountClient::class)->mailingEnabled()) {
             return;
         }
 
@@ -47,6 +47,10 @@ class AccountMailing
     /** Objednávka stornovaná alebo zmazaná: čakajúce maily k nej sa neodošlú. */
     public function cancel(Order $order): void
     {
+        if (! app(AccountClient::class)->mailingEnabled()) {
+            return;
+        }
+
         ReportMailingEvent::dispatch(null, $order->uuid)->afterCommit();
     }
 

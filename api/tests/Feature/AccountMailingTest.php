@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
- * Emailing v Accounte (ACCOUNT_MAILING): udalosti objednávok idú do Accountu,
- * lokálny emailing nič nezaraďuje a staré odkazy z kampaní presmeruje.
+ * Emailing v Accounte (ACCOUNT_MAILING): udalosti objednávok idú do Accountu
+ * a staré odkazy z kampaní zastáv sa presmerujú tam.
  */
 class AccountMailingTest extends TestCase
 {
@@ -49,13 +49,8 @@ class AccountMailingTest extends TestCase
         $this->variant = $p->variants()->create(['name' => 'Large', 'code' => 'FLAG-L', 'published' => true, 'price' => 12, 'is_default' => true, 'min_order' => 1]);
     }
 
-    public function test_nova_objednavka_nahlasi_udalost_do_accountu_a_lokalne_nic_nezaradi(): void
+    public function test_nova_objednavka_nahlasi_udalost_do_accountu(): void
     {
-        $campaign = DB::table('mailing_campaigns')->insertGetId([
-            'name' => 'Lokálna', 'subject' => 'X', 'heading' => 'X', 'body' => 'X', 'status' => 'queued',
-            'trigger_event' => 'order_created', 'delay_hours' => 0, 'scheduled_at' => now(), 'created_at' => now(), 'updated_at' => now(),
-        ]);
-
         $order = $this->order();
 
         Http::assertSent(fn (Request $request) => $request->url() === 'http://account.test/api/v1/mailing/events'
@@ -66,8 +61,16 @@ class AccountMailingTest extends TestCase
             && $request['dedupe_key'] === 'order:'.$order->uuid
             && $request['thread_id'] === OrderThread::id($order)
             && $request['variables']['firma'] === 'Test buyer');
+    }
 
-        $this->assertSame(0, DB::table('mailing_deliveries')->where('campaign_id', $campaign)->count());
+    public function test_bez_emailingu_v_accounte_sa_udalosti_neposielaju(): void
+    {
+        config()->set('account.mailing', false);
+
+        $order = $this->order();
+        $order->update(['status' => OrderStatus::Cancelled]);
+
+        Http::assertNotSent(fn (Request $request) => str_contains($request->url(), '/api/v1/mailing/'));
     }
 
     public function test_storno_objednavky_zrusi_cakajuce_maily_v_accounte(): void

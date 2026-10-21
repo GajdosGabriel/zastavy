@@ -26,8 +26,8 @@ odpovede dostanú k objednávke samy.
    (`direction=staff`) a záznam „Odpoveď z Inboxu“ v histórii e-mailov.
 6. Nedoručené alebo neodoslané → záznam `failed` v histórii e-mailov.
 
-Hromadné kampane (`EmailingService`), reset hesla a pozvánky používateľov
-ostávajú lokálne.
+Reset hesla a pozvánky používateľov ostávajú lokálne. Hromadné kampane bežia
+v Accounte (pozri [EMAILING.md](EMAILING.md)).
 
 ## Zapnutie
 

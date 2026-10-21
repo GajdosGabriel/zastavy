@@ -90,10 +90,10 @@ class ShippingService
                         'order_product_id' => $stock->order_product_id, 'quantity' => $stock->quantity,
                     ])->all()], $order);
 
-                $emailing = app(\App\Services\EmailingService::class);
-                $emailing->trigger(MailingTrigger::ShippingDispatched, $order, $shipping, $shipping->dispatched_at);
+                $emailing = app(\App\Services\Account\AccountMailing::class);
+                $emailing->event(MailingTrigger::ShippingDispatched, $order, $shipping, $shipping->dispatched_at);
                 if ($order->refresh()->isFinished()) {
-                    $emailing->trigger(MailingTrigger::OrderCompleted, $order, null, $shipping->dispatched_at);
+                    $emailing->event(MailingTrigger::OrderCompleted, $order, null, $shipping->dispatched_at);
                 }
             }
 

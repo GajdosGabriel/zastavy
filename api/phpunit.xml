@@ -33,7 +33,6 @@
         <env name="ACCOUNT_MESSAGING" value="false" force="true"/>
         <env name="ACCOUNT_TOKEN" value="" force="true"/>
         <env name="ACCOUNT_MAILING" value="false" force="true"/>
-        <env name="EMAILING_DRY_RUN" value="false"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

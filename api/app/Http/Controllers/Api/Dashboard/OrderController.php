@@ -85,7 +85,7 @@ class OrderController extends Controller
             if ($request->boolean('notify_customer', false)) {
                 $order->loadMissing(['customer', 'orderProducts.product', 'orderProducts.stocks']);
                 $order->notifyCustomer(new OrderCancelled($order));
-                app(\App\Services\EmailingService::class)->trigger(\App\Enums\MailingTrigger::OrderCancelled, $order);
+                app(\App\Services\Account\AccountMailing::class)->event(\App\Enums\MailingTrigger::OrderCancelled, $order);
             }
 
             return new OrderResource($order->refresh()->load(['customer.users', 'user']));
