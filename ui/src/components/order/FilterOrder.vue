@@ -1,11 +1,13 @@
 <script setup>
 import ListFilter from "../plugins/ListFilter.vue";
-import { computed, onUnmounted, reactive, watch } from "vue";
+import { computed, onUnmounted, reactive, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { storeToRefs } from "pinia";
 import useOrders from "../../store/StoreOrders";
 import useQuery from "../../store/StoreQuery";
 import { isActive, isConfirmed, isDeleted, isNotificated } from "../../models/filterLabels";
+import { orderRouteQuery, orderRouteSignature } from "../../models/orderRouteQuery";
+import { PAGE_ORDER } from "../../constants";
 
 const ordersStore = useOrders();
 const { fetchOrders, fetchOrderStatistics } = ordersStore;
@@ -44,16 +46,19 @@ const selects = computed(() => [
 // Musí prebehnúť pred registráciou watchera — zoznam si ho načíta
 // v OrderIndex onMounted, takže nevznikne dvojitý request.
 const route = useRoute();
-const initial = { selects: {} };
+let initial = { selects: {} };
+// Nový kľúč prekreslí ListFilter, aby prevzal `initial` z novej adresy.
+const filterKey = ref(0);
 
-const applyRouteQuery = () => {
+const applyRouteQuery = (force = false) => {
     const { filter, status, shippedAt, product, customer, marked } = route.query;
 
-    if (![filter, status, shippedAt, product, customer, marked].some(Boolean)) {
+    if (!force && ![filter, status, shippedAt, product, customer, marked].some(Boolean)) {
         return;
     }
 
     resetQuery();
+    initial = { selects: {} };
     chips.forEach((item) => (item.active = false));
 
     const chip = chips.find((item) => item.key === `${filter}=`);
@@ -88,6 +93,15 @@ const applyRouteQuery = () => {
 
 applyRouteQuery();
 
+// Preklik na zoznam, keď už je otvorený (zvonček, menu) — mení sa len adresa,
+// komponent ostáva. Vlastný zápis adresy z OrderIndex sa zhoduje so stavom a preskočí sa.
+watch(() => route.query, (query) => {
+    if (route.name !== PAGE_ORDER.ROUTE) return;
+    if (orderRouteSignature(query) === orderRouteSignature(orderRouteQuery(getQuery.value))) return;
+    applyRouteQuery(true);
+    filterKey.value++;
+});
+
 watch(getQuery, () => {
     // Zmena filtra začína od prvej strany — stará ?page=N by mohla byť mimo rozsahu.
     ordersStore.resetUrl();
@@ -106,6 +120,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <ListFilter id="order-filters" :search="search" :selects="selects" :chips="chips" chips-mode="single"
+    <ListFilter :key="filterKey" id="order-filters" :search="search" :selects="selects" :chips="chips" chips-mode="single"
         :initial="initial" />
 </template>

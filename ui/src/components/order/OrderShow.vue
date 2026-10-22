@@ -143,7 +143,7 @@ watch(() => route.query.expedicia, (value) => { if (value && isLoaded.value) ite
                 <div class="mb-4 flex flex-wrap items-start gap-2">
                     <router-link v-if="getOrder.permissions?.update?.allowed" :to="'/vyroba/'+orderId"
                         class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-                        Komunikácia, grafika a výroba
+                        Komunikácia so zákazníkom
                         <span v-if="getOrder.unread_messages" class="ml-2 rounded-full bg-red-600 px-2 text-xs font-bold text-white"
                             :title="'Neprečítané správy zákazníka: '+getOrder.unread_messages">{{ getOrder.unread_messages }}</span>
                     </router-link>

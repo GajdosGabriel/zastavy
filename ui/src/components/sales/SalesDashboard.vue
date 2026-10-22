@@ -62,7 +62,7 @@ onMounted(()=>load());
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gray-50 px-5 py-3">
                         <div>
                             <h2 class="text-sm font-semibold text-gray-700">Plán výroby</h2>
-                            <p class="mt-0.5 text-xs text-gray-600">Novú zákazku otvoríte cez „Komunikácia, grafika a výroba“ v detaile objednávky.</p>
+                            <p class="mt-0.5 text-xs text-gray-600">Novú zákazku otvoríte cez „Komunikácia so zákazníkom“ v detaile objednávky.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-3">
                             <label class="flex min-h-9 cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700">

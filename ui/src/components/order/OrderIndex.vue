@@ -13,6 +13,7 @@ import tableRowOrders from "./component/tableRowOrders.vue";
 import filterOrder from "./FilterOrder.vue";
 import iconStar from "../../components/icons/star.vue";
 import templateOrder from "../../models/templateOrder"
+import { orderRouteQuery } from "../../models/orderRouteQuery";
 import PaginationComponent from "../plugins/pagination.vue";
 import plus from '../icons/plus.vue';
 import PageHeader from '../layout/page/pageHeader.vue';
@@ -36,17 +37,8 @@ const router = useRouter();
 const page = Number(route.query.strana) || 1;
 ordersStore.url = page > 1 ? `${PAGE_ORDER.URL}?page=${page}` : PAGE_ORDER.URL;
 
-const ROUTE_PARAMS = { "status=": "status", "shippedAt=": "shippedAt", "bySearchInput=": "customer", "searchByProduct=": "product" };
-
 const listQuery = () => {
-      const query = {};
-      for (const item of getQuery.value) {
-            const split = item.indexOf("=") + 1;
-            const key = item.slice(0, split);
-            if (key === "isMarked=") query.marked = 1;
-            else if (ROUTE_PARAMS[key]) query[ROUTE_PARAMS[key]] = decodeURIComponent(item.slice(split));
-            else query.filter = key.slice(0, -1);
-      }
+      const query = orderRouteQuery(getQuery.value);
       const current = getPaginator.value?.current_page;
       if (current > 1) query.strana = current;
       return query;

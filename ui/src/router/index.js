@@ -21,7 +21,7 @@ const routes = [
     {path:'/predaj/ponuky',name:'sales.quotes.index',component:()=>import('../components/sales/QuoteIndex.vue'),meta:{title:'Cenové ponuky',requiresAuth:true}},
     {path:'/predaj/ponuky/nova',name:'sales.quote.create',component:()=>import('../components/sales/QuoteEditor.vue'),meta:{title:'Nová cenová ponuka',requiresAuth:true}},
     {path:'/predaj/ponuky/:id(\\d+)',name:'sales.quote',component:()=>import('../components/sales/QuoteEditor.vue'),meta:{title:'Cenová ponuka',requiresAuth:true}},
-    {path:'/vyroba/:orderId',name:'production.show',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Plán výroby',requiresAuth:true}},
+    {path:'/vyroba/:orderId',name:'production.show',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Komunikácia so zákazníkom',requiresAuth:true}},
     {path:'/grafika/:uuid',name:'artwork.public',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Schválenie grafiky'}},
     // Odkaz z e-mailov objednávky; /grafika/:uuid ostáva pre už rozoslané odkazy.
     {path:'/objednavka/:uuid/spravy',name:'order.messages.public',component:()=>import('../components/sales/ProductionView.vue'),meta:{title:'Správy k objednávke'}},

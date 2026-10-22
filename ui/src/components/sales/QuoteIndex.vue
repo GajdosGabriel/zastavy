@@ -9,6 +9,8 @@ async function load(page=1){busy.value=true;error.value='';try{
  const params=Object.fromEntries(Object.entries({...filters.value,page}).filter(([,v])=>v!==''&&v!==null));
  router.replace({query:{...params,page:page>1?page:undefined}});
  quotes.value=(await axios.get('/sales-quotes',{params})).data;}catch(e){error.value=salesError(e);}finally{busy.value=false;}}
+// Preklik na otvorený zoznam (zvonček) mení len adresu — stav prevezmi z nej.
+watch(()=>route.query.status??'',status=>{if(status!==filters.value.status){filters.value.status=status;load();}});
 let timer;watch(()=>filters.value.search,()=>{clearTimeout(timer);timer=setTimeout(()=>load(),350);});
 onMounted(()=>load(Number(route.query.page)||1));
 </script>

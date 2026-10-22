@@ -134,7 +134,7 @@ onBeforeUnmount(() => {
 
                   <ul v-if="items.length" class="divide-y divide-slate-100">
                         <li v-for="item in items" :key="item.key">
-                              <router-link :to="item.to"
+                              <router-link :to="item.to" @click="open = false"
                                     class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition hover:bg-slate-50 hover:text-blue-700">
                                     <span class="h-2.5 w-2.5 shrink-0 rounded-full" :class="item.tone" />
                                     <span class="min-w-0 flex-1">{{ item.text }}</span>
@@ -143,7 +143,7 @@ onBeforeUnmount(() => {
                         </li>
                   </ul>
 
-                  <router-link v-if="hasSales" :to="{ name: 'sales.index' }"
+                  <router-link v-if="hasSales" :to="{ name: 'sales.index' }" @click="open = false"
                         class="flex items-center justify-between border-t border-slate-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800 transition hover:bg-blue-100">
                         Ponuky a plán výroby
                         <span>→</span>
