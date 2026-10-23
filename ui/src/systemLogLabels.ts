@@ -54,6 +54,7 @@ const mailTemplates: Record<string, { label: string; description: string }> = {
       OrderReturnProcessed: { label: 'Vybavenie vratky', description: 'Odchádza zákazníkovi po vybavení vratky.' },
       CouponIssued: { label: 'Zľavový kupón', description: 'Odchádza zákazníkovi s kupónom na ďalší nákup.' },
       CustomerReviewDigest: { label: 'Prehľad zákazníkov na kontrolu', description: 'Súhrnný e-mail pre obchod.' },
+      LogErrorsFound: { label: 'Chyby v logu', description: 'Súhrn opraviteľných chýb z laravel.log pre správcu systému.' },
       ResetPassword: { label: 'Obnovenie hesla', description: 'Odkaz na nastavenie nového hesla.' },
       UserInvited: { label: 'Pozvánka používateľa', description: 'Prístupové údaje k novému účtu.' },
 };

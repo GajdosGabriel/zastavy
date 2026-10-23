@@ -152,4 +152,51 @@ return [
         'body_days' => (int) env('ORDER_EMAIL_BODY_DAYS', 730),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Hlásenie chýb z laravel.log e-mailom
+    |--------------------------------------------------------------------------
+    |
+    | Príkaz logs:report-errors číta každých 10 minút prírastok logu a chyby
+    | (ERROR a vyššie), ktoré sa dajú opraviť v systéme, pošle jedným
+    | súhrnným mailom. Komu: LOG_REPORT_EMAIL (zoznam oddelený čiarkou),
+    | inak používateľom s rolou nižšie.
+    |
+    | `ignore` je šum, s ktorým sa nedá nič urobiť — výpadky siete a cudzích
+    | služieb, neexistujúce schránky zákazníkov, preklepy v artisan
+    | príkazoch. Podreťazec sa hľadá v správe aj v triede výnimky (bez ohľadu
+    | na veľkosť písmen). Záznamy z prostredí v `skip_environments` (testy
+    | lokálne píšu do toho istého súboru) sa preskočia celé.
+    |
+    */
+
+    'report' => [
+        'enabled' => (bool) env('LOG_REPORT_ENABLED', true),
+        'emails' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('LOG_REPORT_EMAIL', ''))
+        ))),
+        'roles' => ['super-admin'],
+        'path' => storage_path('logs/laravel.log'),
+        // storage/app je verzovaný, storage/logs nie.
+        'state' => storage_path('logs/log-report.json'),
+        'max_bytes' => 5 * 1024 * 1024,
+        'skip_environments' => ['testing'],
+        'ignore' => [
+            'Illuminate\Http\Client\ConnectionException',
+            'cURL error',
+            'Could not connect',
+            'timed out',
+            'nedostupn',
+            // 5xx a 429 z cudzej služby (Account, register, OpenAI) — u nich nič neopravíme.
+            'HTTP request returned status code 5',
+            'HTTP request returned status code 429',
+            // Zákazník zadal neexistujúcu alebo plnú schránku.
+            'User unknown',
+            'Mailbox full',
+            'Recipient address rejected',
+            'Symfony\Component\Console\Exception\\',
+        ],
+    ],
+
 ];

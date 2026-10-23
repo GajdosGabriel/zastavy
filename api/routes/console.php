@@ -38,6 +38,9 @@ if (config('operations.enabled')) {
     Schedule::command('ops:check')->everyFiveMinutes()->withoutOverlapping(10);
 }
 
+// Opraviteľné chyby z laravel.log e-mailom (config/logging.php → report).
+Schedule::command('logs:report-errors')->everyTenMinutes()->withoutOverlapping(10);
+
 // Denník udalostí drží len posledných 30 dní (config/logging.php).
 Schedule::command('model:prune', ['--model' => \App\Models\SystemLog::class])->dailyAt('03:25');
 
