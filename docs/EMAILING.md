@@ -19,7 +19,7 @@ prebehol 21. 10. 2026 (`mailing:import` v Accounte, potom sa lokálne tabuľky
 - **Udržiavajú adresár zákazníkov** v Accounte (`AccountMailing::syncContact`,
   fronta `SyncMailingContact`). Každý e-mail zákazníka je kontakt so štítkami
   `customer` (má objednávku okrem konceptu a storna), typ zákazníka
-  (`municipality`, `school`, `company`, `person`) a `account` (má prihlásenie).
+  (`municipality`, `school`, `company`, `person`) a `account` (aspoň raz sa prihlásil – používateľa má po importe každý zákazník).
   Atribúty `{meno}` a `{firma}` sa dajú použiť v texte kampane. Zákazníci dávajú
   súhlas s ponukami pri objednávke, preto ide kontakt so súhlasom. Stav sa pošle
   pri zmene zákazníka, objednávky alebo účtu. Keď adresa už nepatrí žiadnemu

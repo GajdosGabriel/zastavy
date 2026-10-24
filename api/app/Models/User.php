@@ -136,11 +136,18 @@ class User extends Authenticatable implements HasLocalePreference
      */
     public function recordLogin(?string $ip = null): void
     {
+        $first = ! $this->last_login_at;
+
         static::withoutTimestamps(fn () => $this->forceFill([
             'last_login_at' => now(),
             'last_login_ip' => $ip,
             'login_count'   => ($this->login_count ?? 0) + 1,
         ])->saveQuietly());
+
+        // Prvé prihlásenie zákazníka = štítok „prihlásil sa“ v adresári Accountu.
+        if ($first && $this->customer_id) {
+            app(AccountMailing::class)->syncContact(Customer::withTrashed()->find($this->customer_id)?->email);
+        }
     }
 
     public function customer()
