@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Services\Account\AccountMailing;
 use App\Support\AddressFormatter;
 use App\Traits\HasModelStatus;
 use App\Traits\HasNotices;
@@ -45,6 +46,18 @@ class Order extends Model
             if (! $order->delivery_token) {
                 $order->delivery_token = Str::random(64);
                 $order->delivery_token_expires_at = now()->addDays(self::DELIVERY_TOKEN_DAYS);
+            }
+        });
+
+        // Štítok „objednal“ v adresári Accountu závisí od objednávok zákazníka.
+        static::saved(function (Order $order) {
+            if ($order->wasRecentlyCreated || $order->wasChanged(['status', 'customer_id'])) {
+                $mailing = app(AccountMailing::class);
+                $mailing->syncContact(Customer::withTrashed()->find($order->customer_id)?->email);
+
+                if ($order->wasChanged('customer_id') && $order->getOriginal('customer_id')) {
+                    $mailing->syncContact(Customer::withTrashed()->find($order->getOriginal('customer_id'))?->email);
+                }
             }
         });
     }

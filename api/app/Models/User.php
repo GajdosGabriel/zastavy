@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\ModelStatus;
 use App\Notifications\ResetPassword;
+use App\Services\Account\AccountMailing;
 use App\Traits\HasModelStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -71,6 +72,20 @@ class User extends Authenticatable implements HasLocalePreference
                 $user->uuid = (string) Str::uuid();
             }
         });
+
+        // Štítok „má účet“ v adresári Accountu patrí zákazníkovi, nie používateľovi.
+        static::saved(function (User $user) {
+            if ($user->wasRecentlyCreated || $user->wasChanged('customer_id')) {
+                $mailing = app(AccountMailing::class);
+                $mailing->syncContact(Customer::withTrashed()->find($user->customer_id)?->email);
+
+                if ($user->wasChanged('customer_id') && $user->getOriginal('customer_id')) {
+                    $mailing->syncContact(Customer::withTrashed()->find($user->getOriginal('customer_id'))?->email);
+                }
+            }
+        });
+        static::deleted(fn (User $user) => app(AccountMailing::class)
+            ->syncContact(Customer::withTrashed()->find($user->customer_id)?->email));
     }
 
     /**

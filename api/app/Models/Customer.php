@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\CustomerType;
 use App\Enums\ModelStatus;
 use App\Models\Mark;
+use App\Services\Account\AccountMailing;
 use App\Services\Customers\CustomerTypeClassifier;
 use App\Casts\IcoFormater;
 use App\Casts\DicFormater;
@@ -51,6 +52,20 @@ class Customer extends Model
                 );
             }
         });
+
+        // Adresár v Accounte: nový zákazník, zmena adresy, mena alebo typu, zmazanie.
+        static::saved(function (Customer $customer) {
+            if ($customer->wasRecentlyCreated || $customer->wasChanged(['email', 'name', 'company', 'type'])) {
+                $mailing = app(AccountMailing::class);
+                $mailing->syncContact($customer->email);
+
+                if ($customer->wasChanged('email')) {
+                    $mailing->syncContact($customer->getOriginal('email'));
+                }
+            }
+        });
+        static::deleted(fn (Customer $customer) => app(AccountMailing::class)->syncContact($customer->email));
+        static::restored(fn (Customer $customer) => app(AccountMailing::class)->syncContact($customer->email));
     }
 
     public function orders()

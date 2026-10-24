@@ -127,6 +127,44 @@ class AccountClient
     }
 
     /**
+     * Štítky kontaktov (segmenty) pre výber adresátov kampane v Accounte.
+     *
+     * @param  array<int, array{key: string, label: string, description?: string}>  $tags
+     */
+    public function registerMailingTags(array $tags): void
+    {
+        $this->assertWritesAllowed();
+
+        $this->request()->put('/api/v1/mailing/tags', ['tags' => $tags])->throw();
+    }
+
+    /**
+     * Adresár v Accounte (max. 1000 naraz). Štítky a atribúty nahradia
+     * doterajšie; súhlas sa raz udelí a neodoberie, odhláseného nevráti.
+     *
+     * @param  array<int, array<string, mixed>>  $contacts
+     * @return array{added: int, updated: int}
+     */
+    public function upsertMailingContacts(array $contacts): array
+    {
+        $this->assertWritesAllowed();
+
+        return $this->request()->post('/api/v1/mailing/contacts', ['contacts' => $contacts])->throw()->json('data');
+    }
+
+    /**
+     * Adresa už nepatrí žiadnemu zákazníkovi – Account zmaže kontakt.
+     *
+     * @param  array<int, string>  $emails
+     */
+    public function removeMailingContacts(array $emails): int
+    {
+        $this->assertWritesAllowed();
+
+        return (int) $this->request()->post('/api/v1/mailing/contacts/remove', ['emails' => $emails])->throw()->json('data.removed');
+    }
+
+    /**
      * Poistka: mimo produkcie sa posiela len do lokálnej inštancie Accountu
      * (localhost, *.local, *.test), inak len s ACCOUNT_ALLOW_REMOTE_WRITES.
      */

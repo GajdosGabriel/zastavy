@@ -43,6 +43,9 @@ class AccountMailingTest extends TestCase
             'account.test/api/v1/mailing/events' => Http::response(['data' => ['queued' => 1]], 202),
             'account.test/api/v1/mailing/events/cancel' => Http::response(['data' => ['skipped' => 1]]),
             'account.test/api/v1/mailing/triggers' => Http::response(['data' => []]),
+            'account.test/api/v1/mailing/tags' => Http::response(['data' => []]),
+            'account.test/api/v1/mailing/contacts/remove' => Http::response(['data' => ['removed' => 1]]),
+            'account.test/api/v1/mailing/contacts' => Http::response(['data' => ['added' => 1, 'updated' => 0]], 201),
         ]);
 
         $p = Product::create(['name' => 'Flag', 'code' => 'FLAG', 'published' => true, 'vat' => 23, 'unit_value' => 'ks']);
@@ -116,6 +119,53 @@ class AccountMailingTest extends TestCase
         Http::assertSent(fn (Request $request) => $request->url() === 'http://account.test/api/v1/mailing/triggers'
             && collect($request['triggers'])->pluck('key')->all() === ['order_created', 'shipping_dispatched', 'order_completed', 'order_cancelled']
             && $request['triggers'][0]['quote_kind'] === 'order.OrderCreated');
+    }
+
+    public function test_registracia_posle_aj_stitky_zakaznikov(): void
+    {
+        $this->artisan('emailing:register-triggers')->assertSuccessful();
+
+        Http::assertSent(fn (Request $request) => $request->url() === 'http://account.test/api/v1/mailing/tags'
+            && collect($request['tags'])->pluck('key')->all() === ['customer', 'municipality', 'school', 'company', 'person', 'account']);
+    }
+
+    public function test_objednavka_posle_zakaznika_do_adresara_so_suhlasom(): void
+    {
+        $order = $this->order();
+        $order->update(['status' => OrderStatus::Processing]);
+
+        Http::assertSent(fn (Request $request) => $request->url() === 'http://account.test/api/v1/mailing/contacts'
+            && $request['contacts'][0]['email'] === 'buyer@example.test'
+            && in_array('customer', $request['contacts'][0]['tags'], true)
+            && in_array($order->customer->type->value, $request['contacts'][0]['tags'], true)
+            && $request['contacts'][0]['attributes']['firma'] === 'Test buyer'
+            && filled($request['contacts'][0]['permission_note']));
+    }
+
+    public function test_zmazany_zakaznik_zmizne_z_adresara(): void
+    {
+        $customer = $this->order()->customer;
+
+        $customer->delete();
+
+        Http::assertSent(fn (Request $request) => $request->url() === 'http://account.test/api/v1/mailing/contacts/remove'
+            && $request['emails'] === ['buyer@example.test']);
+    }
+
+    public function test_doplnenie_adresara_posle_vsetkych_zakaznikov(): void
+    {
+        config()->set('account.mailing', false);
+        $this->order();
+        config()->set('account.mailing', true);
+
+        $this->artisan('account:sync-mailing-contacts', ['--dry-run' => true])
+            ->expectsOutputToContain('Poslalo by sa kontaktov: 1')->assertSuccessful();
+        Http::assertNothingSent();
+
+        $this->artisan('account:sync-mailing-contacts')->assertSuccessful();
+
+        Http::assertSent(fn (Request $request) => $request->url() === 'http://account.test/api/v1/mailing/contacts'
+            && $request['contacts'][0]['email'] === 'buyer@example.test');
     }
 
     private function order(): Order

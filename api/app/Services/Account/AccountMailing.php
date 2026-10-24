@@ -2,8 +2,12 @@
 
 namespace App\Services\Account;
 
+use App\Enums\CustomerType;
 use App\Enums\MailingTrigger;
+use App\Enums\OrderStatus;
 use App\Jobs\ReportMailingEvent;
+use App\Jobs\SyncMailingContact;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Shipping;
 use App\Support\OrderThread;
@@ -11,7 +15,8 @@ use Carbon\Carbon;
 
 /**
  * Emailing (kampane a automatizácie) beží v Accounte – zastavy len hlásia
- * udalosti objednávok s premennými do textu.
+ * udalosti objednávok s premennými do textu a udržiavajú adresár zákazníkov
+ * (štítky: objednal, typ zákazníka, má účet).
  *
  * Kľúč udalosti je `order:{uuid}` (pri zásielke `order:{uuid}:shipping:{id}`),
  * takže opakované hlásenie nič nezdvojí. Referencia je tá istá ako pri
@@ -52,6 +57,76 @@ class AccountMailing
         }
 
         ReportMailingEvent::dispatch(null, $order->uuid)->afterCommit();
+    }
+
+    /**
+     * Adresu treba v adresári Accountu prepočítať (zákazník vznikol, zmenil
+     * sa, objednal, bol zmazaný). Stav poskladá až job – pozri contact().
+     */
+    public function syncContact(?string $email): void
+    {
+        $email = mb_strtolower(trim((string) $email));
+
+        if ($email === '' || ! app(AccountClient::class)->mailingEnabled()) {
+            return;
+        }
+
+        SyncMailingContact::dispatch($email)->afterCommit();
+    }
+
+    /**
+     * Kontakt pre adresár v Accounte zo všetkých zákazníkov s touto adresou,
+     * alebo null, ak adresa nepatrí žiadnemu zákazníkovi (kontakt sa zmaže).
+     *
+     * Zákazníci dávajú pri objednávke súhlas s ponukami – kontakt ide so
+     * súhlasom od založenia prvého zákazníka s touto adresou.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function contact(string $email): ?array
+    {
+        $email = mb_strtolower(trim($email));
+        $customers = Customer::query()->whereRaw('LOWER(email) = ?', [$email])->withCount('users')->oldest('id')->get();
+
+        if ($customers->isEmpty()) {
+            return null;
+        }
+
+        $ordered = Order::query()->whereIn('customer_id', $customers->modelKeys())
+            ->whereNotIn('status', [OrderStatus::Draft->value, OrderStatus::Cancelled->value])
+            ->exists();
+        // Údaje do textu z naposledy upraveného zákazníka.
+        $latest = $customers->sortByDesc(fn (Customer $c) => $c->getRawOriginal('updated_at'))->first();
+        $first = $customers->first();
+
+        return [
+            'email' => $email,
+            'name' => trim((string) $latest->name) ?: null,
+            'tags' => array_values(array_unique(array_filter([
+                $ordered ? 'customer' : null,
+                ...$customers->map(fn (Customer $c) => $c->type?->value)->all(),
+                $customers->sum('users_count') > 0 ? 'account' : null,
+            ]))),
+            'attributes' => array_filter([
+                'meno' => trim((string) $latest->name) ?: null,
+                'firma' => trim((string) $latest->company) ?: null,
+            ]),
+            'permission_note' => 'Zákazník Zástav – súhlas pri objednávke',
+            'permission_at' => Carbon::parse($first->getRawOriginal('created_at') ?? now())->toIso8601String(),
+        ];
+    }
+
+    /** Štítky pre výber adresátov v Accounte. */
+    public function tags(): array
+    {
+        return [
+            ['key' => 'customer', 'label' => 'Objednal', 'description' => 'Má aspoň jednu objednávku (okrem konceptu a storna).'],
+            ['key' => CustomerType::Municipality->value, 'label' => 'Obec', 'description' => 'Obec alebo mesto.'],
+            ['key' => CustomerType::School->value, 'label' => 'Škola'],
+            ['key' => CustomerType::Company->value, 'label' => 'Firma / organizácia', 'description' => 'Firma, farnosť, združenie a iné organizácie s IČO.'],
+            ['key' => CustomerType::Person->value, 'label' => 'Súkromná osoba'],
+            ['key' => 'account', 'label' => 'Má účet', 'description' => 'Zákazník sa vie prihlásiť do e-shopu.'],
+        ];
     }
 
     /** Udalosti pre výber spúšťača v Accounte. */
