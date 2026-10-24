@@ -86,11 +86,7 @@ class AccountMailing
     public function contact(string $email): ?array
     {
         $email = mb_strtolower(trim($email));
-        // Používateľa má po importe zo starého e-shopu každý zákazník – „účet“
-        // je až ten, kto sa do e-shopu naozaj prihlásil.
-        $customers = Customer::query()->whereRaw('LOWER(email) = ?', [$email])
-            ->withCount(['users' => fn ($q) => $q->whereNotNull('last_login_at')])
-            ->oldest('id')->get();
+        $customers = Customer::query()->whereRaw('LOWER(email) = ?', [$email])->withCount('users')->oldest('id')->get();
 
         if ($customers->isEmpty()) {
             return null;
@@ -129,7 +125,7 @@ class AccountMailing
             ['key' => CustomerType::School->value, 'label' => 'Škola'],
             ['key' => CustomerType::Company->value, 'label' => 'Firma / organizácia', 'description' => 'Firma, farnosť, združenie a iné organizácie s IČO.'],
             ['key' => CustomerType::Person->value, 'label' => 'Súkromná osoba'],
-            ['key' => 'account', 'label' => 'Prihlásil sa do e-shopu', 'description' => 'Zákazník sa aspoň raz prihlásil do svojho účtu.'],
+            ['key' => 'account', 'label' => 'Má účet', 'description' => 'Zákazník sa vie prihlásiť do e-shopu.'],
         ];
     }
 
