@@ -61,3 +61,7 @@ Thumbs.db
 
 # Súkromné zákaznícke prílohy a grafické podklady sú runtime dáta.
 **/storage/app/private/
+
+# Zálohy databázy nepatria do repozitára (je verejný)
+*.sql
+*.sql.gz

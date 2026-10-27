@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule ^$ ui/dist/ [L]
+RewriteRule (.*) ui/dist/$1 [L]
