@@ -64,6 +64,22 @@ Artisan::command('cache:prune-expired', function () {
 })->purpose('Vymaže exspirované riadky databázovej cache (počítadlá throttle, zámky)');
 Schedule::command('cache:prune-expired')->hourly()->withoutOverlapping(10);
 
+Artisan::command('notifications:prune', function () {
+    $deleted = 0;
+    foreach ([
+        // Prečítané po read_days, neprečítané až po unread_days (config/alerts.php).
+        fn ($q) => $q->whereNotNull('read_at')->where('created_at', '<', now()->subDays(max(1, (int) config('alerts.read_days', 30)))),
+        fn ($q) => $q->whereNull('read_at')->where('created_at', '<', now()->subDays(max(1, (int) config('alerts.unread_days', 90)))),
+    ] as $scope) {
+        do {
+            $batch = $scope(DB::table('notifications'))->limit(5000)->delete();
+            $deleted += $batch;
+        } while ($batch > 0);
+    }
+    $this->info('Zmazané staré upozornenia: '.$deleted);
+})->purpose('Vymaže staré upozornenia zo zvončeka (prečítané po 30, neprečítané po 90 dňoch)');
+Schedule::command('notifications:prune')->dailyAt('03:30')->withoutOverlapping(10);
+
 // Tokeny staršie ako sanctum.expiration (30 dní) už neplatia.
 Schedule::command('sanctum:prune-expired', ['--hours' => 24])->dailyAt('03:45');
 

@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Notifications\OrderMessageReceived;
 use App\Notifications\OrderMessageSent;
 use App\Services\SalesAccess;
+use App\Services\StaffAlerts;
 use App\Support\OrderThread;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -223,6 +224,7 @@ class ProductionController extends Controller
     private function notifyStaff(OrderMessage $message): void
     {
         Notification::send(User::role('super-admin')->get(), (new OrderMessageReceived($message))->afterCommit());
+        StaffAlerts::orderMessage($message);
     }
 
     /** Správa obsluhy zákazníkovi; s `artwork_version` zároveň odošle aktuálny návrh na schválenie. */

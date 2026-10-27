@@ -8,6 +8,7 @@ use App\Models\OrderMessage;
 use App\Models\OrderProduction;
 use App\Models\SalesQuote;
 use App\Models\User;
+use App\Notifications\StaffAlert;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -101,6 +102,8 @@ class DashboardService
             'quotes_unread'      => $sales ? SalesQuote::whereHas('messages', fn ($q) => $q->unread())->count() : null,
             'production_overdue' => $sales ? $this->overdueProduction($user) : null,
             'messages_unread'    => $sales ? OrderMessage::unreadFor($user)->count() : null,
+            // Neprečítané v histórii (zvonček → História); nie je súčasťou čísla na zvončeku.
+            'alerts_unread'      => $user->unreadNotifications()->where('type', StaffAlert::class)->count(),
         ];
     }
 

@@ -9,6 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use App\Notifications\OrderMessageReceived;
 use App\Notifications\OrderMessageSent;
+use App\Notifications\StaffAlert;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
@@ -111,6 +112,7 @@ class OrderMessagesTest extends TestCase
         // Opakované schválenie je idempotentné a novú udalosť nevytvorí.
         $this->postJson('/api/public-artworks/'.$o->uuid.'/decision', ['action' => 'approve', 'version' => 1, 'name' => 'Buyer', 'confirm' => true], $headers)->assertOk()->assertJsonCount(4, 'messages');
         Notification::assertSentToTimes($admin, OrderMessageReceived::class, 3);
+        Notification::assertSentToTimes($admin, StaffAlert::class, 3);
         $this->assertStringContainsString('schválil', (string) (new OrderMessageReceived(OrderMessage::latest('id')->first()))->toMail($admin)->render());
     }
 

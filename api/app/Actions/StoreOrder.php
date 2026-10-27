@@ -12,6 +12,7 @@ use App\Models\ShippingMethod;
 use App\Notifications\OrderCreated;
 use App\Services\Delivery\DeliveryAddressService;
 use App\Services\EmailOrders\EmailOrderInbox;
+use App\Services\StaffAlerts;
 use Illuminate\Http\Request;
 use App\Contracts\StoreOrderContract;
 use App\Models\PaymentMethod;
@@ -270,6 +271,7 @@ class StoreOrder implements StoreOrderContract
             }
 
             Notification::send(User::role('super-admin')->get(), $notification);
+            StaffAlerts::orderCreated($order);
         } catch (\Throwable $e) {
             // Zlyhanie notifikácie nesmie zhodiť vytvorenie objednávky.
             report($e);

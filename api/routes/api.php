@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\PublicImageController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\Dashboard\DashboardController;
+use App\Http\Controllers\Api\Dashboard\StaffAlertController;
 use App\Http\Controllers\Api\Dashboard\OrderAttachmentController;
 use App\Http\Controllers\Api\Dashboard\OrderController;
 use App\Http\Controllers\Api\Dashboard\OrderMarkController;
@@ -116,6 +117,9 @@ Route::post('/coupons/validate', [CouponController::class, 'validate'])
 Route::middleware(['auth:sanctum', DashboardMiddleware::class])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/dashboard/notifications', [DashboardController::class, 'notifications'])->name('dashboard.notifications');
+    Route::get('/dashboard/alerts', [StaffAlertController::class, 'index'])->name('dashboard.alerts.index');
+    Route::post('/dashboard/alerts/read-all', [StaffAlertController::class, 'readAll'])->name('dashboard.alerts.read-all');
+    Route::post('/dashboard/alerts/{id}/read', [StaffAlertController::class, 'read'])->whereUuid('id')->name('dashboard.alerts.read');
     Route::get('/orders/statistics', [OrderController::class, 'statistics'])->name('orders.statistics');
 
     Route::post('orders/{order}/shippings/preview', [OrderShippingController::class, 'preview']);

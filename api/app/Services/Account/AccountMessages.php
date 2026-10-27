@@ -5,6 +5,7 @@ namespace App\Services\Account;
 use App\Listeners\SystemLogSubscriber;
 use App\Models\Order;
 use App\Models\OrderMessage;
+use App\Services\StaffAlerts;
 use App\Services\SystemLog\Recorder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -58,7 +59,7 @@ class AccountMessages
         $paths = [];
 
         try {
-            DB::transaction(function () use ($order, $message, &$paths) {
+            $row = DB::transaction(function () use ($order, $message, &$paths) {
                 $row = OrderMessage::create([
                     'order_id' => $order->id,
                     'direction' => 'customer',
@@ -71,11 +72,15 @@ class AccountMessages
                 foreach ($message['attachments'] ?? [] as $file) {
                     AccountAttachments::store($row, $file, 'order-messages/'.$row->order_id, $paths);
                 }
+
+                return $row;
             });
         } catch (\Throwable $e) {
             Storage::disk('local')->delete($paths);
             throw $e;
         }
+
+        StaffAlerts::orderMessage($row);
 
         Recorder::info('mail', 'customer_replied', 'Odpoveď zákazníka e-mailom', status: 'received',
             recipient: $message['from'] ?? null, context: ['order' => $order->uuid, 'message' => $message['id'] ?? null]);

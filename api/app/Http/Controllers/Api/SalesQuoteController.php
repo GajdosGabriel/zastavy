@@ -21,6 +21,7 @@ use App\Services\OrderNumberService;
 use App\Services\QuoteNumberService;
 use App\Services\QuotePdf;
 use App\Services\SalesAccess;
+use App\Services\StaffAlerts;
 use App\Services\SystemLog\Activity;
 use App\Support\Media;
 use App\Support\OrderThread;
@@ -91,6 +92,7 @@ class SalesQuoteController extends Controller
                     } $paths[] = $path;
                     $quote->attachments()->create(['disk' => 'local', 'path' => $path, 'name' => $file->getClientOriginalName(), 'mime' => $file->getMimeType(), 'size' => $file->getSize()]);
                 }
+                StaffAlerts::quoteRequested($quote);
 
                 return ['uuid' => $quote->uuid, 'token' => $token];
             });
@@ -332,6 +334,7 @@ class SalesQuoteController extends Controller
                 + ($totals ? ['total_net' => $totals['net'], 'total_gross' => $totals['gross']] : []));
             $order->notifyCustomer(new OrderCreated($order));
             Notification::send(User::role('super-admin')->get(), (new OrderCreated($order))->afterCommit());
+            StaffAlerts::orderCreated($order);
 
             return ['order_uuid' => $order->uuid];
         }, 3);
@@ -407,6 +410,7 @@ class SalesQuoteController extends Controller
     private function notifyStaff(SalesQuoteMessage $message): void
     {
         Notification::send(User::role('super-admin')->get(), (new QuoteMessageReceived($message))->afterCommit());
+        StaffAlerts::quoteMessage($message);
     }
 
     public function file(Request $request, string $uuid, int $attachment)
