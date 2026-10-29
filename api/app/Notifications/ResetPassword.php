@@ -23,8 +23,8 @@ class ResetPassword extends Notification implements ShouldQueue
             . '?token=' . urlencode($this->token)
             . '&email=' . urlencode($notifiable->getEmailForPasswordReset());
 
+        // Technický mail: odosielateľ noreply@ (config mail.from), odpoveď na obchod@.
         return (new \Illuminate\Notifications\Messages\MailMessage)
-            ->from('obchod@zastavy-vlajky.sk', 'Gajdoš Gabriel – Reprezent')
             ->subject('Obnovenie hesla')
             ->view('emails.resetPassword', [
                 'url'  => $url,
