@@ -68,6 +68,38 @@ const items = computed(() => {
 });
 
 const total = computed(() => items.value.reduce((sum, item) => sum + Number(counts.value?.[item.key] || 0), 0));
+
+// Ako v Messengeri: odznak ukazuje len to, čo pribudlo od posledného otvorenia zvončeka.
+// Otvorenie ho vynuluje, položky v zozname ostávajú. Pamätá sa v prehliadači pre každého používateľa.
+const seenKey = computed(() => `bell-seen:${getUser.value?.id ?? ''}`);
+const seen = ref<Record<string, number>>({});
+const fresh = ref<string[]>([]);
+const readSeen = () => {
+      try { seen.value = JSON.parse(localStorage.getItem(seenKey.value) || '{}') || {}; } catch { seen.value = {}; }
+};
+const writeSeen = () => {
+      try { localStorage.setItem(seenKey.value, JSON.stringify(seen.value)); } catch { /* bez úložiska sa len nepamätá */ }
+};
+const newCount = (key: string) => Math.max(0, Number(counts.value?.[key] || 0) - Number(seen.value[key] || 0));
+const unseen = computed(() => items.value.reduce((sum, item) => sum + newCount(item.key), 0));
+const unseenAlerts = computed(() => newCount('alerts_unread'));
+// Keď niečo ubudne (vybavené), znížime aj „videné“, aby sa ďalší prírastok ukázal celý.
+const shrinkSeen = () => {
+      if (!counts.value) return;
+      let changed = false;
+      for (const key of Object.keys(seen.value)) {
+            const current = Number(counts.value[key] || 0);
+            if (seen.value[key] > current) { seen.value[key] = current; changed = true; }
+      }
+      if (changed) writeSeen();
+};
+const markSeen = () => {
+      if (!counts.value) return;
+      const added = items.value.filter((item) => newCount(item.key) > 0).map((item) => item.key);
+      fresh.value = [...new Set([...fresh.value, ...added])];
+      seen.value = Object.fromEntries(Object.entries(counts.value).map(([key, value]) => [key, Number(value || 0)]));
+      writeSeen();
+};
 // Ponuky a výrobu posiela API len obsluhe; pre ostatných je hodnota null.
 const hasSales = computed(() => counts.value?.production_overdue != null);
 
@@ -77,6 +109,8 @@ const load = async () => {
       try {
             counts.value = (await axiosInstance.get('/dashboard/notifications')).data.data;
             failed.value = false;
+            if (open.value) markSeen();
+            else shrinkSeen();
       } catch {
             // Zvonček je doplnok — pri výpadku ostane ticho a ponúkne skúsiť znova.
             failed.value = true;
@@ -104,6 +138,7 @@ const showTab = (value: 'todo' | 'history') => {
 
 const setUnread = (value: number) => {
       if (counts.value) counts.value = { ...counts.value, alerts_unread: Math.max(0, value) };
+      shrinkSeen();
 };
 
 // Kliknutie označí upozornenie ako prečítané; záznam ostáva v histórii.
@@ -131,6 +166,8 @@ const formatTime = (value: string) => new Date(value).toLocaleString('sk-SK', { 
 const toggle = () => {
       open.value = !open.value;
       if (open.value) {
+            fresh.value = [];
+            markSeen();
             load();
             if (tab.value === 'history') loadHistory();
       }
@@ -141,9 +178,12 @@ const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') open.value
 let timer: ReturnType<typeof setInterval> | undefined;
 
 watch(() => route.fullPath, () => (open.value = false));
+watch(seenKey, readSeen);
 watch(enabled, (value) => {
       counts.value = null;
       history.value = null;
+      fresh.value = [];
+      readSeen();
       if (value) load();
 }, { immediate: true });
 
@@ -163,17 +203,17 @@ onBeforeUnmount(() => {
       <div v-if="enabled" ref="root" class="relative mr-2 shrink-0">
             <button type="button"
                   class="relative flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-gray-200 focus:outline-none"
-                  :class="total ? 'text-red-600' : 'text-gray-600'"
-                  :aria-label="total ? `Upozornenia: ${total}` : 'Upozornenia'" :aria-expanded="open" @click="toggle">
+                  :class="unseen ? 'text-red-600' : 'text-gray-600'"
+                  :aria-label="unseen ? `Nové upozornenia: ${unseen}` : 'Upozornenia'" :aria-expanded="open" @click="toggle">
                   <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
                   </svg>
-                  <span v-if="total"
+                  <span v-if="unseen"
                         class="absolute -right-1 -top-1 min-w-5 rounded-full bg-red-600 px-1 text-center text-xs font-bold leading-5 text-white">
-                        {{ total > 99 ? '99+' : total }}
+                        {{ unseen > 99 ? '99+' : unseen }}
                   </span>
-                  <span v-else-if="alertsUnread" class="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-blue-600" aria-hidden="true" />
+                  <span v-else-if="unseenAlerts" class="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-blue-600" aria-hidden="true" />
             </button>
 
             <section v-if="open" aria-label="Upozornenia"
@@ -231,7 +271,8 @@ onBeforeUnmount(() => {
                   <ul v-if="items.length" class="divide-y divide-slate-100">
                         <li v-for="item in items" :key="item.key">
                               <router-link :to="item.to" @click="open = false"
-                                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition hover:bg-slate-50 hover:text-blue-700">
+                                    class="flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50 hover:text-blue-700"
+                                    :class="fresh.includes(item.key) ? 'bg-blue-50/40 font-semibold text-slate-900' : 'font-medium text-slate-600'">
                                     <span class="h-2.5 w-2.5 shrink-0 rounded-full" :class="item.tone" />
                                     <span class="min-w-0 flex-1">{{ item.text }}</span>
                                     <span class="text-slate-500" aria-hidden="true">→</span>
