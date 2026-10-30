@@ -275,6 +275,7 @@ Route::middleware(['auth:sanctum',DashboardMiddleware::class])->group(function()
  Route::post('orders/{order}/artworks/share',[\App\Http\Controllers\Api\ProductionController::class,'share']);
  Route::post('orders/{order}/messages',[\App\Http\Controllers\Api\ProductionController::class,'message']);
  Route::get('order-messages/unread',[\App\Http\Controllers\Api\ProductionController::class,'unread']);
+ Route::apiResource('message-templates',\App\Http\Controllers\Api\MessageTemplateController::class)->except(['show']);
 });
 
 // Odkazy z kampaní odoslaných ešte zo zastáv – emailing beží v Accounte.

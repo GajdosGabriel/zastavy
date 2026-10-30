@@ -1,7 +1,7 @@
 <script setup>
 import {ref,computed,watch,onMounted,onBeforeUnmount} from 'vue';import {useRoute,useRouter} from 'vue-router';import {storeToRefs} from 'pinia';import axios from '../../axiosInstance';
 import BaseLayout from '../layout/BaseLayout.vue';import buttonLink from '../layout/page/ButtonLink.vue';
-import CustomerFormFields from '../forms/CustomerFormFields.vue';import CustomOrderItem from '../forms/CustomOrderItem.vue';
+import CustomerFormFields from '../forms/CustomerFormFields.vue';import CustomOrderItem from '../forms/CustomOrderItem.vue';import MessageTemplatePicker from './MessageTemplatePicker.vue';
 import useCustomers from '../../store/StoreCustomers';import useErrors from '../../store/StoreErrors';
 import {salesError,shareUrl,downloadSales,quoteLabels,quoteTones,quoteMessageLabels,money,quoteLine,quoteTotals,netFromGross,VAT_RATES,SHIPPING_VAT} from '../../models/sales';
 const route=useRoute(),router=useRouter();
@@ -128,6 +128,7 @@ const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
                                     <p class="whitespace-pre-wrap text-gray-900">{{ m.body }}</p>
                                 </div>
                                 <form v-if="!closed" class="space-y-2" @submit.prevent="sendMessage">
+                                    <MessageTemplatePicker v-model="reply" />
                                     <label class="block text-sm font-semibold text-gray-700">Odpoveď zákazníkovi <span class="font-normal text-gray-500">(príde mu e-mailom s odkazom na ponuku)</span>
                                         <textarea v-model="reply" rows="3" maxlength="5000" required class="mt-1.5" :class="input" />
                                     </label>

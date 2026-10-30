@@ -1,5 +1,5 @@
 <script setup>
-import {ref,computed,onMounted} from 'vue';import {useRoute} from 'vue-router';import BaseLayout from '../layout/BaseLayout.vue';import OrderConversation from './OrderConversation.vue';import axios from '../../axiosInstance';import {salesError,tokenHeaders,messagesUrl,downloadSales,productionLabels} from '../../models/sales';
+import {ref,computed,onMounted} from 'vue';import {useRoute} from 'vue-router';import BaseLayout from '../layout/BaseLayout.vue';import OrderConversation from './OrderConversation.vue';import MessageTemplatePicker from './MessageTemplatePicker.vue';import axios from '../../axiosInstance';import {salesError,tokenHeaders,messagesUrl,downloadSales,productionLabels} from '../../models/sales';
 const route=useRoute(),staff=computed(()=>!!route.params.orderId),token=new URLSearchParams(route.hash.slice(1)).get('token')??'';
 const detail=ref(null),form=ref({status:'awaiting_artwork',production_due_at:'',delivery_due_at:'',materials:'',note:''}),file=ref(null),note=ref(''),name=ref(''),comment=ref(''),confirm=ref(false),error=ref(''),busy=ref(false),share=ref(''),uuid=ref(route.params.uuid),artText=ref('');
 const ART_TEXT='Dobrý deň, posielame Vám grafický návrh na schválenie.';
@@ -92,6 +92,7 @@ const success='rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-whit
                                         <p v-if="sentAt(v)" class="text-xs text-green-800">Odoslané zákazníkovi {{ new Date(sentAt(v)).toLocaleString('sk-SK') }}</p>
                                         <p v-else-if="index===0" class="text-xs font-semibold text-amber-700">Zatiaľ neodoslané zákazníkovi.</p>
                                         <form v-if="index===0 && v.status!=='approved'" @submit.prevent="sendArtwork" class="space-y-2 pt-1">
+                                            <MessageTemplatePicker v-model="artText"/>
                                             <label :class="label">Sprievodný text e-mailu<textarea v-model="artText" required maxlength="5000" rows="3" class="mt-1" :class="input"/></label>
                                             <button :disabled="busy || !artText.trim()" :class="success">{{ sentAt(v) ? 'Odoslať návrh znova' : 'Odoslať návrh zákazníkovi' }}</button>
                                         </form>

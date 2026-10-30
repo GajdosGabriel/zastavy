@@ -31,7 +31,7 @@ onMounted(()=>load());
 
                 <!-- Cenové dopyty a ponuky -->
                 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                    <h2 class="flex justify-between border-b border-gray-100 bg-gray-50 px-5 py-3 text-sm font-semibold text-gray-700">Cenové dopyty a ponuky <router-link to="/predaj/ponuky" class="font-normal text-blue-700 hover:underline">Všetky ponuky →</router-link></h2>
+                    <h2 class="flex justify-between border-b border-gray-100 bg-gray-50 px-5 py-3 text-sm font-semibold text-gray-700">Cenové dopyty a ponuky <span class="flex gap-4 font-normal"><router-link to="/predaj/sablony" class="text-blue-700 hover:underline">Šablóny správ</router-link><router-link to="/predaj/ponuky" class="text-blue-700 hover:underline">Všetky ponuky →</router-link></span></h2>
 
                     <div v-if="!quotes" role="status" class="animate-pulse space-y-3 px-5 py-5">
                         <span class="sr-only">Načítavam dopyty…</span>

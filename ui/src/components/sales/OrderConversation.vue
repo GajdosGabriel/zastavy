@@ -4,6 +4,7 @@
 // istej časovej osi ako bežné správy.
 import { ref } from 'vue';
 import axios from '../../axiosInstance';
+import MessageTemplatePicker from './MessageTemplatePicker.vue';
 import { salesError, tokenHeaders, downloadSales } from '../../models/sales';
 import { formatFileSize } from '../../models/functions';
 
@@ -101,6 +102,7 @@ async function download(message, file) {
                 <label v-if="!staff" class="block text-sm font-semibold text-gray-700">Vaše meno
                     <input v-model="name" required maxlength="150" class="mt-1" :class="field" />
                 </label>
+                <MessageTemplatePicker v-if="staff" v-model="body" />
                 <label class="block text-sm font-semibold text-gray-700">{{ staff ? 'Správa zákazníkovi' : 'Vaša správa' }}
                     <textarea v-model="body" required maxlength="5000" rows="4" class="mt-1" :class="field" />
                 </label>
