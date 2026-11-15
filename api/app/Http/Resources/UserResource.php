@@ -25,6 +25,11 @@ class UserResource extends JsonResource
             ];
         }
 
+        // Súhrn objednávok, oprávnenia a navigácia patria prihlásenému používateľovi.
+        // Pre kontakty vnorené v zákazníkovi či objednávke by to boli dotazy navyše
+        // na každý riadok zoznamu (a údaje, ktoré tam nikto nečíta).
+        $isSelf = (bool) $request->user('sanctum')?->is($this->resource);
+
         return [
             'id' => $this->id,
             'uuid' => $this->uuid,
@@ -42,14 +47,14 @@ class UserResource extends JsonResource
             'customer_id' => $this->customer_id,
             'status' => $this->statusData(),
             'active' => (bool) $this->active,
-            'order' => app(OrderStatisticsService::class)
-                ->navigationSummary($this->resource, app(OrderFilter::class))['orders'],
+            'order' => $this->when($isSelf, fn () => app(OrderStatisticsService::class)
+                ->navigationSummary($this->resource, app(OrderFilter::class))['orders']),
             'roles' => $this->getRoleNames(),
-            'can' => $this->buildCan(),
-            'navigation' => [
+            'can' => $this->when($isSelf, fn () => $this->buildCan()),
+            'navigation' => $this->when($isSelf, fn () => [
                 'main' => $this->mainNavigation(),
                 'userMenu' => $this->userMenuNavigation(),
-            ],
+            ]),
         ];
     }
 

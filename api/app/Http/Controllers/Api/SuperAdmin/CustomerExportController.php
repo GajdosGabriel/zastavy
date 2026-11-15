@@ -104,7 +104,7 @@ class CustomerExportController extends Controller
             fputcsv($handle, array_map(fn ($key) => self::ATTRIBUTES[$key], $attributes), ';');
 
             foreach ($customers as $customer) {
-                fputcsv($handle, array_map(fn ($key) => $this->resolveValue($customer, $key), $attributes), ';');
+                fputcsv($handle, array_map(fn ($key) => \App\Support\Csv::cell($this->resolveValue($customer, $key)), $attributes), ';');
             }
 
             fclose($handle);

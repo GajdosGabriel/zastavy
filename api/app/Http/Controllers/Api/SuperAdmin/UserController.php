@@ -192,6 +192,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         Gate::authorize('view', $user);
+        $this->authorizeUserScope(request()->user(), $user);
 
         return (new UserIndexResource($user->load(['roles', 'customer', 'latestOrder', 'lastUsedToken'])->loadCount('orders')))
             ->additional($this->formOptions($user));
@@ -200,7 +201,7 @@ class UserController extends Controller
     public function update(UserUpdateRequest $request, User $user)
     {
         Gate::authorize('update', $user);
-        $this->authorizeCustomerScope($request->user(), $user->customer_id);
+        $this->authorizeUserScope($request->user(), $user);
 
         $validated   = $request->validated();
         $roles       = $validated['roles'] ?? null;
@@ -208,13 +209,13 @@ class UserController extends Controller
         unset($validated['roles'], $validated['permissions']);
 
         $validated['name']     = $this->displayName($validated);
-        $validated['username'] = $validated['username'] ?: $this->plainName($validated);
+        $validated['username'] = ($validated['username'] ?? null) ?: $this->plainName($validated);
         $validated['slug']     = Str::slug($validated['username']);
 
         DB::transaction(function () use ($user, $validated, $roles, $permissions, $request) {
             $user->update($validated);
 
-            if ($request->user()->hasAnyRole(['admin', 'super-admin']) && is_array($roles)) {
+            if ($request->user()->hasRole('super-admin') && is_array($roles)) {
                 $this->syncRolesWithLog($user, $roles);
             }
 
@@ -248,6 +249,22 @@ class UserController extends Controller
         $name = trim($prefix . ' ' . $this->plainName($validated));
 
         return $postfix !== '' ? $name . ', ' . $postfix : $name;
+    }
+
+    /**
+     * Rozsah zhodný so zoznamom: kto nie je super-admin, vidí a upravuje seba
+     * a kontakty svojich zákazníkov. Účty obsluhy (bez zákazníka) sú mimo —
+     * zmenou e-mailu cudzieho účtu a obnovou hesla by sa dal prevziať.
+     */
+    private function authorizeUserScope(User $authUser, User $target): void
+    {
+        if ($authUser->hasRole('super-admin') || $authUser->is($target)) {
+            return;
+        }
+
+        abort_if($target->customer_id === null, 403, 'Účty obsluhy spravuje iba super-admin.');
+
+        $this->authorizeCustomerScope($authUser, $target->customer_id);
     }
 
     private function authorizeCustomerScope(User $authUser, ?int $customerId): void

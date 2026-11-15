@@ -4,10 +4,9 @@ namespace App\Actions;
 
 use App\Models\Order;
 use App\Services\CustomerService;
-use App\Contracts\StoreCheckoutContract;
 use Illuminate\Http\Request;
 
-class StoreCheckout implements StoreCheckoutContract
+class StoreCheckout
 {
     private Order $order;
 

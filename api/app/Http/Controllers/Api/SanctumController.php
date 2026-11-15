@@ -17,6 +17,11 @@ class SanctumController extends Controller
 {
     public function login(Request $request)
     {
+        // Pole namiesto reťazca by inak skončilo chybou 500 v Hash::check.
+        $request->validate([
+            'email' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'max:255'],
+        ]);
 
         // Ten istý e-mail môže mať viac kontaktných záznamov (tá istá osoba
         // objednáva za viac firiem). Prihlasuje sa najstarší — pôvodný účet.

@@ -18,7 +18,11 @@ class CustomerController extends Controller
     {
         Gate::authorize('viewAny', Customer::class);
 
-        $customers = Customer::with(['users', 'primaryUser', 'review'])->filter($customerFilter)->latest()->paginate();
+        $customers = Customer::with(['users.roles', 'primaryUser.roles', 'review', 'mark'])
+            ->withCount('orders')
+            ->filter($customerFilter)
+            ->latest()
+            ->paginate();
 
         // Zoznam statusov ide v meta, aby ho filter v zozname vedel vyrenderovať.
         return CustomerResource::collection($customers)->additional($this->formOptions());

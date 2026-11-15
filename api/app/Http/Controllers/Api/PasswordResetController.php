@@ -18,15 +18,11 @@ class PasswordResetController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $status = Password::sendResetLink($request->only('email'));
+        // Odpoveď je rovnaká pre známy aj neznámy e-mail — inak by sa formulárom
+        // dalo zisťovať, kto má v obchode účet.
+        Password::sendResetLink($request->only('email'));
 
-        if ($status !== Password::RESET_LINK_SENT) {
-            throw ValidationException::withMessages([
-                'email' => [__($status)],
-            ]);
-        }
-
-        return response()->json(['message' => 'Na Váš email sme poslali odkaz na obnovenie hesla.']);
+        return response()->json(['message' => 'Ak je k tomuto e-mailu vedený účet, poslali sme naň odkaz na obnovenie hesla.']);
     }
 
     public function resetPassword(Request $request): JsonResponse

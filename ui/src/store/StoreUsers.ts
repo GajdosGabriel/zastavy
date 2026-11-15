@@ -69,7 +69,6 @@ export const useUsers = defineStore('users', {
             try {
                 await axiosInstance.post('/logout');
                 this.clearAuth();
-                console.log('Odhlasenie uspesne');
             } catch (error: any) {
                 if (error.response?.status === 401) {
                     this.clearAuth();
@@ -82,12 +81,11 @@ export const useUsers = defineStore('users', {
 
         async login(form: Record<string, any>): Promise<boolean> {
             try {
-                const response = await axiosInstance.post('/login', form);
+                await axiosInstance.post('/login', form);
 
                 // Token prišiel v httpOnly cookie, JS ho nevidí; držíme len príznak, že má zmysel sa pýtať na /user.
                 markSession(true);
 
-                console.log('Prihlasenie uspesne');
 
                 await this.fetchUser();
 
@@ -138,10 +136,6 @@ export const useUsers = defineStore('users', {
             localStorage.removeItem(CUSTOMER_STORAGE_KEY);
             useCustomers().resetCustomer();
             useCheckouts().resetDelivery();
-        },
-
-        resetModelUrl(url: string): void {
-            console.log(url);
         },
 
         async forgotPassword(email: string): Promise<{ success: boolean; message?: string }> {

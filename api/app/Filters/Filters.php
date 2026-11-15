@@ -12,6 +12,9 @@ abstract class Filters {
 
     protected $builder;
 
+    /** Filtre, ktoré smú dostať pole (ostatné čakajú jednu hodnotu). */
+    protected $arrayFilters = [];
+
     public function __construct(Request $request)
     {
         $this->request = $request;
@@ -30,7 +33,12 @@ abstract class Filters {
 
     public function getFilters()
     {
-        return array_filter($this->request->only($this->filters));
+        // ?bySearchInput[]=x by v LIKE skončilo chybou „Array to string conversion".
+        return array_filter(
+            $this->request->only($this->filters),
+            fn ($value, $filter) => $value && (is_scalar($value) || in_array($filter, $this->arrayFilters, true)),
+            ARRAY_FILTER_USE_BOTH,
+        );
     }
 
 }

@@ -182,7 +182,13 @@ class CustomerService
         }
 
         if (!empty($request['ico'])) {
-            return Customer::where('ico', $request['ico'])->first();
+            // Stĺpec drží IČO doplnené nulami na 8 miest (IcoFormater); „123456"
+            // by inak existujúcu firmu nenašlo a založilo ju druhýkrát.
+            $ico = preg_replace('/\s+/', '', (string) $request['ico']);
+
+            return Customer::whereIn('ico', array_unique([$ico, str_pad($ico, 8, '0', STR_PAD_LEFT)]))
+                ->orderBy('id')
+                ->first();
         }
 
         return null;

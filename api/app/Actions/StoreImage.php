@@ -3,10 +3,9 @@
 namespace App\Actions;
 
 
-use App\Contracts\StoreImageContract;
 use App\Support\Media;
 
-class StoreImage implements StoreImageContract
+class StoreImage
 {
     public $product;
     public $input;

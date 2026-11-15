@@ -14,14 +14,13 @@ use App\Services\Delivery\DeliveryAddressService;
 use App\Services\EmailOrders\EmailOrderInbox;
 use App\Services\StaffAlerts;
 use Illuminate\Http\Request;
-use App\Contracts\StoreOrderContract;
 use App\Models\PaymentMethod;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 
-class StoreOrder implements StoreOrderContract
+class StoreOrder
 {
 
     public function __construct(private Request $request)

@@ -3,11 +3,12 @@
 namespace App\Actions;
 
 
-use App\Contracts\StoreOrderProductContract;
-
-
-class StoreOrderProduct implements StoreOrderProductContract
+class StoreOrderProduct
 {
+    private $order;
+
+    private $items;
+
     /**
      * @param  \Illuminate\Support\Collection|array  $items  Položky s kľúčmi product_id,
      *         product_variant_id, variant_label, quantity, price (serverová cena).

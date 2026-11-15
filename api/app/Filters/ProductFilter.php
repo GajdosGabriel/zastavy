@@ -19,6 +19,8 @@ class ProductFilter extends Filters
         'priceTo',
     ];
 
+    protected $arrayFilters = ['byAttribute'];
+
     public function bySearchInput($value)
     {
         return $this->builder->where(function (Builder $query) use ($value) {
@@ -33,7 +35,7 @@ class ProductFilter extends Filters
 
     public function isUnpublished($value)
     {
-        return $this->builder->where('published', $value ? 0 : $value );
+        return $this->builder->where('published', 0);
     }
 
     public function isDeleted()

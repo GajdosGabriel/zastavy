@@ -7,7 +7,6 @@ B2B e-shop a interná správa objednávok, variantov, skladu, expedícií a vrat
 - [Backend – inštalácia a testy](api/README.md)
 - [Frontend – vývoj a kontroly](ui/README.md)
 - [Nasadenie, fronta, monitoring a obnova](docs/OPERATIONS.md)
-- [Analýza a dokončené kroky](ANALYZA-PROJEKTU-2026-09-14.md)
 
 ## Kontroly pred odovzdaním
 

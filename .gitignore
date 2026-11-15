@@ -55,13 +55,9 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Nové databázové exporty patria do riadených záloh, nie do Gitu.
+# Databázové exporty a zálohy patria do riadených záloh, nie do Gitu (repozitár je verejný).
 *.sql
 *.sql.gz
 
 # Súkromné zákaznícke prílohy a grafické podklady sú runtime dáta.
 **/storage/app/private/
-
-# Zálohy databázy nepatria do repozitára (je verejný)
-*.sql
-*.sql.gz

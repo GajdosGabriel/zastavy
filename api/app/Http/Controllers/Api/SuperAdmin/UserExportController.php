@@ -79,7 +79,7 @@ class UserExportController extends Controller
             fputcsv($handle, array_map(fn ($key) => self::ATTRIBUTES[$key], $attributes), ';');
 
             foreach ($users as $user) {
-                fputcsv($handle, array_map(fn ($key) => $this->resolveValue($user, $key), $attributes), ';');
+                fputcsv($handle, array_map(fn ($key) => \App\Support\Csv::cell($this->resolveValue($user, $key)), $attributes), ';');
             }
 
             fclose($handle);

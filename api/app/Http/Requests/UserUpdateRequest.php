@@ -28,8 +28,9 @@ class UserUpdateRequest extends FormRequest
             'note' => ['nullable', 'string', 'max:2000'],
             'status' => ['required', Rule::in(ModelStatus::allowedValuesForUser($this->user()))],
             'active' => ['sometimes', 'boolean'],
+            // Roly prideľuje len super-admin — inak by si admin vedel prideliť super-admina sám.
             'roles' => [
-                Rule::prohibitedIf(! $this->user()?->hasAnyRole(['admin', 'super-admin'])),
+                Rule::prohibitedIf(! $this->user()?->hasRole('super-admin')),
                 'sometimes',
                 'array',
             ],

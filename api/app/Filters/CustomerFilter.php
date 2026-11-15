@@ -87,7 +87,8 @@ class CustomerFilter extends Filters
 
     public function sortByOrders()
     {
-        return $this->builder->withCount('orders')->orderByDesc('orders_count');
+        // `orders_count` pridáva CustomerController::index (withCount).
+        return $this->builder->orderByDesc('orders_count');
     }
 
     public function withoutOrder()

@@ -160,7 +160,8 @@ class Customer extends Model
 
     public function getOrdersCountAttribute()
     {
-        return $this->orders()->count();
+        // Zoznam si počet načíta jedným dotazom (withCount); inak je to dotaz na riadok.
+        return $this->attributes['orders_count'] ?? $this->orders()->count();
     }
 
     public function scopeFilter($query, $filters)
