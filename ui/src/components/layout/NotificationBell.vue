@@ -202,7 +202,7 @@ onBeforeUnmount(() => {
 <template>
       <div v-if="enabled" ref="root" class="relative mr-2 shrink-0">
             <button type="button"
-                  class="relative flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-gray-200 focus:outline-none"
+                  class="relative flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-gray-200 focus:outline-hidden"
                   :class="unseen ? 'text-red-600' : 'text-gray-600'"
                   :aria-label="unseen ? `Nové upozornenia: ${unseen}` : 'Upozornenia'" :aria-expanded="open" @click="toggle">
                   <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

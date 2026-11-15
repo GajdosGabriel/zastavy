@@ -321,7 +321,7 @@ onMounted(async () => {
                     <div class="lg:col-span-2 space-y-6">
 
                         <!-- Položky objednávky -->
-                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                             <div class="border-b border-gray-100 bg-gray-50 px-5 py-4">
                                 <h2 class="text-base font-semibold text-gray-800">Položky objednávky</h2>
                             </div>
@@ -331,10 +331,10 @@ onMounted(async () => {
                                     <input
                                         v-model="productSearch"
                                         type="text"
-                                        class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
                                         placeholder="Filtrovať podľa kódu alebo názvu"
                                     />
-                                    <select v-model="selectedProductId" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                    <select v-model="selectedProductId" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500">
                                         <option value="">Vyberte produkt</option>
                                         <option v-for="option in variantOptions" :key="option.key" :value="option.key">
                                             {{ option.variant.code || option.product.code }} – {{ option.label }} ({{ formatPrice(option.variant.active_price) }} €)
@@ -374,13 +374,13 @@ onMounted(async () => {
                                                             class="h-12 w-12 shrink-0 rounded-lg border border-gray-200 object-cover"
                                                         />
                                                         <div>
-                                                            <input v-if="product.is_custom" v-model="product.name" aria-label="Názov vlastnej položky" class="w-full rounded border-gray-300" /><p v-else class="font-semibold text-gray-900">{{ product.name }}</p>
+                                                            <input v-if="product.is_custom" v-model="product.name" aria-label="Názov vlastnej položky" class="w-full rounded-sm border-gray-300" /><p v-else class="font-semibold text-gray-900">{{ product.name }}</p>
                                                             <p class="text-xs text-gray-500">{{ product.code }}</p>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td class="px-4 py-3 text-right text-sm whitespace-nowrap text-gray-700">
-                                                    <input v-if="product.is_custom" v-model.number="product.active_price" aria-label="Jednotková cena" type="number" min="0" step="0.01" class="w-24 rounded border-gray-300" /><span v-else>{{ formatPrice(product.active_price) }} €</span>
+                                                    <input v-if="product.is_custom" v-model.number="product.active_price" aria-label="Jednotková cena" type="number" min="0" step="0.01" class="w-24 rounded-sm border-gray-300" /><span v-else>{{ formatPrice(product.active_price) }} €</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     <div class="inline-flex items-center gap-1.5">
@@ -388,7 +388,7 @@ onMounted(async () => {
                                                             type="number"
                                                             v-model.number="product.input_order"
                                                             :min="product.min_order || 1"
-                                                            class="w-20 rounded-lg border border-gray-300 px-2 py-1 text-center text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                            class="w-20 rounded-lg border border-gray-300 px-2 py-1 text-center text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
                                                             @input="normalizeQuantity(product)"
                                                         />
                                                         <span class="text-xs text-gray-500">{{ product.unit_value }}</span>
@@ -422,7 +422,7 @@ onMounted(async () => {
                         </div>
 
                         <!-- Zákazník -->
-                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                             <div class="border-b border-gray-100 bg-gray-50 px-5 py-4">
                                 <h2 class="text-base font-semibold text-gray-800">Zákazník</h2>
                             </div>
@@ -435,7 +435,7 @@ onMounted(async () => {
                                         <input
                                             v-model="customerSearch"
                                             type="text"
-                                            class="w-full rounded-lg border border-gray-300 px-3 py-2 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            class="w-full rounded-lg border border-gray-300 px-3 py-2 pr-8 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
                                             placeholder="Hľadajte podľa firmy, mesta, IČO, emailu…"
                                             @input="onCustomerSearchInput"
                                             @blur="() => { setTimeout(() => { showCustomerDropdown = false; }, 150); }"
@@ -500,15 +500,15 @@ onMounted(async () => {
                                     <input
                                         v-model="ordersStore.order.note"
                                         type="text"
-                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
                                         placeholder="Poznámka"
                                     />
                                 </div>
 
-                                <div class="mt-4 rounded-md border px-4 py-3 shadow"
+                                <div class="mt-4 rounded-md border px-4 py-3 shadow-sm"
                                      :class="wantsCoupon ? 'border-orange-300 bg-orange-50' : 'border-gray-300 bg-white'">
                                     <label class="flex cursor-pointer items-center gap-3">
-                                        <input type="checkbox" v-model="wantsCoupon" class="h-4 w-4 rounded border-gray-300 text-orange-500" />
+                                        <input type="checkbox" v-model="wantsCoupon" class="h-4 w-4 rounded-sm border-gray-300 text-orange-500" />
                                         <span class="flex items-center gap-2 text-sm font-semibold"
                                               :class="wantsCoupon ? 'text-orange-800' : 'text-gray-600'">
                                             <span class="text-base">🎟️</span>
@@ -536,7 +536,7 @@ onMounted(async () => {
                         <div class="sticky top-4 space-y-4">
 
                             <!-- Zoznam produktov v súhrne -->
-                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                                 <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
                                     <h2 class="text-sm font-semibold text-gray-700">
                                         Produkty ({{ orderProducts.length }})
@@ -563,7 +563,7 @@ onMounted(async () => {
                             </div>
 
                             <!-- Doprava + platba + rekapitulácia + tlačidlo -->
-                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                                 <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
                                     <h2 class="text-sm font-semibold text-gray-700">Doprava a platba</h2>
                                 </div>
@@ -661,7 +661,7 @@ onMounted(async () => {
                                         type="button"
                                         @click="openSaveModal"
                                         :disabled="isSubmitting || !orderProducts.length"
-                                        class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                                        class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
                                     >
                                         <svg v-if="isSubmitting" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -681,23 +681,23 @@ onMounted(async () => {
             </div>
 
             <Teleport to="body">
-                <div v-if="showSaveModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-                    <div class="w-full max-w-sm rounded bg-white p-5 shadow-lg">
+                <div v-if="showSaveModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div class="w-full max-w-sm rounded-sm bg-white p-5 shadow-lg">
                         <h3 class="mb-3 text-lg font-semibold text-gray-800">Uložiť objednávku</h3>
                         <p class="mb-4 text-sm text-gray-600">
                             Vytvoriť objednávku pre {{ getCustomer.company || getCustomer.name }}?
                         </p>
                         <label class="mb-5 flex items-center gap-2 text-sm text-gray-700">
-                            <input v-model="notifyCustomer" type="checkbox" class="rounded" />
+                            <input v-model="notifyCustomer" type="checkbox" class="rounded-sm" />
                             Poslať notifikáciu používateľovi
                         </label>
                         <div class="flex justify-end gap-2">
-                            <button type="button" class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700" @click="showSaveModal = false">
+                            <button type="button" class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700" @click="showSaveModal = false">
                                 Zrušiť
                             </button>
                             <button type="button" @click="confirmSave()"
                                 :disabled="loadingStore.isLoading"
-                                class="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:bg-blue-400 disabled:cursor-not-allowed">
+                                class="inline-flex items-center gap-2 rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:bg-blue-400 disabled:cursor-not-allowed">
                                 <SpinnerButton v-if="loadingStore.isLoading" />
                                 Potvrdiť
                             </button>

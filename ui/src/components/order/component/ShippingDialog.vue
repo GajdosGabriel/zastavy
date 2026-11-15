@@ -65,28 +65,28 @@ const confirm = async () => {
 <template>
     <Teleport to="body">
         <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="emit('close')">
-            <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded bg-white p-5 shadow-lg">
+            <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-sm bg-white p-5 shadow-lg">
                 <h3 class="mb-3 text-lg font-semibold text-gray-800">{{ isDispatch ? "Potvrdiť odoslanie" : "Pripraviť dodací list" }}</h3>
                 <p class="mb-4 text-sm text-gray-600">
                     {{ isDispatch ? "Potvrdzujete skutočné odoslanie zásielky. Sklad sa odpíše teraz." : "Objednávka sa začne pripravovať v sklade. Zásielka ešte nie je odoslaná." }}
                 </p>
                 <label class="mb-5 flex items-center gap-2 text-sm text-gray-700">
-                    <input v-model="notifyCustomer" type="checkbox" class="rounded" />
+                    <input v-model="notifyCustomer" type="checkbox" class="rounded-sm" />
                     {{ isDispatch ? "Informovať zákazníka o odoslaní" : "Informovať zákazníka o príprave v sklade" }}
                 </label>
                 <div v-if="notifyCustomer" class="mb-4">
                     <p v-if="previewLoading" class="text-sm">Načítavam náhľad e-mailu…</p>
                     <template v-if="preview">
                         <p class="mb-2 text-sm font-semibold">Predmet: {{ preview.subject }}</p>
-                        <iframe title="Náhľad e-mailu zákazníkovi" sandbox="" :srcdoc="preview.html" class="h-72 w-full rounded border bg-white"></iframe>
+                        <iframe title="Náhľad e-mailu zákazníkovi" sandbox="" :srcdoc="preview.html" class="h-72 w-full rounded-sm border bg-white"></iframe>
                     </template>
                 </div>
                 <p v-else class="mb-4 text-sm text-amber-700">E-mail sa dá poslať aj neskôr z Histórie objednávky.</p>
                 <div class="flex justify-end gap-2">
                     <button type="button" @click="emit('close')"
-                        class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">Zrušiť</button>
+                        class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">Zrušiť</button>
                     <button type="button" @click="confirm" :disabled="confirming || previewLoading || (notifyCustomer && !preview)"
-                        class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400">
+                        class="rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400">
                         {{ confirming ? "Ukladám…" : "Potvrdiť" }}
                     </button>
                 </div>

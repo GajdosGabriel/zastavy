@@ -62,7 +62,7 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                     <buttonRouterLink :item="buttonBack" class="text-sm" />
                 </div>
 
-                <form v-if="store.user?.id" @submit.prevent="saveUser" class="rounded bg-white px-8 pt-6 pb-8 shadow-md">
+                <form v-if="store.user?.id" @submit.prevent="saveUser" class="rounded-sm bg-white px-8 pt-6 pb-8 shadow-md">
 
 
                     <TitleDatalists />
@@ -132,7 +132,7 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                             <label class="mb-2 block text-sm font-bold text-gray-700">Jazyk komunikácie</label>
                             <select
                                 v-model="store.user.locale"
-                                class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                class="w-full rounded-sm border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-hidden focus:ring-1 focus:ring-blue-400"
                             >
                                 <option v-for="locale in getLocales" :key="locale.value" :value="locale.value">
                                     {{ locale.label }}
@@ -147,7 +147,7 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                             <select
                                 v-model="store.user.status.value"
                                 required
-                                class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                class="w-full rounded-sm border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-hidden focus:ring-1 focus:ring-blue-400"
                             >
                                 <option v-for="status in getStatuses" :key="status.value" :value="status.value">
                                     {{ status.label }}
@@ -159,8 +159,8 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                         <!-- Aktívny účet — samostatný vypínač prihlásenia -->
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Prístup</label>
-                            <label class="inline-flex w-full items-center gap-2 rounded border border-gray-300 px-3 py-2.5 text-sm">
-                                <input v-model="store.user.active" type="checkbox" class="rounded" />
+                            <label class="inline-flex w-full items-center gap-2 rounded-sm border border-gray-300 px-3 py-2.5 text-sm">
+                                <input v-model="store.user.active" type="checkbox" class="rounded-sm" />
                                 Aktívny účet (môže sa prihlásiť)
                             </label>
                         </div>
@@ -168,7 +168,7 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                         <!-- Role — len super-admin -->
                         <div v-if="canManageRoles && getRoles.length">
                             <label class="mb-2 block text-sm font-bold text-gray-700">Role</label>
-                            <div class="flex flex-wrap gap-2 rounded border p-3">
+                            <div class="flex flex-wrap gap-2 rounded-sm border p-3">
                                 <label v-for="role in getRoles" :key="role.value" class="inline-flex items-center gap-2 text-sm">
                                     <input v-model="store.user.roles" type="checkbox" :value="role.value" />
                                     {{ role.label }}
@@ -177,11 +177,11 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                         </div>
                         <div v-else-if="store.user.roles?.length">
                             <label class="mb-2 block text-sm font-bold text-gray-700">Role</label>
-                            <div class="flex min-h-11 flex-wrap items-center gap-2 rounded border bg-gray-50 p-3">
+                            <div class="flex min-h-11 flex-wrap items-center gap-2 rounded-sm border bg-gray-50 p-3">
                                 <span
                                     v-for="role in store.user.roles"
                                     :key="role"
-                                    class="rounded bg-slate-200 px-2 py-1 text-xs font-semibold text-slate-700"
+                                    class="rounded-sm bg-slate-200 px-2 py-1 text-xs font-semibold text-slate-700"
                                 >
                                     {{ role }}
                                 </span>
@@ -191,7 +191,7 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                         <!-- Práva — admin/super-admin pre portálových userov -->
                         <div v-if="canManagePermissions && isPortalUser && getPortalPermissions.length" class="md:col-span-2">
                             <label class="mb-2 block text-sm font-bold text-gray-700">Práva na objednávky</label>
-                            <div class="rounded border p-3">
+                            <div class="rounded-sm border p-3">
                                 <p class="mb-3 text-xs text-gray-500">
                                     Bez pridelených práv má používateľ základný prístup (zobrazenie a vytváranie objednávok).
                                     Po pridelení aspoň jedného práva sa uplatnia len zvolené oprávnenia.
@@ -206,7 +206,7 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                                             v-model="store.user.permissions"
                                             type="checkbox"
                                             :value="perm.value"
-                                            class="rounded"
+                                            class="rounded-sm"
                                         />
                                         {{ perm.label }}
                                     </label>
@@ -221,7 +221,7 @@ const buttonSubmit = { name: "Uložiť", spinner: true };
                                 rows="3"
                                 maxlength="2000"
                                 placeholder="Poznámka pre kolegov — používateľovi sa neposiela."
-                                class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                class="w-full rounded-sm border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-hidden focus:ring-1 focus:ring-blue-400"
                             ></textarea>
                             <p v-if="fe('note')" class="mt-1 text-xs font-semibold text-red-600">{{ fe('note') }}</p>
                         </div>

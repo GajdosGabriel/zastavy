@@ -86,20 +86,20 @@ watch(() => props.modelValue, (value) => {
 </script>
 
 <template>
-    <div class="rounded-md border border-gray-300 shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+    <div class="rounded-md border border-gray-300 shadow-xs focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
         <div class="flex flex-wrap items-center gap-1 border-b border-gray-200 bg-gray-50 px-2 py-1.5">
             <button v-for="tool in tools" :key="tool.label" type="button"
                 :title="tool.title" @click="exec(tool.command, tool.value ?? null)"
-                class="rounded px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
+                class="rounded-sm px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
                 :class="tool.class">
                 {{ tool.label }}
             </button>
             <button type="button" title="Odkaz" @click="onLink"
-                class="rounded px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200">
+                class="rounded-sm px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200">
                 🔗 odkaz
             </button>
             <button type="button" title="Zrušiť formátovanie" @click="onClearFormat"
-                class="rounded px-2 py-1 text-xs text-gray-500 transition hover:bg-gray-200">
+                class="rounded-sm px-2 py-1 text-xs text-gray-500 transition hover:bg-gray-200">
                 vyčistiť
             </button>
         </div>
@@ -111,7 +111,7 @@ watch(() => props.modelValue, (value) => {
             </p>
             <div ref="editor" contenteditable="true" @input="onInput" @blur="onInput" @paste="onPaste"
                 :style="{ minHeight: props.minHeight }"
-                class="html-editor w-full px-3 py-2 text-sm leading-6 focus:outline-none" />
+                class="html-editor w-full px-3 py-2 text-sm leading-6 focus:outline-hidden" />
         </div>
     </div>
 </template>

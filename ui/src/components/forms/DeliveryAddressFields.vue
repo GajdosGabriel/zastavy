@@ -62,7 +62,7 @@ const applySaved = (event: Event) => {
 </script>
 
 <template>
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
         <div class="border-b border-gray-100 bg-gray-50 px-6 py-4">
             <h2 class="text-base font-semibold text-gray-800">{{ title }}</h2>
         </div>
@@ -94,7 +94,7 @@ const applySaved = (event: Event) => {
                 <div v-if="savedAddresses.length">
                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Uložené adresy</label>
                     <select
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
                         @change="applySaved"
                     >
                         <option value="">— vypísať novú adresu —</option>
@@ -144,7 +144,7 @@ const applySaved = (event: Event) => {
                 <!-- Uloženie do adresára -->
                 <div v-if="allowSave" class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
                     <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
-                        <input type="checkbox" v-model="modelValue.save_address" class="rounded" />
+                        <input type="checkbox" v-model="modelValue.save_address" class="rounded-sm" />
                         Uložiť adresu pre ďalšie objednávky
                     </label>
                     <div v-if="modelValue.save_address" class="mt-3">

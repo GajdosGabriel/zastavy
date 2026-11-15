@@ -162,7 +162,7 @@ const onSubmit = async () => {
                     <div class="lg:col-span-2 space-y-6">
 
                         <!-- Typ pohybu -->
-                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                             <div class="border-b border-gray-100 bg-gray-50 px-5 py-4">
                                 <h2 class="text-base font-semibold text-gray-800">Typ pohybu</h2>
                             </div>
@@ -194,7 +194,7 @@ const onSubmit = async () => {
                         </div>
 
                         <!-- Výber skladovej položky -->
-                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                             <div class="border-b border-gray-100 bg-gray-50 px-5 py-4">
                                 <h2 class="text-base font-semibold text-gray-800">Tovar</h2>
                             </div>
@@ -230,7 +230,7 @@ const onSubmit = async () => {
                         </div>
 
                         <!-- Množstvo + cena + poznámka -->
-                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                             <div class="border-b border-gray-100 bg-gray-50 px-5 py-4">
                                 <h2 class="text-base font-semibold text-gray-800">
                                     {{ isWriteoff ? 'Detaily odpisu' : 'Detaily príjmu' }}
@@ -251,7 +251,7 @@ const onSubmit = async () => {
                                                 step="1"
                                                 :max="LIMITS.quantity"
                                                 inputmode="numeric"
-                                                class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1"
+                                                class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden focus:ring-1"
                                                 :class="inputClass('quantity')"
                                                 placeholder="0"
                                                 @input="clearFieldError('quantity')"
@@ -281,7 +281,7 @@ const onSubmit = async () => {
                                             min="0"
                                             :max="LIMITS.price"
                                             inputmode="decimal"
-                                            class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1"
+                                            class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden focus:ring-1"
                                             :class="inputClass('price')"
                                             placeholder="0.00"
                                             @input="clearFieldError('price')"
@@ -306,7 +306,7 @@ const onSubmit = async () => {
                                             v-model="store.create.received_at"
                                             type="date"
                                             :max="today"
-                                            class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1"
+                                            class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden focus:ring-1"
                                             :class="inputClass('received_at')"
                                             @input="clearFieldError('received_at')"
                                             @blur="onBlur('received_at')"
@@ -325,7 +325,7 @@ const onSubmit = async () => {
                                             v-model="store.create.document_number"
                                             type="text"
                                             :maxlength="LIMITS.document_number"
-                                            class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1"
+                                            class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden focus:ring-1"
                                             :class="inputClass('document_number')"
                                             :placeholder="isWriteoff ? 'Inventúrny zápis, škodový protokol, …' : 'DL-2026/0153'"
                                             @input="clearFieldError('document_number')"
@@ -345,7 +345,7 @@ const onSubmit = async () => {
                                         v-model="store.create.supplier"
                                         type="text"
                                         :maxlength="LIMITS.supplier"
-                                        class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1"
+                                        class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden focus:ring-1"
                                         :class="inputClass('supplier')"
                                         placeholder="Názov firmy, od ktorej tovar prišiel"
                                         @input="clearFieldError('supplier')"
@@ -365,7 +365,7 @@ const onSubmit = async () => {
                                         v-model="store.create.note"
                                         type="text"
                                         :maxlength="LIMITS.note"
-                                        class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1"
+                                        class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden focus:ring-1"
                                         :class="inputClass('note')"
                                         :placeholder="isWriteoff
                                             ? 'Poškodené pri preprave, inventúrny rozdiel, …'
@@ -386,7 +386,7 @@ const onSubmit = async () => {
                         <div class="sticky top-4 space-y-4">
 
                             <!-- Súhrn -->
-                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                                 <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
                                     <h2 class="text-sm font-semibold text-gray-700">Súhrn</h2>
                                 </div>
@@ -432,13 +432,13 @@ const onSubmit = async () => {
                             </div>
 
                             <!-- Akcie -->
-                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                                 <div class="px-5 py-4 space-y-2">
                                     <button
                                         type="button"
                                         @click="onSubmit"
                                         :disabled="isSubmitting"
-                                        class="inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold text-white shadow transition disabled:cursor-not-allowed disabled:bg-gray-400"
+                                        class="inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold text-white shadow-sm transition disabled:cursor-not-allowed disabled:bg-gray-400"
                                         :class="isWriteoff ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'"
                                     >
                                         <svg v-if="isSubmitting" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -79,8 +79,8 @@ function addVariant(p,v){const min=Math.max(1,v.min_order??1);
 function addCustom(c){form.value.items.push({is_custom:true,variant_id:null,name:c.name,variant_name:'',description:'',unit:c.unit_value||'ks',vat:c.vat,quantity:c.input_order,price_net:c.active_price,discount_percent:0,min_order:null,alternatives:[]});}
 function move(i,d){const items=form.value.items,j=i+d;if(j<0||j>=items.length)return;[items[i],items[j]]=[items[j],items[i]];}
 function pickShipping(){const m=methods.value.find(m=>m.id===form.value.shipping_method_id);if(m&&!Number(form.value.shipping_price_net))form.value.shipping_price_net=netFromGross(m.price??0,SHIPPING_VAT);}
-const input='w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50';
-const card='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm';
+const input='w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50';
+const card='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs';
 const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
 </script>
 
@@ -124,7 +124,7 @@ const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
                             <div class="space-y-3 px-6 py-5">
                                 <p v-if="!quote.messages.length" class="text-sm text-gray-600">Zatiaľ bez správ. Zákazník vám môže napísať alebo požiadať o úpravu priamo zo stránky ponuky.</p>
                                 <div v-for="m in quote.messages" :key="m.id" class="max-w-3xl rounded-lg px-4 py-2 text-sm" :class="m.direction === 'staff' ? 'ml-auto bg-blue-50' : (m.kind === 'rejected' ? 'bg-orange-50' : 'bg-gray-50')">
-                                    <p class="text-xs text-gray-600"><strong>{{ m.author }}</strong> · {{ date(m.created_at) }}<span v-if="m.kind !== 'message'" class="ml-1 rounded bg-white px-1.5 font-semibold text-gray-800">{{ quoteMessageLabels[m.kind] }}</span></p>
+                                    <p class="text-xs text-gray-600"><strong>{{ m.author }}</strong> · {{ date(m.created_at) }}<span v-if="m.kind !== 'message'" class="ml-1 rounded-sm bg-white px-1.5 font-semibold text-gray-800">{{ quoteMessageLabels[m.kind] }}</span></p>
                                     <p class="whitespace-pre-wrap text-gray-900">{{ m.body }}</p>
                                 </div>
                                 <form v-if="!closed" class="space-y-2" @submit.prevent="sendMessage">
@@ -176,8 +176,8 @@ const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div class="flex flex-wrap items-center gap-3 md:pl-[3.75rem]">
-                                                <input v-model="item.description" maxlength="2000" placeholder="Popis — rozmer, materiál, potlač" aria-label="Popis položky" class="min-w-[14rem] flex-1" :class="input" />
+                                            <div class="flex flex-wrap items-center gap-3 md:pl-15">
+                                                <input v-model="item.description" maxlength="2000" placeholder="Popis — rozmer, materiál, potlač" aria-label="Popis položky" class="min-w-56 flex-1" :class="input" />
                                                 <div v-if="!closed" class="flex items-center gap-2 text-xs">
                                                     <button type="button" class="font-semibold text-blue-700" :disabled="item.alternatives.length >= 5" @click="addAlternative(item)">+ cena pre iné množstvo</button>
                                                     <button type="button" class="px-1 text-gray-500" aria-label="Posunúť vyššie" :disabled="i === 0" @click="move(i, -1)">▲</button>
@@ -185,12 +185,12 @@ const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
                                                 </div>
                                             </div>
                                             <!-- Cenové varianty podľa množstva: zákazník si vyberie pri prijatí. -->
-                                            <div v-for="(alt, a) in item.alternatives" :key="a" class="flex flex-wrap items-center gap-2 rounded-lg bg-gray-50 px-3 py-1.5 text-xs md:ml-[3.75rem]">
+                                            <div v-for="(alt, a) in item.alternatives" :key="a" class="flex flex-wrap items-center gap-2 rounded-lg bg-gray-50 px-3 py-1.5 text-xs md:ml-15">
                                                 <span class="text-gray-600">alebo</span>
                                                 <input v-model.number="alt.quantity" type="number" min="1" max="100000" aria-label="Množstvo" class="w-20 text-center" :class="input" /><span class="text-gray-600">{{ item.unit }} ×</span>
                                                 <input v-model.number="alt.price_net" type="number" min="0" step="0.01" aria-label="Cena za jednotku bez DPH" class="w-24 text-right" :class="input" /><span class="text-gray-600">€ bez DPH</span>
                                                 <span class="ml-auto font-semibold text-gray-800">{{ money(quoteLine({ ...item, ...alt }).lineNet) }}</span>
-                                                <button v-if="!closed" type="button" class="rounded p-1 text-gray-500 hover:bg-red-50 hover:text-red-600" aria-label="Odobrať množstvo" @click="item.alternatives.splice(a, 1)">✕</button>
+                                                <button v-if="!closed" type="button" class="rounded-sm p-1 text-gray-500 hover:bg-red-50 hover:text-red-600" aria-label="Odobrať množstvo" @click="item.alternatives.splice(a, 1)">✕</button>
                                             </div>
                                         </li>
                                     </ul>
@@ -207,9 +207,9 @@ const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
                                     </form>
                                     <ul v-if="products.length" class="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white text-sm">
                                         <li v-for="p in products" :key="p.id" class="flex flex-wrap items-center gap-2 px-3 py-2">
-                                            <img :src="p.thumb" width="32" height="32" loading="lazy" alt="" class="h-8 w-8 rounded border border-gray-200 object-cover" />
+                                            <img :src="p.thumb" width="32" height="32" loading="lazy" alt="" class="h-8 w-8 rounded-sm border border-gray-200 object-cover" />
                                             <span class="font-medium">{{ p.name }}</span>
-                                            <button v-for="v in p.variants" :key="v.id" type="button" class="rounded bg-gray-100 px-2 py-0.5 text-xs hover:bg-blue-100" @click="addVariant(p, v)">+ {{ v.name || v.code }} ({{ money(netFromGross(v.active_price ?? 0, p.vat ?? 23)) }} bez DPH)</button>
+                                            <button v-for="v in p.variants" :key="v.id" type="button" class="rounded-sm bg-gray-100 px-2 py-0.5 text-xs hover:bg-blue-100" @click="addVariant(p, v)">+ {{ v.name || v.code }} ({{ money(netFromGross(v.active_price ?? 0, p.vat ?? 23)) }} bez DPH)</button>
                                         </li>
                                     </ul>
                                     <CustomOrderItem price-label="Jednotková cena bez DPH (€)" @add="addCustom" />
@@ -303,8 +303,8 @@ const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
                                     </dl>
 
                                     <template v-if="!closed">
-                                        <label class="flex items-center gap-2 text-gray-700"><input v-model="notify" type="checkbox" class="rounded" /> Poslať zákazníkovi e-mail s PDF</label>
-                                        <button type="button" class="inline-flex w-full items-center justify-center rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400" :disabled="busy || !form.items.length" @click="send">
+                                        <label class="flex items-center gap-2 text-gray-700"><input v-model="notify" type="checkbox" class="rounded-sm" /> Poslať zákazníkovi e-mail s PDF</label>
+                                        <button type="button" class="inline-flex w-full items-center justify-center rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400" :disabled="busy || !form.items.length" @click="send">
                                             {{ busy ? 'Ukladám...' : (quote?.version ? 'Odoslať novú verziu' : 'Odoslať ponuku') }}
                                         </button>
                                         <button type="button" class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50" :disabled="busy" @click="saveDraft">Uložiť koncept</button>
@@ -321,13 +321,13 @@ const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
                                         <button type="button" class="text-red-700 underline" :disabled="busy" @click="withdraw">Stiahnuť ponuku</button>
                                     </template>
                                 </div>
-                                <div v-if="share" class="mt-3"><p class="text-gray-600">Nový odkaz zneplatnil predchádzajúce.</p><input :value="share" readonly aria-label="Odkaz pre zákazníka" class="mt-1 w-full rounded border p-2" @focus="$event.target.select()" /></div>
+                                <div v-if="share" class="mt-3"><p class="text-gray-600">Nový odkaz zneplatnil predchádzajúce.</p><input :value="share" readonly aria-label="Odkaz pre zákazníka" class="mt-1 w-full rounded-sm border p-2" @focus="$event.target.select()" /></div>
                             </div>
                         </div>
                     </aside>
                 </div>
 
-                <details v-if="sent.length" class="mt-6 rounded-xl border border-gray-200 bg-white p-4 text-sm shadow-sm">
+                <details v-if="sent.length" class="mt-6 rounded-xl border border-gray-200 bg-white p-4 text-sm shadow-xs">
                     <summary class="cursor-pointer font-semibold text-gray-700">Odoslané verzie ({{ sent.length }})</summary>
                     <div v-for="v in sent" :key="v.id" class="mt-3 border-t border-gray-100 pt-3">
                         <p class="font-semibold">Verzia {{ v.version }} · odoslaná {{ date(v.sent_at) }} · platná do {{ v.valid_until?.slice(0, 10) }}

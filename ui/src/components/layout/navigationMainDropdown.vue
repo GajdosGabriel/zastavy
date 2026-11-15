@@ -6,7 +6,7 @@
                 @click.stop="isShow"
                 aria-haspopup="menu"
                 :aria-expanded="show"
-                class="flex min-h-9 items-center px-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out"
+                class="flex min-h-9 items-center px-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:border-gray-300 focus:outline-hidden focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out"
             >
                 <div>{{ getUser.firstName }}</div>
 

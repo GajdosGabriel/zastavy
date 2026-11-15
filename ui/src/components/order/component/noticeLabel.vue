@@ -67,7 +67,7 @@ const onDispatched = async () => {
             :class="shipping.is_preparing
                 ? 'text-sky-700 hover:text-sky-900'
                 : (emailNotice ? 'text-green-700 hover:text-green-900' : 'text-gray-600 hover:text-gray-800')"
-            class="inline-flex min-h-7 cursor-pointer items-center gap-1 rounded border border-gray-200 bg-white px-2 py-1 shadow-sm hover:bg-gray-50">
+            class="inline-flex min-h-7 cursor-pointer items-center gap-1 rounded-sm border border-gray-200 bg-white px-2 py-1 shadow-xs hover:bg-gray-50">
             <!-- package with ribbon icon (tovar zabalený/expedovaný, prepravca ešte neprevzal) -->
             <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -85,8 +85,8 @@ const onDispatched = async () => {
     </div>
 
     <Teleport to="body">
-        <div v-if="showNoticeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div class="w-full max-w-sm rounded bg-white p-5 shadow-lg">
+        <div v-if="showNoticeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div class="w-full max-w-sm rounded-sm bg-white p-5 shadow-lg">
                 <h3 class="mb-3 text-lg font-semibold text-gray-800">{{ shipping.is_preparing ? "Notifikácia prípravy zásielky" : "Notifikácia odoslania" }}</h3>
 
                 <template v-if="emailNotice">
@@ -96,7 +96,7 @@ const onDispatched = async () => {
                     </p>
                     <div class="flex justify-end">
                         <button type="button" @click="closeNoticeModal"
-                            class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                            class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
                             Zavrieť
                         </button>
                     </div>
@@ -109,12 +109,12 @@ const onDispatched = async () => {
                     </p>
                     <div class="flex justify-end gap-2">
                         <button type="button" @click="closeNoticeModal"
-                            class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                            class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
                             Zavrieť
                         </button>
                         <button type="button" @click="saveNotice('email')"
                             :disabled="loadingStore.isLoading"
-                            class="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                            class="inline-flex items-center gap-2 rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
                             <SpinnerButton v-if="loadingStore.isLoading" />
                             Odoslať email
                         </button>
@@ -126,17 +126,17 @@ const onDispatched = async () => {
                         {{ shipping.is_preparing ? "Dodací list je vystavený, zásielka čaká na odoslanie. Odoslať zákazníkovi e-mail o príprave zásielky?" : "Zásielka bola odoslaná. Odoslať zákazníkovi potvrdenie?" }}
                     </p>
                     <label class="mb-5 flex items-center gap-2 text-sm text-gray-700">
-                        <input type="checkbox" v-model="notifyCustomer" class="rounded" />
+                        <input type="checkbox" v-model="notifyCustomer" class="rounded-sm" />
                         Poslať email zákazníkovi
                     </label>
                     <div class="flex justify-end gap-2">
                         <button type="button" @click="closeNoticeModal"
-                            class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                            class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
                             Zrušiť
                         </button>
                         <button type="button" @click="confirmNotice"
                             :disabled="loadingStore.isLoading"
-                            class="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                            class="inline-flex items-center gap-2 rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
                             <SpinnerButton v-if="loadingStore.isLoading" />
                             Potvrdiť
                         </button>

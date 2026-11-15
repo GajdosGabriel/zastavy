@@ -108,7 +108,7 @@ const onAddValue = async (attribute) => {
                 <!-- Zoznam -->
                 <div class="space-y-3">
                     <article v-for="attribute in getAttributes" :key="attribute.id"
-                        class="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
+                        class="overflow-hidden rounded-md border border-gray-200 bg-white shadow-xs">
                         <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                             <button type="button" @click="toggle(attribute.id)" class="flex items-center gap-3 text-left">
                                 <span class="text-gray-500">{{ expanded[attribute.id] ? '▾' : '▸' }}</span>
@@ -152,13 +152,13 @@ const onAddValue = async (attribute) => {
                                     class="flex flex-wrap items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2">
                                     <input v-model="value.value" type="text"
                                         @change="updateValue(attribute.id, value)"
-                                        class="min-w-40 flex-1 rounded border border-gray-200 px-2 py-1 text-sm" />
+                                        class="min-w-40 flex-1 rounded-sm border border-gray-200 px-2 py-1 text-sm" />
                                     <span class="font-mono text-xs text-gray-500">{{ value.code }}</span>
                                     <input v-model.number="value.sort_order" type="number" min="0"
                                         @change="updateValue(attribute.id, value)" title="Poradie"
-                                        class="w-16 rounded border border-gray-200 px-2 py-1 text-sm" />
+                                        class="w-16 rounded-sm border border-gray-200 px-2 py-1 text-sm" />
                                     <button type="button" @click="destroyValue(attribute.id, value)"
-                                        class="rounded px-2 py-1 text-xs text-gray-500 transition hover:bg-red-50 hover:text-red-600">
+                                        class="rounded-sm px-2 py-1 text-xs text-gray-500 transition hover:bg-red-50 hover:text-red-600">
                                         ×
                                     </button>
                                 </div>

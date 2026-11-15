@@ -180,7 +180,7 @@ const onValidateCoupon = () => validateCoupon(props.cartTotal);
                         @input="setCouponCode($event.target.value)"
                         @keyup.enter="onValidateCoupon"
                         placeholder="Zadajte kód kupóna"
-                        class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
                     />
                     <button
                         type="button"

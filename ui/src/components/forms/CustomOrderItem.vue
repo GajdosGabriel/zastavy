@@ -26,12 +26,12 @@ const add = () => {
 <div v-if="open" class="mt-3 space-y-3">
 <p class="text-sm text-gray-600">Služba alebo príplatok bez skladovej zásoby.</p>
 <div class="grid gap-3 sm:grid-cols-2">
-<label class="text-sm">Názov<input v-model="item.name" maxlength="200" placeholder="Napr. grafická príprava" class="mt-1 w-full rounded border-gray-300" /></label>
-<label class="text-sm">Množstvo<input v-model.number="item.input_order" type="number" min="1" step="1" class="mt-1 w-full rounded border-gray-300" /></label>
-<label class="text-sm">Jednotka<input v-model="item.unit_value" maxlength="20" class="mt-1 w-full rounded border-gray-300" /></label>
-<label class="text-sm">{{ props.priceLabel }}<input v-model.number="item.active_price" type="number" min="0" step="0.01" class="mt-1 w-full rounded border-gray-300" /></label>
-<label class="text-sm">DPH<select v-model.number="item.vat" class="mt-1 w-full rounded border-gray-300"><option v-for="rate in VAT_RATES" :key="rate" :value="rate">{{ rate }} %</option></select></label>
+<label class="text-sm">Názov<input v-model="item.name" maxlength="200" placeholder="Napr. grafická príprava" class="mt-1 w-full rounded-sm border-gray-300" /></label>
+<label class="text-sm">Množstvo<input v-model.number="item.input_order" type="number" min="1" step="1" class="mt-1 w-full rounded-sm border-gray-300" /></label>
+<label class="text-sm">Jednotka<input v-model="item.unit_value" maxlength="20" class="mt-1 w-full rounded-sm border-gray-300" /></label>
+<label class="text-sm">{{ props.priceLabel }}<input v-model.number="item.active_price" type="number" min="0" step="0.01" class="mt-1 w-full rounded-sm border-gray-300" /></label>
+<label class="text-sm">DPH<select v-model.number="item.vat" class="mt-1 w-full rounded-sm border-gray-300"><option v-for="rate in VAT_RATES" :key="rate" :value="rate">{{ rate }} %</option></select></label>
 </div><p v-if="error" role="alert" class="text-sm text-red-700">{{ error }}</p>
-<button type="button" class="rounded bg-blue-700 px-4 py-2 text-white" @click="add">Pridať položku</button>
+<button type="button" class="rounded-sm bg-blue-700 px-4 py-2 text-white" @click="add">Pridať položku</button>
 </div></div>
 </template>

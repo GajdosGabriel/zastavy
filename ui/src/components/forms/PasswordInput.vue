@@ -18,14 +18,14 @@ const visible = ref(false);
             v-bind="$attrs"
             :value="modelValue"
             :type="visible ? 'text' : 'password'"
-            class="block w-full rounded border border-slate-300 bg-white px-3 py-2.5 pr-11 text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            class="block w-full rounded-sm border border-slate-300 bg-white px-3 py-2.5 pr-11 text-slate-900 shadow-xs outline-hidden transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             @input="$emit('update:modelValue', $event.target.value)"
         />
 
         <button
             type="button"
             tabindex="-1"
-            class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 transition hover:text-slate-700 focus:outline-none"
+            class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 transition hover:text-slate-700 focus:outline-hidden"
             :title="visible ? 'Skryť heslo' : 'Zobraziť heslo'"
             :aria-label="visible ? 'Skryť heslo' : 'Zobraziť heslo'"
             @click="visible = !visible"

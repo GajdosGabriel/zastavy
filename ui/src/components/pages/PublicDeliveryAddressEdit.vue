@@ -109,7 +109,7 @@ const submit = async () => {
                 </div>
 
                 <div v-else class="mx-auto max-w-3xl space-y-5">
-                    <div class="rounded-md border border-gray-200 bg-white px-6 py-5 shadow-sm">
+                    <div class="rounded-md border border-gray-200 bg-white px-6 py-5 shadow-xs">
                         <h1 class="text-xl font-semibold text-gray-900">Adresa doručenia</h1>
                         <p v-if="info.serial_number" class="mt-1 text-sm text-gray-500">
                             Objednávka č. <span class="font-medium text-gray-700">{{ info.serial_number }}</span>
@@ -127,7 +127,7 @@ const submit = async () => {
                             <a href="mailto:obchod@zastavy-vlajky.sk" class="underline">obchod@zastavy-vlajky.sk</a>
                             alebo na 0905 320 616 a dohodneme sa.
                         </p>
-                        <div class="mt-4 rounded border border-amber-100 bg-white px-4 py-3 text-sm text-gray-700">
+                        <div class="mt-4 rounded-sm border border-amber-100 bg-white px-4 py-3 text-sm text-gray-700">
                             <p v-if="info.delivery.company" class="font-semibold">{{ info.delivery.company }}</p>
                             <p v-if="info.delivery.name">{{ info.delivery.name }}</p>
                             <p v-if="info.delivery.street">{{ info.delivery.street }}</p>
@@ -160,7 +160,7 @@ const submit = async () => {
                                 type="button"
                                 @click="submit"
                                 :disabled="saving"
-                                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
                             >
                                 <svg v-if="saving" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

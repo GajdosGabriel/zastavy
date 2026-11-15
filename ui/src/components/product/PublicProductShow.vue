@@ -180,7 +180,7 @@ onUnmounted(() => {
                 <!-- Na mobile: galéria → cena a Kúpiť → popis. Na desktope je karta s cenou vpravo cez oba riadky. -->
                 <section v-if="productLoaded" class="grid gap-6 lg:grid-cols-12">
                     <div class="order-1 lg:col-span-7 lg:col-start-1 lg:row-start-1">
-                        <div class="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
+                        <div class="overflow-hidden rounded-md border border-gray-200 bg-white shadow-xs">
                             <div class="relative flex min-h-56 items-center justify-center bg-gray-50 p-4 md:min-h-96 md:p-8">
                                 <img :src="selectedImage" :alt="getProduct.name" width="520" height="520"
                                     class="max-h-64 w-full object-contain md:max-h-[520px]" />
@@ -191,7 +191,7 @@ onUnmounted(() => {
                         <div v-if="getImages.length > 1" class="mt-4 flex flex-wrap gap-3">
                             <button v-for="(image, index) in getImages" :key="image.id" type="button"
                                 @click="onClickImage(index)"
-                                class="h-20 w-20 overflow-hidden rounded border bg-white p-1 shadow-sm hover:border-blue-500"
+                                class="h-20 w-20 overflow-hidden rounded-sm border bg-white p-1 shadow-xs hover:border-blue-500"
                                 :class="currentImage === index ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200'"
                                 :aria-label="`Zobraziť obrázok ${index + 1} z ${getImages.length}`"
                                 :aria-pressed="currentImage === index">
@@ -201,7 +201,7 @@ onUnmounted(() => {
                     </div>
 
                     <div class="order-3 lg:col-span-7 lg:col-start-1 lg:row-start-2">
-                        <section class="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
+                        <section class="rounded-md border border-gray-200 bg-white p-5 shadow-xs">
                             <h2 class="mb-3 text-xl font-semibold text-gray-900">Popis tovaru</h2>
                             <div class="leading-7 text-gray-600">
                                 <p v-if="!getProduct.description">Popis produktu pripravujeme.</p>
@@ -211,7 +211,7 @@ onUnmounted(() => {
 
                         <!-- Prehľad všetkých variantov: parametre aj skladová dostupnosť -->
                         <section v-if="(getProduct.variants ?? []).length > 1"
-                            class="mt-6 overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
+                            class="mt-6 overflow-hidden rounded-md border border-gray-200 bg-white shadow-xs">
                             <h2 class="border-b border-gray-100 px-5 py-3 text-xl font-semibold text-gray-900">
                                 Prehľad prevedení
                             </h2>
@@ -252,7 +252,7 @@ onUnmounted(() => {
 
                     <aside class="order-2 lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1">
                         <div class="sticky top-4 space-y-5">
-                            <section class="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
+                            <section class="rounded-md border border-gray-200 bg-white p-5 shadow-xs">
                                 <div class="mb-4 border-b border-gray-200 pb-4">
                                     <p class="mb-2 text-sm font-semibold uppercase text-blue-800">
                                         Zástavy-vlajky.sk
@@ -285,7 +285,7 @@ onUnmounted(() => {
                                     </div>
                                 </div>
 
-                                <p v-else class="rounded bg-gray-50 p-3 text-sm text-gray-500">
+                                <p v-else class="rounded-sm bg-gray-50 p-3 text-sm text-gray-500">
                                     Tento produkt momentálne nemá dostupné prevedenie.
                                 </p>
 
@@ -295,13 +295,13 @@ onUnmounted(() => {
                                     </label>
                                     <div class="flex gap-3">
                                         <input id="input_order" type="number" inputmode="numeric" v-model.number="quantity"
-                                            class="w-28 rounded border-gray-300 text-center"
+                                            class="w-28 rounded-sm border-gray-300 text-center"
                                             :min="minOrder" step="1" max="100000" required
                                             :aria-invalid="belowMinimum"
                                             aria-describedby="order_hint"
                                             @invalid="onQuantityInvalid" @input="$event.target.setCustomValidity('')" />
                                         <button :disabled="!canBuy"
-                                            class="flex flex-1 items-center justify-center rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400">
+                                            class="flex flex-1 items-center justify-center rounded-sm bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400">
                                             <kosikButton />
                                             <span class="ml-2">{{ canBuy ? 'Kúpiť' : 'Vypredané' }}</span>
                                         </button>
@@ -317,7 +317,7 @@ onUnmounted(() => {
                                     </template>
                                 </p>
 
-                                <div v-if="selectedVariant" class="mt-4 rounded bg-blue-50 p-3 text-sm text-blue-900">
+                                <div v-if="selectedVariant" class="mt-4 rounded-sm bg-blue-50 p-3 text-sm text-blue-900">
                                     <div class="flex justify-between">
                                         <span>Min. odber</span>
                                         <strong>{{ minOrder }} {{ getProduct.unit_value }}</strong>
@@ -339,14 +339,14 @@ onUnmounted(() => {
                                         leave-active-class="transform duration-200 ease-in"
                                         leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-75">
                                         <p v-for="(message, index) in messages" :key="index"
-                                            class="mt-4 rounded border border-green-500 bg-green-100 p-3 text-sm font-semibold text-green-800 shadow-sm">
+                                            class="mt-4 rounded-sm border border-green-500 bg-green-100 p-3 text-sm font-semibold text-green-800 shadow-xs">
                                             Do košíka ste vložili {{ message }} {{ getProduct.unit_value }}.
                                         </p>
                                     </transition-group>
                                 </router-link>
                             </section>
 
-                            <section class="grid gap-3 rounded-md border border-gray-200 bg-white p-5 text-sm text-gray-700 shadow-sm sm:grid-cols-3 lg:grid-cols-1">
+                            <section class="grid gap-3 rounded-md border border-gray-200 bg-white p-5 text-sm text-gray-700 shadow-xs sm:grid-cols-3 lg:grid-cols-1">
                                 <div>
                                     <div class="font-semibold text-gray-900">Overený predajca</div>
                                     <div class="text-gray-500">Špecializácia na vlajky a symboly.</div>
@@ -366,7 +366,7 @@ onUnmounted(() => {
                                 ({{ freeShipping.name }}).
                             </p>
 
-                            <section class="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
+                            <section class="rounded-md border border-gray-200 bg-white p-5 shadow-xs">
                                 <kosik />
                             </section>
 
@@ -376,13 +376,13 @@ onUnmounted(() => {
 
                 <section v-else class="grid gap-6 lg:grid-cols-12">
                     <div class="lg:col-span-7">
-                        <div class="min-h-96 rounded-md border border-gray-200 bg-gray-50 shadow-sm"></div>
+                        <div class="min-h-96 rounded-md border border-gray-200 bg-gray-50 shadow-xs"></div>
                     </div>
                     <aside class="lg:col-span-5">
-                        <div class="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
-                            <div class="h-6 w-32 rounded bg-gray-100"></div>
-                            <div class="mt-4 h-10 w-3/4 rounded bg-gray-100"></div>
-                            <div class="mt-6 h-20 rounded bg-gray-100"></div>
+                        <div class="rounded-md border border-gray-200 bg-white p-5 shadow-xs">
+                            <div class="h-6 w-32 rounded-sm bg-gray-100"></div>
+                            <div class="mt-4 h-10 w-3/4 rounded-sm bg-gray-100"></div>
+                            <div class="mt-6 h-20 rounded-sm bg-gray-100"></div>
                         </div>
                     </aside>
                 </section>

@@ -104,7 +104,7 @@ onUnmounted(() => {
                     :data-dropdown-id="id"
                     :style="dropdownStyle"
                     role="menu"
-                    class="fixed z-50 w-44 rounded border border-gray-300 bg-white shadow-lg"
+                    class="fixed z-50 w-44 rounded-sm border border-gray-300 bg-white shadow-lg"
                 >
                     <div v-if="items.length">
                         <!-- Deštruktívne akcie (danger) sú oddelené čiarou a červené, aby sa nezamenili s bežnými. -->

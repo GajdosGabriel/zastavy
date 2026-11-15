@@ -6,7 +6,7 @@ import { salesError } from '../../models/sales';
 
 const blank = () => ({ id: null, name: '', body: '', sort_order: 99 });
 const templates = ref([]), form = ref(blank()), busy = ref(false), error = ref('');
-const field = 'w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
+const field = 'w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500';
 const label = 'block text-sm font-semibold text-gray-700';
 
 async function run(fn) {
@@ -58,7 +58,7 @@ function destroy(template) {
 
                 <p v-if="error" role="alert" class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ error }}</p>
 
-                <form class="mb-6 space-y-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm" @submit.prevent="save">
+                <form class="mb-6 space-y-3 rounded-xl border border-gray-200 bg-white p-5 shadow-xs" @submit.prevent="save">
                     <div class="grid gap-3 md:grid-cols-4">
                         <label class="md:col-span-3" :class="label">Názov
                             <input v-model="form.name" required maxlength="150" placeholder="Napr. Grafický návrh obecnej zástavy" class="mt-1 font-normal" :class="field" />
@@ -76,7 +76,7 @@ function destroy(template) {
                     </div>
                 </form>
 
-                <ul class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <ul class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                     <li v-if="!templates.length" class="px-5 py-8 text-center text-sm text-gray-600">Zatiaľ žiadne šablóny.</li>
                     <li v-for="t in templates" :key="t.id" class="px-5 py-4">
                         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -86,7 +86,7 @@ function destroy(template) {
                                 <button type="button" :disabled="busy" class="text-red-700 hover:underline" @click="destroy(t)">Zmazať</button>
                             </div>
                         </div>
-                        <p class="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{{ t.body }}</p>
+                        <p class="mt-1 whitespace-pre-wrap wrap-break-word text-sm text-gray-700">{{ t.body }}</p>
                     </li>
                 </ul>
             </div>

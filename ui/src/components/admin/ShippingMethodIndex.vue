@@ -30,7 +30,7 @@ const dropdownItems = (method) => [
             <div class="page-body col-span-12">
                 <PageHeader :item="{ title: 'Spôsoby dopravy' }" />
 
-                <form class="mb-6 rounded-md border border-slate-300 bg-white p-4 shadow-sm" @submit.prevent="saveShippingMethod">
+                <form class="mb-6 rounded-md border border-slate-300 bg-white p-4 shadow-xs" @submit.prevent="saveShippingMethod">
                     <div class="grid gap-4 md:grid-cols-3">
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Názov</label>
@@ -59,7 +59,7 @@ const dropdownItems = (method) => [
                     </div>
                 </form>
 
-                <div class="overflow-x-auto rounded-md border border-slate-200 bg-white shadow-sm">
+                <div class="overflow-x-auto rounded-md border border-slate-200 bg-white shadow-xs">
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="thead">
                             <tr>
@@ -93,7 +93,7 @@ const dropdownItems = (method) => [
 
                 <div v-if="getTrashedMethods.length" class="mt-8">
                     <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Kôš</h3>
-                    <div class="overflow-x-auto rounded-md border border-red-100 bg-red-50 shadow-sm">
+                    <div class="overflow-x-auto rounded-md border border-red-100 bg-red-50 shadow-xs">
                         <table class="min-w-full divide-y divide-red-100">
                             <thead>
                                 <tr>
@@ -108,7 +108,7 @@ const dropdownItems = (method) => [
                                     <td class="tbody_td text-slate-500">{{ formatPrice(method.price) }} €</td>
                                     <td class="tbody_td">
                                         <button type="button" @click="restoreShippingMethod(method)"
-                                            class="rounded bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-200">
+                                            class="rounded-sm bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-200">
                                             Obnoviť
                                         </button>
                                     </td>

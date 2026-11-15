@@ -152,7 +152,7 @@ watch(() => route.query.expedicia, (value) => { if (value && isLoaded.value) ite
 
                 <!-- Poznámka zákazníka a veci, na ktoré sa pri vybavení nesmie zabudnúť -->
                 <div v-if="getOrder.note || getOrder.wants_coupon || madeToOrderNames.length"
-                     class="mb-4 flex items-start gap-3 rounded-lg border-2 border-amber-400 bg-amber-50 px-5 py-4 shadow-sm">
+                     class="mb-4 flex items-start gap-3 rounded-lg border-2 border-amber-400 bg-amber-50 px-5 py-4 shadow-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                     </svg>
@@ -169,15 +169,15 @@ watch(() => route.query.expedicia, (value) => { if (value && isLoaded.value) ite
                 </div>
 
                 <!-- Čaká na prepravcu — najnaliehavejšia úloha, preto hore -->
-                <section v-if="pendingShippings.length" class="mb-4 rounded-lg border-2 border-blue-300 bg-blue-50 p-5 shadow-sm">
+                <section v-if="pendingShippings.length" class="mb-4 rounded-lg border-2 border-blue-300 bg-blue-50 p-5 shadow-xs">
                     <h2 class="font-semibold text-blue-900">Pripravené na odoslanie</h2>
                     <p class="text-sm text-blue-800">Balík je pripravený pre prepravcu. Keď ho prepravca prevezme, potvrďte odoslanie. Sklad sa odpíše až potom.</p>
                     <div v-for="shipping in pendingShippings" :key="shipping.id" class="mt-3">
                         <p class="font-semibold">Dodací list #{{ shipping.id }} · {{ shipping.created_at }}</p>
                         <p v-for="item in shipping.prepared_items" :key="item.order_product_id" class="mt-1 text-sm">{{ item.name }} — {{ item.quantity }} {{ item.unit }}</p>
                         <div v-if="canShip" class="mt-3 flex flex-wrap gap-3">
-                            <button type="button" class="rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800" @click="dialogShipping = shipping">Potvrdiť odoslanie</button>
-                            <button type="button" class="rounded border border-gray-300 bg-white px-4 py-2 hover:bg-gray-50" @click="cancelPreparation(shipping)">Zrušiť prípravu</button>
+                            <button type="button" class="rounded-sm bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800" @click="dialogShipping = shipping">Potvrdiť odoslanie</button>
+                            <button type="button" class="rounded-sm border border-gray-300 bg-white px-4 py-2 hover:bg-gray-50" @click="cancelPreparation(shipping)">Zrušiť prípravu</button>
                         </div>
                     </div>
                 </section>
@@ -195,7 +195,7 @@ watch(() => route.query.expedicia, (value) => { if (value && isLoaded.value) ite
                 <OrderHistory v-if="getOrder.permissions?.update?.allowed" ref="history" :order-id="orderId" />
 
                 <!-- Prílohy zákazníka (podklady k výrobe) -->
-                <div class="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div class="mt-4 rounded-lg border border-gray-200 bg-white shadow-xs">
                     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-2.5">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Prílohy
@@ -237,7 +237,7 @@ watch(() => route.query.expedicia, (value) => { if (value && isLoaded.value) ite
                 </div>
 
                 <!-- Vrátenia — vrátiť sa dá len expedovaný tovar, inak sekcia nemá význam -->
-                <div v-if="getReturns.length || hasShippedItems" class="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div v-if="getReturns.length || hasShippedItems" class="mt-4 rounded-lg border border-gray-200 bg-white shadow-xs">
                     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-2.5">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Vrátenia tovaru

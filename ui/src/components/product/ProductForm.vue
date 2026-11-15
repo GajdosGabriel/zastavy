@@ -160,7 +160,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                     <div class="space-y-5">
 
                     <!-- Základné info -->
-                    <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <section class="rounded-lg border border-gray-200 bg-white shadow-xs">
                         <div class="border-b border-gray-100 px-6 py-3">
                             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Základné informácie</h2>
                         </div>
@@ -172,7 +172,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                                     </label>
                                     <input id="name" type="text" v-model="getProduct.name"
                                         placeholder="Názov produktu" required
-                                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-xs focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500" />
                                 </div>
                                 <div>
                                     <label class="mb-1.5 block text-sm font-medium text-gray-700" for="code">
@@ -180,7 +180,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                                     </label>
                                     <input id="code" type="text" v-model.trim="getProduct.code"
                                         placeholder="napr. TOV-000001" required
-                                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-xs focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500" />
                                 </div>
                             </div>
                             <div>
@@ -193,7 +193,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                     </section>
 
                     <!-- Jednotky a DPH -->
-                    <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <section class="rounded-lg border border-gray-200 bg-white shadow-xs">
                         <div class="border-b border-gray-100 px-6 py-3">
                             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Jednotky a DPH</h2>
                         </div>
@@ -204,7 +204,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                                         Jednotka <RequiredMark />
                                     </label>
                                     <select id="unit_value" v-model="getProduct.unit_value" required
-                                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-xs focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500">
                                         <option value="ks">kusy</option>
                                         <option value="l">litre</option>
                                         <option value="kg">hmotnosť</option>
@@ -215,7 +215,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                                         Sadzba DPH <RequiredMark />
                                     </label>
                                     <select id="vat" v-model="getProduct.vat" required
-                                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-xs focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500">
                                         <option :value="23">23 %</option>
                                         <option :value="10">10 %</option>
                                         <option :value="0">0 %</option>
@@ -226,14 +226,14 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                     </section>
 
                     <!-- Dostupnosť -->
-                    <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <section class="rounded-lg border border-gray-200 bg-white shadow-xs">
                         <div class="border-b border-gray-100 px-6 py-3">
                             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Dostupnosť</h2>
                         </div>
                         <div class="px-6 py-5">
                             <label class="flex cursor-pointer items-start gap-3">
                                 <input type="checkbox" v-model="getProduct.made_to_order"
-                                    class="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                    class="mt-0.5 h-4 w-4 rounded-sm border-gray-300 text-blue-600 focus:ring-blue-500" />
                                 <span>
                                     <span class="block text-sm font-medium text-gray-700">
                                         Tovar na zákazku — nesledovať sklad
@@ -253,7 +253,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                     <div class="space-y-5">
 
                     <!-- Kategórie -->
-                    <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <section class="rounded-lg border border-gray-200 bg-white shadow-xs">
                         <div class="border-b border-gray-100 px-6 py-3">
                             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Kategória</h2>
                         </div>
@@ -272,7 +272,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                     </section>
 
                     <!-- Obrázky -->
-                    <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <section class="rounded-lg border border-gray-200 bg-white shadow-xs">
                         <div class="border-b border-gray-100 px-6 py-3">
                             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Obrázky</h2>
                         </div>
@@ -294,7 +294,7 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                             <div v-if="imageUrls.length" class="flex flex-wrap gap-3">
                                 <div v-for="imageUrl in imageUrls" :key="imageUrl"
                                     class="rounded-md border-2 border-blue-300 bg-blue-50 p-1">
-                                    <img :src="imageUrl" alt="" class="h-24 w-24 rounded object-contain" />
+                                    <img :src="imageUrl" alt="" class="h-24 w-24 rounded-sm object-contain" />
                                     <p class="mt-1 text-center text-xs text-blue-500">Nový</p>
                                 </div>
                             </div>
@@ -317,10 +317,10 @@ const buttonBack = { name: 'Späť', spinner: true, link: '/products', icon: 'ar
                                                 : 'border-gray-200 hover:border-gray-400'
                                         ]"
                                     >
-                                        <span class="absolute left-1.5 top-1.5 rounded bg-gray-700/60 px-1 text-xs text-white">{{ index + 1 }}</span>
-                                        <img :src="image.path" alt="" class="h-24 w-24 rounded object-contain pointer-events-none" />
+                                        <span class="absolute left-1.5 top-1.5 rounded-sm bg-gray-700/60 px-1 text-xs text-white">{{ index + 1 }}</span>
+                                        <img :src="image.path" alt="" class="h-24 w-24 rounded-sm object-contain pointer-events-none" />
                                         <button type="button" @click="onClickImageRemove(image.id)"
-                                            class="mt-1 w-full rounded text-center text-xs text-gray-500 hover:bg-red-50 hover:text-red-600 py-0.5 transition">
+                                            class="mt-1 w-full rounded-sm text-center text-xs text-gray-500 hover:bg-red-50 hover:text-red-600 py-0.5 transition">
                                             Odstrániť
                                         </button>
                                     </div>

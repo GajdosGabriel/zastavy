@@ -19,7 +19,7 @@ onMounted(() => {
             <div
                 v-for="announcement in getActiveBottomAnnouncements"
                 :key="announcement.id"
-                class="border-x border-slate-300 p-2 text-center font-semibold shadow-sm"
+                class="border-x border-slate-300 p-2 text-center font-semibold shadow-xs"
                 :class="announcement.style_class"
             >
                 <p>{{ announcement.title }}</p>

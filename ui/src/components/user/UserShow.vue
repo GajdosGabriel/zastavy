@@ -50,7 +50,7 @@ const neverLoggedIn = computed(() => !user.value.last_login_at);
                 </div>
 
                 <!-- Detail karta -->
-                <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div class="rounded-lg border border-gray-200 bg-white shadow-xs">
                     <div class="grid divide-y divide-gray-100 px-5 py-1 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
 
                         <!-- Kontakt -->
@@ -135,7 +135,7 @@ const neverLoggedIn = computed(() => !user.value.last_login_at);
                             <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Prihlásenie</p>
 
                             <div v-if="neverLoggedIn"
-                                class="mb-3 flex items-start gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-800">
+                                class="mb-3 flex items-start gap-1.5 rounded-sm border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-800">
                                 <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
                                 </svg>

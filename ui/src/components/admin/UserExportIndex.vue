@@ -22,7 +22,7 @@ onMounted(() => {
             <div class="page-body col-span-12">
                 <PageHeader :item="{ title: 'Export používateľov' }" />
 
-                <div class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="rounded-md border border-slate-200 bg-white p-5 shadow-xs">
                     <p class="mb-4 text-sm text-slate-600">
                         Vyber atribúty, ktoré chceš zahrnúť do CSV exportu používateľov. Export rešpektuje rovnaké
                         oprávnenia ako zoznam používateľov (bežný admin vidí len svojich zákazníkov, super admin všetkých).
@@ -41,7 +41,7 @@ onMounted(() => {
                         <label
                             v-for="attribute in getAttributes"
                             :key="attribute.value"
-                            class="flex items-center gap-2 rounded border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                            class="flex items-center gap-2 rounded-sm border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                         >
                             <input
                                 type="checkbox"
@@ -57,7 +57,7 @@ onMounted(() => {
                         <button
                             type="button"
                             :disabled="!getSelected.length || isExporting"
-                            class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                            class="rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                             @click="exportUsers"
                         >
                             {{ isExporting ? "Exportujem..." : "Exportovať do CSV" }}

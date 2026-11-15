@@ -45,7 +45,7 @@ const dropdownItems = (announcement) => [
             <div class="page-body col-span-12">
                 <PageHeader :item="pageHeader" />
 
-                <div class="mt-5 overflow-x-auto rounded-md border border-slate-200 bg-white shadow-sm">
+                <div class="mt-5 overflow-x-auto rounded-md border border-slate-200 bg-white shadow-xs">
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="thead">
                             <tr>

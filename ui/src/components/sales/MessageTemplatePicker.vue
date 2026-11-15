@@ -28,7 +28,7 @@ function insert(event) {
 
 <template>
     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-        <select aria-label="Vložiť šablónu" class="rounded-lg border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" @change="insert">
+        <select aria-label="Vložiť šablónu" class="rounded-lg border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500" @change="insert">
             <option value="">Vložiť šablónu…</option>
             <option v-for="t in templates" :key="t.id" :value="t.id">{{ t.name }}</option>
         </select>

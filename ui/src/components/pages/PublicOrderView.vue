@@ -62,7 +62,7 @@ const showDeliveryCompany = computed(() => {
                 <div v-else class="mx-auto max-w-3xl space-y-6">
 
                     <!-- Header -->
-                    <div class="rounded-md border border-gray-200 bg-white shadow-sm">
+                    <div class="rounded-md border border-gray-200 bg-white shadow-xs">
                         <div class="border-b border-gray-100 bg-gray-50 px-6 py-5">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
@@ -134,7 +134,7 @@ const showDeliveryCompany = computed(() => {
                     <PaymentInstructions :payment="order.payment_instructions" />
 
                     <!-- Products -->
-                    <div class="rounded-md border border-gray-200 bg-white shadow-sm">
+                    <div class="rounded-md border border-gray-200 bg-white shadow-xs">
                         <div class="border-b border-gray-100 bg-gray-50 px-6 py-3">
                             <h2 class="text-sm font-semibold text-gray-700">Objednané položky</h2>
                         </div>
@@ -206,7 +206,7 @@ const showDeliveryCompany = computed(() => {
                     </div>
 
                     <!-- Attachments -->
-                    <div v-if="order.attachments?.length" class="rounded-md border border-gray-200 bg-white shadow-sm">
+                    <div v-if="order.attachments?.length" class="rounded-md border border-gray-200 bg-white shadow-xs">
                         <div class="border-b border-gray-100 bg-gray-50 px-6 py-3">
                             <h2 class="text-sm font-semibold text-gray-700">Prílohy</h2>
                         </div>

@@ -59,7 +59,7 @@ const dropdownItems = (coupon) => [
                 <PageHeader :item="{ title: 'Kupóny' }" />
 
                 <!-- Nastavenia automatického kupóna -->
-                <div class="mb-6 rounded-md border border-blue-200 bg-blue-50 p-4 shadow-sm">
+                <div class="mb-6 rounded-md border border-blue-200 bg-blue-50 p-4 shadow-xs">
                     <h2 class="mb-3 text-sm font-bold uppercase tracking-wide text-blue-700">
                         Nastavenia automatického kupóna
                     </h2>
@@ -99,7 +99,7 @@ const dropdownItems = (coupon) => [
                             <button
                                 type="submit"
                                 :disabled="settingsSaving"
-                                class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                                class="rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                             >
                                 {{ settingsSaving ? 'Ukladám...' : 'Uložiť nastavenia' }}
                             </button>
@@ -113,7 +113,7 @@ const dropdownItems = (coupon) => [
                 </div>
 
                 <!-- Formulár na manuálny kupón -->
-                <form class="mb-6 rounded-md border border-slate-300 bg-white p-4 shadow-sm" @submit.prevent="saveCoupon">
+                <form class="mb-6 rounded-md border border-slate-300 bg-white p-4 shadow-xs" @submit.prevent="saveCoupon">
                     <div class="grid gap-4 md:grid-cols-3">
                         <div>
                             <label for="coupon-code" class="mb-1 block text-sm font-bold text-slate-700">Kód kupóna</label>
@@ -121,14 +121,14 @@ const dropdownItems = (coupon) => [
                                 <FormInput id="coupon-code" v-model="coupon.code" placeholder="SUMMER10" required class="uppercase flex-1" />
                                 <button type="button" @click="generateCode"
                                     title="Generovať kód"
-                                    class="rounded border border-slate-300 bg-slate-100 px-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+                                    class="rounded-sm border border-slate-300 bg-slate-100 px-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 whitespace-nowrap">
                                     &#x21bb; Generovať
                                 </button>
                             </div>
                         </div>
                         <div>
                             <label for="coupon-type" class="mb-1 block text-sm font-bold text-slate-700">Typ zľavy</label>
-                            <select id="coupon-type" v-model="coupon.type" required class="form-control rounded border px-3 py-2 w-full">
+                            <select id="coupon-type" v-model="coupon.type" required class="form-control rounded-sm border px-3 py-2 w-full">
                                 <option value="percent">Percentuálna (%)</option>
                                 <option value="fixed">Fixná (€)</option>
                             </select>
@@ -149,11 +149,11 @@ const dropdownItems = (coupon) => [
                         </div>
                         <div>
                             <label for="coupon-from" class="mb-1 block text-sm font-bold text-slate-700">Platný od</label>
-                            <input id="coupon-from" v-model="coupon.valid_from" type="date" class="form-control rounded border px-3 py-2 w-full" />
+                            <input id="coupon-from" v-model="coupon.valid_from" type="date" class="form-control rounded-sm border px-3 py-2 w-full" />
                         </div>
                         <div>
                             <label for="coupon-to" class="mb-1 block text-sm font-bold text-slate-700">Platný do</label>
-                            <input id="coupon-to" v-model="coupon.valid_to" type="date" class="form-control rounded border px-3 py-2 w-full" />
+                            <input id="coupon-to" v-model="coupon.valid_to" type="date" class="form-control rounded-sm border px-3 py-2 w-full" />
                         </div>
                         <label for="coupon-active" class="flex min-h-10 cursor-pointer items-center gap-2 self-end md:col-span-2">
                             <input id="coupon-active" type="checkbox" v-model="coupon.active" class="h-5 w-5 accent-blue-600" />
@@ -167,7 +167,7 @@ const dropdownItems = (coupon) => [
                 </form>
 
                 <!-- Tabuľka kupónov -->
-                <div class="overflow-x-auto rounded-md border border-slate-200 bg-white shadow-sm">
+                <div class="overflow-x-auto rounded-md border border-slate-200 bg-white shadow-xs">
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="thead">
                             <tr>
@@ -223,7 +223,7 @@ const dropdownItems = (coupon) => [
                 <!-- Kôš -->
                 <div v-if="getTrashedCoupons.length" class="mt-8">
                     <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Kôš</h3>
-                    <div class="overflow-x-auto rounded-md border border-red-100 bg-red-50 shadow-sm">
+                    <div class="overflow-x-auto rounded-md border border-red-100 bg-red-50 shadow-xs">
                         <table class="min-w-full divide-y divide-red-100">
                             <thead>
                                 <tr>
@@ -240,7 +240,7 @@ const dropdownItems = (coupon) => [
                                     </td>
                                     <td class="tbody_td">
                                         <button type="button" @click="restoreCoupon(coupon)"
-                                            class="rounded bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-200">
+                                            class="rounded-sm bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-200">
                                             Obnoviť
                                         </button>
                                     </td>

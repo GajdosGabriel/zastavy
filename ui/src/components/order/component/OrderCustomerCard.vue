@@ -105,7 +105,7 @@ watch(() => [props.order?.id, canLookup.value], ([id]) => {
     <div class="grid gap-4 sm:grid-cols-2">
 
         <!-- Firma / zákazník -->
-        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-xs">
             <div class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Zákazník</div>
 
             <div class="flex flex-col gap-4 lg:flex-row">
@@ -129,7 +129,7 @@ watch(() => [props.order?.id, canLookup.value], ([id]) => {
                         <div v-for="item in taxIds" :key="item.key" class="flex items-center gap-1">
                             <span>{{ item.label }}: <strong class="text-gray-700">{{ current[item.key] }}</strong></span>
                             <button type="button" @click="copyValue(item.key, current[item.key])"
-                                class="-my-1 rounded p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-blue-600"
+                                class="-my-1 rounded-sm p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-blue-600"
                                 :aria-label="`Kopírovať ${item.label}`"
                                 :title="copied === item.key ? 'Skopírované' : `Kopírovať ${item.label}`">
                                 <svg v-if="copied === item.key" class="h-3.5 w-3.5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -151,14 +151,14 @@ watch(() => [props.order?.id, canLookup.value], ([id]) => {
                                 {{ lookup.failed ? 'DIČ sa v registri nenašlo' : 'DIČ chýba' }}
                             </span>
                             <button type="button" @click="lookupTaxIds"
-                                class="rounded border border-gray-200 px-2 py-0.5 font-semibold text-gray-700 transition hover:bg-gray-100">
+                                class="rounded-sm border border-gray-200 px-2 py-0.5 font-semibold text-gray-700 transition hover:bg-gray-100">
                                 Dohľadať v registri
                             </button>
                         </template>
                     </div>
 
                     <button v-if="billingText" type="button" @click="copyValue('billing', billingText)"
-                        class="mt-2 rounded border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-100">
+                        class="mt-2 rounded-sm border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-100">
                         {{ copied === 'billing' ? 'Skopírované' : 'Kopírovať fakturačné údaje' }}
                     </button>
                 </div>
@@ -189,7 +189,7 @@ watch(() => [props.order?.id, canLookup.value], ([id]) => {
         </div>
 
         <!-- Objednávka -->
-        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-xs">
             <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Objednávka</div>
 
             <div class="flex gap-4">
@@ -252,7 +252,7 @@ watch(() => [props.order?.id, canLookup.value], ([id]) => {
             </div>
             </div>
 
-            <div v-if="order.note" class="mt-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <div v-if="order.note" class="mt-3 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                 <span class="font-semibold">Poznámka: </span>{{ order.note }}
             </div>
         </div>
@@ -260,7 +260,7 @@ watch(() => [props.order?.id, canLookup.value], ([id]) => {
         <!-- Adresa doručenia — vyzdvihnutá len keď sa líši od sídla, inak by
              karta zopakovala tú istú adresu druhýkrát. -->
         <div v-if="order.delivery?.is_custom"
-             class="rounded-lg border-2 border-indigo-200 bg-indigo-50 p-4 shadow-sm sm:col-span-2">
+             class="rounded-lg border-2 border-indigo-200 bg-indigo-50 p-4 shadow-xs sm:col-span-2">
             <div class="mb-2 flex items-center justify-between">
                 <span class="text-xs font-semibold uppercase tracking-wide text-indigo-500">Doručiť na inú adresu</span>
                 <span v-if="order.delivery_changed_at" class="text-xs text-indigo-400">
@@ -283,7 +283,7 @@ watch(() => [props.order?.id, canLookup.value], ([id]) => {
                     v-if="order.delivery.phone || order.delivery.street"
                     type="button"
                     @click="copyValue('delivery', [order.delivery.company, order.delivery.name, order.delivery.street, [order.delivery.postcode, order.delivery.city].filter(Boolean).join(' ')].filter(Boolean).join('\n'))"
-                    class="rounded border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
+                    class="rounded-sm border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
                 >
                     {{ copied === 'delivery' ? 'Skopírované' : 'Kopírovať adresu' }}
                 </button>

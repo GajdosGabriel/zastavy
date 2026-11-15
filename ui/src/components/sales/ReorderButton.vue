@@ -13,7 +13,7 @@ function add(){if(added.value)return;cart.getlocalStorage();for(const item of it
             Zopakovať objednávku
         </button>
 
-        <section v-if="items || error" class="basis-full rounded-md border border-gray-200 bg-white p-4 text-sm shadow-sm">
+        <section v-if="items || error" class="basis-full rounded-md border border-gray-200 bg-white p-4 text-sm shadow-xs">
             <p v-if="error" role="alert" class="text-red-700">{{ error }}</p>
             <div v-if="items" class="space-y-3">
                 <p class="text-gray-700">Skontrolujte aktuálne ceny a množstvá. Dostupné položky sa pridajú k existujúcemu košíku.</p>
@@ -30,7 +30,7 @@ function add(){if(added.value)return;cart.getlocalStorage();for(const item of it
                 </ul>
                 <div class="flex flex-wrap items-center gap-4">
                     <button type="button" :disabled="added || !items.some(i => i.available)" @click="add"
-                        class="rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 disabled:opacity-40">
+                        class="rounded-sm bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 disabled:opacity-40">
                         {{ added ? 'Pridané do košíka' : 'Pridať dostupné položky' }}
                     </button>
                     <router-link v-if="added" to="/kosik" class="font-semibold text-blue-700 underline">Prejsť do košíka</router-link>

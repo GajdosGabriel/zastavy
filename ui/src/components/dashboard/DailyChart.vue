@@ -44,7 +44,7 @@ const active = computed(() => hovered.value === null ? null : props.days[hovered
 </script>
 
 <template>
-      <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-xs">
             <div class="flex flex-wrap items-start justify-between gap-3">
                   <div>
                         <h2 class="text-base font-semibold text-slate-900">Posledných 30 dní</h2>
@@ -55,8 +55,8 @@ const active = computed(() => hovered.value === null ? null : props.days[hovered
                   </div>
                   <div class="inline-flex rounded-md border border-slate-200 bg-slate-50 p-0.5 text-xs font-medium">
                         <button v-for="item in metrics" :key="item.key" type="button"
-                              class="rounded px-2.5 py-1 transition"
-                              :class="metric === item.key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'"
+                              class="rounded-sm px-2.5 py-1 transition"
+                              :class="metric === item.key ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'"
                               @click="metric = item.key">
                               {{ item.label }}
                         </button>
@@ -77,7 +77,7 @@ const active = computed(() => hovered.value === null ? null : props.days[hovered
 
                   <div class="flex h-44 items-end gap-[3px] pt-10" @mouseleave="hovered = null">
                         <div v-for="(day, index) in days" :key="day.date"
-                              class="group relative flex h-full flex-1 cursor-default items-end rounded-sm"
+                              class="group relative flex h-full flex-1 cursor-default items-end rounded-xs"
                               :class="isWeekend(day.date) ? 'bg-slate-50' : ''"
                               @mouseenter="hovered = index">
                               <div class="w-full rounded-t-sm transition-all duration-300"

@@ -103,7 +103,7 @@ onMounted(() => {
                               <button
                                     type="button"
                                     v-if="!isDesktop"
-                                    class="ml-1 rounded-md p-2 text-gray-600 hover:bg-gray-200 hover:text-gray-900 focus:outline-none"
+                                    class="ml-1 rounded-md p-2 text-gray-600 hover:bg-gray-200 hover:text-gray-900 focus:outline-hidden"
                                     @click="mobileMenuOpen = !mobileMenuOpen"
                                     aria-label="Menu"
                               >

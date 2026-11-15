@@ -131,7 +131,7 @@ const onResolve = async () => {
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-semibold text-gray-800">{{ issue.label }}</span>
-                                    <span class="rounded px-1.5 py-0.5 text-[11px] font-semibold" :class="severityClass(issue.severity)">
+                                    <span class="rounded-sm px-1.5 py-0.5 text-[11px] font-semibold" :class="severityClass(issue.severity)">
                                         {{ issue.severity_label }}
                                     </span>
                                     <span class="text-[11px] text-gray-500">{{ issue.source_label }}</span>

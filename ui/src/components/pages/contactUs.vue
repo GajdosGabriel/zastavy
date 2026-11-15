@@ -12,7 +12,7 @@ onMounted(() => {
       <BaseLayout>
             <template #main>
                   <section class="contact-page px-4 pb-10 sm:px-7">
-                        <div class="contact-shell overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+                        <div class="contact-shell overflow-hidden rounded-md border border-slate-200 bg-white shadow-xs">
                               <div class="bg-blue-900 px-5 py-8 text-white sm:px-8">
                                     <p class="text-sm font-semibold uppercase tracking-wide text-blue-100">
                                           Kontaktné údaje

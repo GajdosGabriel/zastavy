@@ -19,9 +19,9 @@ const productionTones={awaiting_artwork:'bg-amber-100 text-amber-800',ready:'bg-
 // Kedy bola verzia naposledy odoslaná zákazníkovi e-mailom.
 const sentAt=v=>detail.value.messages.filter(m=>m.kind==='artwork_sent'&&m.version===v.version).at(-1)?.created_at;
 const date=d=>d?new Date(d).toLocaleDateString('sk-SK'):'neurčené';
-const input='w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
+const input='w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500';
 const label='block text-sm font-semibold text-gray-700';
-const card='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm';
+const card='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs';
 const cardHead='border-b border-gray-100 bg-gray-50 px-5 py-3';
 const primary='rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:bg-gray-400';
 const success='rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 disabled:bg-gray-400';

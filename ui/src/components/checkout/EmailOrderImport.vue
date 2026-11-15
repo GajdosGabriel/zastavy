@@ -79,7 +79,7 @@ defineExpose({ open, openDraft });
         <dialog ref="dialog" class="m-auto max-h-[90vh] w-[min(56rem,95vw)] overflow-y-auto rounded-xl bg-white p-0 shadow-xl backdrop:bg-slate-950/50" aria-labelledby="email-import-title" @cancel.prevent="close">
             <div class="flex items-center justify-between border-b p-5">
                 <h2 id="email-import-title" class="text-lg font-semibold">Doplniť objednávku z e-mailu</h2>
-                <button type="button" :disabled="busy" aria-label="Zavrieť" class="rounded px-3 py-1 text-xl disabled:opacity-40" @click="close">×</button>
+                <button type="button" :disabled="busy" aria-label="Zavrieť" class="rounded-sm px-3 py-1 text-xl disabled:opacity-40" @click="close">×</button>
             </div>
             <div class="space-y-4 p-5">
                 <p class="text-sm text-slate-600">Vložte celý text e-mailu vrátane odosielateľa a podpisu. AI vyhľadá zákazníka, chýbajúce firemné údaje a produkty. Text sa odošle službe OpenAI na spracovanie.</p>
@@ -96,7 +96,7 @@ defineExpose({ open, openDraft });
                     <dl class="grid gap-3 rounded-lg border p-4 sm:grid-cols-2">
                         <div v-for="(label, field) in fields" :key="field">
                             <dt class="text-xs text-slate-500">{{ label }}</dt>
-                            <dd class="break-words text-sm font-medium">{{ draft.customer[field] || '—' }}</dd>
+                            <dd class="wrap-break-word text-sm font-medium">{{ draft.customer[field] || '—' }}</dd>
                         </div>
                     </dl>
                     <p class="text-sm text-slate-600">Údaje môžete po doplnení upraviť vo formulári košíka.</p>
@@ -106,7 +106,7 @@ defineExpose({ open, openDraft });
                             <label class="flex items-start gap-2"><input v-model="item.selected" type="checkbox" class="mt-1" /><span>{{ item.cart.name }} — {{ item.cart.variant_name }}<span class="block text-xs text-slate-500">Z e-mailu: {{ item.description }}</span></span></label>
                             <div class="mt-2 flex items-center gap-3">
                                 <label :for="`email-quantity-${index}`">Počet</label>
-                                <input :id="`email-quantity-${index}`" v-model.number="item.cart.input_order" type="number" :min="item.cart.min_order" max="100000" step="1" class="w-24 rounded border-slate-300" />
+                                <input :id="`email-quantity-${index}`" v-model.number="item.cart.input_order" type="number" :min="item.cart.min_order" max="100000" step="1" class="w-24 rounded-sm border-slate-300" />
                                 <span>{{ formatPrice(item.cart.active_price) }} € / ks</span>
                             </div>
                         </template>

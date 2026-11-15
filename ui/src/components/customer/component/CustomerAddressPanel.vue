@@ -141,14 +141,14 @@ const errorFor = (field) => {
 </script>
 
 <template>
-    <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div class="rounded-lg border border-gray-200 bg-white shadow-xs">
         <div class="flex items-center justify-between border-b border-gray-100 px-5 py-2.5">
             <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Doručovacie adresy</span>
             <button
                 v-if="canEdit && !showForm"
                 type="button"
                 @click="openCreate"
-                class="rounded border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                class="rounded-sm border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
             >
                 + Pridať adresu
             </button>
@@ -160,56 +160,56 @@ const errorFor = (field) => {
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Pomenovanie</label>
                     <input v-model="form.label" type="text" placeholder="Napr. Sklad Nitra" maxlength="100"
-                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           class="w-full rounded-sm border px-3 py-1.5 text-sm focus:outline-hidden"
                            :class="inputClass('label')" @input="clearError('label')" />
                     <p v-if="errorFor('label')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('label') }}</p>
                 </div>
                 <div class="sm:col-span-1 lg:col-span-2">
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Názov príjemcu</label>
                     <input v-model="form.company" type="text" placeholder="Napr. Základná škola Testovce" maxlength="200"
-                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           class="w-full rounded-sm border px-3 py-1.5 text-sm focus:outline-hidden"
                            :class="inputClass('company')" @input="clearError('company')" />
                     <p v-if="errorFor('company')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('company') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Ulica a číslo *</label>
                     <input v-model="form.street" type="text" maxlength="250"
-                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           class="w-full rounded-sm border px-3 py-1.5 text-sm focus:outline-hidden"
                            :class="inputClass('street')" @input="clearError('street')" />
                     <p v-if="errorFor('street')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('street') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">PSČ *</label>
                     <input v-model="form.postcode" type="text" maxlength="6"
-                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           class="w-full rounded-sm border px-3 py-1.5 text-sm focus:outline-hidden"
                            :class="inputClass('postcode')" @input="clearError('postcode')" />
                     <p v-if="errorFor('postcode')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('postcode') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Mesto *</label>
                     <input v-model="form.city" type="text" maxlength="100"
-                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           class="w-full rounded-sm border px-3 py-1.5 text-sm focus:outline-hidden"
                            :class="inputClass('city')" @input="clearError('city')" />
                     <p v-if="errorFor('city')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('city') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Kontaktná osoba na mieste</label>
                     <input v-model="form.name" type="text" maxlength="150"
-                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           class="w-full rounded-sm border px-3 py-1.5 text-sm focus:outline-hidden"
                            :class="inputClass('name')" @input="clearError('name')" />
                     <p v-if="errorFor('name')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('name') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Telefón na mieste</label>
                     <input v-model="form.phone" type="tel" maxlength="40"
-                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           class="w-full rounded-sm border px-3 py-1.5 text-sm focus:outline-hidden"
                            :class="inputClass('phone')" @input="clearError('phone')" />
                     <p v-if="errorFor('phone')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('phone') }}</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-gray-600">Poznámka pre doručenie</label>
                     <input v-model="form.note" type="text" placeholder="Napr. zvoniť na vrátnicu" maxlength="255"
-                           class="w-full rounded border px-3 py-1.5 text-sm focus:outline-none"
+                           class="w-full rounded-sm border px-3 py-1.5 text-sm focus:outline-hidden"
                            :class="inputClass('note')" @input="clearError('note')" />
                     <p v-if="errorFor('note')" class="mt-1 text-xs font-semibold text-red-600">{{ errorFor('note') }}</p>
                 </div>
@@ -217,16 +217,16 @@ const errorFor = (field) => {
 
             <div class="mt-3 flex items-center justify-between">
                 <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" v-model="form.is_default" class="rounded" />
+                    <input type="checkbox" v-model="form.is_default" class="rounded-sm" />
                     Predvolená doručovacia adresa
                 </label>
                 <div class="flex gap-2">
                     <button type="button" @click="closeForm"
-                            class="rounded bg-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                            class="rounded-sm bg-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-300">
                         Zrušiť
                     </button>
                     <button type="button" @click="save" :disabled="saving"
-                            class="rounded bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400">
+                            class="rounded-sm bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400">
                         {{ saving ? 'Ukladám…' : 'Uložiť' }}
                     </button>
                 </div>

@@ -5,14 +5,14 @@ import gabrielImage from "../../assets/images/gabriel.jpg";
 
 <template>
     <section class="mb-6 bg-slate-200 px-3">
-        <div class="max-w-7xl mx-auto border-x border-b border-slate-300 bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto border-x border-b border-slate-300 bg-white shadow-xs">
             <div class="grid items-center gap-6 px-3 py-6 md:px-6 lg:grid-cols-12">
                 <div class="lg:col-span-8">
                     <img
                         :src="headerImage"
                         width="700" height="180"
                         alt="Zástavy-vlajky.sk"
-                        class="aspect-[700/180] h-auto w-full rounded-md object-contain object-left"
+                        class="aspect-700/180 h-auto w-full rounded-md object-contain object-left"
                     />
                 </div>
 
@@ -22,7 +22,7 @@ import gabrielImage from "../../assets/images/gabriel.jpg";
                             :src="gabrielImage"
                             width="128" height="128" loading="lazy"
                             alt="Gabriel Gajdoš, kontaktná osoba"
-                            class="h-16 w-16 shrink-0 rounded-md sm:h-24 sm:w-24 xl:h-32 xl:w-32 object-cover shadow-sm"
+                            class="h-16 w-16 shrink-0 rounded-md sm:h-24 sm:w-24 xl:h-32 xl:w-32 object-cover shadow-xs"
                         />
                         <div class="min-w-0">
                             <div class="text-sm font-semibold uppercase text-slate-500">Kontakt</div>

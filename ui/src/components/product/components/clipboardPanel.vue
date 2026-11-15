@@ -7,7 +7,7 @@ const props = defineProps({
 </script>
 
 <template>
-    <div class="mb-5 overflow-hidden rounded-md border border-slate-300 bg-slate-50 shadow-sm">
+    <div class="mb-5 overflow-hidden rounded-md border border-slate-300 bg-slate-50 shadow-xs">
         <div class="grid grid-cols-3 gap-4 bg-slate-800 px-4 py-2 text-sm font-semibold text-white">
             <span>Schránka</span>
             <span>Ks</span>

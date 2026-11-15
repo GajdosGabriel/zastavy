@@ -222,11 +222,11 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: ordersStore.listRo
 
                 <!-- Doprava + platba -->
                 <div v-if="shippingMethods.length || paymentMethods.length"
-                     class="mb-4 grid gap-4 md:grid-cols-2 bg-white p-4 border-2 border-gray-300 rounded-ms shadow">
+                     class="mb-4 grid gap-4 md:grid-cols-2 bg-white p-4 border-2 border-gray-300 rounded-ms shadow-sm">
                     <div v-if="shippingMethods.length">
                         <label class="mb-1 block text-sm font-semibold text-gray-700">Spôsob dopravy</label>
                         <select v-model="selectedShippingId"
-                            class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            class="w-full rounded-sm border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500">
                             <option :value="null">— nevybrané —</option>
                             <option v-for="m in shippingMethods" :key="m.id" :value="m.id">
                                 {{ m.name }} ({{ m.price > 0 ? `${formatPrice(m.price)} €` : 'Zdarma' }})
@@ -236,7 +236,7 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: ordersStore.listRo
                     <div v-if="paymentMethods.length">
                         <label class="mb-1 block text-sm font-semibold text-gray-700">Spôsob platby</label>
                         <select v-model="selectedPaymentId"
-                            class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            class="w-full rounded-sm border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500">
                             <option :value="null">— nevybrané —</option>
                             <option v-for="m in paymentMethods" :key="m.id" :value="m.id">
                                 {{ m.name }}{{ m.fee > 0 ? ` (+ ${formatPrice(m.fee)} €)` : '' }}
@@ -259,10 +259,10 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: ordersStore.listRo
                 </div>
 
                 <!-- Záujem o kupón -->
-                <div class="mb-4 rounded-md border bg-white px-4 py-3 shadow"
+                <div class="mb-4 rounded-md border bg-white px-4 py-3 shadow-sm"
                      :class="wantsCoupon ? 'border-orange-300 bg-orange-50' : 'border-gray-300'">
                     <label class="flex cursor-pointer items-center gap-3">
-                        <input type="checkbox" v-model="wantsCoupon" class="h-4 w-4 rounded border-gray-300 text-orange-500" />
+                        <input type="checkbox" v-model="wantsCoupon" class="h-4 w-4 rounded-sm border-gray-300 text-orange-500" />
                         <span class="flex items-center gap-2 text-sm font-semibold"
                               :class="wantsCoupon ? 'text-orange-800' : 'text-gray-600'">
                             <span class="text-base">🎟️</span>
@@ -272,12 +272,12 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: ordersStore.listRo
                 </div>
 
                 <!-- Poznámka k objednávke -->
-                <div class="mb-4 bg-white p-4 border-2 border-gray-300 rounded-ms shadow">
+                <div class="mb-4 bg-white p-4 border-2 border-gray-300 rounded-ms shadow-sm">
                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
                     <input
                         v-model="note"
                         type="text"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
                         placeholder="Poznámka"
                     />
                 </div>
@@ -286,7 +286,7 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: ordersStore.listRo
                 <div class="flex flex-col">
                     <div class="-my-2">
                         <div class="py-2 block min-w-0">
-                            <div class="overflow-x-auto shadow border-b border-gray-200 sm:rounded-lg">
+                            <div class="overflow-x-auto shadow-sm border-b border-gray-200 sm:rounded-lg">
                                 <table class="min-w-full divide-y border-2 border-gray-500">
                                     <thead class="thead">
                                         <tr>
@@ -337,23 +337,23 @@ const buttonBack   = { name: 'Späť',   spinner: true, link: ordersStore.listRo
 
     <!-- Modal: Informovať zákazníka o zmene -->
     <Teleport to="body">
-        <div v-if="showNotifyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+        <div v-if="showNotifyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
             <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
                 <h3 class="mb-2 text-lg font-semibold text-gray-800">Uložiť zmeny</h3>
                 <p class="mb-4 text-sm text-gray-600">
                     Chcete zákazníka informovať o zmenách emailom?
                 </p>
                 <label class="mb-5 flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                    <input type="checkbox" v-model="notifyCustomer" class="rounded" />
+                    <input type="checkbox" v-model="notifyCustomer" class="rounded-sm" />
                     Informovať zákazníka o zmene
                 </label>
                 <div class="flex justify-end gap-2">
                     <button type="button" @click="showNotifyModal = false"
-                        class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                        class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
                         Zrušiť
                     </button>
                     <button type="button" @click="confirmUpdate"
-                        class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                        class="rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
                         Uložiť
                     </button>
                 </div>

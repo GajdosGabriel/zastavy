@@ -133,7 +133,7 @@ onMounted(load);
                 <div
                     v-for="group in groups"
                     :key="group.key"
-                    class="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+                    class="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs"
                 >
                     <div class="flex items-center justify-between gap-3 border-b border-gray-100 bg-gray-50 px-5 py-3">
                         <h2 class="text-sm font-semibold text-gray-800">{{ group.reason }}</h2>

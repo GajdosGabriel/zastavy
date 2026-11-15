@@ -151,7 +151,7 @@ async function doDelete() {
                 </div>
 
                 <!-- Detail karty -->
-                <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-xs">
                     <div class="border-b border-gray-100 px-5 py-2.5 flex items-center justify-between">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Detail</span>
                         <button v-if="ret.can_manage && ret.status === 'pending' && !editing"
@@ -205,7 +205,7 @@ async function doDelete() {
                 </div>
 
                 <!-- Položky -->
-                <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-xs">
                     <div class="border-b border-gray-100 px-5 py-2.5">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Položky</span>
                     </div>
@@ -229,7 +229,7 @@ async function doDelete() {
                                         v-model.number="editQuantities[item.order_product_id]"
                                         :min="0"
                                         :max="item.shipped_quantity"
-                                        class="w-20 rounded border border-gray-300 px-2 py-1 text-center text-sm focus:border-blue-500 focus:outline-none"
+                                        class="w-20 rounded-sm border border-gray-300 px-2 py-1 text-center text-sm focus:border-blue-500 focus:outline-hidden"
                                     />
                                     <span v-else class="font-semibold text-sm text-gray-900">
                                         {{ item.quantity }} {{ item.product_unit }}
@@ -242,11 +242,11 @@ async function doDelete() {
                     <!-- Edit actions -->
                     <div v-if="editing" class="flex justify-end gap-2 px-5 py-3 border-t border-gray-100">
                         <button @click="cancelEdit"
-                            class="rounded px-4 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-100">
+                            class="rounded-sm px-4 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-100">
                             Zrušiť
                         </button>
                         <button @click="saveEdit" :disabled="submitting"
-                            class="rounded bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                            class="rounded-sm bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
                             {{ submitting ? 'Ukladám...' : 'Uložiť zmeny' }}
                         </button>
                     </div>
@@ -258,20 +258,20 @@ async function doDelete() {
                         <div class="flex items-center gap-2 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-sm text-gray-700">
                             <span class="font-semibold">Zrušiť vrátenie?</span>
                             <button @click="doCancel" :disabled="submitting"
-                                class="ml-2 rounded bg-gray-600 px-3 py-1 font-semibold text-white hover:bg-gray-700 disabled:opacity-50">
+                                class="ml-2 rounded-sm bg-gray-600 px-3 py-1 font-semibold text-white hover:bg-gray-700 disabled:opacity-50">
                                 {{ submitting ? '...' : 'Áno, zrušiť' }}
                             </button>
-                            <button @click="confirming = null" class="rounded px-3 py-1 text-gray-600 hover:bg-gray-100">Nie</button>
+                            <button @click="confirming = null" class="rounded-sm px-3 py-1 text-gray-600 hover:bg-gray-100">Nie</button>
                         </div>
                     </template>
                     <template v-else-if="confirming === 'delete'">
                         <div class="flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">
                             <span class="font-semibold">Zmazať vrátenie natrvalo?</span>
                             <button @click="doDelete" :disabled="submitting"
-                                class="ml-2 rounded bg-red-600 px-3 py-1 font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+                                class="ml-2 rounded-sm bg-red-600 px-3 py-1 font-semibold text-white hover:bg-red-700 disabled:opacity-50">
                                 {{ submitting ? '...' : 'Zmazať' }}
                             </button>
-                            <button @click="confirming = null" class="rounded px-3 py-1 text-red-700 hover:bg-red-100">Nie</button>
+                            <button @click="confirming = null" class="rounded-sm px-3 py-1 text-red-700 hover:bg-red-100">Nie</button>
                         </div>
                     </template>
                     <template v-else>
@@ -299,7 +299,7 @@ async function doDelete() {
 
     <!-- Modal: Spracovať vrátenie -->
     <Teleport to="body">
-        <div v-if="showProcessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+        <div v-if="showProcessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
             <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
                 <h3 class="mb-1 text-lg font-semibold text-gray-800">Spracovať vrátenie tovaru?</h3>
                 <p class="mb-1 text-sm text-gray-500">
@@ -309,20 +309,20 @@ async function doDelete() {
                     Dôvod: {{ ret.reason_label }}
                 </p>
                 <label class="mb-3 flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" v-model="restock" class="rounded" />
+                    <input type="checkbox" v-model="restock" class="rounded-sm" />
                     Vrátiť predajný tovar do dostupného skladu
                 </label>
                 <label class="mb-5 flex cursor-pointer items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" v-model="notifyCustomer" class="rounded" />
+                    <input type="checkbox" v-model="notifyCustomer" class="rounded-sm" />
                     Informovať zákazníka emailom o vrátení
                 </label>
                 <div class="flex justify-end gap-2">
                     <button type="button" @click="showProcessModal = false"
-                        class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                        class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
                         Zrušiť
                     </button>
                     <button type="button" @click="doProcess" :disabled="submitting"
-                        class="rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">
+                        class="rounded-sm bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">
                         {{ submitting ? '...' : 'Spracovať vrátenie' }}
                     </button>
                 </div>

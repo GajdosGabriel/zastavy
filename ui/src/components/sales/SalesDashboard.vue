@@ -14,7 +14,7 @@ onMounted(()=>load());
                 <p v-if="error" role="alert" class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ error }}</p>
 
                 <!-- Neprečítané správy -->
-                <section v-if="unread.length" class="overflow-hidden rounded-xl border border-blue-200 bg-white shadow-sm">
+                <section v-if="unread.length" class="overflow-hidden rounded-xl border border-blue-200 bg-white shadow-xs">
                     <h2 class="border-b border-blue-100 bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-900">
                         Neprečítané správy zákazníkov
                     </h2>
@@ -30,12 +30,12 @@ onMounted(()=>load());
                 </section>
 
                 <!-- Cenové dopyty a ponuky -->
-                <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                     <h2 class="flex justify-between border-b border-gray-100 bg-gray-50 px-5 py-3 text-sm font-semibold text-gray-700">Cenové dopyty a ponuky <span class="flex gap-4 font-normal"><router-link to="/predaj/sablony" class="text-blue-700 hover:underline">Šablóny správ</router-link><router-link to="/predaj/ponuky" class="text-blue-700 hover:underline">Všetky ponuky →</router-link></span></h2>
 
                     <div v-if="!quotes" role="status" class="animate-pulse space-y-3 px-5 py-5">
                         <span class="sr-only">Načítavam dopyty…</span>
-                        <div v-for="n in 3" :key="n" class="h-4 rounded bg-gray-100" aria-hidden="true"></div>
+                        <div v-for="n in 3" :key="n" class="h-4 rounded-sm bg-gray-100" aria-hidden="true"></div>
                     </div>
                     <p v-else-if="!quotes.data.length" class="px-5 py-8 text-center text-sm text-gray-600">Zatiaľ žiadne dopyty.</p>
                     <ul v-else class="divide-y divide-gray-100">
@@ -49,16 +49,16 @@ onMounted(()=>load());
                     </ul>
 
                     <div v-if="quotes?.last_page > 1" class="flex items-center justify-center gap-3 border-t border-gray-100 px-5 py-3 text-sm">
-                        <button type="button" class="rounded border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                        <button type="button" class="rounded-sm border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                             :disabled="busy || quotes.current_page === 1" @click="load(quotes.current_page - 1, production.current_page)">Predchádzajúca</button>
                         <span class="text-gray-600">{{ quotes.current_page }} / {{ quotes.last_page }}</span>
-                        <button type="button" class="rounded border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                        <button type="button" class="rounded-sm border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                             :disabled="busy || quotes.current_page === quotes.last_page" @click="load(quotes.current_page + 1, production.current_page)">Ďalšia</button>
                     </div>
                 </section>
 
                 <!-- Plán výroby -->
-                <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gray-50 px-5 py-3">
                         <div>
                             <h2 class="text-sm font-semibold text-gray-700">Plán výroby</h2>
@@ -66,10 +66,10 @@ onMounted(()=>load());
                         </div>
                         <div class="flex flex-wrap items-center gap-3">
                             <label class="flex min-h-9 cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700">
-                                <input v-model="overdue" type="checkbox" class="h-4 w-4 rounded border-gray-300" @change="load(quotes?.current_page ?? 1, 1)" />
+                                <input v-model="overdue" type="checkbox" class="h-4 w-4 rounded-sm border-gray-300" @change="load(quotes?.current_page ?? 1, 1)" />
                                 Iba omeškané
                             </label>
-                            <select v-model="status" aria-label="Stav výroby" class="rounded border border-gray-300 px-3 py-1.5 text-sm" @change="load(quotes?.current_page ?? 1, 1)">
+                            <select v-model="status" aria-label="Stav výroby" class="rounded-sm border border-gray-300 px-3 py-1.5 text-sm" @change="load(quotes?.current_page ?? 1, 1)">
                                 <option value="">Všetky stavy</option>
                                 <option v-for="(label, key) in productionLabels" :key="key" :value="key">{{ label }}</option>
                             </select>
@@ -78,7 +78,7 @@ onMounted(()=>load());
 
                     <div v-if="!production" role="status" class="animate-pulse space-y-3 px-5 py-5">
                         <span class="sr-only">Načítavam plán výroby…</span>
-                        <div v-for="n in 3" :key="n" class="h-4 rounded bg-gray-100" aria-hidden="true"></div>
+                        <div v-for="n in 3" :key="n" class="h-4 rounded-sm bg-gray-100" aria-hidden="true"></div>
                     </div>
                     <p v-else-if="!production.data.length" class="px-5 py-8 text-center text-sm text-gray-600">Žiadne zákazky pre tento filter.</p>
                     <ul v-else class="divide-y divide-gray-100">
@@ -99,10 +99,10 @@ onMounted(()=>load());
                     </ul>
 
                     <div v-if="production?.last_page > 1" class="flex items-center justify-center gap-3 border-t border-gray-100 px-5 py-3 text-sm">
-                        <button type="button" class="rounded border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                        <button type="button" class="rounded-sm border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                             :disabled="busy || production.current_page === 1" @click="load(quotes.current_page, production.current_page - 1)">Predchádzajúca</button>
                         <span class="text-gray-600">{{ production.current_page }} / {{ production.last_page }}</span>
-                        <button type="button" class="rounded border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                        <button type="button" class="rounded-sm border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                             :disabled="busy || production.current_page === production.last_page" @click="load(quotes.current_page, production.current_page + 1)">Ďalšia</button>
                     </div>
                 </section>

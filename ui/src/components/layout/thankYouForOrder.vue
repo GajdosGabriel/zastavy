@@ -28,7 +28,7 @@ onMounted(async () => {
     <BaseLayout>
         <template #main>
             <section class="col-span-12 px-4 pb-12">
-                <div class="mx-auto max-w-3xl rounded-md border border-green-200 bg-white shadow-sm">
+                <div class="mx-auto max-w-3xl rounded-md border border-green-200 bg-white shadow-xs">
                     <div class="border-b border-green-100 bg-green-50 px-6 py-6 text-center">
                         <div
                             class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-700 text-white">
@@ -49,7 +49,7 @@ onMounted(async () => {
                             <span class="mx-1 text-gray-500" aria-hidden="true">·</span>
                             <strong>{{ formatPrice(order.grand_total) }} €</strong>
                         </p>
-                        <p v-else-if="orderToken" class="mx-auto mt-3 h-7 w-64 animate-pulse rounded bg-green-100" aria-hidden="true"></p>
+                        <p v-else-if="orderToken" class="mx-auto mt-3 h-7 w-64 animate-pulse rounded-sm bg-green-100" aria-hidden="true"></p>
 
                         <p class="mt-2 text-gray-700">
                             {{ emailSent
@@ -59,7 +59,7 @@ onMounted(async () => {
 
                         <router-link v-if="orderToken"
                             :to="{ name: 'public.order.show', params: { uuid: orderToken } }"
-                            class="mt-5 inline-flex items-center justify-center rounded-md bg-blue-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            class="mt-5 inline-flex items-center justify-center rounded-md bg-blue-700 px-6 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-blue-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                             Zobraziť moju objednávku
                         </router-link>
                     </div>
@@ -118,7 +118,7 @@ onMounted(async () => {
                             </div>
 
                             <router-link :to="{ name: 'public.index' }"
-                                class="inline-flex w-auto items-center justify-center rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                class="inline-flex w-auto items-center justify-center rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-xs hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                                 Prejsť na začiatok
                             </router-link>
                         </div>

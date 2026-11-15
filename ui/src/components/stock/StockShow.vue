@@ -67,7 +67,7 @@ const paginatorUrl = (url) => setPaginator(url);
                 <PageHeader :item="{ title: 'Pohyby skladu', buttonLink: buttonBack }" />
 
                 <!-- Hlavička položky -->
-                <div class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                     <div class="border-b border-gray-100 bg-gray-50 px-5 py-4">
                         <h2 class="text-base font-semibold text-gray-800">{{ title }}</h2>
                         <p v-if="getVariantSummary?.code" class="mt-0.5 text-xs text-gray-500">
@@ -118,7 +118,7 @@ const paginatorUrl = (url) => setPaginator(url);
                 </div>
 
                 <!-- Pohyby -->
-                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                     <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
                         <h2 class="text-sm font-semibold text-gray-700">Pohyby položky</h2>
                     </div>

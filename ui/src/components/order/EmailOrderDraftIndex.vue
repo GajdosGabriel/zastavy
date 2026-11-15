@@ -140,7 +140,7 @@ onMounted(() => {
                 </div>
 
                 <div class="grid gap-4 lg:grid-cols-5">
-                    <ul class="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white shadow-sm lg:col-span-2">
+                    <ul class="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white shadow-xs lg:col-span-2">
                         <li v-if="loading" class="p-4 text-sm text-gray-500">Načítavam…</li>
                         <li v-else-if="!drafts.length" class="p-4 text-sm text-gray-500">Žiadne e-maily.</li>
                         <li v-for="draft in drafts" v-else :key="draft.id">
@@ -152,7 +152,7 @@ onMounted(() => {
                                 </span>
                                 <span class="block truncate text-xs text-gray-600">{{ draft.subject || '(bez predmetu)' }}</span>
                                 <span class="mt-1 flex flex-wrap gap-2 text-xs">
-                                    <span class="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">{{ statusLabels[draft.status] }}</span>
+                                    <span class="rounded-sm bg-gray-100 px-1.5 py-0.5 text-gray-700">{{ statusLabels[draft.status] }}</span>
                                     <span v-if="draft.items_count" class="text-gray-500">položky {{ draft.items_matched }}/{{ draft.items_count }}</span>
                                     <span v-if="draft.attachments_count" class="text-gray-500">📎 {{ draft.attachments_count }}</span>
                                     <span v-if="draft.order" class="font-semibold text-green-700">{{ draft.order.serial_number }}{{ draft.auto_created ? ' · automaticky' : '' }}</span>
@@ -162,24 +162,24 @@ onMounted(() => {
                         </li>
                     </ul>
 
-                    <section v-if="detail" class="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm lg:col-span-3" aria-live="polite">
+                    <section v-if="detail" class="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-xs lg:col-span-3" aria-live="polite">
                         <div>
                             <h2 class="text-lg font-semibold text-gray-900">{{ detail.subject || '(bez predmetu)' }}</h2>
                             <p class="text-sm text-gray-600">{{ detail.from_name }} &lt;{{ detail.from_email }}&gt; · {{ detail.received_at }}</p>
                         </div>
 
-                        <p v-if="detail.order" class="rounded bg-green-50 px-3 py-2 text-sm text-green-800">
+                        <p v-if="detail.order" class="rounded-sm bg-green-50 px-3 py-2 text-sm text-green-800">
                             Objednávka
                             <router-link :to="`/objednavky/${detail.order.id}/show`" class="font-semibold underline">{{ detail.order.serial_number }}</router-link>
                             {{ detail.auto_created ? 'vznikla automaticky.' : 'vznikla z košíka.' }}
                         </p>
-                        <p v-else-if="detail.quote" class="rounded bg-violet-50 px-3 py-2 text-sm text-violet-800">
+                        <p v-else-if="detail.quote" class="rounded-sm bg-violet-50 px-3 py-2 text-sm text-violet-800">
                             Dopyt na cenovú ponuku – založená ponuka
                             <router-link :to="`/predaj/ponuky/${detail.quote.id}`" class="font-semibold underline">{{ detail.quote.number }}</router-link>.
                         </p>
-                        <p v-else-if="detail.error" class="rounded bg-red-50 px-3 py-2 text-sm text-red-800">{{ detail.error }}</p>
+                        <p v-else-if="detail.error" class="rounded-sm bg-red-50 px-3 py-2 text-sm text-red-800">{{ detail.error }}</p>
 
-                        <div v-if="detail.preview" class="rounded border border-gray-200 p-3 text-sm">
+                        <div v-if="detail.preview" class="rounded-sm border border-gray-200 p-3 text-sm">
                             <p class="font-semibold text-gray-800">
                                 {{ detail.preview.customer.company || detail.preview.customer.name || 'Zákazník nerozpoznaný' }}
                                 <span class="font-normal text-gray-500">— {{ customerLabels[detail.preview.customer_status] }}</span>
@@ -201,7 +201,7 @@ onMounted(() => {
 
                         <div>
                             <h3 class="text-sm font-semibold text-gray-700">Pôvodný e-mail</h3>
-                            <pre class="mt-1 max-h-96 overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-3 font-sans text-sm text-gray-800">{{ detail.body }}</pre>
+                            <pre class="mt-1 max-h-96 overflow-auto whitespace-pre-wrap rounded-sm bg-gray-50 p-3 font-sans text-sm text-gray-800">{{ detail.body }}</pre>
                         </div>
 
                         <div v-if="detail.attachments.length">
@@ -215,11 +215,11 @@ onMounted(() => {
                         </div>
 
                         <div v-if="!detail.order && !detail.quote" class="flex flex-wrap gap-2 border-t border-gray-100 pt-4">
-                            <button v-if="canCreate" type="button" :disabled="busy" class="rounded bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50" @click="openInCart">Otvoriť v košíku</button>
-                            <button v-if="detail.preview" type="button" :disabled="busy" class="rounded border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="toQuote">Spracovať ako cenovú ponuku</button>
-                            <button v-if="detail.status === 'not_order' || detail.status === 'failed' || !detail.preview" type="button" :disabled="busy" class="rounded border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="retry">Spracovať znova</button>
-                            <button v-if="detail.status !== 'not_order'" type="button" :disabled="busy" class="rounded border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="setStatus('not_order')">Nie je objednávka</button>
-                            <button v-if="detail.status === 'not_order' && detail.preview" type="button" :disabled="busy" class="rounded border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="setStatus('draft')">Vrátiť medzi návrhy</button>
+                            <button v-if="canCreate" type="button" :disabled="busy" class="rounded-sm bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50" @click="openInCart">Otvoriť v košíku</button>
+                            <button v-if="detail.preview" type="button" :disabled="busy" class="rounded-sm border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="toQuote">Spracovať ako cenovú ponuku</button>
+                            <button v-if="detail.status === 'not_order' || detail.status === 'failed' || !detail.preview" type="button" :disabled="busy" class="rounded-sm border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="retry">Spracovať znova</button>
+                            <button v-if="detail.status !== 'not_order'" type="button" :disabled="busy" class="rounded-sm border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="setStatus('not_order')">Nie je objednávka</button>
+                            <button v-if="detail.status === 'not_order' && detail.preview" type="button" :disabled="busy" class="rounded-sm border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" @click="setStatus('draft')">Vrátiť medzi návrhy</button>
                         </div>
                     </section>
                 </div>

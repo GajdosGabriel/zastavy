@@ -24,14 +24,14 @@ const onSubmit = async () => {
     <BaseLayout>
         <template #main>
             <div class="col-span-12 flex min-h-[calc(100vh-14rem)] items-center justify-center px-4 py-10">
-                <section class="w-full max-w-md rounded bg-white shadow-lg ring-1 ring-slate-200">
+                <section class="w-full max-w-md rounded-sm bg-white shadow-lg ring-1 ring-slate-200">
                     <div class="border-b border-slate-200 px-7 py-6">
                         <h1 class="text-2xl font-semibold text-slate-900">Zabudnuté heslo</h1>
                         <p class="mt-1 text-sm text-slate-500">Zadajte Váš email a pošleme Vám odkaz na obnovenie hesla.</p>
                     </div>
 
                     <div class="px-7 py-6">
-                        <div v-if="sent" class="rounded bg-green-50 border border-green-200 px-4 py-4 text-sm text-green-800">
+                        <div v-if="sent" class="rounded-sm bg-green-50 border border-green-200 px-4 py-4 text-sm text-green-800">
                             {{ successMessage }}
                         </div>
 
@@ -44,14 +44,14 @@ const onSubmit = async () => {
                                     type="email"
                                     required
                                     autocomplete="email"
-                                    class="block w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                    class="block w-full rounded-sm border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-xs outline-hidden transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
 
                             <button
                                 type="submit"
                                 :disabled="loadingStore.isLoading"
-                                class="flex w-full items-center justify-center gap-2 rounded bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:bg-blue-500 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                class="flex w-full items-center justify-center gap-2 rounded-sm bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-800 disabled:bg-blue-500 disabled:cursor-not-allowed focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                             >
                                 <SpinnerButton v-if="loadingStore.isLoading" />
                                 Odoslať odkaz

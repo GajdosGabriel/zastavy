@@ -150,7 +150,7 @@ const hasAttributes = computed(() => getVariantAttributes.value.length > 0);
 </script>
 
 <template>
-    <section class="rounded-lg border border-gray-200 bg-white shadow-sm">
+    <section class="rounded-lg border border-gray-200 bg-white shadow-xs">
         <div class="flex items-center justify-between border-b border-gray-100 px-6 py-3">
             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">
                 Varianty a ceny
@@ -286,7 +286,7 @@ const hasAttributes = computed(() => getVariantAttributes.value.length > 0);
                     </div>
 
                     <div v-if="variantErrors[variant.id]" role="alert"
-                        class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        class="rounded-sm border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
                         <p v-for="(message, i) in variantErrors[variant.id]" :key="i">{{ message }}</p>
                     </div>
 
@@ -370,7 +370,7 @@ const hasAttributes = computed(() => getVariantAttributes.value.length > 0);
                 </p>
 
                 <div v-if="variantErrors.new" role="alert"
-                    class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    class="rounded-sm border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
                     <p v-for="(message, i) in variantErrors.new" :key="i">{{ message }}</p>
                 </div>
 

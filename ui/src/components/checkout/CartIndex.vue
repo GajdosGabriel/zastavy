@@ -214,7 +214,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                     </div>
                 </details>
                 <!-- Prázdny košík -->
-                <div v-if="!showCheckout" class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center shadow-sm">
+                <div v-if="!showCheckout" class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center shadow-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-4 h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
@@ -250,7 +250,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                         </p>
 
                         <!-- Položky: na mobile karty, od md tabuľka -->
-                        <div v-else class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <div v-else class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                             <ul class="divide-y divide-gray-100 md:hidden">
                                 <li v-for="product in getCarts" :key="product.key" class="flex gap-3 px-4 py-4">
                                     <img :src="product.thumb" width="56" height="56" loading="lazy" :alt="product.name"
@@ -274,7 +274,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                                 <input type="number" inputmode="numeric" step="1"
                                                     :aria-label="`Množstvo: ${product.name}${product.variant_name ? ' – ' + product.variant_name : ''} (${product.unit_value || 'ks'})`"
                                                     v-model.number="product.input_order"
-                                                    class="w-20 rounded-lg border border-gray-300 px-2 py-2 text-center text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    class="w-20 rounded-lg border border-gray-300 px-2 py-2 text-center text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
                                                     :min="product.min_order" @change="updateCartQuantity(product, product.input_order)" required />
                                                 <span class="text-sm text-gray-600">{{ product.unit_value }} × {{ formatPrice(product.active_price) }} €</span>
                                             </div>
@@ -324,7 +324,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                                     step="1"
                                                     :aria-label="`Množstvo: ${product.name}${product.variant_name ? ' – ' + product.variant_name : ''} (${product.unit_value || 'ks'})`"
                                                     v-model.number="product.input_order"
-                                                    class="w-16 rounded-lg border border-gray-300 px-2 py-1 text-center text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    class="w-16 rounded-lg border border-gray-300 px-2 py-1 text-center text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
                                                     :min="product.min_order"
                                                     @change="updateCartQuantity(product, product.input_order)"
                                                     required
@@ -355,7 +355,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                 <button
                                     type="button"
                                     @click="clickEmptyBasket"
-                                    class="inline-flex min-h-9 items-center gap-1.5 rounded px-2 text-sm text-gray-600 transition hover:bg-red-50 hover:text-red-700"
+                                    class="inline-flex min-h-9 items-center gap-1.5 rounded-sm px-2 text-sm text-gray-600 transition hover:bg-red-50 hover:text-red-700"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -375,7 +375,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                         </details>
 
                         <!-- Fakturačné údaje -->
-                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                             <div class="border-b border-gray-100 bg-gray-50 px-6 py-4">
                                 <h2 class="text-base font-semibold text-gray-800">Fakturačné údaje</h2>
                             </div>
@@ -398,7 +398,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                 </CustomerFormFields>
                                 <div class="mt-4">
                                     <label class="mb-1.5 block text-sm font-semibold text-gray-700">Poznámka k objednávke</label>
-                                    <input v-model="note" type="text" aria-label="Poznámka k objednávke" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />
+                                    <input v-model="note" type="text" aria-label="Poznámka k objednávke" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500" placeholder="Poznámka" />
                                 </div>
 
                                 <!-- Prílohy k objednávke (logo, návrh, podklady) -->
@@ -442,7 +442,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                                 <button
                                                     type="button"
                                                     @click="removeAttachment(index)"
-                                                    class="rounded p-1 text-gray-500 transition hover:bg-red-50 hover:text-red-600"
+                                                    class="rounded-sm p-1 text-gray-500 transition hover:bg-red-50 hover:text-red-600"
                                                     title="Odstrániť prílohu"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -473,7 +473,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                     <aside class="space-y-4 pb-20 lg:pb-0">
                         <div class="sticky top-4 space-y-4">
                             <!-- Zoznam produktov v súhrne -->
-                            <div v-if="getCarts.length" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <div v-if="getCarts.length" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                                 <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
                                     <h2 class="text-sm font-semibold text-gray-700">
                                         Produkty ({{ getCarts.length }})
@@ -492,7 +492,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                             </div>
 
                             <!-- Doprava + platba + kupón + rekapitulácia -->
-                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                                 <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
                                     <h2 class="text-sm font-semibold text-gray-700">Doprava a platba</h2>
                                 </div>
@@ -503,7 +503,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                         type="button"
                                         @click="onClickForm"
                                         :disabled="isSubmitting || !getCarts.length"
-                                        class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+                                        class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400"
                                     >
                                         <svg v-if="isSubmitting" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -534,23 +534,23 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
 
             <!-- Modal: odoslanie objednávky (len super-admin) -->
             <Teleport to="body">
-                <div v-if="showSubmitModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-                    <div class="w-full max-w-sm rounded bg-white p-5 shadow-lg">
+                <div v-if="showSubmitModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div class="w-full max-w-sm rounded-sm bg-white p-5 shadow-lg">
                         <h3 class="mb-3 text-lg font-semibold text-gray-800">Odoslať objednávku</h3>
                         <p class="mb-4 text-sm text-gray-600">
                             Vytvoriť objednávku pre {{ getCustomer.company || getCustomer.name || 'zákazníka' }}?
                         </p>
                         <label class="mb-5 flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" v-model="notifyCustomer" class="rounded" />
+                            <input type="checkbox" v-model="notifyCustomer" class="rounded-sm" />
                             Poslať zákazníkovi e-mail o objednávke
                         </label>
                         <div class="flex justify-end gap-2">
                             <button type="button" @click="showSubmitModal = false"
-                                class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                                class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
                                 Zrušiť
                             </button>
                             <button type="button" @click="submitOrder()" :disabled="isSubmitting"
-                                class="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400">
+                                class="inline-flex items-center gap-2 rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400">
                                 <svg v-if="isSubmitting" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>

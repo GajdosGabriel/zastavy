@@ -220,10 +220,8 @@ const router = createRouter({
     }
 })
 
-router.beforeResolve(async (to, from, next) => {
-    // Get the page title from the route meta data that we have defined
-    // See further down below for how we setup this data
-
+// Guard vracia cieľ presmerovania; bez návratovej hodnoty navigácia pokračuje.
+router.beforeResolve(async (to) => {
     useStoreErrors().resetErrors();
     useStoreOrders().resetOrder();
 
@@ -235,22 +233,18 @@ router.beforeResolve(async (to, from, next) => {
     }
 
     if (to.meta.guestOnly && usersStore.getUser?.isAuth) {
-        next({ name: 'dashboard.index' });
-        return;
+        return { name: 'dashboard.index' };
     }
 
     if (to.meta.requiresAuth && !usersStore.getUser?.isAuth) {
-        next({ name: 'public.login.index' });
-        return;
+        return { name: 'public.login.index' };
     }
 
-    if (to.meta.superAdminOnly &&!usersStore.getUser?.roles?.some((role) => ['super-admin', 'admin'].includes(role))) {
-        next({
+    if (to.meta.superAdminOnly && !usersStore.getUser?.roles?.some((role) => ['super-admin', 'admin'].includes(role))) {
+        return {
             name: usersStore.getUser?.isAuth ? 'dashboard.index' : 'public.login.index'
-        });
-        return;
+        };
     }
-    next()
 })
 
 // Titulok, popis, canonical, OG a structured data — <head> sa inak medzi routami nemení.

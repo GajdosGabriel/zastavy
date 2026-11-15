@@ -112,7 +112,7 @@ async function submit() {
                 <form @submit.prevent="submit" class="space-y-4">
 
                     <!-- Dôvod + poznámka -->
-                    <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div class="rounded-lg border border-gray-200 bg-white shadow-xs">
                         <div class="border-b border-gray-100 px-5 py-2.5">
                             <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Dôvod vrátenia</span>
                         </div>
@@ -139,7 +139,7 @@ async function submit() {
                     </div>
 
                     <!-- Položky -->
-                    <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div class="rounded-lg border border-gray-200 bg-white shadow-xs">
                         <div class="border-b border-gray-100 px-5 py-2.5">
                             <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Položky na vrátenie</span>
                         </div>
@@ -168,7 +168,7 @@ async function submit() {
                                             v-model.number="quantities[item.id]"
                                             :min="0"
                                             :max="item.shipped"
-                                            class="w-20 rounded border border-gray-300 px-2 py-1 text-center text-sm focus:border-blue-500 focus:outline-none"
+                                            class="w-20 rounded-sm border border-gray-300 px-2 py-1 text-center text-sm focus:border-blue-500 focus:outline-hidden"
                                         />
                                     </td>
                                 </tr>

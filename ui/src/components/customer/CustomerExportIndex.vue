@@ -27,7 +27,7 @@ onMounted(() => {
             <div class="page-body col-span-12">
                 <PageHeader :item="{ title: 'Export zákazníkov' }" />
 
-                <div class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="rounded-md border border-slate-200 bg-white p-5 shadow-xs">
                     <p class="mb-4 text-sm text-slate-600">
                         Vyberte stĺpce, ktoré má obsahovať CSV súbor. Číslo pri políčku ukazuje,
                         v akom poradí sa stĺpec v súbore objaví — určuje ho poradie zaškrtnutia.
@@ -50,7 +50,7 @@ onMounted(() => {
 
                     <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                         <label v-for="attribute in getAttributes" :key="attribute.value"
-                            class="flex items-center gap-2 rounded border px-3 py-2 text-sm hover:bg-slate-50"
+                            class="flex items-center gap-2 rounded-sm border px-3 py-2 text-sm hover:bg-slate-50"
                             :class="getSelected.includes(attribute.value)
                                 ? 'border-blue-300 bg-blue-50/60 text-slate-900'
                                 : 'border-slate-200 text-slate-700'">
@@ -67,7 +67,7 @@ onMounted(() => {
 
                     <div class="mt-6 flex items-center gap-3">
                         <button type="button" :disabled="!getSelected.length || isExporting"
-                            class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                            class="rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                             @click="exportCustomers">
                             {{ isExporting ? "Exportujem..." : "Exportovať do CSV" }}
                         </button>

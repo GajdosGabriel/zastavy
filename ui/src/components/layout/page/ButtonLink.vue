@@ -15,7 +15,7 @@ const isSecondary = computed(() => props.item?.variant === 'secondary'
         <router-link
             :to="typeof props.item.link === 'string' && !props.item.link.startsWith('/') ? { name: props.item.link } : props.item.link"
             v-if="props.item && Object.keys(props.item).length"
-            class="flex items-center rounded px-4 py-2 font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            class="flex items-center rounded-sm px-4 py-2 font-bold transition focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             :class="isSecondary
                 ? 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                 : 'bg-blue-700 text-white hover:bg-blue-800'">

@@ -141,7 +141,7 @@ onUnmounted(() => clearTimeout(blurTimer));
                 :placeholder="open ? searchPlaceholder : placeholder"
                 :required="required && !selected"
                 :disabled="disabled"
-                class="w-full rounded border px-3 py-2 pr-16 focus:outline-none focus:ring-1"
+                class="w-full rounded-sm border px-3 py-2 pr-16 focus:outline-hidden focus:ring-1"
                 :class="error
                     ? 'border-red-500 ring-1 ring-red-500 bg-red-50'
                     : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'"
@@ -174,7 +174,7 @@ onUnmounted(() => clearTimeout(blurTimer));
             </span>
         </div>
 
-        <div v-if="open" class="absolute z-30 mt-1 w-full rounded border border-gray-200 bg-white shadow-lg">
+        <div v-if="open" class="absolute z-30 mt-1 w-full rounded-sm border border-gray-200 bg-white shadow-lg">
             <ul v-if="visible.length" ref="listbox" class="max-h-64 overflow-y-auto py-1" role="listbox">
                 <li
                     v-for="(option, index) in visible"

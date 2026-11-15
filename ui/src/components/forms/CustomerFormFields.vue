@@ -288,7 +288,7 @@ const onClickIco = async () => {
                             <span v-if="item.status && item.status !== 'aktívna'" class="font-semibold text-red-600"> · {{ item.status }}</span>
                         </span>
                     </span>
-                    <span v-if="item.source === 'database'" class="shrink-0 rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">náš zákazník</span>
+                    <span v-if="item.source === 'database'" class="shrink-0 rounded-sm bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">náš zákazník</span>
                 </button>
             </li>
         </ul>
@@ -371,7 +371,7 @@ const onClickIco = async () => {
             <select
                 v-model="customerType"
                 :id="fid('type')"
-                class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1"
+                class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden focus:ring-1"
                 :class="fieldError('type')
                     ? 'border-red-500 bg-red-50 ring-1 ring-red-500'
                     : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'"
@@ -390,7 +390,7 @@ const onClickIco = async () => {
             <select
                 v-model="getCustomer.status.value"
                 required
-                class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1"
+                class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden focus:ring-1"
                 :class="fieldError('status')
                     ? 'border-red-500 bg-red-50 ring-1 ring-red-500'
                     : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'"

@@ -58,7 +58,7 @@ const dropdownItems = computed(() => {
     <tr class="hover:bg-gray-50">
         <td class="px-4 py-4 whitespace-nowrap">
             <div class="flex items-center">
-                <div class="flex-shrink-0 h-10 w-10">
+                <div class="shrink-0 h-10 w-10">
                     <img width="40" height="40" loading="lazy" class="h-10 w-10 rounded-full" :src="product.thumb" :alt="product.name" />
                 </div>
                 <div class="ml-4">
@@ -89,7 +89,7 @@ const dropdownItems = computed(() => {
             <div class="text-sm text-gray-900" @click="$emit('checkmark')">
                 <Checkmark v-if="product.quickMark" />
                 <CheckmarkLight v-else="product.quickMark" />
-                <span class="bg-yellow-200 px-2 rounded-md mr-2 shadow-sm" v-for="category in product.categories"
+                <span class="bg-yellow-200 px-2 rounded-md mr-2 shadow-xs" v-for="category in product.categories"
                     :key="category.id">
                     {{ category.name }}
                 </span>

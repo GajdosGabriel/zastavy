@@ -57,7 +57,7 @@ const productRoute = computed(() => ({
 </script>
 
 <template>
-    <article class="relative flex h-full flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md">
+    <article class="relative flex h-full flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-xs transition hover:border-blue-300 hover:shadow-md">
         <div class="relative flex h-56 items-center justify-center bg-slate-50 p-5">
             <router-link :to="productRoute" class="cursor-pointer" tabindex="-1" aria-hidden="true">
                 <img :src="item.images?.[0]?.path ?? item.thumb" width="400" height="192" loading="lazy" class="max-h-48 w-full object-contain" :alt="item.name" />
@@ -117,7 +117,7 @@ const productRoute = computed(() => ({
                         type="number"
                         step="1"
                         :aria-label="`Množstvo: ${item.name}`"
-                        class="w-24 rounded border-slate-300 text-center"
+                        class="w-24 rounded-sm border-slate-300 text-center"
                         :min="singleVariant.min_order"
                         required
                     />
@@ -149,7 +149,7 @@ const productRoute = computed(() => ({
                     <p
                         v-for="(message, index) in messages"
                         :key="index"
-                        class="mb-4 rounded-md border border-green-300 bg-green-50 p-3 text-sm font-semibold text-green-800 shadow-sm"
+                        class="mb-4 rounded-md border border-green-300 bg-green-50 p-3 text-sm font-semibold text-green-800 shadow-xs"
                     >
                         Do košíka ste vložili {{ message }}.
                     </p>

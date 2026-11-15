@@ -111,7 +111,7 @@ const template = () => {
                               <div class="-my-2">
 
                                     <div class="py-2 block min-w-0">
-                                          <div class="overflow-x-auto shadow border-b border-gray-200 sm:rounded-lg">
+                                          <div class="overflow-x-auto shadow-sm border-b border-gray-200 sm:rounded-lg">
                                                 <!-- Pod md sa tabuľka zobrazuje ako zoznam kariet (riadky v tableRowOrders). -->
                                                 <table
                                                       class="block min-w-full divide-y divide-gray-200 border border-gray-200 md:table">
@@ -122,7 +122,7 @@ const template = () => {
                                                                   </th>
                                                                   <th class="thead_th">
                                                                         <button type="button" @click="fetchMarkSelected"
-                                                                              class="mx-auto flex h-8 w-8 items-center justify-center rounded hover:bg-white/10"
+                                                                              class="mx-auto flex h-8 w-8 items-center justify-center rounded-sm hover:bg-white/10"
                                                                               :aria-pressed="!!ordersStore.statement.markSelected"
                                                                               :aria-label="ordersStore.statement.markSelected ? 'Zobraziť všetky objednávky' : 'Zobraziť len označené'"
                                                                               :title="ordersStore.statement.markSelected ? 'Zobraziť všetky objednávky' : 'Zobraziť len označené'">
@@ -130,7 +130,7 @@ const template = () => {
                                                                         </button>
                                                                   </th>
                                                                   <th class="thead_th">Zákazník</th>
-                                                                  <th class="thead_th !text-right">Cena</th>
+                                                                  <th class="thead_th text-right!">Cena</th>
                                                                   <th class="thead_th">Status</th>
                                                                   <th class="thead_th">Expedícia</th>
                                                                   <th class="thead_th"><span class="sr-only">Akcie</span></th>
@@ -151,9 +151,9 @@ const template = () => {
                         </div>
                         <!-- Legenda farieb riadkov -->
                         <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
-                              <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm border border-gray-300 bg-green-50"></span>Neotvorená</span>
-                              <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm border border-gray-300 bg-blue-50"></span>Vybavená</span>
-                              <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm border border-gray-300 bg-gray-200"></span>Stornovaná</span>
+                              <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-xs border border-gray-300 bg-green-50"></span>Neotvorená</span>
+                              <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-xs border border-gray-300 bg-blue-50"></span>Vybavená</span>
+                              <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-xs border border-gray-300 bg-gray-200"></span>Stornovaná</span>
                         </div>
                         <PageBottom :item="template().page_bottom" />
                         <pagination-component @setUrl="paginatorUrl"></pagination-component>

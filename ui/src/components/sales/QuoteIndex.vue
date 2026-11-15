@@ -21,17 +21,17 @@ onMounted(()=>load(Number(route.query.page)||1));
             <div class="page-body col-span-12 space-y-4">
                 <PageHeader :item="{ title: 'Cenové ponuky', buttonLink: { name: 'Nová ponuka', link: '/predaj/ponuky/nova', icon: 'plus' } }" />
 
-                <form class="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm" @submit.prevent="load()">
+                <form class="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-xs" @submit.prevent="load()">
                     <label class="text-sm text-gray-700">Hľadať
-                        <input v-model="filters.search" type="search" placeholder="Číslo, firma, e-mail, IČO" class="mt-1 block w-64 rounded border border-gray-300 px-3 py-1.5" />
+                        <input v-model="filters.search" type="search" placeholder="Číslo, firma, e-mail, IČO" class="mt-1 block w-64 rounded-sm border border-gray-300 px-3 py-1.5" />
                     </label>
                     <label class="text-sm text-gray-700">Stav
-                        <select v-model="filters.status" class="mt-1 block rounded border border-gray-300 px-3 py-1.5" @change="load()">
+                        <select v-model="filters.status" class="mt-1 block rounded-sm border border-gray-300 px-3 py-1.5" @change="load()">
                             <option v-for="[value,label] in statusOptions" :key="value" :value="value">{{ label }}</option>
                         </select>
                     </label>
                     <label class="text-sm text-gray-700">Zdroj
-                        <select v-model="filters.source" class="mt-1 block rounded border border-gray-300 px-3 py-1.5" @change="load()">
+                        <select v-model="filters.source" class="mt-1 block rounded-sm border border-gray-300 px-3 py-1.5" @change="load()">
                             <option value="">Všetky</option><option value="web">Dopyt z webu</option><option value="email">Dopyt z e-mailu</option><option value="staff">Založené obsluhou</option>
                         </select>
                     </label>
@@ -39,10 +39,10 @@ onMounted(()=>load(Number(route.query.page)||1));
 
                 <p v-if="error" role="alert" class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ error }}</p>
 
-                <section class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+                <section class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-xs">
                     <div v-if="!quotes" role="status" class="animate-pulse space-y-3 px-5 py-5">
                         <span class="sr-only">Načítavam ponuky…</span>
-                        <div v-for="n in 4" :key="n" class="h-4 rounded bg-gray-100" aria-hidden="true"></div>
+                        <div v-for="n in 4" :key="n" class="h-4 rounded-sm bg-gray-100" aria-hidden="true"></div>
                     </div>
                     <p v-else-if="!quotes.data.length" class="px-5 py-8 text-center text-sm text-gray-600">Žiadne ponuky nezodpovedajú filtru.</p>
                     <table v-else class="min-w-full text-sm" :class="{ 'opacity-60': busy }">
@@ -70,9 +70,9 @@ onMounted(()=>load(Number(route.query.page)||1));
                         </tbody>
                     </table>
                     <div v-if="quotes?.last_page > 1" class="flex items-center justify-center gap-3 border-t border-gray-100 px-5 py-3 text-sm">
-                        <button type="button" class="rounded border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" :disabled="busy || quotes.current_page === 1" @click="load(quotes.current_page - 1)">Predchádzajúca</button>
+                        <button type="button" class="rounded-sm border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" :disabled="busy || quotes.current_page === 1" @click="load(quotes.current_page - 1)">Predchádzajúca</button>
                         <span class="text-gray-600">{{ quotes.current_page }} / {{ quotes.last_page }}</span>
-                        <button type="button" class="rounded border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" :disabled="busy || quotes.current_page === quotes.last_page" @click="load(quotes.current_page + 1)">Ďalšia</button>
+                        <button type="button" class="rounded-sm border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50" :disabled="busy || quotes.current_page === quotes.last_page" @click="load(quotes.current_page + 1)">Ďalšia</button>
                     </div>
                 </section>
             </div>

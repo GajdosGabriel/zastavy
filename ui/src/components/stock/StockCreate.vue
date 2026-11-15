@@ -111,7 +111,7 @@ const submit = async () => {
                 <form novalidate @submit.prevent="submit">
                     <fieldset :disabled="submitting" class="min-w-0 grid items-start gap-6 xl:grid-cols-4">
                         <div class="min-w-0 space-y-6 xl:col-span-3">
-                            <section class="rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <section class="rounded-xl border border-gray-200 bg-white shadow-xs">
                                 <div class="border-b bg-gray-50 px-5 py-4"><h2 class="font-semibold text-gray-800">Údaje príjemky</h2></div>
                                 <div class="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
                                     <div>
@@ -126,7 +126,7 @@ const submit = async () => {
                                     </div>
                                 </div>
                             </section>
-                            <section class="rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <section class="rounded-xl border border-gray-200 bg-white shadow-xs">
                                 <div class="flex items-center justify-between border-b bg-gray-50 px-5 py-4">
                                     <h2 class="font-semibold text-gray-800">Položky príjemky <span class="text-gray-500">({{ form.items.length }})</span></h2>
                                     <button type="button" :disabled="form.items.length >= 100" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50" @click="addItem">+ Pridať položku</button>
@@ -152,9 +152,9 @@ const submit = async () => {
                                 </div>
                                 <div class="border-t px-5 py-3 text-xs text-gray-500">DPH zadajte podľa dodávateľského dokladu; pri nulovej sadzbe zadajte 0. Najviac 100 položiek.</div>
                             </section>
-                            <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"><label for="receipt-note" class="mb-2 block text-sm font-semibold">Poznámka k príjemke</label><textarea id="receipt-note" v-model="form.note" rows="3" maxlength="2000" :class="inputClass('note')" placeholder="Stav zásielky, spôsob prevzatia, interné informácie…" @input="edit('note')" /><p v-if="fieldError('note')" class="text-xs text-red-600">{{ fieldError('note') }}</p></section>
+                            <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-xs"><label for="receipt-note" class="mb-2 block text-sm font-semibold">Poznámka k príjemke</label><textarea id="receipt-note" v-model="form.note" rows="3" maxlength="2000" :class="inputClass('note')" placeholder="Stav zásielky, spôsob prevzatia, interné informácie…" @input="edit('note')" /><p v-if="fieldError('note')" class="text-xs text-red-600">{{ fieldError('note') }}</p></section>
                         </div>
-                        <aside class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm xl:sticky xl:top-6">
+                        <aside class="rounded-xl border border-gray-200 bg-white p-5 shadow-xs xl:sticky xl:top-6">
                             <h2 class="mb-4 font-semibold">Súhrn príjemky</h2>
                             <dl class="space-y-3 text-sm"><div class="flex justify-between gap-2"><dt>Položky</dt><dd>{{ form.items.length }}</dd></div><div class="flex justify-between gap-2"><dt>Súčet množstiev</dt><dd>{{ quantityTotal }}</dd></div><div class="flex justify-between gap-2"><dt>Bez DPH</dt><dd>{{ formatPrice(totals.net) }} €</dd></div><div class="flex justify-between gap-2"><dt>DPH</dt><dd>{{ formatPrice(totals.tax) }} €</dd></div><div class="flex justify-between gap-2 border-t pt-3 font-bold"><dt>Celkom s DPH</dt><dd>{{ formatPrice(totals.total) }} €</dd></div></dl>
                             <p v-if="missingPrices" class="mt-4 text-xs text-amber-700">Súhrn doplní všetky hodnoty po zadaní cien.</p>

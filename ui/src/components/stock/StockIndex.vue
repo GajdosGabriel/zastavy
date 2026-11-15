@@ -125,29 +125,29 @@ const money = (value) => formatPrice(value);
                         class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 hover:bg-gray-50">Odpis zo skladu</router-link>
                 </nav>
                 <div v-if="getSummaryMeta" class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+                    <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-xs">
                         <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Skladové položky</div>
                         <div class="mt-1 text-2xl font-bold text-gray-900">{{ getSummaryMeta.variants }}</div>
                     </div>
-                    <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+                    <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-xs">
                         <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">V mínuse</div>
                         <div class="mt-1 text-2xl font-bold" :class="getSummaryMeta.below_zero ? 'text-red-600' : 'text-green-700'">
                             {{ getSummaryMeta.below_zero }}
                         </div>
                     </div>
-                    <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+                    <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-xs">
                         <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Hodnota skladu</div>
                         <div class="mt-1 text-2xl font-bold text-gray-900">{{ money(getSummaryMeta.total_value) }} €</div>
                         <div class="mt-0.5 text-xs text-gray-500">z nákupných cien príjmov</div>
                     </div>
-                    <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+                    <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-xs">
                         <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Odpísané</div>
                         <div class="mt-1 text-2xl font-bold text-gray-900">{{ getSummaryMeta.total_writeoff }}</div>
                     </div>
                 </div>
 
                 <!-- Stav skladu -->
-                <div class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gray-50 px-5 py-3">
                         <div>
                             <h2 class="text-sm font-semibold text-gray-700">Stav skladu</h2>
@@ -156,14 +156,14 @@ const money = (value) => formatPrice(value);
                             </p>
                         </div>
                         <label class="flex cursor-pointer items-center gap-2 text-xs font-semibold text-gray-600">
-                            <input v-model="onlyProblems" type="checkbox" class="rounded border-gray-300" />
+                            <input v-model="onlyProblems" type="checkbox" class="rounded-sm border-gray-300" />
                             Len problémové
                         </label>
                     </div>
 
                     <div v-if="!summaryLoaded" role="status" class="animate-pulse space-y-3 px-5 py-6">
                         <span class="sr-only">Načítavam stav skladu…</span>
-                        <div v-for="n in 4" :key="n" class="h-4 rounded bg-gray-100" aria-hidden="true"></div>
+                        <div v-for="n in 4" :key="n" class="h-4 rounded-sm bg-gray-100" aria-hidden="true"></div>
                     </div>
 
                     <div v-else-if="!visibleSummary.length" class="px-5 py-10 text-center text-sm text-gray-600">
@@ -236,7 +236,7 @@ const money = (value) => formatPrice(value);
                 </div>
 
                 <!-- Pohyby -->
-                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                     <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
                         <h2 class="text-sm font-semibold text-gray-700">Pohyby</h2>
                     </div>

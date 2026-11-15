@@ -62,7 +62,7 @@ const dropdownItems = computed(() => {
                 </div>
 
                 <!-- Detail karta -->
-                <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-xs">
                     <div class="grid divide-y divide-gray-100 px-5 py-1 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
 
                         <!-- Firma -->
@@ -102,7 +102,7 @@ const dropdownItems = computed(() => {
                 </div>
 
                 <!-- Používatelia -->
-                <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-xs">
                     <div class="border-b border-gray-100 px-5 py-2.5">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Používatelia</span>
                     </div>
@@ -151,7 +151,7 @@ const dropdownItems = computed(() => {
                 </div>
 
                 <!-- Objednávky -->
-                <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div class="rounded-lg border border-gray-200 bg-white shadow-xs">
                     <div class="border-b border-gray-100 px-5 py-2.5">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Objednávky</span>
                     </div>

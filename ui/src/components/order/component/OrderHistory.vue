@@ -106,7 +106,7 @@ defineExpose({ load, openModal });
 </script>
 
 <template>
-    <div class="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div class="mt-4 rounded-lg border border-gray-200 bg-white shadow-xs">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-5 py-2.5">
             <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                 História objednávky
@@ -136,7 +136,7 @@ defineExpose({ load, openModal });
             <li v-for="(event, index) in timeline" :key="index" class="relative flex gap-3 pb-4 last:pb-0">
                 <!-- Zvislá čiara časovej osi -->
                 <span v-if="index < timeline.length - 1" class="absolute left-[11px] top-6 h-full w-px bg-gray-200" aria-hidden="true"></span>
-                <span class="relative z-[1] mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                <span class="relative z-1 mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
                     :class="event.status === 'failed' ? 'bg-red-100 text-red-700'
                         : event.status === 'pending' ? 'bg-sky-100 text-sky-700'
                         : event.kind === 'email' ? 'bg-blue-100 text-blue-700'
@@ -161,13 +161,13 @@ defineExpose({ load, openModal });
 
     <Teleport to="body">
         <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="showModal = false">
-            <div class="flex max-h-[90vh] w-full max-w-3xl flex-col rounded bg-white p-5 shadow-lg">
+            <div class="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-sm bg-white p-5 shadow-lg">
                 <h3 class="mb-1 text-lg font-semibold text-gray-800">Poslať zákazníkovi e-mail</h3>
                 <p class="mb-4 text-sm text-gray-600">Odíde na <strong>{{ recipient }}</strong> s aktuálnym stavom objednávky, do toho istého vlákna ako potvrdenie.</p>
 
                 <div class="mb-4 grid gap-2 sm:grid-cols-2">
                     <label v-for="option in options" :key="optionKey(option)"
-                        class="flex cursor-pointer gap-2 rounded border p-3 text-sm"
+                        class="flex cursor-pointer gap-2 rounded-sm border p-3 text-sm"
                         :class="selected && optionKey(selected) === optionKey(option) ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'">
                         <input type="radio" name="order-email-type" class="mt-0.5"
                             :checked="selected && optionKey(selected) === optionKey(option)" @change="choose(option)" />
@@ -181,10 +181,10 @@ defineExpose({ load, openModal });
                 <label v-if="selected?.type === 'update'" class="mb-4 block text-sm text-gray-700">
                     Poznámka pre zákazníka (napr. dôvod storna položky)
                     <textarea v-model="note" rows="2" maxlength="2000" @change="loadPreview"
-                        class="mt-1 block w-full rounded border border-gray-300 p-2 text-sm"></textarea>
+                        class="mt-1 block w-full rounded-sm border border-gray-300 p-2 text-sm"></textarea>
                 </label>
 
-                <div v-if="selected" class="mb-4 min-h-0 flex-1 overflow-hidden rounded border border-gray-200">
+                <div v-if="selected" class="mb-4 min-h-0 flex-1 overflow-hidden rounded-sm border border-gray-200">
                     <div class="border-b border-gray-100 bg-gray-50 px-3 py-1.5 text-xs text-gray-600">
                         Náhľad{{ preview ? ': ' + preview.subject : '' }}
                     </div>
@@ -194,9 +194,9 @@ defineExpose({ load, openModal });
 
                 <div class="flex justify-end gap-2">
                     <button type="button" @click="showModal = false"
-                        class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">Zrušiť</button>
+                        class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">Zrušiť</button>
                     <button type="button" @click="send" :disabled="!selected || !preview || sending || previewLoading"
-                        class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                        class="rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
                         {{ sending ? 'Odosielam…' : 'Odoslať' }}
                     </button>
                 </div>
@@ -204,13 +204,13 @@ defineExpose({ load, openModal });
         </div>
 
         <div v-if="viewed" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="viewed = null">
-            <div class="flex max-h-[90vh] w-full max-w-3xl flex-col rounded bg-white p-5 shadow-lg">
+            <div class="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-sm bg-white p-5 shadow-lg">
                 <h3 class="text-lg font-semibold text-gray-800">{{ viewed.label }}</h3>
                 <p class="mb-3 text-sm text-gray-600">{{ viewed.subject }} · {{ viewed.created_at }}</p>
-                <iframe :srcdoc="viewed.html" sandbox="" title="Odoslaný e-mail" class="mb-4 h-[60vh] w-full rounded border border-gray-200"></iframe>
+                <iframe :srcdoc="viewed.html" sandbox="" title="Odoslaný e-mail" class="mb-4 h-[60vh] w-full rounded-sm border border-gray-200"></iframe>
                 <div class="flex justify-end">
                     <button type="button" @click="viewed = null"
-                        class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">Zavrieť</button>
+                        class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">Zavrieť</button>
                 </div>
             </div>
         </div>

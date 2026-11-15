@@ -45,7 +45,7 @@ const requiredFields = ["company", "city", "postcode", "email", "name"];
             <div class="page-body col-span-12">
                 <PageHeader :item="{ title: 'Upraviť zákazníka', buttonLink: buttonBack }" />
 
-                <form @submit.prevent="saveCustomer" class="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <form @submit.prevent="saveCustomer" class="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                     <div class="border-b border-gray-100 bg-gray-50 px-6 py-4">
                         <h2 class="text-base font-semibold text-gray-800">Údaje zákazníka</h2>
                     </div>

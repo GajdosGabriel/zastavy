@@ -75,9 +75,9 @@ watch(getProducts, (products) => {
                                           Zvoleným filtrom nezodpovedá žiadny tovar.
                                     </p>
                                     <nav v-if="paginator.meta && paginator.meta.last_page > 1" aria-label="Stránkovanie katalógu" class="flex justify-center items-center gap-4 mt-6">
-                                          <button :disabled="paginator.meta.current_page <= 1" @click="page(paginator.meta.current_page-1)" class="rounded border p-2 disabled:opacity-40">Predchádzajúca</button>
+                                          <button :disabled="paginator.meta.current_page <= 1" @click="page(paginator.meta.current_page-1)" class="rounded-sm border p-2 disabled:opacity-40">Predchádzajúca</button>
                                           <span>Strana {{paginator.meta.current_page}} z {{paginator.meta.last_page}}</span>
-                                          <button :disabled="paginator.meta.current_page >= paginator.meta.last_page" @click="page(paginator.meta.current_page+1)" class="rounded border p-2 disabled:opacity-40">Ďalšia</button>
+                                          <button :disabled="paginator.meta.current_page >= paginator.meta.last_page" @click="page(paginator.meta.current_page+1)" class="rounded-sm border p-2 disabled:opacity-40">Ďalšia</button>
                                     </nav>
                               </div>
 
@@ -85,7 +85,7 @@ watch(getProducts, (products) => {
                                     <div class="space-y-5 lg:sticky lg:top-4">
                                           <CatalogFilter />
                                           <nazoryZakaznikov />
-                                          <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+                                          <div class="rounded-md border border-slate-200 bg-white p-4 shadow-xs">
                                                 <router-link to="/dopyt" class="block font-semibold text-blue-700 underline hover:text-blue-900">Požiadať o cenovú ponuku</router-link>
                                           </div>
                                     </div>

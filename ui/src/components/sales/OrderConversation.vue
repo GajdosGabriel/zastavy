@@ -28,10 +28,10 @@ const events = {
 };
 const label = (m) => events[m.kind]?.(m);
 const tones = {
-    approved: { box: '!bg-green-50 !border-green-300', text: 'text-green-800' },
-    changes_requested: { box: '!bg-orange-50 !border-orange-200', text: 'text-orange-800' },
+    approved: { box: 'bg-green-50! border-green-300!', text: 'text-green-800' },
+    changes_requested: { box: 'bg-orange-50! border-orange-200!', text: 'text-orange-800' },
 };
-const field = 'w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
+const field = 'w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500';
 const mine = (m) => (m.direction === 'staff') === props.staff;
 
 function pick(event) {
@@ -69,7 +69,7 @@ async function download(message, file) {
 </script>
 
 <template>
-    <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
         <div class="border-b border-gray-100 bg-gray-50 px-5 py-3">
             <h2 class="text-base font-semibold text-gray-800">{{ staff ? 'Správy so zákazníkom' : 'Správy k objednávke' }}</h2>
         </div>
@@ -80,13 +80,13 @@ async function download(message, file) {
 
             <ol v-else class="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
                 <li v-for="m in messages" :key="m.id" class="flex" :class="mine(m) ? 'justify-end' : 'justify-start'">
-                    <div class="max-w-[85%] rounded-2xl border px-4 py-2 text-sm shadow-sm"
+                    <div class="max-w-[85%] rounded-2xl border px-4 py-2 text-sm shadow-xs"
                         :class="[mine(m) ? 'rounded-br-sm bg-blue-50 border-blue-200' : 'rounded-bl-sm bg-gray-50 border-gray-200', tones[m.kind]?.box]">
                         <p class="text-xs text-gray-500">
                             <strong class="text-gray-700">{{ m.author }}</strong> · {{ new Date(m.created_at).toLocaleString('sk-SK') }}
                         </p>
                         <p v-if="label(m)" class="font-semibold" :class="tones[m.kind]?.text ?? 'text-gray-800'">{{ label(m) }}</p>
-                        <p v-if="m.body" class="whitespace-pre-wrap break-words text-gray-900">{{ m.body }}</p>
+                        <p v-if="m.body" class="whitespace-pre-wrap wrap-break-word text-gray-900">{{ m.body }}</p>
                         <ul v-if="m.attachments.length" class="mt-1 space-y-0.5">
                             <li v-for="f in m.attachments" :key="f.id">
                                 <button type="button" class="break-all text-left font-semibold text-blue-700 hover:underline" @click="download(m, f)">📎 {{ f.name }}</button>

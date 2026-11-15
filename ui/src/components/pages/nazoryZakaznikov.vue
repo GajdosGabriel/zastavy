@@ -23,7 +23,7 @@ const reviews = [
 </script>
 
 <template>
-    <aside class="hidden md:block rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+    <aside class="hidden md:block rounded-md border border-slate-200 bg-white p-4 shadow-xs">
         <div class="mb-4 border-b border-slate-200 pb-3">
             <p class="text-xs font-semibold uppercase tracking-wide text-blue-800">Referencie</p>
             <h4 class="mt-1 text-lg font-semibold text-slate-900">Názory zákazníkov</h4>

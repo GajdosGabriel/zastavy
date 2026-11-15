@@ -94,7 +94,7 @@ const adjustment = computed(() => Number(props.order?.adjustment_amount ?? 0));
 </script>
 
 <template>
-    <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div class="mb-4 rounded-lg border border-gray-200 bg-white shadow-xs">
         <!-- Hlavička: súhrn expedície + prepínanie režimov -->
         <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-100 px-5 py-3">
             <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Položky a expedícia</span>
@@ -110,24 +110,24 @@ const adjustment = computed(() => Number(props.order?.adjustment_amount ?? 0));
             <div class="ml-auto flex flex-wrap gap-2">
                 <template v-if="mode === 'view'">
                     <button v-if="canEdit" type="button" @click="setMode('edit')"
-                        class="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                        class="rounded-sm border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                         Upraviť položky / storno
                     </button>
                     <button v-if="canPrepare" type="button" @click="setMode('prepare')"
-                        class="rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
+                        class="rounded-sm bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
                         Pripraviť dodací list
                     </button>
                 </template>
                 <template v-else-if="showPrepare">
                     <button type="button" @click="resetShippingItems(false)"
-                        class="rounded bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-200">Vyčistiť</button>
+                        class="rounded-sm bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-200">Vyčistiť</button>
                     <button type="button" @click="resetShippingItems(true)"
-                        class="rounded bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100">Všetko zostávajúce</button>
+                        class="rounded-sm bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100">Všetko zostávajúce</button>
                     <button type="button" @click="setMode('view')"
-                        class="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">Zrušiť prípravu</button>
+                        class="rounded-sm border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">Zrušiť prípravu</button>
                 </template>
                 <button v-else-if="mode === 'edit'" type="button" @click="setMode('view')"
-                    class="rounded bg-gray-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-900">
+                    class="rounded-sm bg-gray-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-900">
                     Hotovo s úpravami
                 </button>
             </div>
@@ -187,13 +187,13 @@ const adjustment = computed(() => Number(props.order?.adjustment_amount ?? 0));
                             : item.remaining === 0 && item.stornoQuantity === 0 && item.shipped > 0 ? 'bg-green-50'
                             : item.remaining === 0 && item.stornoQuantity > 0 ? 'bg-gray-50 text-gray-500' : ''">
                         <td v-if="showPrepare" class="tbody_td text-center">
-                            <input v-if="item.remaining > 0" type="checkbox" class="h-4 w-4 rounded"
+                            <input v-if="item.remaining > 0" type="checkbox" class="h-4 w-4 rounded-sm"
                                 :checked="!isExcluded(item)" @change="toggleExcludeItem(item)"
                                 :title="isExcluded(item) ? 'Zahrnúť do dodacieho listu' : 'Vynechať z dodacieho listu'" />
                         </td>
                         <td class="tbody_td">
                             <div class="flex items-center gap-3">
-                                <img v-if="item.thumb" :src="item.thumb" :alt="item.name" class="h-10 w-10 rounded border border-gray-200 object-cover" />
+                                <img v-if="item.thumb" :src="item.thumb" :alt="item.name" class="h-10 w-10 rounded-sm border border-gray-200 object-cover" />
                                 <div>
                                     <div class="font-semibold text-gray-900">{{ item.name }}</div>
                                     <div v-if="item.variant_name" class="text-xs font-medium text-blue-700">{{ item.variant_name }}</div>
@@ -215,7 +215,7 @@ const adjustment = computed(() => Number(props.order?.adjustment_amount ?? 0));
                             <input v-if="item.remaining > 0" v-model.number="shippingItems[item.id]"
                                 type="number" min="0" :max="item.remaining" :disabled="isExcluded(item)"
                                 :aria-label="'Teraz pripraviť: ' + item.name"
-                                class="w-24 rounded border px-2 py-1 text-center"
+                                class="w-24 rounded-sm border px-2 py-1 text-center"
                                 :class="isExcluded(item) ? 'border-gray-200 bg-gray-100 text-gray-500 line-through' : 'border-gray-300'"
                                 @input="normalizeQuantity(item)" />
                             <span v-else class="text-xs text-gray-500">—</span>
@@ -245,7 +245,7 @@ const adjustment = computed(() => Number(props.order?.adjustment_amount ?? 0));
             <span class="text-sm text-gray-600">Teraz pripraviť <span class="font-semibold text-gray-900">{{ selectedQuantity }} ks</span></span>
             <span class="text-sm text-gray-600">ostane na neskôr <span class="font-semibold text-gray-900">{{ remainingAfterShipping }} ks</span></span>
             <button type="button" :disabled="selectedQuantity <= 0" @click="emit('prepare', selection())"
-                class="ml-auto rounded bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400">
+                class="ml-auto rounded-sm bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400">
                 Pripraviť dodací list
             </button>
         </div>

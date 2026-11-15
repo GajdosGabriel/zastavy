@@ -90,7 +90,7 @@ const rowStateTitle = computed(() => {
         { 'bg-blue-50': order.isFinished },
         { 'bg-gray-200': order.isStorned },
     ]">
-        <td class="tbody_td order-1 whitespace-nowrap font-semibold !text-gray-700 max-md:!px-2 max-md:!py-1">
+        <td class="tbody_td order-1 whitespace-nowrap font-semibold text-gray-700! max-md:px-2! max-md:py-1!">
             <div class="flex items-center gap-1.5">
                 <router-link :to="{ name: 'orders.show', params: { orderId: order.id } }" class="hover:text-blue-700">
                     {{ order.serial_number }}
@@ -102,9 +102,9 @@ const rowStateTitle = computed(() => {
             </div>
         </td>
 
-        <td class="tbody_td order-2 w-10 max-md:!px-0 max-md:!py-0">
+        <td class="tbody_td order-2 w-10 max-md:px-0! max-md:py-0!">
             <button type="button" @click="clickToMark(order)"
-                class="mx-auto flex h-8 w-8 items-center justify-center rounded hover:bg-gray-100 md:-my-1.5"
+                class="mx-auto flex h-8 w-8 items-center justify-center rounded-sm hover:bg-gray-100 md:-my-1.5"
                 :aria-pressed="!!order.mark.isActive"
                 :aria-label="order.mark.isActive ? 'Zrušiť označenie' : 'Označiť objednávku'"
                 :title="order.mark.isActive ? 'Zrušiť označenie' : 'Označiť objednávku'">
@@ -112,15 +112,15 @@ const rowStateTitle = computed(() => {
             </button>
         </td>
 
-        <td class="tbody_td order-4 basis-full cursor-pointer hover:text-blue-800 max-md:!px-2 max-md:!py-1 md:min-w-64">
+        <td class="tbody_td order-4 basis-full cursor-pointer hover:text-blue-800 max-md:px-2! max-md:py-1! md:min-w-64">
             <router-link :to="{ name: 'orders.show', params: { orderId: order.id } }">
                 <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-900"
                     :class="order.customer.company ? 'font-bold' : 'font-semibold'">
                     <TruncatedText :text="customerName" />
-                    <span v-if="order.has_made_to_order" class="rounded bg-violet-600 px-2 text-xs font-semibold text-white">
+                    <span v-if="order.has_made_to_order" class="rounded-sm bg-violet-600 px-2 text-xs font-semibold text-white">
                         Na zákazku
                     </span>
-                    <span v-if="order.note" class="rounded bg-amber-600 px-2 text-xs font-semibold text-white">
+                    <span v-if="order.note" class="rounded-sm bg-amber-600 px-2 text-xs font-semibold text-white">
                         Poznámka
                     </span>
                 </div>
@@ -130,16 +130,16 @@ const rowStateTitle = computed(() => {
             </router-link>
         </td>
 
-        <td class="tbody_td order-5 whitespace-nowrap font-bold !text-gray-900 max-md:!px-2 max-md:!py-1 md:text-right">
+        <td class="tbody_td order-5 whitespace-nowrap font-bold text-gray-900! max-md:px-2! max-md:py-1! md:text-right">
             {{ formatPrice(order.grand_total ?? order.price_sum) }} €
         </td>
 
-        <td class="tbody_td order-6 max-md:!px-2 max-md:!py-1 md:min-w-36">
+        <td class="tbody_td order-6 max-md:px-2! max-md:py-1! md:min-w-36">
             <shipping-button :order="order" :show-shipping-action="false" />
             <div class="mt-2 text-xs text-gray-500">{{ order.created_at_human }}</div>
         </td>
 
-        <td class="tbody_td order-7 basis-full max-md:!px-2 max-md:!py-1 md:min-w-44" title="zoznam expedícií">
+        <td class="tbody_td order-7 basis-full max-md:px-2! max-md:py-1! md:min-w-44" title="zoznam expedícií">
             <div class="flex flex-col gap-2">
                 <div v-if="order.shippings.length" class="flex flex-wrap gap-2">
                     <notice-label v-for="shipping in order.shippings" :key="shipping.id" :shipping="shipping" :order="order" />
@@ -150,14 +150,14 @@ const rowStateTitle = computed(() => {
             </div>
         </td>
 
-        <td class="tbody_td order-3 w-12 max-md:ml-auto max-md:!px-2 max-md:!py-0">
+        <td class="tbody_td order-3 w-12 max-md:ml-auto max-md:px-2! max-md:py-0!">
             <panel-dropdown :items="dropdownItems" />
         </td>
     </tr>
 
     <!-- Storno modal -->
     <Teleport to="body">
-        <div v-if="showStornoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+        <div v-if="showStornoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
             <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
                 <h3 class="mb-1 text-lg font-semibold text-gray-800">Stornovať objednávku?</h3>
                 <p class="mb-4 text-sm text-gray-500">
@@ -165,16 +165,16 @@ const rowStateTitle = computed(() => {
                     neexpedované položky budú označené ako stornované.
                 </p>
                 <label class="mb-5 flex cursor-pointer items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" v-model="notifyCustomer" class="rounded" />
+                    <input type="checkbox" v-model="notifyCustomer" class="rounded-sm" />
                     Informovať zákazníka emailom o storne
                 </label>
                 <div class="flex justify-end gap-2">
                     <button type="button" @click="showStornoModal = false"
-                        class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
+                        class="rounded-sm bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300">
                         Zrušiť
                     </button>
                     <button type="button" @click="confirmStorno" :disabled="submitting"
-                        class="rounded bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+                        class="rounded-sm bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
                         {{ submitting ? '...' : 'Potvrdiť storno' }}
                     </button>
                 </div>

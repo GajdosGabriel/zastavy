@@ -65,14 +65,14 @@ const dropdownItems = computed(() => {
                             <router-link
                                 v-if="review"
                                 :to="{ name: 'customers.edit', params: { customerId: customer.id } }"
-                                class="ml-1 inline-block rounded px-1.5 py-0.5 align-middle text-[11px] font-semibold"
+                                class="ml-1 inline-block rounded-sm px-1.5 py-0.5 align-middle text-[11px] font-semibold"
                                 :class="reviewClass"
                                 :title="review.summary || 'Kontrola údajov našla nezrovnalosti'"
                             >
                                 {{ review.count }}×
                             </router-link>
                             <div class="text-sm text-gray-500">
-                                <span v-if="customer.type_label" class="mr-1 rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600">{{ customer.type_label }}</span>
+                                <span v-if="customer.type_label" class="mr-1 rounded-sm bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600">{{ customer.type_label }}</span>
                                 {{ customer.name }}
                                 {{ customer.phone }}
                             </div>

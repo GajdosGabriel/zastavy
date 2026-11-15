@@ -62,7 +62,7 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                     <buttonRouterLink :item="buttonBack" class="text-sm" />
                 </div>
 
-                <form @submit.prevent="saveUser" class="rounded bg-white px-8 pt-6 pb-8 shadow-md">
+                <form @submit.prevent="saveUser" class="rounded-sm bg-white px-8 pt-6 pb-8 shadow-md">
                     <TitleDatalists />
 
                     <div class="grid gap-4 md:grid-cols-2">
@@ -125,7 +125,7 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                             <label class="mb-2 block text-sm font-bold text-gray-700">Jazyk komunikácie</label>
                             <select
                                 v-model="store.user.locale"
-                                class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                class="w-full rounded-sm border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-hidden focus:ring-1 focus:ring-blue-400"
                             >
                                 <option v-for="locale in getLocales" :key="locale.value" :value="locale.value">
                                     {{ locale.label }}
@@ -155,7 +155,7 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                             <select
                                 v-model="store.user.status"
                                 required
-                                class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                class="w-full rounded-sm border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-hidden focus:ring-1 focus:ring-blue-400"
                             >
                                 <option v-for="status in getStatuses" :key="status.value" :value="status.value">
                                     {{ status.label }}
@@ -168,8 +168,8 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                         <!-- Aktívny účet — samostatný vypínač prihlásenia -->
                         <div>
                             <label class="mb-2 block text-sm font-bold text-gray-700">Prístup</label>
-                            <label class="inline-flex w-full items-center gap-2 rounded border border-gray-300 px-3 py-2.5 text-sm">
-                                <input v-model="store.user.active" type="checkbox" class="rounded" />
+                            <label class="inline-flex w-full items-center gap-2 rounded-sm border border-gray-300 px-3 py-2.5 text-sm">
+                                <input v-model="store.user.active" type="checkbox" class="rounded-sm" />
                                 Aktívny účet (môže sa prihlásiť)
                             </label>
                         </div>
@@ -177,7 +177,7 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                         <!-- Role — len super-admin -->
                         <div v-if="canManageRoles && getRoles.length" class="md:col-span-2">
                             <label class="mb-2 block text-sm font-bold text-gray-700">Role</label>
-                            <div class="flex flex-wrap gap-3 rounded border p-3">
+                            <div class="flex flex-wrap gap-3 rounded-sm border p-3">
                                 <label v-for="role in getRoles" :key="role.value" class="inline-flex items-center gap-2 text-sm">
                                     <input v-model="store.user.roles" type="checkbox" :value="role.value" />
                                     {{ role.label }}
@@ -188,13 +188,13 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                         <!-- Práva — admin + super-admin -->
                         <div v-if="canManagePermissions && getPortalPermissions.length" class="md:col-span-2">
                             <label class="mb-2 block text-sm font-bold text-gray-700">Práva na objednávky</label>
-                            <div class="rounded border p-3">
+                            <div class="rounded-sm border p-3">
                                 <p class="mb-3 text-xs text-gray-500">
                                     Bez pridelených práv má používateľ základný prístup (zobrazenie a vytváranie objednávok).
                                 </p>
                                 <div class="grid gap-2 sm:grid-cols-2">
                                     <label v-for="perm in getPortalPermissions" :key="perm.value" class="inline-flex items-center gap-2 text-sm">
-                                        <input v-model="store.user.permissions" type="checkbox" :value="perm.value" class="rounded" />
+                                        <input v-model="store.user.permissions" type="checkbox" :value="perm.value" class="rounded-sm" />
                                         {{ perm.label }}
                                     </label>
                                 </div>
@@ -208,7 +208,7 @@ const buttonSubmit = { name: "Vytvoriť a odoslať email", spinner: true };
                                 rows="3"
                                 maxlength="2000"
                                 placeholder="Poznámka pre kolegov — používateľovi sa neposiela."
-                                class="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                class="w-full rounded-sm border border-gray-300 px-3 py-2 focus:border-blue-400 focus:outline-hidden focus:ring-1 focus:ring-blue-400"
                             ></textarea>
                             <p v-if="fe('note')" class="mt-1 text-xs font-semibold text-red-600">{{ fe('note') }}</p>
                         </div>

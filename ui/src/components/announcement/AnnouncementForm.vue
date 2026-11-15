@@ -58,7 +58,7 @@ const buttonSubmit = { name: "Uložiť oznam", spinner: true };
             <div class="page-body col-span-12">
                 <PageHeader :item="pageHeader" />
 
-                <form class="mt-5 rounded-md border border-slate-300 bg-white p-4 shadow-sm" @submit.prevent="onSubmitForm">
+                <form class="mt-5 rounded-md border border-slate-300 bg-white p-4 shadow-xs" @submit.prevent="onSubmitForm">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Názov</label>
@@ -67,7 +67,7 @@ const buttonSubmit = { name: "Uložiť oznam", spinner: true };
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Umiestnenie</label>
-                            <select v-model="announcement.placement" required class="form-control rounded border px-3 py-2">
+                            <select v-model="announcement.placement" required class="form-control rounded-sm border px-3 py-2">
                                 <option v-for="placement in getPlacements" :key="placement.value" :value="placement.value">
                                     {{ placement.label }}
                                 </option>
@@ -81,7 +81,7 @@ const buttonSubmit = { name: "Uložiť oznam", spinner: true };
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Farba</label>
-                            <select v-model="announcement.style_class" required class="form-control rounded border px-3 py-2">
+                            <select v-model="announcement.style_class" required class="form-control rounded-sm border px-3 py-2">
                                 <option v-for="styleClass in getStyleClasses" :key="styleClass.value" :value="styleClass.value">
                                     {{ styleClass.label }}
                                 </option>
@@ -90,7 +90,7 @@ const buttonSubmit = { name: "Uložiť oznam", spinner: true };
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Status</label>
-                            <select v-model="announcement.status.value" required class="form-control rounded border px-3 py-2">
+                            <select v-model="announcement.status.value" required class="form-control rounded-sm border px-3 py-2">
                                 <option v-for="status in getStatuses" :key="status.value" :value="status.value">
                                     {{ status.label }}
                                 </option>
@@ -99,17 +99,17 @@ const buttonSubmit = { name: "Uložiť oznam", spinner: true };
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Zobrazovať od</label>
-                            <input v-model="announcement.published_from" type="datetime-local" class="form-control rounded border px-3 py-2" />
+                            <input v-model="announcement.published_from" type="datetime-local" class="form-control rounded-sm border px-3 py-2" />
                         </div>
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Zobrazovať do</label>
-                            <input v-model="announcement.published_until" type="datetime-local" class="form-control rounded border px-3 py-2" />
+                            <input v-model="announcement.published_until" type="datetime-local" class="form-control rounded-sm border px-3 py-2" />
                         </div>
 
                         <div>
                             <label class="mb-1 block text-sm font-bold text-slate-700">Poradie</label>
-                            <input v-model.number="announcement.sort_order" type="number" min="0" class="form-control rounded border px-3 py-2" />
+                            <input v-model.number="announcement.sort_order" type="number" min="0" class="form-control rounded-sm border px-3 py-2" />
                         </div>
                     </div>
 

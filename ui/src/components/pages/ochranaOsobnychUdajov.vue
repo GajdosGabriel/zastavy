@@ -7,7 +7,7 @@ import BaseLayout from '../layout/BaseLayout.vue';
         <template #main>
 
             <div class="col-span-12">
-                <div class="max-w-7xl mx-auto border-x border-b border-slate-300 bg-white shadow-sm">
+                <div class="max-w-7xl mx-auto border-x border-b border-slate-300 bg-white shadow-xs">
                     <div class="grid items-center gap-5 px-3 py-4 md:grid-cols-12 md:px-6">
                         <div class="md:col-span-8">
                             <img
@@ -21,7 +21,7 @@ import BaseLayout from '../layout/BaseLayout.vue';
                                 <img
                                     src="/src/assets/images/gabriel.jpg"
                                     alt="Kontakt"
-                                    class="h-24 w-24 rounded-md object-cover shadow-sm"
+                                    class="h-24 w-24 rounded-md object-cover shadow-xs"
                                 >
                                 <div>
                                     <div class="text-xs font-semibold uppercase text-slate-500">Kontakt</div>
@@ -35,7 +35,7 @@ import BaseLayout from '../layout/BaseLayout.vue';
             </div>
 
             <section class="gdpr-page px-4 pb-10 sm:px-7">
-                <div class="gdpr-shell overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+                <div class="gdpr-shell overflow-hidden rounded-md border border-slate-200 bg-white shadow-xs">
 
                     <div class="bg-blue-900 px-5 py-8 text-white sm:px-8">
                         <p class="text-sm font-semibold uppercase tracking-wide text-blue-100">

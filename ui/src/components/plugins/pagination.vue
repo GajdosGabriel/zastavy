@@ -74,7 +74,7 @@ onBeforeUnmount(() => resetPaginator());
             <!-- Prvá strana -->
             <button @click="fetchPaginate(getLinks.first)"
                 :disabled="getPaginator.current_page === 1"
-                class="flex h-8 w-8 items-center justify-center rounded border text-gray-600 transition"
+                class="flex h-8 w-8 items-center justify-center rounded-sm border text-gray-600 transition"
                 :class="getPaginator.current_page === 1
                     ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
                     : 'border-gray-300 bg-white hover:bg-gray-100'"
@@ -87,7 +87,7 @@ onBeforeUnmount(() => resetPaginator());
             <!-- Predchádzajúca -->
             <button @click="fetchPaginate(getLinks.prev)"
                 :disabled="!getLinks.prev"
-                class="flex h-8 w-8 items-center justify-center rounded border text-gray-600 transition"
+                class="flex h-8 w-8 items-center justify-center rounded-sm border text-gray-600 transition"
                 :class="!getLinks.prev
                     ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
                     : 'border-gray-300 bg-white hover:bg-gray-100'"
@@ -105,7 +105,7 @@ onBeforeUnmount(() => resetPaginator());
                 </span>
                 <button v-else
                     @click="fetchPaginate(getPageUrl(item.page))"
-                    class="flex h-8 min-w-8 items-center justify-center rounded border px-2 text-sm font-semibold transition"
+                    class="flex h-8 min-w-8 items-center justify-center rounded-sm border px-2 text-sm font-semibold transition"
                     :class="item.page === getPaginator.current_page
                         ? 'border-blue-600 bg-blue-600 text-white cursor-default'
                         : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100'">
@@ -116,7 +116,7 @@ onBeforeUnmount(() => resetPaginator());
             <!-- Ďalšia -->
             <button @click="fetchPaginate(getLinks.next)"
                 :disabled="!getLinks.next"
-                class="flex h-8 w-8 items-center justify-center rounded border text-gray-600 transition"
+                class="flex h-8 w-8 items-center justify-center rounded-sm border text-gray-600 transition"
                 :class="!getLinks.next
                     ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
                     : 'border-gray-300 bg-white hover:bg-gray-100'"
@@ -129,7 +129,7 @@ onBeforeUnmount(() => resetPaginator());
             <!-- Posledná strana -->
             <button @click="fetchPaginate(getLinks.last)"
                 :disabled="getPaginator.current_page === getPaginator.last_page"
-                class="flex h-8 w-8 items-center justify-center rounded border text-gray-600 transition"
+                class="flex h-8 w-8 items-center justify-center rounded-sm border text-gray-600 transition"
                 :class="getPaginator.current_page === getPaginator.last_page
                     ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
                     : 'border-gray-300 bg-white hover:bg-gray-100'"

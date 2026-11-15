@@ -70,7 +70,7 @@ const dropdownItems = computed(() => [
                 <span
                     v-for="role in user.roles"
                     :key="role"
-                    class="inline-flex rounded bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-200"
+                    class="inline-flex rounded-sm bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-200"
                 >
                     {{ role }}
                 </span>
