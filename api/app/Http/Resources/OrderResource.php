@@ -63,6 +63,7 @@ class OrderResource extends JsonResource
             'payment_fee' => (float) $this->payment_fee,
             'discount_amount' => (float) $this->discount_amount,
             'note'         => $this->note,
+            'internal_note' => $this->internal_note,
             'wants_coupon' => (bool) $this->wants_coupon,
             'issued_coupon' => $this->wants_coupon && $this->issuedCoupon ? [
                 'code'        => $this->issuedCoupon->code,

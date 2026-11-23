@@ -106,7 +106,6 @@ class EmailOrderAutoCreate
             ])->all(),
             'shipping_method_id' => config('account.email_orders.shipping_method_id'),
             'payment_method_id' => config('account.email_orders.payment_method_id'),
-            'note' => mb_substr(trim((string) ($preview['note'] ?? '')), 0, 900) ?: null,
         ]);
 
         return DB::transaction(function () use ($draft, $preview, $input, $request) {

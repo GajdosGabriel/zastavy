@@ -147,8 +147,10 @@ class EmailOrderInboxTest extends TestCase
         $this->assertSame($this->customer->id, $order->customer_id);
         $this->assertSame(2, (int) $order->orderProducts()->sole()->quantity);
         $this->assertSame($this->shipping->id, (int) $order->shipping_method_id);
-        $this->assertStringContainsString('Objednávka z e-mailu od Starosta <obec@lehota.test>', $order->note);
-        $this->assertStringContainsString('(vytvorená automaticky)', $order->note);
+        $this->assertStringContainsString('Objednávka z e-mailu od Starosta <obec@lehota.test>', $order->internal_note);
+        $this->assertStringContainsString('(vytvorená automaticky)', $order->internal_note);
+        // Interné údaje nejdú zákazníkovi do potvrdenia ani na verejnú stránku
+        $this->assertNull($order->note);
 
         // Pôvodný mail je prvá správa zákazníka aj so skenom
         $message = OrderMessage::where('order_id', $order->id)->sole();

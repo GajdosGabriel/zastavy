@@ -255,6 +255,9 @@ watch(() => [props.order?.id, canLookup.value], ([id]) => {
             <div v-if="order.note" class="mt-3 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                 <span class="font-semibold">Poznámka: </span>{{ order.note }}
             </div>
+            <div v-if="order.internal_note" class="mt-3 whitespace-pre-line rounded-sm border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700">
+                <span class="font-semibold">Interná poznámka: </span>{{ order.internal_note }}
+            </div>
         </div>
 
         <!-- Adresa doručenia — vyzdvihnutá len keď sa líši od sídla, inak by

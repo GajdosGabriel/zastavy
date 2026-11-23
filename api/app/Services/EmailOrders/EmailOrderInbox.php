@@ -154,7 +154,9 @@ class EmailOrderInbox
         $from = trim(($draft->from_name ? $draft->from_name.' ' : '').($draft->from_email ? '<'.$draft->from_email.'>' : ''));
         $line = 'Objednávka z e-mailu'.($from ? ' od '.$from : '').', '.($draft->received_at ?? now())->format('d.m.Y H:i')
             .' – pôvodný text v konverzácii'.($auto ? ' (vytvorená automaticky)' : '').'.';
-        $order->update(['note' => trim($line."\n".$order->note)]);
+        // Pôvod a poznámka z AI (písaná o zákazníkovi) sú pre obsluhu – zákazníkovi ide len `note`.
+        $aiNote = $auto ? trim((string) ($draft->preview['note'] ?? '')) : '';
+        $order->update(['internal_note' => trim($line."\n".$aiNote."\n".$order->internal_note)]);
 
         $draft->update(['status' => EmailOrderDraft::CREATED, 'order_id' => $order->id, 'auto_created' => $auto]);
 
