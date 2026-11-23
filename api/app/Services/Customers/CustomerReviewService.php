@@ -2,8 +2,10 @@
 
 namespace App\Services\Customers;
 
+use App\Enums\OrderStatus;
 use App\Models\Customer;
 use App\Models\CustomerReview;
+use App\Models\Order;
 use App\Services\Companies\CompanyRegistry;
 use App\Services\OpenAI\ChatGPT;
 use Illuminate\Database\Eloquent\Collection;
@@ -297,6 +299,10 @@ class CustomerReviewService
         }
 
         $this->persist($customer);
+        $this->syncDraftOrders($customer, array_map(
+            static fn (array $c) => ['field' => $c['field'], 'from' => $c['to'] ?? null, 'to' => $c['from'] ?? null],
+            $reverted,
+        ));
 
         // Vrátený stav treba posúdiť odznova — pôvodná hodnota je zrejme tá,
         // ktorú kontrola pred chvíľou označila za chybnú, a má sa objaviť
@@ -387,6 +393,7 @@ class CustomerReviewService
 
         if ($changes !== []) {
             $this->persist($customer);
+            $this->syncDraftOrders($customer, $changes);
         }
 
         return $changes;
@@ -555,6 +562,64 @@ class CustomerReviewService
     }
 
     /** Uloží zákazníka tak, aby uloženie nenaplánovalo ďalšiu kontrolu. */
+    /**
+     * Polia fakturačného odtlačku objednávky, ktoré pochádzajú zo zákazníka.
+     * Meno, e-mail a telefón má objednávka vlastné — tie oprava zákazníka nemení.
+     */
+    private const SNAPSHOT_FIELDS = ['company', 'street', 'postcode', 'city', 'ico', 'dic', 'ic_dic'];
+
+    /**
+     * Prenesie opravy zákazníka do odtlačku jeho ešte nespracovaných objednávok.
+     *
+     * Odtlačok je zamrazený zámerne — vybavená objednávka má ostať taká, ako
+     * bola. Nová objednávka (koncept) ale ešte nikam nešla: keby si nechala
+     * napr. „Maria“ namiesto názvu úradu, výroba aj faktúra by ho prevzali,
+     * hoci zákazník je už opravený. Mení sa len hodnota, ktorá v odtlačku
+     * stále je pôvodná — iný zásah (človek, adresa doručenia) má prednosť.
+     *
+     * Prenáša sa len OPRAVA vyplnenej hodnoty. Doplnenie prázdneho poľa
+     * (DIČ z registra) ostáva len zákazníkovi — objednávka drží, čo zákazník
+     * poslal, a detail objednávky rozdiel voči dnešnému zákazníkovi ukáže.
+     *
+     * @param  array<int, array<string, mixed>>  $changes  zápisy v tvare `applied`
+     */
+    private function syncDraftOrders(Customer $customer, array $changes): void
+    {
+        $changes = array_values(array_filter(
+            $changes,
+            fn (array $c) => in_array($c['field'] ?? null, self::SNAPSHOT_FIELDS, true)
+                && ! $this->rules->isBlank($c['from'] ?? null)
+                && ! $this->rules->isBlank($c['to'] ?? null),
+        ));
+
+        if ($changes === []) {
+            return;
+        }
+
+        Order::query()
+            ->where('customer_id', $customer->getKey())
+            ->where('status', OrderStatus::Draft)
+            ->whereNotNull('billing_snapshot')
+            ->get()
+            ->each(function (Order $order) use ($changes) {
+                $snapshot = $order->billing_snapshot;
+                $touched = false;
+
+                foreach ($changes as $change) {
+                    $field = $change['field'];
+
+                    if (($snapshot[$field] ?? null) === ($change['from'] ?? null)) {
+                        $snapshot[$field] = $change['to'] ?? null;
+                        $touched = true;
+                    }
+                }
+
+                if ($touched) {
+                    $order->forceFill(['billing_snapshot' => $snapshot])->saveQuietly();
+                }
+            });
+    }
+
     private function persist(Customer $customer): void
     {
         self::$applying = true;
