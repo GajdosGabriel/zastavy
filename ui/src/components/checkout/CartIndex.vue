@@ -21,7 +21,7 @@ import EmailOrderImport from "./EmailOrderImport.vue";
 import buttonLink from "../layout/page/ButtonLink.vue";
 
 // Vlastná položka nemá obrázok — rovnaký zástupný ako pri produktoch bez fotky na serveri.
-const PLACEHOLDER_THUMB = '/images/product-placeholder.svg';
+const PLACEHOLDER_THUMB = '/web/images/product-placeholder.svg';
 const checkoutsStore = useCheckouts();
 const { getCarts, getCheckout, note, attachments, delivery, deliverToOtherAddress, customerDraft } = storeToRefs(checkoutsStore);
 const {

@@ -78,7 +78,9 @@ class OrderProduct extends Model
     {
         $image = $this->variant?->image ?? $this->product?->images->first();
 
-        return $image ? route('images.show', $image) : null;
+        // Bez fotky (aj vlastná položka) zástupný obrázok, nech je stĺpec v e-maile zarovnaný.
+        // PNG, nie SVG — Gmail ani Outlook SVG v e-mailoch nezobrazia.
+        return $image ? route('images.show', $image) : url('/images/product-placeholder.png');
     }
 
     public function stocks()

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Support\Media;
 use Illuminate\Support\Facades\Storage;
 
 class OrderProductResource extends JsonResource
@@ -26,7 +27,7 @@ class OrderProductResource extends JsonResource
             'variant_name' => $this->variant_name,
             'variant_code' => $this->product_details->variant_code,
             'activePrice' => $this->price,
-            'thumb' => $this->variant?->thumb ?? ($this->product?->thumb ?? '/images/product-placeholder.svg'),
+            'thumb' => $this->thumbUrl(),
             'unit_value' => $this->product_details->unit_value,
             'min_order' => $this->variant?->min_order ?? 1,
             'product_vat' => $this->product_details->vat,
@@ -52,5 +53,21 @@ class OrderProductResource extends JsonResource
                 'destroy'   =>  route('orders.orderProducts.destroy', [$this->order_id, $this->id]),
             ],
         ];
+    }
+
+    /**
+     * Fotka variantu/produktu; inak placeholder. Placeholder leží v public/ API,
+     * nie vo frontende — relatívna cesta /images/... by sa na doméne UI
+     * neotvorila, preto ide ako absolútna URL API (napr. /web/images/...).
+     */
+    private function thumbUrl(): string
+    {
+        $thumb = $this->variant?->thumb ?? $this->product?->thumb;
+
+        if (! $thumb || str_starts_with($thumb, '/images/')) {
+            return Media::absolute($thumb ?: '/images/product-placeholder.svg');
+        }
+
+        return $thumb;
     }
 }

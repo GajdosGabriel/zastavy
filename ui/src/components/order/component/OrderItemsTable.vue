@@ -193,7 +193,7 @@ const adjustment = computed(() => Number(props.order?.adjustment_amount ?? 0));
                         </td>
                         <td class="tbody_td">
                             <div class="flex items-center gap-3">
-                                <img v-if="item.thumb" :src="item.thumb" :alt="item.name" class="h-10 w-10 rounded-sm border border-gray-200 object-cover" />
+                                <img :src="item.thumb || '/web/images/product-placeholder.svg'" alt="" class="h-10 w-10 rounded-sm border border-gray-200 object-cover" />
                                 <div>
                                     <div class="font-semibold text-gray-900">{{ item.name }}</div>
                                     <div v-if="item.variant_name" class="text-xs font-medium text-blue-700">{{ item.variant_name }}</div>

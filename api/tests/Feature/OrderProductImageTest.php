@@ -65,6 +65,22 @@ class OrderProductImageTest extends TestCase
 
     public function test_missing_image_uses_frontend_placeholder(): void
     {
-        $this->assertSame('/images/product-placeholder.svg', $this->thumbnail(null));
+        config(['app.url' => 'https://example.test/web']);
+        app('url')->forceRootUrl('https://example.test/web');
+
+        // Placeholder leží v public/ API (/web/images), nie na koreni frontendu.
+        $this->assertStringEndsWith('example.test/web/images/product-placeholder.svg', $this->thumbnail(null));
+    }
+
+    public function test_email_image_of_item_without_photo_is_png_placeholder(): void
+    {
+        config(['app.url' => 'https://example.test/web']);
+        app('url')->forceRootUrl('https://example.test/web');
+
+        $item = new OrderProduct(['is_custom' => true]);
+        $item->setRelation('product', null);
+        $item->setRelation('variant', null);
+
+        $this->assertStringEndsWith('example.test/web/images/product-placeholder.png', $item->email_image_url);
     }
 }
