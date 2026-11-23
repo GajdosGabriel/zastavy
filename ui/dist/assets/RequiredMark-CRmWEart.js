@@ -1,0 +1,1 @@
+import{bt as e,lt as t}from"./index-37DS8cqj.js";import{p as n}from"./BaseLayout-B0w2Mebe.js";var r={},i={class:`text-red-600 text-sm align-top leading-none`,"aria-label":`povinné pole`};function a(n,r){return e(),t(`span`,i,`*`)}var o=n(r,[[`render`,a]]);export{o as t};

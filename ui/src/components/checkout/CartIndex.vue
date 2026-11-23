@@ -20,6 +20,8 @@ import ShippingPaymentSelector from "../forms/ShippingPaymentSelector.vue";
 import EmailOrderImport from "./EmailOrderImport.vue";
 import buttonLink from "../layout/page/ButtonLink.vue";
 
+// Vlastná položka nemá obrázok — rovnaký zástupný ako pri produktoch bez fotky na serveri.
+const PLACEHOLDER_THUMB = '/images/product-placeholder.svg';
 const checkoutsStore = useCheckouts();
 const { getCarts, getCheckout, note, attachments, delivery, deliverToOtherAddress, customerDraft } = storeToRefs(checkoutsStore);
 const {
@@ -253,7 +255,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                         <div v-else class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
                             <ul class="divide-y divide-gray-100 md:hidden">
                                 <li v-for="product in getCarts" :key="product.key" class="flex gap-3 px-4 py-4">
-                                    <img :src="product.thumb" width="56" height="56" loading="lazy" :alt="product.name"
+                                    <img :src="product.thumb || PLACEHOLDER_THUMB" width="56" height="56" loading="lazy" :alt="product.name"
                                         class="h-14 w-14 shrink-0 rounded-lg border border-gray-200 object-cover" />
                                     <div class="min-w-0 flex-1">
                                         <div class="flex items-start justify-between gap-2">
@@ -299,7 +301,7 @@ const submitOrder = async (sendNotification = notifyCustomer.value) => {
                                         <td class="px-4 py-3">
                                             <div class="flex items-center gap-3">
                                                 <img
-                                                    :src="product.thumb"
+                                                    :src="product.thumb || PLACEHOLDER_THUMB"
                                                     width="48" height="48" loading="lazy"
                                                     :alt="product.name"
                                                     class="h-12 w-12 shrink-0 rounded-lg border border-gray-200 object-cover"
