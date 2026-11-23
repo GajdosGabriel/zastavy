@@ -221,7 +221,7 @@ const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
                                             <button v-for="v in p.variants" :key="v.id" type="button" class="rounded-sm bg-gray-100 px-2 py-0.5 text-xs hover:bg-blue-100" @click="addVariant(p, v)">+ {{ v.name || v.code }} ({{ money(netFromGross(v.active_price ?? 0, p.vat ?? 23)) }} bez DPH)</button>
                                         </li>
                                     </ul>
-                                    <CustomOrderItem price-label="Jednotková cena bez DPH (€)" @add="addCustom" />
+                                    <CustomOrderItem emit-net @add="addCustom" />
                                 </div>
                             </details>
 

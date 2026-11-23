@@ -34,6 +34,7 @@ export const money=v=>Number(v??0).toLocaleString('sk-SK',{minimumFractionDigits
 // Zaokrúhľuje ako PHP round(): 74.105 → 74.11 (násobenie 74.105*100 by dalo 7410.4999…).
 const r2=v=>{const n=Number(v),s=Math.abs(n).toPrecision(15);return Math.sign(n)*(s.includes('e')?Math.round(Math.abs(n)*100)/100:Math.round(Number(s+'e2'))/100);};
 export const netFromGross=(gross,vat)=>r2(Number(gross)/(1+Number(vat)/100));
+export const grossFromNet=(net,vat)=>r2(Number(net)*(1+Number(vat)/100));
 // Rovnaký výpočet ako App\Support\QuotePricing — súčty v editore sa zhodujú s uloženou ponukou.
 export function quoteLine(i){const unitNet=r2(Number(i.price_net||0)*(1-Number(i.discount_percent||0)/100)),unitGross=r2(unitNet*(1+Number(i.vat||0)/100)),q=Number(i.quantity||0);
  return {unitNet,unitGross,lineNet:r2(q*unitNet),lineGross:r2(q*unitGross)};}

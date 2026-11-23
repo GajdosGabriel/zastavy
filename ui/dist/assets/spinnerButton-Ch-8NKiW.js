@@ -1,0 +1,1 @@
+import{bt as e,lt as t,pt as n}from"./index-D_1BZw3W.js";var r={class:`loader`,style:{margin:`auto`}},i=n({__name:`spinnerButton`,setup(n){return(n,i)=>(e(),t(`div`,r))}});export{i as t};
