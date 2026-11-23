@@ -51,8 +51,17 @@ function payload(){return {version:quote.value?.version??0,...header.value,custo
  discount_percent:form.value.discount_percent||0,shipping_method_id:form.value.shipping_method_id||null,shipping_price_net:form.value.shipping_price_net||0,terms:form.value.terms||null,valid_until:form.value.valid_until||null};}
 async function ensureQuote(){if(quote.value)return;const {data}=await axios.post('/sales-quotes',{...header.value,customer:customerPayload()});quote.value=data;await router.replace('/predaj/ponuky/'+data.id);}
 function saveDraft(){return run(async()=>{await ensureQuote();apply((await axios.put('/sales-quotes/'+quote.value.id,payload())).data);},'Koncept je uložený. Zákazník ho zatiaľ nevidí.');}
-function send(){const email=getCustomer.value?.email;
- if(!window.confirm(notify.value?`Odoslať ponuku zákazníkovi na ${email}?`:'Sprístupniť ponuku bez e-mailu? Odkaz pošlete zákazníkovi sami.'))return;
+// Kontrola pred potvrdením — inak by sa ponuka najprv založila a server by dopravu odmietol až potom.
+const shippingSelect=ref(null);
+function sendProblem(){const email=String(getCustomer.value?.email??'').trim();
+ if(!form.value.items.length)return 'Pridajte aspoň jednu položku.';
+ if(!form.value.shipping_method_id){shippingSelect.value?.scrollIntoView({block:'center'});shippingSelect.value?.focus();return 'Vyberte dopravu — bez nej sa ponuka nedá odoslať.';}
+ if(notify.value&&!email)return 'Doplňte e-mail zákazníka alebo zrušte „Poslať zákazníkovi e-mail s PDF“.';
+ return '';}
+function send(){const problem=sendProblem();if(problem){saved.value='';error.value=problem;return;}
+ const email=String(getCustomer.value?.email??'').trim(),method=methods.value.find(m=>m.id===form.value.shipping_method_id)?.name??'';
+ const summary=`\n\nDoprava: ${method} (${money(totals.value.shippingNet)} bez DPH)\nCelkom s DPH: ${money(totals.value.gross)}`;
+ if(!window.confirm((notify.value?`Odoslať ponuku zákazníkovi na ${email}?`:'Sprístupniť ponuku bez e-mailu? Odkaz pošlete zákazníkovi sami.')+summary))return;
  return run(async()=>{await ensureQuote();apply((await axios.post('/sales-quotes/'+quote.value.id+'/offer',{...payload(),notify:notify.value})).data);},notify.value?'Ponuka je odoslaná zákazníkovi e-mailom.':'Ponuka je sprístupnená.');}
 function discard(){if(!window.confirm('Zahodiť rozpracované zmeny a vrátiť sa k poslednej odoslanej verzii?'))return;return run(async()=>apply((await axios.delete('/sales-quotes/'+quote.value.id+'/draft')).data));}
 function withdraw(){if(!window.confirm('Stiahnuť ponuku? Zákazník ju už nebude môcť prijať.'))return;return run(async()=>apply((await axios.post('/sales-quotes/'+quote.value.id+'/withdraw')).data));}
@@ -282,7 +291,7 @@ const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
                                 <div class="space-y-3 px-5 py-4 text-sm">
                                     <div class="grid grid-cols-2 gap-3">
                                         <label class="col-span-2 block font-semibold text-gray-700">Doprava
-                                            <select v-model="form.shipping_method_id" class="mt-1" :class="input" @change="pickShipping"><option value="">Vyberte</option><option v-for="m in methods" :key="m.id" :value="m.id">{{ m.name }}</option></select>
+                                            <select ref="shippingSelect" v-model="form.shipping_method_id" class="mt-1" :class="input" @change="pickShipping"><option value="">Vyberte</option><option v-for="m in methods" :key="m.id" :value="m.id">{{ m.name }}</option></select>
                                         </label>
                                         <label class="block font-semibold text-gray-700">Doprava bez DPH<input v-model.number="form.shipping_price_net" type="number" min="0" step="0.01" class="mt-1 text-right" :class="input" /></label>
                                         <label class="block font-semibold text-gray-700">Zľava na ponuku %<input v-model.number="form.discount_percent" type="number" min="0" max="100" step="0.01" class="mt-1 text-right" :class="input" /></label>
@@ -307,6 +316,7 @@ const cardHead='border-b border-gray-100 bg-gray-50 px-6 py-4';
                                         <button type="button" class="inline-flex w-full items-center justify-center rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400" :disabled="busy || !form.items.length" @click="send">
                                             {{ busy ? 'Ukladám...' : (quote?.version ? 'Odoslať novú verziu' : 'Odoslať ponuku') }}
                                         </button>
+                                        <p v-if="error" role="alert" class="text-sm font-semibold text-red-700">{{ error }}</p>
                                         <button type="button" class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50" :disabled="busy" @click="saveDraft">Uložiť koncept</button>
                                     </template>
                                 </div>

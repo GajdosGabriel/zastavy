@@ -56,10 +56,12 @@
 </head>
 <body>
 <div class="wrapper">
-    <div class="header" style="background: {{ $accent }};">
-        <h1>{{ $heading }}</h1>
+    {{-- Farby textu sú aj inline: pri odpovedi/preposlaní Gmail zahodí <style> z hlavičky,
+         ostalo by len tmavé pozadie a text by bol tmavý na tmavom. --}}
+    <div class="header" style="background: {{ $accent }}; color: #ffffff; padding: 28px 32px;">
+        <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #ffffff;">{{ $heading }}</h1>
         @if($subheading)
-            <p>{{ $subheading }}</p>
+            <p style="margin: 6px 0 0; font-size: 14px; color: #e2e8f0;">{{ $subheading }}</p>
         @endif
     </div>
 
