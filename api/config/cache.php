@@ -52,6 +52,14 @@ return [
             'lock_path' => storage_path('framework/cache/data'),
         ],
 
+        // Heartbeaty monitora (config/operations.php). Mimo framework/cache/data,
+        // takže ich cache:clear nemaže ani pri CACHE_STORE=file.
+        'operations' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/operations'),
+            'lock_path' => storage_path('framework/cache/operations'),
+        ],
+
         'memcached' => [
             'driver' => 'memcached',
             'persistent_id' => env('MEMCACHED_PERSISTENT_ID'),

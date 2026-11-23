@@ -12,7 +12,7 @@ Tento postup je pripravený pre server s PHP, MySQL, statickým frontend hosting
 6. Vykonajte `php artisan config:cache` a `php artisan view:cache`. Pred opätovným buildom cache po zmene konfigurácie používajte `php artisan config:clear`. Pri lokálnom disku vytvorte `php artisan storage:link`.
 7. V `ui` nastavte produkčné URL, spustite `npm ci`, `npm run typecheck`, `npm test`, `npm run build`. Overte log generovania sitemap a publikujte obsah `ui/dist` s SPA fallbackom na `index.html`.
 8. Prepnite release, spustite workery a obnovte aplikáciu. Pri dlhobežiacich workeroch vykonajte `php artisan queue:restart`; správca procesov musí worker znovu spustiť. Overte `/up`, verejný katalóg, prihlásenie a čítanie objednávky. Skúšobné objednávky a e-maily robte na stagingu s testovacími príjemcami.
-9. Po prvom päťminútovom cykle monitora overte `php artisan ops:check --json`. Prvý beh pred prvým spracovaným heartbeat jobom môže hlásiť chýbajúci worker.
+9. Po prvom päťminútovom cykle monitora overte `php artisan ops:check --json`. Heartbeaty sú v samostatnom súborovom store `operations` (`storage/framework/cache/operations`), takže ich `optimize:clear` / `cache:clear` pri nasadení nevymaže.
 
 ## 2. Fronta
 
@@ -66,7 +66,7 @@ CACHE_STORE=database
 QUEUE_CONNECTION=database
 ```
 
-Po zmene obnovte config cache a workery. Scheduler každých päť minút zapíše svoj čas a odošle malú úlohu do predvolenej fronty; worker pri jej spracovaní zapíše vlastný čas. Oba procesy musia používať rovnakú trvalú cache, DB a cache prefix. Monitor kontroluje predvolené pripojenie a frontu; ďalšie fronty vyžadujú vlastné monitorovanie.
+Po zmene obnovte config cache a workery. Scheduler každých päť minút zapíše svoj čas a odošle malú úlohu do predvolenej fronty; worker pri jej spracovaní zapíše vlastný čas. Oba procesy musia bežať na tom istom serveri (heartbeaty sú v súborovom store `operations`; inak nastavte `OPS_HEARTBEAT_STORE` na zdieľaný store, ktorý `cache:clear` nemaže) a používať rovnakú DB a cache prefix. Monitor kontroluje predvolené pripojenie a frontu; ďalšie fronty vyžadujú vlastné monitorovanie.
 
 `php artisan ops:check --json` overuje:
 

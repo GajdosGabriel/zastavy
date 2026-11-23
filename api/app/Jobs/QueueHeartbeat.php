@@ -16,6 +16,6 @@ class QueueHeartbeat implements ShouldQueue
 
     public function handle(): void
     {
-        Cache::put('ops:worker-heartbeat', now()->timestamp, now()->addDay());
+        Cache::store(config('operations.heartbeat_store'))->put('ops:worker-heartbeat', now()->timestamp, now()->addDay());
     }
 }

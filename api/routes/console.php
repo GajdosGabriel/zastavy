@@ -29,7 +29,7 @@ Schedule::command('app:customer-reviews-run --time-budget=25')
 
 if (config('operations.enabled')) {
     Schedule::call(function () {
-        \Illuminate\Support\Facades\Cache::put('ops:scheduler-heartbeat', now()->timestamp, now()->addDay());
+        \Illuminate\Support\Facades\Cache::store(config('operations.heartbeat_store'))->put('ops:scheduler-heartbeat', now()->timestamp, now()->addDay());
         // Najviac jeden probe za 5 minút; funguje aj pri viacerých scheduleroch.
         if (\Illuminate\Support\Facades\Cache::add('ops:probe-dispatched', true, 290)) {
             \App\Jobs\QueueHeartbeat::dispatch();

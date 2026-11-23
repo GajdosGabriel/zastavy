@@ -43,6 +43,21 @@ class OperationsHealthTest extends TestCase
         Log::shouldHaveReceived('error')->with('operations.unhealthy', \Mockery::on(fn ($data) => $data['checks']['queue_worker'] === 'failed'));
     }
 
+    public function test_deploy_cache_clear_does_not_erase_heartbeats(): void
+    {
+        // Produkcia: predvolená cache je databázová, heartbeaty v súborovom store.
+        config(['cache.default' => 'database', 'operations.heartbeat_store' => 'operations']);
+        $heartbeats = Cache::store('operations');
+        try {
+            $this->heartbeat();
+            $heartbeats->put('ops:scheduler-heartbeat', now()->timestamp);
+            // Nasadenie spúšťa optimize:clear → cache:clear predvolenej cache.
+            $this->artisan('cache:clear')->assertExitCode(0);
+            $this->assertNotContains('failed', app(OperationsHealth::class)->checks());
+        } finally {
+            $heartbeats->flush();
+        }
+    }
     public function test_missing_scheduler_is_not_masked_by_running_worker(): void
     {
         (new QueueHeartbeat)->handle();

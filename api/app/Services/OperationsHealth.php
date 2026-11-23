@@ -53,7 +53,7 @@ class OperationsHealth
 
     private function fresh(string $key): bool
     {
-        $timestamp = Cache::get($key);
+        $timestamp = Cache::store(config('operations.heartbeat_store'))->get($key);
 
         return is_numeric($timestamp) && $timestamp <= now()->timestamp
             && now()->timestamp - $timestamp <= config('operations.heartbeat_max_age');
